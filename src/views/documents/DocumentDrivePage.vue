@@ -252,11 +252,11 @@
           
           <div class="status-ribbon mb-8 relative z-10">
              <div class="sr-item">
-                <CheckCircle2 :size="14" class="text-amber-500" v-if="!selectedDoc.is_confidential"/>
-                <ShieldAlert :size="14" class="text-red-500" v-else/>
-                <span :class="selectedDoc.is_confidential ? 'text-red-500' : 'text-amber-500'">
-                  {{ selectedDoc.status === 'Pending Approval' ? 'Pending Admin Approval' : (selectedDoc.is_confidential ? 'Confidential' : 'Public Access') }}
-                </span>
+                <ShieldAlert :size="14" class="text-red-500" v-if="selectedDoc.is_confidential"/>
+                <Lock :size="14" v-else-if="selectedDoc.access_level === 'Private'" class="al-private"/>
+                <Users :size="14" v-else-if="selectedDoc.access_level === 'User'" class="al-user"/>
+                <Globe :size="14" v-else class="al-org"/>
+                <span :class="ribbonClass(selectedDoc)">{{ ribbonLabel(selectedDoc) }}</span>
              </div>
              <div class="sr-date">Uploaded on {{ formatDate(selectedDoc.created_at) }}</div>
           </div>
@@ -282,44 +282,82 @@
           <transition name="tab-fade" mode="out-in">
             <div class="drawer-tab-content mt-6 pb-20" v-if="drawerTab === 'info'">
               <div class="info-block fade-up" style="animation-delay: 0.1s">
-                 <h4>Document Info</h4>
+                 <h4><Info :size="13" class="info-block-icon"/> Document Info</h4>
                  <div class="separator-line"></div>
                  <div class="ib-row">
-                   <span class="ib-label">Access Level</span>
-                   <span class="ib-val text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded">{{ selectedDoc.access_level }}</span>
+                   <span class="ib-label"><Lock :size="11"/> Access Level</span>
+                   <span class="al-pill" :class="`al-${selectedDoc.access_level?.toLowerCase()}`">{{ selectedDoc.access_level }}</span>
                  </div>
                  <div class="ib-row">
-                   <span class="ib-label">File Type</span>
+                   <span class="ib-label"><FileType2 :size="11"/> File Type</span>
                    <span class="ib-val">{{ selectedDoc.file_type.toUpperCase() }}</span>
                  </div>
                  <div class="ib-row">
-                   <span class="ib-label">MIME</span>
+                   <span class="ib-label"><Hash :size="11"/> MIME</span>
                    <span class="ib-val opacity-50">{{ selectedDoc.mime_type }}</span>
                  </div>
+                 <div class="ib-row" v-if="selectedDoc.category">
+                   <span class="ib-label"><Layers :size="11"/> Category</span>
+                   <span class="ib-val">{{ selectedDoc.category }}</span>
+                 </div>
                  <div class="ib-row" v-if="selectedDoc.description">
-                   <span class="ib-label">Description</span>
+                   <span class="ib-label"><Info :size="11"/> Description</span>
                    <span class="ib-val wrap-title">{{ selectedDoc.description }}</span>
                  </div>
               </div>
 
-              <div class="info-block fade-up mt-8" style="animation-delay: 0.2s">
-                 <h4>Tags</h4>
+              <!-- SHARED WITH -->
+              <div class="info-block fade-up" style="animation-delay: 0.2s">
+                 <h4><Users :size="13" class="info-block-icon"/> Shared With</h4>
                  <div class="separator-line"></div>
-                 <div class="tags-flex mt-4">
-                   <span class="drawer-tag pop-in" v-for="(tag, i) in selectedDoc.tags" :key="tag" :style="{animationDelay: `${0.2 + i * 0.05}s`}">#{{ tag }}</span>
-                   <span class="text-xs text-white/30" v-if="!selectedDoc.tags?.length">No tags attached.</span>
+                 <div class="shared-with-stack">
+                   <template v-if="drawerSharedUsers.length">
+                     <div
+                       class="shared-user-pill pop-in"
+                       v-for="(u, i) in drawerSharedUsers"
+                       :key="u.id"
+                       :title="u.email"
+                       :style="{ animationDelay: `${0.2 + i * 0.05}s` }"
+                     >
+                       <div class="shared-pill-avatar">{{ getInitials(u.full_name || u.email) }}</div>
+                       <div class="shared-pill-info">
+                         <span class="shared-pill-name">{{ u.full_name || 'Unnamed' }}</span>
+                         <span class="shared-pill-email">{{ u.email }}</span>
+                       </div>
+                     </div>
+                   </template>
+                   <div v-else class="empty-row">
+                     <Users :size="14" class="empty-row-icon"/>
+                     <span>Not shared with anyone yet.</span>
+                   </div>
                  </div>
               </div>
-              
-              <div class="info-block fade-up mt-8" style="animation-delay: 0.3s">
-                 <h4>Ownership</h4>
+
+              <div class="info-block fade-up" style="animation-delay: 0.3s">
+                 <h4><Tag :size="13" class="info-block-icon"/> Tags</h4>
                  <div class="separator-line"></div>
-                 <div class="flex items-center gap-3 mt-4 bg-white/5 p-4 rounded-2xl border border-white/5 hover-lift relative overflow-hidden">
+                 <div class="tags-flex">
+                   <template v-if="selectedDoc.tags?.length">
+                     <span class="drawer-tag pop-in" v-for="(tag, i) in selectedDoc.tags" :key="tag" :style="{animationDelay: `${0.3 + i * 0.05}s`}">#{{ tag }}</span>
+                   </template>
+                   <div v-else class="empty-row">
+                     <Hash :size="14" class="empty-row-icon"/>
+                     <span>No tags attached.</span>
+                   </div>
+                 </div>
+              </div>
+
+              <div class="info-block fade-up" style="animation-delay: 0.4s">
+                 <h4><User :size="13" class="info-block-icon"/> Ownership</h4>
+                 <div class="separator-line"></div>
+                 <div class="ownership-card hover-lift">
                     <div class="owner-bg-glow"></div>
-                    <div class="avatar-micro" style="width:40px; height:40px; font-size:14px; z-index: 2;">{{ getInitials(selectedDoc.uploader_name) }}</div>
-                    <div class="flex flex-col z-[2]">
-                       <span class="text-sm font-medium text-white">{{ selectedDoc.uploader_name || 'System' }}</span>
-                       <span class="text-xs text-amber-500 mt-0.5">Owner / Uploader</span>
+                    <div class="ownership-avatar">{{ getInitials(selectedDoc.uploader_name) }}</div>
+                    <div class="ownership-info">
+                       <span class="ownership-name">{{ selectedDoc.uploader_name || 'System' }}</span>
+                       <span class="ownership-role">
+                         <ShieldCheck :size="11"/> Owner &middot; Uploader
+                       </span>
                     </div>
                  </div>
               </div>
@@ -352,7 +390,8 @@
            <button class="df-btn outline hover-amber pop-in" style="animation-delay: 0.2s" @click="toggleFavorite(selectedDoc)">
              <Star :size="16" :fill="selectedDoc.is_favorite ? 'currentColor' : 'none'" :class="{'text-amber-500': selectedDoc.is_favorite}"/> 
            </button>
-           <button class="df-btn outline hover-blue pop-in" style="animation-delay: 0.3s" @click="shareDocument(selectedDoc)" v-if="selectedDoc.status !== 'Pending Approval'">
+           <!-- Share is allowed even while Pending Approval; the backend defers notifications until admin approves. -->
+           <button class="df-btn outline hover-blue pop-in" style="animation-delay: 0.3s" @click="shareDocument(selectedDoc)">
              <Share2 :size="16"/> Share
            </button>
            <button class="df-btn primary hover-lift pop-in" style="animation-delay: 0.4s" @click="downloadFile(selectedDoc)">
@@ -387,6 +426,165 @@
             <button class="cmp-btn ghost hover-lift" @click="docToDelete = null">Cancel</button>
             <button class="cmp-btn delete-btn hover-lift" @click="executeDeleteDocument">Yes, Delete</button>
           </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- SHARE MODAL -->
+    <transition name="modal-spring">
+      <div class="custom-modal-backdrop share-backdrop" v-if="docToShare" @click.self="closeShareModal">
+        <div class="custom-modal-panel share-modal-v2">
+
+          <!-- Aura: subtle radial gradient bloom behind the panel -->
+          <div class="share-aura-glow" aria-hidden="true"></div>
+
+          <!-- HEADER -->
+          <header class="share-header inner-stagger-1">
+            <div class="share-icon-ring pop-in">
+              <Share2 :size="20" stroke-width="2"/>
+              <Sparkles :size="10" class="share-icon-spark"/>
+            </div>
+            <div class="share-title-block">
+              <div class="share-eyebrow">
+                <Send :size="10"/> <span>SHARE ACCESS</span>
+              </div>
+              <h3 class="share-title">Share Document</h3>
+              <p class="share-subtitle truncate-block">{{ docToShare.title }}</p>
+            </div>
+            <button class="share-close spin-hover" @click="closeShareModal">
+              <X :size="16"/>
+            </button>
+          </header>
+
+          <div class="share-divider"></div>
+
+          <!-- BODY -->
+          <div class="share-body custom-scroll inner-stagger-2">
+
+            <!-- Status hint pill -->
+            <div class="share-status-pill" :class="docToShare.status === 'Pending Approval' ? 'is-pending' : 'is-active'">
+              <template v-if="docToShare.status === 'Pending Approval'">
+                <ShieldAlert :size="13"/>
+                <span>Pending admin approval — recipients are notified after it's approved.</span>
+              </template>
+              <template v-else>
+                <CheckCircle2 :size="13"/>
+                <span>Recipients receive a notification immediately.</span>
+              </template>
+            </div>
+
+            <!-- Already-shared row (avatars) -->
+            <div class="share-section-block" v-if="alreadySharedUsers.length">
+              <div class="share-section-label">
+                <Users :size="12"/> <span>Already shared with</span>
+                <span class="share-count-pill">{{ alreadySharedUsers.length }}</span>
+              </div>
+              <div class="share-existing-stack">
+                <div
+                  class="share-existing-chip pop-in"
+                  v-for="(u, i) in alreadySharedUsers"
+                  :key="u.id"
+                  :style="{ animationDelay: `${i * 0.05}s` }"
+                  :title="u.email"
+                >
+                  <div class="usg-avatar share-chip-avatar">{{ getInitials(u.full_name || u.email) }}</div>
+                  <span>{{ (u.full_name || u.email).split(' ')[0] }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Search -->
+            <div class="share-section-block">
+              <div class="share-section-label">
+                <UserPlus :size="12"/> <span>Add people</span>
+              </div>
+              <div class="share-search-wrap-v2">
+                <Search :size="14" class="share-search-icon-v2"/>
+                <input
+                  type="text"
+                  v-model="shareSearchQuery"
+                  placeholder="Search by name or email…"
+                  class="share-search-input-v2"
+                />
+                <button
+                  v-if="shareSearchQuery"
+                  class="share-search-clear"
+                  @click="shareSearchQuery = ''"
+                  aria-label="Clear search"
+                >
+                  <X :size="13"/>
+                </button>
+              </div>
+            </div>
+
+            <!-- User grid -->
+            <div class="share-user-grid-v2 custom-scroll">
+              <div
+                class="share-user-card"
+                v-for="(user, i) in shareableUsers"
+                :key="user.id"
+                @click="toggleShareUser(user.id)"
+                :style="{ animationDelay: `${0.05 + i * 0.04}s` }"
+                :class="{
+                  active: shareSelectedUsers.includes(user.id),
+                  'is-existing': isAlreadyShared(user.id)
+                }"
+              >
+                <div class="suc-avatar">
+                  <span>{{ getInitials(user.full_name || user.email) }}</span>
+                </div>
+                <div class="suc-info">
+                  <div class="suc-name-row">
+                    <User :size="11"/>
+                    <span class="suc-name">{{ user.full_name || 'Unnamed User' }}</span>
+                  </div>
+                  <div class="suc-email-row">
+                    <Mail :size="10"/>
+                    <span class="suc-email">{{ user.email }}</span>
+                  </div>
+                </div>
+                <span v-if="isAlreadyShared(user.id)" class="suc-badge existing">
+                  <CheckCircle2 :size="10"/> Shared
+                </span>
+                <span v-else-if="shareSelectedUsers.includes(user.id)" class="suc-badge picked">
+                  <CheckCircle2 :size="12"/>
+                </span>
+                <span v-else class="suc-badge idle"><Plus :size="12"/></span>
+              </div>
+
+              <div v-if="!shareableUsers.length" class="share-empty">
+                <Users :size="32" stroke-width="1" class="opacity-30 mb-2"/>
+                <span>No users match "{{ shareSearchQuery }}"</span>
+              </div>
+            </div>
+
+            <div v-if="shareError" class="share-error-box slide-in-text">
+              <ShieldAlert :size="14" class="shrink-0 mt-0.5"/>
+              <span>{{ shareError }}</span>
+            </div>
+          </div>
+
+          <!-- FOOTER -->
+          <footer class="share-footer">
+            <div class="share-selection-summary" v-if="shareSelectedUsers.length">
+              <span class="share-sel-dot"></span>
+              <strong>{{ shareSelectedUsers.length }}</strong>
+              <span class="text-white/50">{{ shareSelectedUsers.length === 1 ? 'user' : 'users' }} selected</span>
+            </div>
+            <span v-else class="text-xs text-white/35 self-center mr-auto">Pick someone to share with…</span>
+
+            <button type="button" class="share-btn-ghost" @click="closeShareModal">Cancel</button>
+            <button
+              type="button"
+              class="share-btn-primary"
+              :disabled="!shareSelectedUsers.length || isSharing"
+              @click="executeShare"
+            >
+              <Loader2 v-if="isSharing" class="spin" :size="14"/>
+              <Share2 v-else :size="14"/>
+              <span>{{ isSharing ? 'Sharing…' : (shareSelectedUsers.length ? `Share with ${shareSelectedUsers.length}` : 'Share') }}</span>
+            </button>
+          </footer>
         </div>
       </div>
     </transition>
@@ -445,25 +643,25 @@
                 </div>
                 
                 <div class="fg-item">
-                  <label>Category</label>
-                  <CustomSelect 
-                    v-model="uploadForm.category" 
-                    :options="[{value:'Finance', label:'Finance'}, {value:'Legal', label:'Legal'}, {value:'Compliance', label:'Compliance'}, {value:'HR', label:'HR'}, {value:'Project', label:'Project'}, {value:'Other', label:'Other'}]" 
+                  <label>Category <span class="text-red-500">*</span></label>
+                  <CustomSelect
+                    v-model="uploadForm.category"
+                    :options="[{value:'Finance', label:'Finance'}, {value:'Legal', label:'Legal'}, {value:'Compliance', label:'Compliance'}, {value:'HR', label:'HR'}, {value:'Project', label:'Project'}, {value:'Other', label:'Other'}]"
                     labelKey="label" valueKey="value"
                   />
                 </div>
 
                 <div class="fg-item">
-                  <label>Access Level</label>
-                  <CustomSelect 
-                    v-model="uploadForm.access_level" 
-                    :options="[{value:'Private', label:'Private'}, {value:'User', label:'User'}, {value:'Organization', label:'Organization'}]" 
+                  <label>Access Level <span class="text-red-500">*</span></label>
+                  <CustomSelect
+                    v-model="uploadForm.access_level"
+                    :options="[{value:'Private', label:'Private'}, {value:'User', label:'User'}, {value:'Organization', label:'Organization'}]"
                     labelKey="label" valueKey="value"
                   />
                 </div>
-                
+
                 <div class="fg-item full-width" v-if="uploadForm.access_level === 'User'">
-                  <label>Select Users to Share With</label>
+                  <label>Select Users to Share With <span class="text-red-500">*</span></label>
                   <div class="user-select-grid custom-scroll mt-2">
                     <div class="usg-item slide-in-text" v-for="(user, i) in usersList" :key="user.id" 
                          @click="toggleSharedUser(user.id)"
@@ -529,7 +727,8 @@ import {
   LayoutGrid, Clock, Star, Trash2, UploadCloud, FileText, HardDrive, Share2,
   Search, Grid, List, ShieldAlert, Download, X, File, Image as ImageIcon,
   Film, Music, Archive, RefreshCcw, Loader2, FolderOpen, ChevronLeft, ChevronRight,
-  ShieldCheck, Users, MoreHorizontal, Calendar, Bell, ArrowRight, ChevronDown, ArrowDown, Plus, CheckCircle2
+  ShieldCheck, Users, MoreHorizontal, Calendar, Bell, ArrowRight, ChevronDown, ArrowDown, Plus, CheckCircle2,
+  Lock, Globe, User, Mail, FileType2, Tag, Hash, Info, Layers, Sparkles, Send, UserPlus
 } from 'lucide-vue-next'
 import CustomSelect from '../../components/ui/CustomSelect.vue'
 import axios from 'axios'
@@ -614,7 +813,7 @@ const uploadFile = ref(null)
 const isUploading = ref(false)
 const uploadError = ref('')
 const uploadForm = ref({
-  title: '', category: 'Other', description: '', tags: '',
+  title: '', category: '', description: '', tags: '',
   access_level: 'Private', is_confidential: false, shared_with: []
 })
 
@@ -623,8 +822,20 @@ const selectedDoc = ref(null)
 const drawerTab = ref('info')
 const docActivities = ref([])
 
+// SHARE MODAL
+const docToShare = ref(null)
+const shareSelectedUsers = ref([])
+const shareSearchQuery = ref('')
+const shareError = ref('')
+const isSharing = ref(false)
+
 // API 
-const getToken = () => localStorage.getItem('user_token') || localStorage.getItem('admin_token')
+// Route-aware: admin portal must use admin_token, user portal must use user_token.
+// Falling back to either-or caused admin pages to read user_token (since user logins
+// often happen first), so the admin appeared to see only that user's files.
+const getToken = () => isAdminRoute.value
+  ? (localStorage.getItem('admin_token') || localStorage.getItem('user_token'))
+  : (localStorage.getItem('user_token') || localStorage.getItem('admin_token'))
 
 const fetchStats = async () => {
   try {
@@ -797,8 +1008,85 @@ const downloadFile = async (doc) => {
   } catch (e) {}
 }
 
+// Open the share modal. Only the uploader or an admin can share — but we still show
+// the modal for any user; the backend rejects with 403 if they're not authorized.
 const shareDocument = (doc) => {
-  alert("Share functionality will be implemented in the upcoming Sprint!")
+  if (!doc) return
+  docToShare.value = doc
+  shareSelectedUsers.value = []
+  shareSearchQuery.value = ''
+  shareError.value = ''
+}
+
+const closeShareModal = () => {
+  docToShare.value = null
+  shareSelectedUsers.value = []
+  shareSearchQuery.value = ''
+  shareError.value = ''
+}
+
+// Already-shared user ids (string compare; backend stores them as strings).
+const isAlreadyShared = (userId) =>
+  Array.isArray(docToShare.value?.shared_with) &&
+  docToShare.value.shared_with.includes(userId)
+
+// Toggle a user in the selection. Already-shared users are not toggleable.
+const toggleShareUser = (userId) => {
+  if (isAlreadyShared(userId)) return
+  const idx = shareSelectedUsers.value.indexOf(userId)
+  if (idx === -1) shareSelectedUsers.value.push(userId)
+  else shareSelectedUsers.value.splice(idx, 1)
+}
+
+// Filtered, owner-excluded list driving the modal grid.
+const shareableUsers = computed(() => {
+  if (!docToShare.value) return []
+  const ownerId = docToShare.value.uploaded_by
+  const q = shareSearchQuery.value.trim().toLowerCase()
+  return usersList.value
+    .filter(u => u.id !== ownerId)
+    .filter(u => !q ||
+      (u.full_name || '').toLowerCase().includes(q) ||
+      (u.email || '').toLowerCase().includes(q))
+})
+
+// Hydrated list of users this doc has already been shared with (for header chips & drawer).
+const alreadySharedUsers = computed(() => {
+  const ids = docToShare.value?.shared_with || []
+  if (!Array.isArray(ids) || !ids.length) return []
+  return usersList.value.filter(u => ids.includes(u.id))
+})
+
+// Same hydration but for the selected drawer doc.
+const drawerSharedUsers = computed(() => {
+  const ids = selectedDoc.value?.shared_with || []
+  if (!Array.isArray(ids) || !ids.length) return []
+  return usersList.value.filter(u => ids.includes(u.id))
+})
+
+const executeShare = async () => {
+  if (!docToShare.value || !shareSelectedUsers.value.length) return
+  isSharing.value = true
+  shareError.value = ''
+  try {
+    const res = await axios.post(
+      `http://localhost:8000/api/drive/documents/${docToShare.value.id}/share`,
+      { user_ids: shareSelectedUsers.value },
+      { headers: { Authorization: `Bearer ${getToken()}` } }
+    )
+    // Update the local doc & drawer cache so the "Already shared" labels reflect immediately.
+    if (docToShare.value) docToShare.value.shared_with = res.data.shared_with || []
+    if (selectedDoc.value && selectedDoc.value.id === docToShare.value.id) {
+      selectedDoc.value.shared_with = res.data.shared_with || []
+    }
+    toastSuccess(`Shared with ${res.data.added_count} user(s).`)
+    closeShareModal()
+    fetchDocuments()
+  } catch (e) {
+    shareError.value = e.response?.data?.detail || 'Share failed.'
+  } finally {
+    isSharing.value = false
+  }
 }
 
 const openDocDetails = (doc) => { 
@@ -828,8 +1116,17 @@ const toggleSharedUser = (userId) => {
 
 const handleUpload = async () => {
   if (!uploadFile.value) return
+
+  // Mandatory metadata gates (mirrors backend validation in drive.py /upload)
+  if (!uploadForm.value.title?.trim())       return uploadError.value = 'Title is required.'
+  if (!uploadForm.value.category)            return uploadError.value = 'Category is required.'
+  if (!uploadForm.value.access_level)        return uploadError.value = 'Access level is required.'
+  if (uploadForm.value.access_level === 'User' && uploadForm.value.shared_with.length === 0) {
+    return uploadError.value = 'Select at least one user to share with.'
+  }
+  uploadError.value = ''
   isUploading.value = true
-  
+
   const formData = new FormData()
   formData.append('file', uploadFile.value)
   formData.append('title', uploadForm.value.title)
@@ -840,14 +1137,14 @@ const handleUpload = async () => {
   if (uploadForm.value.access_level === 'User' && uploadForm.value.shared_with.length > 0) {
       formData.append('shared_with', uploadForm.value.shared_with.join(','))
   }
-  
+
   try {
     await axios.post('http://localhost:8000/api/drive/upload', formData, {
       headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'multipart/form-data' }
     })
     showUploadModal.value = false
     uploadFile.value = null
-    uploadForm.value = { title: '', category: 'Other', description: '', tags: '', access_level: 'Private', is_confidential: false }
+    uploadForm.value = { title: '', category: '', description: '', tags: '', access_level: 'Private', is_confidential: false, shared_with: [] }
     fetchStats()
     fetchDocuments()
   } catch (error) {
@@ -874,6 +1171,20 @@ const formatTimeAgo = (dateStr) => {
 }
 const getInitials = (name) => name ? name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'
 const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : ''
+
+// Access-level-aware ribbon (shown above the file preview in the detail drawer)
+const ribbonLabel = (d) => {
+  if (d.status === 'Pending Approval') return 'Pending Admin Approval'
+  if (d.is_confidential)               return 'Confidential'
+  return d.access_level === 'Private' ? 'Private — Owner & Admin only'
+       : d.access_level === 'User'    ? 'Shared with selected users'
+       :                                'Visible to organization'
+}
+const ribbonClass = (d) =>
+  d.is_confidential                ? 'text-red-500'
+  : d.access_level === 'Private'   ? 'al-private'
+  : d.access_level === 'User'      ? 'al-user'
+  :                                  'al-org'
 const getFileIcon = (type) => {
   switch (type) {
     case 'pdf': return FileText; case 'document': return FileText; case 'spreadsheet': return LayoutGrid;
@@ -894,15 +1205,15 @@ onMounted(() => { fetchStats(); fetchDocuments(); fetchUsers() })
 <style scoped>
 /* ELEGANT, UN-CLUSTERED, PREMIUM DARK THEME */
 .drive-os-container {
-  height: 100vh; width: 100%;
-  background: transparent; 
+  min-height: calc(100vh - 52px); width: 100%;
+  background: transparent;
   color: #f5f5f7;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .drive-os-layout {
-  display: flex; height: 100%;
+  display: flex; min-height: 100%;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -1019,7 +1330,7 @@ onMounted(() => { fetchStats(); fetchDocuments(); fetchUsers() })
 .search-omni input::placeholder { color: rgba(255,255,255,0.3); }
 .search-kbd { font-size: 11px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 6px; color: rgba(255,255,255,0.5); font-family: 'SF Mono', monospace; font-weight: 600;}
 
-.scrollable-viewport { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 48px; padding-right: 16px; padding-bottom: 40px; }
+.scrollable-viewport { flex: 1; display: flex; flex-direction: column; gap: 48px; padding-right: 16px; padding-bottom: 40px; }
 
 .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .section-header h3 { font-size: 20px; font-weight: 600; color: #fff; margin: 0; letter-spacing: -0.02em; }
@@ -1156,11 +1467,27 @@ onMounted(() => { fetchStats(); fetchDocuments(); fetchUsers() })
 .drawer-footer { display: flex; gap: 12px; padding: 24px 32px; border-top: 1px solid #27272a; background: #0a0a0a; z-index: 10; position: relative;}
 .df-btn { position: relative; overflow: hidden; flex: 1; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; }
 .df-btn.primary { background: #f5f5f7; color: #000; }
-.df-btn.outline { background: #18181b; border: 1px solid #27272a; color: #f4f4f5; flex: 0 0 50px; }
+.df-btn.outline { background: #18181b; border: 1px solid #27272a; color: #f4f4f5; flex: 0 0 auto; padding: 12px 18px; }
 .df-btn.outline:hover { background: #27272a; }
 
+/* Access-level color tokens (brand: --accent-danger / --accent-noir / --accent-emerald) */
+.al-private { color: #ff453a; }
+.al-user    { color: #0a84ff; }
+.al-org     { color: #00d95f; }
+.al-pill {
+  display: inline-flex; align-items: center;
+  padding: 2px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+  border: 1px solid currentColor;
+}
+.al-pill.al-private      { color: #ff453a; background: rgba(255, 69, 58, 0.10); }
+.al-pill.al-user         { color: #0a84ff; background: rgba(10, 132, 255, 0.10); }
+.al-pill.al-organization { color: #00d95f; background: rgba(0, 217, 95, 0.10); }
+
 /* --- MODAL COMPACT (Transparent Glassmorphic Design) --- */
-.custom-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+/* z-index 2000 keeps confirmation/upload/share modals above the drawer (z-index 1010) — without this, clicking
+   "Delete" inside the drawer rendered the confirmation behind the drawer panel and looked like nothing happened. */
+.custom-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .compact-modal { max-width: 460px; width: 100%; max-height: 85vh; border-radius: 20px; display: flex; flex-direction: column; background: rgba(30, 30, 30, 0.65) !important; backdrop-filter: blur(50px) saturate(200%); -webkit-backdrop-filter: blur(50px) saturate(200%); border: 1px solid rgba(255, 255, 255, 0.15); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
 
 .cmp-header { display: flex; align-items: center; gap: 16px; padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -1306,4 +1633,397 @@ onMounted(() => { fetchStats(); fetchDocuments(); fetchUsers() })
 .dm-actions .cmp-btn { flex: 1; padding: 14px; }
 .delete-btn { background: #ef4444; color: #fff; border: none; }
 .delete-btn:hover { background: #dc2626; }
+
+/* ============================================================
+   SHARE MODAL — Premium glassmorphic, amber/orange palette
+   Tokens used:
+     --amber-500: #f59e0b   --amber-400: #fbbf24
+     --orange-500: #f97316  --gold: #ffb900
+   ============================================================ */
+.share-backdrop { background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%); }
+.share-modal-v2 {
+  position: relative;
+  width: 100%; max-width: 540px; max-height: 88vh;
+  border-radius: 24px; overflow: hidden;
+  display: flex; flex-direction: column;
+  /* Neutral dark glass — orange/amber stays on inner accents only */
+  background: linear-gradient(180deg, rgba(20, 20, 22, 0.62) 0%, rgba(12, 12, 14, 0.72) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04) inset;
+  backdrop-filter: blur(48px) saturate(180%);
+  -webkit-backdrop-filter: blur(48px) saturate(180%);
+  animation: share-modal-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes share-modal-pop {
+  0% { opacity: 0; transform: translateY(14px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.share-aura-glow {
+  /* Subtle accent on the corners only — keeps the panel neutral while hinting at brand */
+  position: absolute; inset: -1px; pointer-events: none; z-index: 0; border-radius: inherit;
+  background:
+    radial-gradient(40% 50% at 0% 0%, rgba(245, 158, 11, 0.06), transparent 70%),
+    radial-gradient(40% 50% at 100% 100%, rgba(249, 115, 22, 0.04), transparent 70%);
+}
+
+/* HEADER */
+.share-header {
+  position: relative; z-index: 1;
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 22px 24px 16px;
+}
+.share-icon-ring {
+  position: relative; flex-shrink: 0;
+  width: 46px; height: 46px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(249, 115, 22, 0.16));
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  color: #fbbf24;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.20), 0 0 0 4px rgba(245, 158, 11, 0.04);
+}
+.share-icon-spark {
+  position: absolute; top: -4px; right: -4px; color: #ffb900;
+  filter: drop-shadow(0 0 6px rgba(255, 185, 0, 0.7));
+  animation: share-spark 2.2s ease-in-out infinite;
+}
+@keyframes share-spark {
+  0%, 100% { opacity: 0.4; transform: scale(0.85) rotate(0deg); }
+  50%      { opacity: 1;   transform: scale(1.1)  rotate(15deg); }
+}
+.share-title-block { flex: 1; min-width: 0; }
+.share-eyebrow {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 9px; letter-spacing: 0.18em; font-weight: 700;
+  color: #fbbf24; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px;
+  background: rgba(245, 158, 11, 0.10); border: 1px solid rgba(245, 158, 11, 0.20);
+  margin-bottom: 6px;
+}
+.share-title { font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 2px; letter-spacing: -0.01em; }
+.share-subtitle { font-size: 12px; color: rgba(255,255,255,0.45); max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.share-close {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.55); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
+}
+.share-close:hover { background: rgba(255,255,255,0.10); color: #fff; transform: rotate(90deg); }
+.share-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.10), transparent);
+  margin: 0 24px;
+}
+
+/* BODY */
+.share-body { position: relative; z-index: 1; padding: 18px 24px 4px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+.share-status-pill {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 12px;
+  font-size: 12px; line-height: 1.45;
+  animation: share-fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.share-status-pill.is-active { background: rgba(0, 217, 95, 0.06); border: 1px solid rgba(0, 217, 95, 0.18); color: #c5e1c2; }
+.share-status-pill.is-active svg { color: #00d95f; flex-shrink: 0; }
+.share-status-pill.is-pending { background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.22); color: #fde9c4; }
+.share-status-pill.is-pending svg { color: #f59e0b; flex-shrink: 0; }
+@keyframes share-fade-up {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.share-section-block { display: flex; flex-direction: column; gap: 8px; animation: share-fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.share-section-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(245, 158, 11, 0.85);
+}
+.share-section-label svg { color: #f59e0b; }
+.share-count-pill {
+  margin-left: 4px;
+  font-size: 10px; font-weight: 700;
+  padding: 1px 7px; border-radius: 999px;
+  background: rgba(245, 158, 11, 0.18); color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  letter-spacing: 0;
+}
+
+.share-existing-stack { display: flex; flex-wrap: wrap; gap: 6px; }
+.share-existing-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 10px 5px 5px; border-radius: 999px;
+  background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.22);
+  font-size: 11px; font-weight: 600; color: #fde9c4;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.share-existing-chip:hover { background: rgba(245, 158, 11, 0.14); transform: translateY(-1px); border-color: rgba(245, 158, 11, 0.35); }
+.share-chip-avatar { width: 22px; height: 22px; font-size: 9px; background: rgba(245, 158, 11, 0.30); color: #1a1208; border: 1px solid rgba(245, 158, 11, 0.40); }
+
+/* SEARCH */
+.share-search-wrap-v2 { position: relative; }
+.share-search-icon-v2 { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: rgba(245, 158, 11, 0.55); pointer-events: none; }
+.share-search-input-v2 {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.30);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px; padding: 12px 38px 12px 38px; color: #fff; font-size: 13px;
+  transition: all 0.25s ease;
+}
+.share-search-input-v2::placeholder { color: rgba(255,255,255,0.28); }
+.share-search-input-v2:focus {
+  outline: none; border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.04);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08);
+}
+.share-search-clear {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.5); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s ease;
+}
+.share-search-clear:hover { background: rgba(245, 158, 11, 0.20); color: #fff; }
+
+/* USER GRID */
+.share-user-grid-v2 {
+  display: flex; flex-direction: column; gap: 8px;
+  max-height: 260px; overflow-y: auto; padding-right: 4px;
+}
+.share-user-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: share-fade-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  position: relative; overflow: hidden;
+}
+.share-user-card::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0));
+  transition: background 0.3s ease;
+}
+.share-user-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(245, 158, 11, 0.25);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+.share-user-card:hover::before { background: linear-gradient(135deg, rgba(245, 158, 11, 0.04), rgba(249, 115, 22, 0.02)); }
+.share-user-card.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(249, 115, 22, 0.08));
+  border-color: rgba(245, 158, 11, 0.50);
+  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.12), 0 0 0 1px rgba(245, 158, 11, 0.25) inset;
+}
+.share-user-card.is-existing { opacity: 0.55; cursor: not-allowed; }
+.share-user-card.is-existing:hover { transform: none; border-color: rgba(0, 217, 95, 0.18); background: rgba(0, 217, 95, 0.03); }
+
+.suc-avatar {
+  flex-shrink: 0; width: 38px; height: 38px; border-radius: 11px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #d4d4d8;
+  transition: all 0.3s ease;
+}
+.share-user-card.active .suc-avatar {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #1a1208; border-color: rgba(255, 255, 255, 0.20);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.30);
+}
+.suc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.suc-name-row, .suc-email-row { display: flex; align-items: center; gap: 6px; }
+.suc-name-row svg { color: rgba(245, 158, 11, 0.6); flex-shrink: 0; }
+.suc-email-row svg { color: rgba(255,255,255,0.30); flex-shrink: 0; }
+.suc-name { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.2; }
+.suc-email { font-size: 11px; color: rgba(255,255,255,0.42); line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.suc-badge {
+  flex-shrink: 0; min-width: 26px; height: 26px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 0 8px; border-radius: 8px; font-size: 10px; font-weight: 700;
+  transition: all 0.2s ease;
+}
+.suc-badge.idle { background: transparent; border: 1px dashed rgba(255,255,255,0.12); color: rgba(255,255,255,0.35); }
+.share-user-card:hover .suc-badge.idle { border-color: rgba(245, 158, 11, 0.35); color: rgba(245, 158, 11, 0.75); }
+.suc-badge.picked { background: linear-gradient(135deg, #f59e0b, #f97316); color: #1a1208; border: none; box-shadow: 0 3px 10px rgba(245, 158, 11, 0.30); animation: suc-bounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.suc-badge.existing { background: rgba(0, 217, 95, 0.12); color: #00d95f; border: 1px solid rgba(0, 217, 95, 0.30); }
+@keyframes suc-bounce { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+.share-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 36px 0; color: rgba(255,255,255,0.30); font-size: 12px;
+}
+
+.share-error-box {
+  display: flex; gap: 10px; padding: 12px 14px; border-radius: 12px;
+  background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.24);
+  color: #fda4a4; font-size: 12px; line-height: 1.45;
+}
+.share-error-box svg { color: #ef4444; }
+
+/* FOOTER */
+.share-footer {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 24px 22px; border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.20);
+}
+.share-selection-summary {
+  display: inline-flex; align-items: center; gap: 6px; margin-right: auto;
+  font-size: 12px; color: rgba(255,255,255,0.85);
+  padding: 6px 12px; border-radius: 999px;
+  background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.20);
+}
+.share-sel-dot { width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; box-shadow: 0 0 8px rgba(245, 158, 11, 0.8); animation: share-pulse 1.4s ease-in-out infinite; }
+@keyframes share-pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.7); } }
+.share-selection-summary strong { color: #fbbf24; font-weight: 700; }
+
+.share-btn-ghost {
+  padding: 10px 18px; border-radius: 12px; font-size: 13px; font-weight: 600;
+  background: transparent; border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.65);
+  cursor: pointer; transition: all 0.2s ease;
+}
+.share-btn-ghost:hover { background: rgba(255,255,255,0.04); color: #fff; border-color: rgba(255,255,255,0.18); }
+.share-btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  color: #1a1208; border: none; cursor: pointer;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.30), 0 0 0 1px rgba(255,255,255,0.10) inset;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.share-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px rgba(245, 158, 11, 0.42), 0 0 0 1px rgba(255,255,255,0.18) inset;
+}
+.share-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+/* ============================================================
+   DRAWER REFINEMENTS — transparency, icons, shared-with stack
+   ============================================================ */
+.transparent-drawer {
+  /* Truly transparent glass — backdrop-filter does the heavy lifting */
+  background: linear-gradient(180deg, rgba(14, 14, 16, 0.45) 0%, rgba(8, 8, 10, 0.55) 100%) !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.06) !important;
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  box-shadow: -24px 0 60px rgba(0,0,0,0.6), inset 1px 0 0 rgba(255,255,255,0.04) !important;
+}
+.drawer-header {
+  background: rgba(10, 10, 10, 0.30) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(20px);
+}
+.drawer-footer {
+  background: rgba(10, 10, 10, 0.30) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(20px);
+}
+
+/* Inline icon next to info-block headings */
+.info-block h4 { display: flex; align-items: center; gap: 8px; color: #fbbf24; }
+.info-block-icon { color: #f59e0b; flex-shrink: 0; }
+
+/* Real spacing between sibling info-blocks (Tailwind .mt-8 was a no-op — no Tailwind in this project) */
+.info-block + .info-block { margin-top: 28px; }
+
+/* ib-label gets a subtle icon prefix */
+.ib-label { display: inline-flex; align-items: center; gap: 6px; }
+.ib-label svg { color: rgba(245, 158, 11, 0.55); flex-shrink: 0; }
+
+/* Empty-state row (used by Tags & Shared With when no items) */
+.empty-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  font-size: 12px; color: rgba(255, 255, 255, 0.40);
+  margin-top: 12px;
+}
+.empty-row .empty-row-icon { color: rgba(245, 158, 11, 0.40); flex-shrink: 0; }
+
+/* Shared-with stack inside drawer */
+.shared-with-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.shared-user-pill {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 12px;
+  background: rgba(245, 158, 11, 0.05);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.shared-user-pill:hover {
+  background: rgba(245, 158, 11, 0.10);
+  border-color: rgba(245, 158, 11, 0.32);
+  transform: translateX(3px);
+}
+.shared-pill-avatar {
+  flex-shrink: 0;
+  width: 34px; height: 34px; border-radius: 10px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #1a1208;
+  border: 1px solid rgba(245, 158, 11, 0.40);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+}
+.shared-pill-info {
+  display: flex; flex-direction: column;
+  min-width: 0; flex: 1;
+  gap: 1px;
+}
+.shared-pill-name {
+  font-size: 13px; font-weight: 600; color: #fff;
+  line-height: 1.2;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.shared-pill-email {
+  font-size: 11px; color: rgba(255, 255, 255, 0.40);
+  line-height: 1.2;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Ownership block — premium, real CSS (replaces broken Tailwind classes) */
+.ownership-card {
+  position: relative; overflow: hidden;
+  display: flex; align-items: center; gap: 14px;
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.06), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(245, 158, 11, 0.16);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ownership-card:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(255, 255, 255, 0.04));
+  border-color: rgba(245, 158, 11, 0.30);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.30);
+}
+.ownership-avatar {
+  flex-shrink: 0; position: relative; z-index: 2;
+  width: 44px; height: 44px; border-radius: 12px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #1a1208;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.25);
+}
+.ownership-info {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; gap: 4px;
+  min-width: 0; flex: 1;
+}
+.ownership-name {
+  font-size: 14px; font-weight: 600; color: #fff;
+  line-height: 1.2;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ownership-role {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; color: #fbbf24;
+  letter-spacing: 0.02em;
+}
+.ownership-role svg { color: #f59e0b; }
 </style>

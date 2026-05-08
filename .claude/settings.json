@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"C:\\\\Projects\\\\FourConnectService\\\\storage\\\\\" 2>&1 | head -20; echo \"---\"; ls \"C:\\\\Projects\\\\FourConnectService\\\\storage\\\\drive\\\\\" 2>&1 | head -30; echo \"---OLD---\"; ls \"C:\\\\Users\\\\91700\\\\.gemini\\\\antigravity\\\\playground\\\\scarlet-halo\\\\backend\\\\storage\\\\\" 2>&1 | head -30)",
+      "Read(//c/Users/91700/.gemini/antigravity/playground/scarlet-halo/backend/**)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Projects\\\\FourConnectService\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Projects\\\\FourConnect\\\\\" -Name)",
+      "Bash(grep -E \"\\\\.\\(js|ts|vue\\)$\")",
+      "PowerShell($src = \"C:\\\\Users\\\\91700\\\\.gemini\\\\antigravity\\\\playground\\\\scarlet-halo\\\\backend\\\\storage\"; $dst = \"C:\\\\Projects\\\\FourConnectService\\\\storage\"; foreach \\($f in 'DPR','Tasks','expenses','notes','payment_documents','payment_receipts','project_orders'\\) { if \\(Test-Path \"$src\\\\$f\"\\) { Copy-Item -Recurse -Force \"$src\\\\$f\" \"$dst\\\\$f\"; Write-Host \"Copied: $f\" } else { New-Item -ItemType Directory -Force -Path \"$dst\\\\$f\" | Out-Null; Write-Host \"Created empty: $f\" } }; Write-Host \"---\"; Get-ChildItem $dst | Select-Object Name, Mode | Format-Table -AutoSize)",
+      "PowerShell(& \"C:\\\\Users\\\\91700\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe\" -c \"import sys; sys.path.insert\\(0, r'C:\\\\Projects\\\\FourConnectService'\\); from app.routers import drive; print\\('drive.py OK'\\); print\\('Has _apply_access_filter:', hasattr\\(drive, '_apply_access_filter'\\)\\)\")"
+    ]
+  }
+}

@@ -5,7 +5,23 @@
       "PowerShell(& \"C:\\\\Users\\\\91700\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe\" --version)",
       "Bash(ls /c/Projects/FourConnectService/)",
       "Read(//c/Projects/FourConnectService//**)",
-      "PowerShell($res = curl.exe -s -o NUL -w \"%{http_code}\" http://localhost:8000/health 2>&1; if \\($res -eq \"200\"\\) { Write-Host \"Backend is running on :8000 - reload should auto-pick up changes\" } else { Write-Host \"Backend not currently responding \\(code: $res\\). Start with: cd C:\\\\Projects\\\\FourConnectService; & 'C:\\\\Users\\\\91700\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe' -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000\" })"
+      "PowerShell($res = curl.exe -s -o NUL -w \"%{http_code}\" http://localhost:8000/health 2>&1; if \\($res -eq \"200\"\\) { Write-Host \"Backend is running on :8000 - reload should auto-pick up changes\" } else { Write-Host \"Backend not currently responding \\(code: $res\\). Start with: cd C:\\\\Projects\\\\FourConnectService; & 'C:\\\\Users\\\\91700\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe' -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000\" })",
+      "PowerShell(Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { $_.CommandLine -match 'uvicorn' } | Select-Object ProcessId, ParentProcessId, CreationDate | Format-Table -AutoSize)",
+      "PowerShell(Stop-Process -Id 33632, 10100, 33320 -Force -ErrorAction SilentlyContinue)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8000/health)",
+      "PowerShell(curl.exe -s -o NUL -w \"GET /health      = %{http_code}`n\" http://localhost:8000/health)",
+      "PowerShell(curl.exe -s -o NUL -w \"GET /api/docs    = %{http_code}`n\" http://localhost:8000/api/docs)",
+      "PowerShell(curl.exe -s -o NUL -w \"GET /api/drive/recent \\(no auth\\)  = %{http_code}`n\" \"http://localhost:8000/api/drive/recent?limit=1\")",
+      "PowerShell(curl.exe -s -o NUL -w \"POST /api/drive/upload \\(no auth\\) = %{http_code}`n\" -X POST \"http://localhost:8000/api/drive/upload\")",
+      "PowerShell(cd C:\\\\Projects\\\\FourConnect; if \\(-not \\(Test-Path node_modules\\)\\) { Write-Host \"Installing deps...\"; npm install --silent 2>&1 | Out-Null }; Write-Host \"Running production build...\"; npm run build 2>&1 | Select-Object -Last 30)",
+      "PowerShell(netstat -ano | findstr LISTENING | findstr \":517\"; Write-Host \"---\"; Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -match 'vite' } | Select-Object ProcessId, CommandLine | Format-List; Write-Host \"---\"; netstat -ano | findstr LISTENING | findstr \":8000\")",
+      "PowerShell(Stop-Process -Id 32184, 19076 -Force -ErrorAction SilentlyContinue)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(find /c/Projects -path \"*/frontend/*\" -name \"*.tsx\" -o -path \"*/frontend/*\" -name \"*.ts\" | grep -i \"document\\\\|drive\" | head -20)",
+      "Read(//c/Projects/**)",
+      "PowerShell(Get-NetTCPConnection -LocalPort 8000 -State Listen | Select-Object OwningProcess; Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { $_.CommandLine -match 'uvicorn' } | Select-Object ProcessId, CreationDate | Format-Table -AutoSize)",
+      "PowerShell($body = '{\"email\":\"mudasar@fourreck.com\",\"password\":\"password123\"}'; $login = curl.exe -s -X POST -H \"Content-Type: application/json\" -d $body http://localhost:8000/api/auth/login; Write-Host \"LOGIN RESPONSE \\(first 500 chars\\):\"; Write-Host $login.Substring\\(0, [Math]::Min\\(500, $login.Length\\)\\))",
+      "PowerShell($body = @{email='mudasar@fourreck.com'; password='@Er5ty2w'} | ConvertTo-Json -Compress; try { $r = Invoke-RestMethod -Method POST -Uri http://localhost:8000/api/auth/login -ContentType 'application/json' -Body $body; Write-Host \"is_superuser: $\\($r.is_superuser\\)\"; $env:MUD_TOKEN = $r.access_token; Write-Host \"Token cached \\(first 20\\): $\\($env:MUD_TOKEN.Substring\\(0,20\\)\\)...\" } catch { Write-Host \"Login failed: $\\($_.Exception.Message\\)\"; if \\($_.ErrorDetails.Message\\) { Write-Host $_.ErrorDetails.Message } }; Write-Host \"--- /api/drive/recent ---\"; try { Invoke-RestMethod -Method GET -Uri \"http://localhost:8000/api/drive/recent?limit=10\" -Headers @{Authorization=\"Bearer $env:MUD_TOKEN\"} | ConvertTo-Json -Depth 3 } catch { Write-Host \"Recent failed: $\\($_.Exception.Message\\)\"; if \\($_.ErrorDetails.Message\\) { Write-Host $_.ErrorDetails.Message } })"
     ],
     "additionalDirectories": [
       "C:\\Projects\\FourConnectService\\app"

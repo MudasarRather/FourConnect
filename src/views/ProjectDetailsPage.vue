@@ -1,0 +1,777 @@
+<template>
+  <div class="project-details-page">
+    <!-- Loading State -->
+    <div v-if="isLoading" class="page-loading">
+      <Loader2 :size="32" class="spinner" />
+      <p>Loading Project Details...</p>
+    </div>
+
+    <!-- Access Denied State -->
+    <div v-else-if="errorState" class="error-container">
+      <div class="access-card">
+         <div class="icon-circle">
+           <ShieldAlert :size="40" class="text-rose-500" />
+         </div>
+         <h2>Access Restricted</h2>
+         <p>"{{ errorState }}"</p>
+         
+         <div class="actions">
+            <button class="btn-secondary" @click="$router.push(backPath)">
+              <ArrowLeft :size="16" /> Go Back
+            </button>
+         </div>
+      </div>
+    </div>
+
+    <!-- Project Expired Restricted View -->
+    <div v-else-if="isProjectExpired && !isAdmin" class="expiry-overlay">
+      <div class="premium-expiry-card">
+         <div class="expired-icon-box">
+           <Clock :size="48" stroke-width="1.5" class="icon-mono" />
+         </div>
+         <div class="expiry-content">
+            <h2 class="premium-title">Project Expired</h2>
+            <p class="premium-subtitle">Timeline Concluded</p>
+            <div class="expiry-divider"></div>
+            <p class="expiry-description">
+              The professional timeline for this project has reached its conclusion. 
+              Further modifications and milestone creation are currently restricted.
+            </p>
+         </div>
+         
+         <div class="expiry-actions">
+            <button class="btn-premium-back" @click="$router.push(backPath)">
+              <ArrowLeft :size="16" /> Return to Projects
+            </button>
+         </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div v-else class="content-wrapper">
+      <!-- Breadcrumb / Back -->
+      <nav class="breadcrumb">
+        <button class="btn-text" @click="$router.push(backPath)">
+          <ArrowLeft :size="16" />
+          Back to Projects
+        </button>
+      </nav>
+
+      <!-- Page Header -->
+      <header class="page-header">
+        <div class="header-main">
+          <div class="title-row">
+             <div class="project-icon">
+               <Briefcase :size="24" />
+             </div>
+             <div>
+               <h1 class="page-title">{{ project.name }}</h1>
+               <div class="meta-row">
+                 <span class="code">{{ project.code }}</span>
+                 <span class="dot">•</span>
+                 <span class="status-badge" :class="project.status?.toLowerCase().replace(' ', '-')">
+                   {{ project.status }}
+                 </span>
+               </div>
+             </div>
+          </div>
+          
+          <!-- Completed Watermark -->
+          <div v-if="project.completion_percentage >= 100" class="completed-watermark">
+             <div class="watermark-content">
+               <Check :size="16" stroke-width="3" />
+               <span>COMPLETED</span>
+             </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Two Column Layout -->
+      <div class="details-grid">
+        <!-- Main Column -->
+        <main class="main-column">
+          
+
+
+          <!-- Milestones Section -->
+          <MilestoneList 
+            :milestones="milestones" 
+            :loading="milestonesLoading"
+            :can-create="canCreateMilestone"
+            :can-edit="canEdit"
+            @create="showCreateMilestone = true"
+            @select="handleMilestoneSelect"
+            @refresh="fetchProjectDetails"
+          />
+
+
+
+        </main>
+
+        <!-- Sidebar Column -->
+        <aside class="sidebar-column">
+          <!-- Description Section (New Location) -->
+          <ProjectDescription :description="project.description" />
+          
+
+          <!-- Key Metrics -->
+          <div class="content-card metrics-card">
+            <div class="card-header">
+              <BarChart2 :size="18" class="icon" />
+              <h3>Project Stats</h3>
+            </div>
+            <div class="card-content">
+              <div class="metrics-list">
+                <div class="metric-item">
+                  <span class="label icon-label">
+                    <DollarSign :size="12" /> Total Budget
+                  </span>
+                  <span class="value main">{{ project.currency }} {{ formatNumber(project.budget_amount) }}</span>
+                </div>
+                <div class="metric-item">
+                  <span class="label icon-label">
+                    <Clock :size="12" /> Duration
+                  </span>
+                  <span class="value">{{ getDuration(project.start_date, project.end_date) }}</span>
+                </div>
+                <div class="metric-item">
+                  <span class="label icon-label">
+                    <CalendarRange :size="12" /> Dates
+                  </span>
+                  <span class="value text-sm">{{ formatDate(project.start_date) }} - {{ formatDate(project.end_date) }}</span>
+                </div>
+                <div class="metric-item">
+                  <span class="label icon-label">
+                    <PieChart :size="12" /> Budget Utilisation
+                  </span>
+                  <span class="value">{{ project.currency }} {{ formatNumber(project.budget_utilized) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Team Summary -->
+          <div class="content-card team-card">
+            <div class="card-header">
+              <Users :size="18" class="icon" />
+              <h3>Team ({{ allTeamMembers.length }})</h3>
+            </div>
+            
+            <div class="card-content">
+              <div class="team-list">
+                <div v-for="member in allTeamMembers" :key="member.id" class="team-member-row">
+                   <div class="avatar" :style="{ background: getGradient(member.name) }">
+                     {{ getInitials(member.name) }}
+                   </div>
+                   <div class="user-info">
+                     <span class="name">{{ member.name }}</span>
+                     <span class="role">{{ member.role }}</span>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info -->
+          <div class="content-card info-card">
+             <div class="card-header">
+              <Info :size="18" class="icon" />
+              <h3>Details</h3>
+            </div>
+            <div class="card-content">
+              <div class="info-row">
+                <span class="label icon-label">
+                  <Building2 :size="13" /> Organization
+                </span>
+                <span class="value">{{ project.organization }}</span>
+              </div>
+              <div class="info-row">
+                <span class="label icon-label">
+                  <Hash :size="13" /> Cost Center
+                </span>
+                <span class="value mono">{{ project.cost_center }}</span>
+              </div>
+               <div class="info-row">
+                <span class="label icon-label">
+                  <Tag :size="13" /> Type
+                </span>
+                <span class="value">{{ project.project_type }}</span>
+              </div>
+            </div>
+          </div>
+
+        </aside>
+      </div>
+
+      <!-- Modals -->
+      <CreateMilestoneModal 
+        v-model="showCreateMilestone"
+        :project-id="project.id"
+        :token="token"
+        :team-members="allTeamMembers"
+        :project-start-date="project.start_date"
+        :project-end-date="project.end_date"
+        :project-budget="project.budget_amount"
+        :budget-utilized="project.budget_utilized"
+        :currency="project.currency"
+        :is-admin="isAdmin"
+        :current-user="currentUser"
+        @created="fetchMilestones"
+      />
+
+      <MilestoneDetailsPanel
+        :is-open="showDetailsPanel"
+        @close="showDetailsPanel = false"
+        :milestone="selectedMilestone"
+        :project-id="project.id"
+        :token="token"
+        :current-user="currentUser"
+        :project-owner-id="project.created_by_id"
+        :project-start-date="project.start_date"
+        :project-end-date="project.end_date"
+        :is-admin="isAdmin"
+        :team-members="allTeamMembers"
+        @updated="handleMilestoneUpdate"
+        @deleted="handleMilestoneDelete"
+      />
+
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import axios from 'axios'
+import { Loader2, ArrowLeft, ShieldAlert, Briefcase, BarChart2, Users, Info, DollarSign, Clock, CalendarRange, Building2, Hash, Tag, PieChart, Check } from 'lucide-vue-next'
+import MilestoneList from '../components/milestones/MilestoneList.vue'
+import CreateMilestoneModal from '../components/milestones/CreateMilestoneModal.vue'
+import ProjectDescription from '../components/project-console/ProjectDescription.vue'
+import MilestoneDetailsPanel from '../components/milestones/MilestoneDetailsPanel.vue'
+import { useToast } from '../composables/useToast'
+
+const route = useRoute()
+const router = useRouter()
+const projectId = route.params.id
+
+// State
+const project = ref({})
+const milestones = ref([])
+const isLoading = ref(true)
+const milestonesLoading = ref(false)
+const errorState = ref(null)
+const showCreateMilestone = ref(false)
+const showDetailsPanel = ref(false)
+const selectedMilestone = ref(null)
+
+const { addToast } = useToast()
+
+// Computeds
+const isAdmin = computed(() => route.path.startsWith('/admin'))
+const backPath = computed(() => {
+  const base = isAdmin.value ? '/admin/projects/details' : '/user/projects/details'
+  return `${base}?selected=${projectId}`
+})
+const token = computed(() => isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token'))
+
+const canEdit = computed(() => isAdmin.value || !isProjectExpired.value)
+// New: Restrict creation if 100% complete
+const canCreateMilestone = computed(() => {
+  if (isAdmin.value) return true
+  if (isProjectExpired.value) return false
+  
+  // Check completion %
+  const pct = project.value.completion_percentage || 0
+  return pct < 100
+})
+
+const isProjectExpired = computed(() => {
+  if (!project.value || !project.value.end_date) return false
+  const endDate = new Date(project.value.end_date)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return endDate < today
+})
+
+const currentUser = computed(() => {
+  if (isAdmin.value) {
+      const adminStr = localStorage.getItem('admin_user')
+      return adminStr ? JSON.parse(adminStr) : null
+  }
+  const userStr = localStorage.getItem('user')
+  return userStr ? JSON.parse(userStr) : null
+}) 
+
+// Unified Team List
+const allTeamMembers = computed(() => {
+  if (!project.value.id) return []
+  
+  const list = []
+  
+  // 1. Owner (Always first)
+  if (project.value.created_by_id) {
+    list.push({
+      id: project.value.created_by_id, // Use User ID to dedup
+      name: project.value.created_by_name || 'Unknown',
+      role: 'Project Owner',
+      isOwner: true
+    })
+  }
+  
+  // 2. Team Members (from API)
+  if (project.value.team_members && Array.isArray(project.value.team_members)) {
+    project.value.team_members.forEach(tm => {
+      // Avoid duplicate if owner is also in list (check by User ID)
+      if (tm.user_id !== project.value.created_by_id) {
+         list.push({
+           id: tm.user_id,
+           name: tm.user_name || 'Unknown',
+           role: tm.role || 'Team Member',
+           isOwner: false,
+           is_superuser: tm.is_superuser // Pass backend flag
+         })
+      }
+    })
+  }
+  
+  return list
+})
+
+// Methods
+const fetchProject = async () => {
+  try {
+    const res = await axios.get(`http://localhost:8000/api/projects/${projectId}`, {
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+    project.value = res.data
+  } catch (e) {
+    if (e.response && e.response.status === 403) {
+      errorState.value = e.response.data.detail || 'Access Denied'
+    } else if (e.response && e.response.status === 404) {
+      errorState.value = 'Project not found'
+    } else {
+      errorState.value = 'Failed to load project'
+    }
+  }
+}
+
+const fetchMilestones = async () => {
+  milestonesLoading.value = true
+  try {
+    const res = await axios.get(`http://localhost:8000/api/projects/${projectId}/milestones`, {
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+    milestones.value = res.data.sort((a, b) => new Date(a.due_date) - new Date(b.due_date))
+  } catch (e) {
+    console.warn('Failed to fetch milestones', e)
+    addToast('Failed to load milestones', 'error')
+  } finally {
+    milestonesLoading.value = false
+  }
+}
+
+// Alias for template usage
+const fetchProjectDetails = fetchMilestones
+
+onMounted(async () => {
+  if (!projectId) return
+  await fetchProject()
+  if (!errorState.value) {
+    await fetchMilestones()
+  }
+  isLoading.value = false
+})
+
+// Formatters
+const formatNumber = (num) => new Intl.NumberFormat('en-US').format(num || 0)
+const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
+const getInitials = (n) => n ? n.split(' ').map(c => c[0]).join('').slice(0, 2).toUpperCase() : '??'
+
+const getDuration = (start, end) => {
+  if (!start || !end) return '—'
+  const diff = Math.ceil(Math.abs(new Date(end) - new Date(start)) / (1000 * 60 * 60 * 24))
+  return diff > 365 ? `${(diff/365).toFixed(1)} Years` : diff > 30 ? `${(diff/30).toFixed(1)} Months` : `${diff} Days`
+}
+
+const getGradient = (name) => {
+   return 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
+}
+
+// Handlers
+const handleMilestoneSelect = (m) => {
+  selectedMilestone.value = m
+  showDetailsPanel.value = true
+}
+
+const handleMilestoneUpdate = async (updatedM) => {
+  // Update local selected reference so the panel shows new data immediately
+  selectedMilestone.value = updatedM
+  
+  // Force refresh from server to ensure list logic (sorting/grouping) matches
+  await fetchMilestones()
+}
+
+const handleMilestoneDelete = (deletedId) => {
+  milestones.value = milestones.value.filter(x => x.id !== deletedId)
+  showDetailsPanel.value = false
+}
+
+</script>
+
+<style scoped>
+/* Main Page Styles */
+.project-details-page {
+  /* Removed padding/min-height from root to prevent expiry overflow */
+  margin: 0 auto;
+  color: #f5f5f7;
+}
+
+/* Page Loading/Error */
+.page-loading {
+  height: 60vh;
+  display: flex; /* ... */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.error-container {
+  height: 80vh; display: flex; align-items: center; justify-content: center;
+}
+
+.access-card {
+  background: rgba(30, 30, 33, 0.6);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 48px;
+  text-align: center;
+  max-width: 420px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.icon-circle {
+  width: 80px; height: 80px; 
+  background: rgba(244, 63, 94, 0.1); 
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 8px;
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+.access-card h2 { font-size: 24px; font-weight: 700; color: #f5f5f7; margin: 0; }
+.access-card p { font-size: 15px; color: rgba(255, 255, 255, 0.6); line-height: 1.5; font-style: italic; }
+
+.access-card .actions { margin-top: 16px; }
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1); border: none; color: white;
+  padding: 10px 20px; border-radius: 12px; font-weight: 600; font-size: 13px;
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  transition: all 0.2s;
+}
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.15); }
+
+/* Premium Expiry Design (Minimalist Monochromatic) */
+.expiry-overlay {
+  position: fixed;
+  top: 60px; /* Rough height of navbar to ensure we don't cover it if strict fixed */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40; /* High enough to block content, low enough for nav if z-index > 40 */
+  background: rgba(0, 0, 0, 0.6); /* Slightly darker for focus */
+  backdrop-filter: blur(20px); /* Reduced blur slightly for performance/clarity */
+  -webkit-backdrop-filter: blur(20px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8vh; /* Moved further up */
+  overflow: hidden; /* Strict no scroll */
+  animation: expiryFadeIn 0.5s ease-out;
+}
+
+.premium-expiry-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 32px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+}
+
+.expired-icon-box {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-mono {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.expiry-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.premium-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.premium-subtitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.expiry-divider {
+  width: 32px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  margin: 12px 0;
+}
+
+.expiry-description {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.6;
+  max-width: 380px;
+  margin: 0;
+}
+
+.expiry-actions {
+  margin-top: 16px;
+  width: 100%;
+}
+
+.btn-premium-back {
+  background: #ffffff;
+  border: none;
+  color: #000000;
+  padding: 14px 32px;
+  border-radius: 16px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+}
+
+.btn-premium-back:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 8px 30px rgba(255, 255, 255, 0.15);
+}
+
+.btn-premium-back:active {
+  transform: translateY(0);
+}
+
+@keyframes expiryFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-wrapper {
+  animation: fadeIn 0.4s ease-out;
+  /* Restore padding here for normal view */
+  padding: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 80px);
+}
+
+/* Breadcrumb */
+.breadcrumb { margin-bottom: 20px; }
+.btn-text {
+  background: none; border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer; display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 500;
+  transition: color 0.2s;
+}
+.btn-text:hover { color: white; }
+
+/* Header */
+.page-header { margin-bottom: 32px; position: relative; }
+.header-main { display: flex; justify-content: space-between; align-items: flex-start; }
+
+.completed-watermark {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  color: #4ade80;
+  padding: 8px 16px;
+  border-radius: 99px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+  animation: stampIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.watermark-content {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'SF Mono', monospace;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.1em;
+}
+
+@keyframes stampIn {
+  0% { opacity: 0; transform: scale(1.5); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.title-row { display: flex; align-items: flex-start; gap: 20px; }
+.project-icon {
+  width: 52px; height: 52px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: #f5f5f7;
+}
+
+.page-title {
+  font-size: 28px; font-weight: 700; color: #f5f5f7;
+  line-height: 1.2; margin-bottom: 8px; letter-spacing: -0.01em;
+}
+
+.meta-row { display: flex; align-items: center; gap: 12px; font-size: 13px; color: rgba(255, 255, 255, 0.6); }
+.code { font-family: 'SF Mono', monospace; opacity: 0.8; }
+.dot { opacity: 0.3; }
+
+.status-badge {
+  padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase;
+  border: 1px solid transparent;
+}
+.status-badge.approved { background: rgba(16, 185, 129, 0.1); color: #34d399; border-color: rgba(16, 185, 129, 0.2); }
+.status-badge.pending-approval { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border-color: rgba(245, 158, 11, 0.2); }
+
+/* Grid */
+.details-grid {
+  display: grid;
+  grid-template-columns: 2.2fr 1fr; /* Give more space to main content */
+  gap: 24px;
+  align-items: start;
+}
+
+/* Sidebar */
+.sidebar-column { display: flex; flex-direction: column; gap: 24px; }
+
+/* Common Card & Header Style */
+.content-card {
+  background: rgba(30, 30, 33, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+.card-header {
+  padding: 16px 20px 12px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.card-header .icon { color: #a1a1aa; }
+
+.card-header h3 {
+  font-size: 14px; font-weight: 600; color: #f5f5f7; margin: 0; letter-spacing: -0.01em;
+}
+
+.card-content { padding: 20px; }
+
+/* Metrics */
+.metrics-list { display: grid; gap: 16px; }
+.metric-item .label { font-size: 11px; color: rgba(255,255,255,0.5); display: block; margin-bottom: 4px; }
+.metric-item .icon-label, .info-row .icon-label { display: flex; align-items: center; gap: 6px; }
+.metric-item .value { font-size: 18px; font-weight: 600; color: #f5f5f7; }
+.metric-item .value.text-sm { font-size: 14px; color: rgba(255,255,255,0.8); }
+
+/* Team List */
+.team-list { 
+  display: flex; flex-direction: column; gap: 10px; 
+  /* Scroll config: 3 items approx (48px per item + gap) */
+  max-height: 180px; 
+  overflow-y: auto;
+  padding-right: 4px; /* Space for scrollbar */
+}
+
+/* Custom Scrollbar */
+.team-list::-webkit-scrollbar { width: 4px; }
+.team-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.team-list::-webkit-scrollbar-track { background: transparent; }
+
+.team-member-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 10px;
+  transition: background 0.2s;
+}
+.team-member-row:hover { background: rgba(255,255,255,0.06); }
+
+.avatar { 
+  width: 32px; height: 32px; border-radius: 8px; 
+  display: flex; align-items: center; justify-content: center; 
+  font-weight: 600; font-size: 12px; color: white;
+}
+.user-info { display: flex; flex-direction: column; gap: 0px; }
+.name { font-size: 13px; font-weight: 500; color: #f5f5f7; }
+.role { font-size: 11px; color: rgba(255,255,255,0.5); }
+
+/* Info Card */
+.info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.info-row:last-child { border-bottom: none; padding-bottom: 0; }
+.info-row:first-child { padding-top: 0; }
+.info-row .label { font-size: 12px; color: rgba(255,255,255,0.5); }
+.info-row .value { font-size: 13px; color: #e4e4e7; font-weight: 500; }
+.mono { font-family: 'SF Mono', monospace; font-size: 12px; }
+
+.spinner { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+</style>

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-ChildItem \"C:\\\\Projects\\\\FourConnectService\" -ErrorAction SilentlyContinue | Select-Object Name, LastWriteTime; if \\(-not \\(Test-Path \"C:\\\\Projects\\\\FourConnectService\"\\)\\) { Write-Host \"Directory does not exist\" })",
+      "PowerShell(& \"C:\\\\Users\\\\91700\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe\" --version)",
+      "Bash(ls /c/Projects/FourConnectService/)",
+      "Read(//c/Projects/FourConnectService//**)",
+      "PowerShell($res = curl.exe -s -o NUL -w \"%{http_code}\" http://localhost:8000/health 2>&1; if \\($res -eq \"200\"\\) { Write-Host \"Backend is running on :8000 - reload should auto-pick up changes\" } else { Write-Host \"Backend not currently responding \\(code: $res\\). Start with: cd C:\\\\Projects\\\\FourConnectService; & 'C:\\\\Users\\\\91700\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe' -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000\" })"
+    ],
+    "additionalDirectories": [
+      "C:\\Projects\\FourConnectService\\app"
+    ]
+  }
+}

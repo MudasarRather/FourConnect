@@ -87,6 +87,7 @@ const routes = [
             { path: 'documents/dpr', name: 'UserDprDashboard', component: () => import('../views/documents/DprDashboardPage.vue') },
             { path: 'documents/dpr/new', name: 'UserDprWizard', component: () => import('../views/documents/DprWizardPage.vue') },
             { path: 'documents/document-drive', name: 'UserDocumentDrive', component: () => import('../views/documents/DocumentDrivePage.vue') },
+            { path: 'documents/archive', name: 'UserDocumentsArchive', component: () => import('../views/documents/ArchiveDocumentsPage.vue') },
             { path: 'documents/:pathMatch(.*)*', name: 'Documents', component: PlaceholderPage, props: route => ({ type: 'documents' }) },
             { path: 'projects/createproject', name: 'CreateProject', component: CreateProjectPage },
             { path: 'projects', redirect: '/user/projects/allprojects' },
@@ -156,6 +157,7 @@ const routes = [
             { path: 'documents/dpr', name: 'AdminDprDashboard', component: () => import('../views/documents/DprDashboardPage.vue') },
             { path: 'documents/dpr/new', name: 'AdminDprWizard', component: () => import('../views/documents/DprWizardPage.vue') },
             { path: 'documents/document-drive', name: 'AdminDocumentDrive', component: () => import('../views/documents/DocumentDrivePage.vue') },
+            { path: 'documents/archive', name: 'AdminDocumentsArchive', component: () => import('../views/documents/ArchiveDocumentsPage.vue') },
             { path: 'documents/:pathMatch(.*)*', name: 'AdminDocuments', component: PlaceholderPage, props: route => ({ type: 'documents' }) },
             { path: 'settings/:pathMatch(.*)*', name: 'AdminSettings', component: SettingsPage },
             { path: ':pathMatch(.*)*', name: 'AdminPlaceholder', component: PlaceholderPage, props: route => ({ type: 'admin' }) }

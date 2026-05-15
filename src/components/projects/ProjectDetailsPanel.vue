@@ -179,13 +179,13 @@ const getDuration = (start, end) => {
 
 const getInitials = (name) => name ? name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : '?'
 
-// Get avatar color based on member status - color coded for each status
+// Avatar color by member status — orange/amber family across the board
 const getAvatarColor = (member) => {
-  if (member.status === 'declined') return '#a855f7' // Purple for declined
-  if (member.status === 'pending') return '#f59e0b' // Amber for pending
-  if (member.status === 'removed') return '#ef4444' // Red for removed
-  if (member.status === 'accepted') return '#f97316' // Orange for accepted
-  return '#f97316' // Orange fallback
+  if (member.status === 'declined') return '#d97706' // Burnt amber for declined
+  if (member.status === 'pending')  return '#fbbf24' // Amber-400 for pending
+  if (member.status === 'removed')  return '#92400e' // Deep amber for removed
+  if (member.status === 'accepted') return '#f97316' // Orange-500 for accepted
+  return '#f97316'
 }
 
 </script>
@@ -225,10 +225,10 @@ const getAvatarColor = (member) => {
 }
 
 .status-badge.approved {
-  background: rgba(16, 185, 129, 0.1);
-  color: #34d399;
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
 }
-.status-badge.approved .status-dot { background: #34d399; }
+.status-badge.approved .status-dot { background: #fbbf24; }
 .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #9ca3af; }
 
 .project-code {
@@ -427,18 +427,18 @@ const getAvatarColor = (member) => {
 }
 
 .member-role.accepted {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
 }
 
 .member-role.declined {
-  background: rgba(168, 85, 247, 0.1);
-  color: #a855f7;
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
 }
 
 .member-role.removed {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: rgba(146, 64, 14, 0.18);
+  color: #b45309;
 }
 
 .empty-team {

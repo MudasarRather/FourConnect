@@ -73,13 +73,13 @@ const completion = computed(() => Math.round((stats.done / total) * 100))
   border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #a1a1aa;
 }
 h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin: 0; }
-.badge { font-size: 10px; background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 4px 8px; border-radius: 6px; }
+.badge { font-size: 10px; background: rgba(245, 158, 11, 0.15); color: #fbbf24; padding: 4px 8px; border-radius: 6px; }
 
 .tasks-content { display: flex; align-items: center; gap: 24px; }
 .chart-section { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
 .donut-chart { width: 100%; height: 100%; transform: rotate(0deg); } /* Keep simple */
 .bg { fill: none; stroke: rgba(255, 255, 255, 0.05); stroke-width: 3; }
-.fill { fill: none; stroke: #3b82f6; stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray 1s ease; }
+.fill { fill: none; stroke: #f59e0b; stroke-width: 3; stroke-linecap: round; transition: stroke-dasharray 1s ease; filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.5)); }
 .center-text { 
   position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
   display: flex; align-items: center; justify-content: center;
@@ -90,6 +90,6 @@ h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin:
 .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #a1a1aa; }
 .dot { width: 6px; height: 6px; border-radius: 50%; }
 .pending { background: #3f3f46; }
-.in-progress { background: #3b82f6; }
-.done { background: #4ade80; }
+.in-progress { background: #f97316; }
+.done { background: #fbbf24; }
 </style>

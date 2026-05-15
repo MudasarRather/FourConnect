@@ -1,7 +1,7 @@
 <template>
-  <div class="archived-projects-page">
+  <div ref="pageRoot" class="archived-projects-page">
     <!-- Page Header -->
-    <div class="page-header">
+    <div class="page-header" data-anim="page-header">
       <div class="header-left">
         <h1>Archived Projects</h1>
         <p class="subtitle">Projects completed over 6 months ago</p>
@@ -9,7 +9,7 @@
     </div>
 
     <!-- Filter Bar -->
-    <div class="filter-bar">
+    <div class="filter-bar" data-anim="filter-bar">
       <div class="search-box">
         <Search :size="16" class="search-icon" />
         <input type="text" v-model="searchQuery" placeholder="Search archived projects..." @input="debouncedFetch" />
@@ -36,7 +36,7 @@
     </div>
 
     <!-- Table -->
-    <div v-else class="archive-table-wrapper">
+    <div v-else class="archive-table-wrapper" data-anim="table">
       <div class="section-header">
         <div class="header-content">
           <h3>Project Archive</h3>
@@ -66,6 +66,7 @@
           v-for="p in projects"
           :key="p.id"
           class="ms-row item"
+          data-anim="archive-row"
           @click="openDrawer(p)"
         >
           <!-- Name -->
@@ -178,15 +179,7 @@
                 </div>
 
                 <div class="detail-item">
-                  <label>Cost Center</label>
-                  <div class="value">
-                    <Target :size="14" class="text-purple-400" />
-                    {{ selectedProject.cost_center || '—' }}
-                  </div>
-                </div>
-
-                <div class="detail-item">
-                  <label>Budget</label>
+                  <label>Order Value</label>
                   <div class="value mono">
                     <CreditCard :size="14" class="text-amber-400" />
                     {{ selectedProject.currency }} {{ formatNumber(selectedProject.budget_amount) }}
@@ -225,11 +218,61 @@
                   </div>
                 </div>
 
-                <div class="detail-item">
-                  <label>Budget Type</label>
+                <div class="detail-item" v-if="selectedProject.category">
+                  <label>Category</label>
                   <div class="value">
-                    <Wallet :size="14" class="text-orange-400" />
-                    {{ selectedProject.budget_type || '—' }}
+                    <Tag :size="14" class="text-blue-400"/>
+                    {{ selectedProject.category }}
+                  </div>
+                </div>
+
+                <div class="detail-item" v-if="selectedProject.priority">
+                  <label>Priority</label>
+                  <div class="value">
+                    <Flame :size="14" class="text-red-400"/>
+                    {{ selectedProject.priority }}
+                  </div>
+                </div>
+
+                <div class="detail-item" v-if="selectedProject.lifecycle_status">
+                  <label>Lifecycle</label>
+                  <div class="value">
+                    <Activity :size="14" class="text-cyan-400"/>
+                    {{ selectedProject.lifecycle_status }}
+                  </div>
+                </div>
+
+                <div class="detail-item" v-if="selectedProject.funding_type">
+                  <label>Funding</label>
+                  <div class="value">
+                    <Coins :size="14" class="text-amber-400"/>
+                    {{ selectedProject.funding_type }}
+                  </div>
+                </div>
+
+                <div class="detail-item" v-if="selectedProject.state || selectedProject.district">
+                  <label>Location</label>
+                  <div class="value">
+                    <MapPin :size="14" class="text-emerald-400"/>
+                    {{ [selectedProject.state, selectedProject.district].filter(Boolean).join(' · ') }}
+                  </div>
+                </div>
+
+                <div class="detail-item full-width" v-if="selectedProject.government_order_no">
+                  <label>Government Order</label>
+                  <div class="value mono">
+                    <Crown :size="14" class="text-amber-400"/>
+                    {{ selectedProject.government_order_no }}
+                    <span style="opacity:0.5; margin-left:8px" v-if="selectedProject.issuing_authority">· {{ selectedProject.issuing_authority }}</span>
+                  </div>
+                </div>
+
+                <div class="detail-item full-width" v-if="selectedProject.project_head_name">
+                  <label>Project Head</label>
+                  <div class="value">
+                    <User :size="14" class="text-purple-400"/>
+                    {{ selectedProject.project_head_name }}
+                    <span style="opacity:0.5; margin-left:8px" v-if="selectedProject.project_head_designation">· {{ selectedProject.project_head_designation }}</span>
                   </div>
                 </div>
 
@@ -288,9 +331,13 @@ import axios from 'axios'
 import {
   Search, Loader2, Archive, CheckCircle2, X, ChevronLeft, ChevronRight,
   Building, Target, CreditCard, TrendingUp, Calendar, Wallet, Users, Flag,
-  Lock, Eye
+  Lock, Eye, Crown, MapPin, Coins, Flame, Tag, Activity, User
 } from 'lucide-vue-next'
 import { useToast } from '../composables/useToast'
+import { useGsapAnim } from '../composables/useGsapAnim'
+import { archivedProjectsEntry } from '../animations/pageChoreography'
+
+const pageRoot = ref(null)
 
 const router = useRouter()
 const route = useRoute()
@@ -411,6 +458,9 @@ const getAgeSince = (date) => {
   return `${months} months ago`
 }
 
+const { run } = useGsapAnim(pageRoot)
+run(() => { archivedProjectsEntry(pageRoot.value) })
+
 onMounted(() => {
   fetchArchived()
 })
@@ -520,16 +570,29 @@ onMounted(() => {
 }
 
 .ms-row.item {
-  transition: all 0.2s ease;
+  transition: background 0.25s ease;
   border-radius: 8px;
   margin: 0 -8px;
   padding: 12px 8px;
   cursor: pointer;
   border-bottom: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+.ms-row.item::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(245,158,11,0.08) 50%, transparent 100%);
+  transform: translateX(-100%);
+  pointer-events: none;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .ms-row.item:hover {
-  background: rgba(255,255,255,0.03);
-  transform: translateY(-1px);
+  background: rgba(245,158,11,0.04);
+}
+.ms-row.item:hover::before {
+  transform: translateX(100%);
 }
 
 /* Columns */
@@ -713,7 +776,7 @@ onMounted(() => {
   border-radius: 50%; margin: 0 auto 24px;
   display: flex; align-items: center; justify-content: center;
 }
-.empty-icon { opacity: 0.4; color: #a855f7; }
+.empty-icon { opacity: 0.55; color: #fbbf24; }
 .empty-state h3 { font-size: 18px; color: #a1a1aa; margin-bottom: 8px; font-weight: 600; }
 .empty-state p { font-size: 14px; color: #71717a; max-width: 400px; margin: 0 auto; }
 

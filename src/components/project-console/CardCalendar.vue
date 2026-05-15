@@ -156,7 +156,7 @@ const isPassed = (day) => {
   font-size: 9px; padding: 3px 8px; border-radius: 20px; font-weight: 600; letter-spacing: 0.02em;
 }
 /* Subtle, flat colors - no neon */
-.days-left-badge.good { background: rgba(74, 222, 128, 0.15); color: #86efac; border: 1px solid rgba(74, 222, 128, 0.1); }
+.days-left-badge.good { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.22); }
 .days-left-badge.warning { background: rgba(251, 191, 36, 0.15); color: #fcd34d; border: 1px solid rgba(251, 191, 36, 0.1); }
 .days-left-badge.critical { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.1); }
 
@@ -169,7 +169,11 @@ const isPassed = (day) => {
   font-size: 11px; color: rgba(255,255,255,0.8); border-radius: 6px; position: relative;
   transition: all 0.2s;
 }
-.day-cell.today { background: rgba(59, 130, 246, 0.8); color: white; font-weight: 600; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2); }
+.day-cell.today {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: white; font-weight: 600;
+  box-shadow: 0 2px 10px rgba(249, 115, 22, 0.40);
+}
 .day-cell.pre-start { opacity: 0.2; } 
 .day-cell:not(.today):not(.empty):hover { background: rgba(255,255,255,0.08); color: white; }
 

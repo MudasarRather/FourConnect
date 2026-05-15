@@ -281,13 +281,15 @@ const formatCurrency = (val) => {
 
 .title-group { display: flex; flex-direction: column; gap: 10px; }
 
-.code-wrap { 
-  display: flex; align-items: center; gap: 6px; 
-  background: rgba(59, 130, 246, 0.1); padding: 4px 10px; border-radius: 6px; align-self: flex-start;
+.code-wrap {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  padding: 4px 10px; border-radius: 6px; align-self: flex-start;
 }
-.code-icon { color: #3b82f6; opacity: 0.8; }
-.project-code { 
-  font-size: 11px; font-weight: 700; color: #3b82f6; 
+.code-icon { color: #fbbf24; opacity: 0.85; }
+.project-code {
+  font-size: 11px; font-weight: 700; color: #fbbf24;
   letter-spacing: 0.05em;
 }
 
@@ -306,10 +308,10 @@ const formatCurrency = (val) => {
   border: 1px solid transparent;
   display: flex; align-items: center; gap: 8px;
 }
-.success { color: #4ade80; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.2); }
-.info { color: #3b82f6; background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.2); }
-.warning { color: #fbbf24; background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.2); }
-.destructive { color: #ef4444; background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); }
+.success { color: #fbbf24; background: rgba(245, 158, 11, 0.10); border-color: rgba(245, 158, 11, 0.28); }
+.info { color: #fdba74; background: rgba(249, 115, 22, 0.10); border-color: rgba(249, 115, 22, 0.28); }
+.warning { color: #fbbf24; background: rgba(251, 191, 36, 0.10); border-color: rgba(251, 191, 36, 0.28); }
+.destructive { color: #d97706; background: rgba(217, 119, 6, 0.12); border-color: rgba(217, 119, 6, 0.30); }
 
 .completed-stamp { display: none; } /* Remove old style if references exist */
 
@@ -331,10 +333,13 @@ const formatCurrency = (val) => {
 
 .owner-section { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 16px; }
 .owner-pill-hero { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500; color: white; }
-.avatar-mini { 
-  width: 36px; height: 36px; background: #3b82f6; border-radius: 50%; 
-  display: flex; align-items: center; justify-content: center; 
-  font-size: 12px; font-weight: 700; flex-shrink: 0; 
+.avatar-mini {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0;
+  color: white;
 }
 .owner-detail-col { display: flex; flex-direction: column; gap: 4px; flex: 1; justify-content: center; }
 .owner-name { font-weight: 600; line-height: 1.2; font-size: 14px; }
@@ -353,10 +358,10 @@ const formatCurrency = (val) => {
 .value { font-size: 14px; font-weight: 700; color: white; }
 .progress-track { height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
 .progress-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
-.progress-fill.success { background: #4ade80; }
-.progress-fill.info { background: #3b82f6; }
+.progress-fill.success { background: linear-gradient(90deg, #f59e0b, #f97316); }
+.progress-fill.info { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
 .progress-fill.warning { background: #fbbf24; }
-.progress-fill.destructive { background: #ef4444; }
+.progress-fill.destructive { background: #d97706; }
 
 .duration-meta { 
   font-size: 12px; display: flex; align-items: center; gap: 6px; 
@@ -370,9 +375,9 @@ const formatCurrency = (val) => {
 .ms-val { font-size: 12px; font-weight: 700; color: white; padding-left: 0; /* Removed padding */ }
 .ms-val-group { display: flex; flex-direction: column; padding-left: 16px; }
 .ms-sub-val { font-size: 10px; color: rgba(255,255,255,0.4); font-family: monospace; }
-.ms-val.low { color: #4ade80; padding-left: 0; }
+.ms-val.low { color: #facc15; padding-left: 0; }
 .ms-val.medium { color: #fbbf24; padding-left: 0; }
-.ms-val.high { color: #ef4444; padding-left: 0; }
+.ms-val.high { color: #d97706; padding-left: 0; }
 .ms-div { width: 1px; height: 24px; background: rgba(255,255,255,0.1); }
 
 /* Col 3: Calendar */

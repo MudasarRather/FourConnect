@@ -3,10 +3,8 @@
     <div class="card-header">
       <div class="header-left">
         <div class="icon-box"><Wallet :size="16" /></div>
-        <h3>Budget</h3>
+        <h3>Order Value</h3>
       </div>
-      <!-- Budget Type Pill (Capex/Opex) -->
-      <span class="badge" :class="type?.toLowerCase()">{{ type || 'Opex' }}</span>
     </div>
 
     <div class="budget-content">
@@ -44,9 +42,8 @@ import { Wallet } from 'lucide-vue-next'
 const props = defineProps({
   amount: { type: Number, default: 0 },
   currency: { type: String, default: 'USD' },
-  type: { type: String, default: 'Opex' },
   milestones: { type: Array, default: () => [] },
-  usedAmountOverride: { type: Number, default: null } // New prop
+  usedAmountOverride: { type: Number, default: null }
 })
 
 // Exchange Rates (Mocked, same as BurnChart)
@@ -108,8 +105,8 @@ h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin:
   font-size: 10px; padding: 4px 8px; border-radius: 6px; 
   text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;
 }
-.badge.capex { background: rgba(236, 72, 153, 0.15); color: #f472b6; }
-.badge.opex { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.badge.capex { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.badge.opex { background: rgba(249, 115, 22, 0.15); color: #fdba74; }
 
 .budget-content { display: flex; flex-direction: column; gap: 16px; }
 .big-num { display: flex; align-items: baseline; gap: 4px; }
@@ -118,7 +115,7 @@ h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin:
 
 .progress-wrap { width: 100%; }
 .p-track { height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; }
-.p-fill { height: 100%; background: linear-gradient(90deg, #ec4899, #8b5cf6); border-radius: 3px; transition: width 0.5s ease; }
+.p-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #f97316); border-radius: 3px; transition: width 0.5s ease; }
 
 .legend-row { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
 .l-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #a1a1aa; }

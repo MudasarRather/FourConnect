@@ -101,9 +101,9 @@ const isExpired = (m) => {
 }
 h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin: 0; }
 
-.view-all-btn { 
-  background: none; border: none; font-size: 12px; color: #3b82f6; 
-  cursor: pointer; font-weight: 500; transition: opacity 0.2s; 
+.view-all-btn {
+  background: none; border: none; font-size: 12px; color: #fbbf24;
+  cursor: pointer; font-weight: 500; transition: opacity 0.2s;
 }
 .view-all-btn:hover { opacity: 0.8; }
 
@@ -129,7 +129,7 @@ h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin:
   border: 1.5px solid rgba(255, 255, 255, 0.1);
   display: flex; align-items: center; justify-content: center;
 }
-.status-indicator.completed { background: #4ade80; border-color: #4ade80; color: #000; }
+.status-indicator.completed { background: #fbbf24; border-color: #fbbf24; color: #000; }
 .status-indicator.pending { border-color: #fbbf24; }
 .status-indicator.pending .pulse-dot { width: 6px; height: 6px; background: #fbbf24; border-radius: 50%; }
 
@@ -145,7 +145,7 @@ h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin:
   font-size: 10px; padding: 2px 8px; border-radius: 10px; 
   text-transform: capitalize; border: 1px solid transparent; 
 }
-.ms-tag.completed { background: rgba(74, 222, 128, 0.1); color: #4ade80; border-color: rgba(74, 222, 128, 0.2); }
+.ms-tag.completed { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border-color: rgba(245, 158, 11, 0.28); }
 .ms-tag.pending { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border-color: rgba(251, 191, 36, 0.2); }
 .ms-tag.blocked { background: rgba(248, 113, 113, 0.1); color: #f87171; border-color: rgba(248, 113, 113, 0.2); }
 </style>

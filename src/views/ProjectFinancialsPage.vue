@@ -1,8 +1,8 @@
 <template>
-  <div class="financials-page-container">
-    
+  <div ref="pageRoot" class="financials-page-container">
+
     <!-- HEADER SECTION -->
-    <header class="glass-header">
+    <header class="glass-header" data-anim="page-header">
        <div class="header-content">
           <div class="project-identity">
              <div class="project-icon-box" v-if="selectedProject">
@@ -57,7 +57,7 @@
        </div>
 
        <!-- NAVIGATION TABS -->
-       <div class="tabs-dock">
+       <div class="tabs-dock" data-anim="tabs-dock">
           <button 
             v-for="tab in tabs" 
             :key="tab.id"
@@ -73,7 +73,7 @@
     </header>
 
     <!-- CONTENT AREA -->
-    <main class="main-canvas" v-if="!isPending">
+    <main class="main-canvas" data-anim="tab-canvas" v-if="!isPending">
        <transition name="fade-slide" mode="out-in">
           <component 
              :is="activeComponent" 
@@ -90,7 +90,7 @@
     <div v-else class="empty-container">
        <div class="empty-box flex-layout">
          <div class="icon-glow">
-            <ShieldAlert :size="40" class="text-yellow-500" />
+            <ShieldAlert :size="40" class="text-amber-warning" />
          </div>
          <h2 class="mt-4 text-xl font-semibold">Access Restricted</h2>
          <p class="text-base opacity-70 mb-4 max-w-md mx-auto">
@@ -114,6 +114,10 @@ import {
   LayoutDashboard, CreditCard, 
   TrendingUp, BookOpen, FileText, History, ShieldAlert
 } from 'lucide-vue-next'
+import { useGsapAnim } from '../composables/useGsapAnim'
+import { projectFinancialsEntry } from '../animations/pageChoreography'
+
+const pageRoot = ref(null)
 
 // Components
 const FinancialsOverview = defineAsyncComponent(() => import('../components/financials/FinancialsOverview.vue'))
@@ -215,6 +219,9 @@ const vClickOutside = {
   unmounted(el) { document.body.removeEventListener('click', el.clickOutsideEvent); }
 };
 
+const { run } = useGsapAnim(pageRoot)
+run(() => { projectFinancialsEntry(pageRoot.value) })
+
 onMounted(fetchProjects)
 </script>
 
@@ -242,9 +249,9 @@ onMounted(fetchProjects)
 
 .project-identity { display: flex; align-items: center; gap: 16px; }
 .project-icon-box {
-  width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  width: 40px; height: 40px; background: linear-gradient(135deg, #f59e0b, #f97316);
   border-radius: 12px; display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 18px; color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  font-weight: 700; font-size: 18px; color: white; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.35);
 }
 
 .identity-text { display: flex; flex-direction: column; gap: 2px; }
@@ -285,15 +292,29 @@ onMounted(fetchProjects)
   display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; 
 }
 .p-name { flex: 1; font-size: 13px; font-weight: 500; }
-.p-check { color: #8b5cf6; }
+.p-check { color: #fbbf24; }
 
 /* HEADER ACTIONS */
 .header-actions { display: flex; align-items: center; gap: 24px; }
 .mini-metric { display: flex; align-items: center; gap: 12px; font-size: 12px; }
 .mini-metric .label { color: rgba(255,255,255,0.5); }
 .bar-container { width: 80px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
-.bar-fill { height: 100%; background: #22c55e; border-radius: 3px; }
-.mini-metric .value { font-family: 'SF Mono', monospace; font-weight: 600; color: #22c55e; }
+.bar-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+  position: relative; overflow: hidden;
+}
+.bar-fill.ledger-shimmer::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.45) 50%, transparent 100%);
+  transform: translateX(-100%);
+  animation: ledgerShimmer 2.6s linear infinite;
+}
+@keyframes ledgerShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.mini-metric .value { font-family: 'SF Mono', monospace; font-weight: 600; color: #fbbf24; }
 
 .action-btn {
   background: white; color: black; border: none; padding: 8px 16px; border-radius: 20px;
@@ -315,7 +336,8 @@ onMounted(fetchProjects)
 .dock-item.active { color: white; font-weight: 600; }
 .active-glow {
   position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px;
-  background: #8b5cf6; box-shadow: 0 -2px 8px rgba(139, 92, 246, 0.5);
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+  box-shadow: 0 -2px 10px rgba(249, 115, 22, 0.55);
   border-radius: 2px 2px 0 0;
 }
 
@@ -405,5 +427,7 @@ onMounted(fetchProjects)
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.text-amber-warning { color: #f97316; }
 
 </style>

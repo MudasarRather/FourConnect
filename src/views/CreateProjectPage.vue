@@ -1,949 +1,1130 @@
 <template>
-  <div class="page-container">
-    <div class="header">
-      <h1>Create New Project</h1>
-      <p class="subtitle">Initialize a new project with approval workflow</p>
+  <div ref="pageRoot" class="forge-root">
+    <!-- Atmospheric backdrop unique to project pages: blueprint grid + sapphire orbs -->
+    <div class="forge-backdrop" aria-hidden="true" data-anim="backdrop">
+      <div class="forge-base"></div>
+      <svg class="forge-grid" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <defs>
+          <pattern id="bp-grid" width="6" height="6" patternUnits="userSpaceOnUse">
+            <path d="M 6 0 L 0 0 0 6" fill="none" stroke="rgba(245,158,11,0.06)" stroke-width="0.2"/>
+          </pattern>
+          <pattern id="bp-grid-major" width="30" height="30" patternUnits="userSpaceOnUse">
+            <path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(245,158,11,0.10)" stroke-width="0.4"/>
+          </pattern>
+        </defs>
+        <rect width="100" height="100" fill="url(#bp-grid)"/>
+        <rect width="100" height="100" fill="url(#bp-grid-major)"/>
+      </svg>
+      <div class="forge-orb forge-orb-1" data-orb="1"></div>
+      <div class="forge-orb forge-orb-2" data-orb="2"></div>
     </div>
 
-    <!-- Stepper Header -->
-    <div class="stepper-header">
-      <div 
-        v-for="(step, index) in steps" 
-        :key="index"
-        class="step-item"
-        :class="{ active: currentStep === index + 1, completed: currentStep > index + 1 }"
-      >
-        <div class="step-circle">
-          <span v-if="currentStep > index + 1"><Check :size="16" /></span>
-          <span v-else>{{ index + 1 }}</span>
-        </div>
-        <span class="step-label">{{ step }}</span>
-        <div class="step-line" v-if="index < steps.length - 1"></div>
+    <!-- ORDER NOTICE -->
+    <div class="order-notice" data-anim="order-notice">
+      <div class="on-seal">
+        <Crown :size="18"/>
+      </div>
+      <div class="on-body">
+        <div class="on-eyebrow"><Sparkles :size="10"/> GOVERNMENT ORDER NOTICE</div>
+        <div class="on-text">This project is being created against an <strong>officially received government order</strong>. Section&nbsp;1 fields are mandatory before operational stages begin.</div>
+      </div>
+      <div class="on-decoration">
+        <span class="on-corner-1"></span>
+        <span class="on-corner-2"></span>
       </div>
     </div>
 
-    <div class="wizard-card">
-      <form @submit.prevent>
-        
-        <!-- STEP 1: User Context -->
-        <div v-show="currentStep === 1" class="step-content">
-          <h3>User Info</h3>
-          <p class="section-desc">Verify your details before proceeding. This will be logged in the audit trail.</p>
-          
-          <div class="form-grid">
-            <div class="input-wrapper">
-              <label class="floating-label">Full Name</label>
-              <div class="readonly-field">
-                <UserIcon :size="16" class="field-icon" />
-                {{ user.full_name || 'Loading...' }}
-              </div>
-            </div>
-            
-            <div class="input-wrapper">
-              <label class="floating-label">Employee ID</label>
-              <div class="readonly-field">
-                <Hash :size="16" class="field-icon" />
-                {{ user.employee_code || 'N/A' }}
-              </div>
-            </div>
+    <!-- HERO -->
+    <header class="forge-hero">
+      <div class="hero-left">
+        <div class="hero-eyebrow" data-anim="hero-eyebrow"><Hammer :size="11"/> CIVIC FORGE</div>
+        <h1 class="hero-title" data-anim="hero-title">Initiate a new <span>government project</span>.</h1>
+        <p class="hero-sub" data-anim="hero-subtitle">Five sections. One ceremonial stamp. Your project enters the records hall.</p>
+      </div>
+      <div class="hero-meta">
+        <div class="hero-meta-pill">
+          <UserIcon :size="11"/>
+          <span><strong>{{ user.full_name || 'User' }}</strong></span>
+        </div>
+        <div class="hero-meta-pill" v-if="user.organisation">
+          <Building :size="11"/>
+          <span>{{ user.organisation }}</span>
+        </div>
+        <div class="hero-meta-pill">
+          <CalendarDays :size="11"/>
+          <span>{{ createdDate }}</span>
+        </div>
+      </div>
+    </header>
 
-            <div class="input-wrapper">
-              <label class="floating-label">Role</label>
-              <div class="readonly-field">
-                <Shield :size="16" class="field-icon" />
-                {{ isSuperuser ? 'Super Admin' : 'Standard User' }}
+    <!-- BODY: 2-COLUMN -->
+    <div class="forge-body">
+      <!-- LEFT: form sections -->
+      <div class="forge-form custom-scroll">
+
+        <!-- §1 Government Order Details -->
+        <section class="section-card" data-anim="section">
+          <div class="sc-header">
+            <div class="sc-seal">01</div>
+            <div>
+              <h3>Government Order Details</h3>
+              <p>Identifying information from the issuing authority</p>
+            </div>
+          </div>
+          <div class="sc-grid two-col">
+            <div class="field">
+              <label>Government Order No. <span class="req">*</span></label>
+              <input ref="firstFieldRef" v-model.trim="form.government_order_no" type="text" class="civic-input" placeholder="e.g. GO/2024/12345" :class="{ 'has-error': errors.government_order_no }"/>
+              <ErrorText :message="errors.government_order_no"/>
+            </div>
+            <div class="field">
+              <label>Order Date <span class="req">*</span></label>
+              <DatePicker v-model="form.order_date" :max-date="todayDate" :class="{ 'has-error': errors.order_date }"/>
+              <ErrorText :message="errors.order_date"/>
+            </div>
+            <div class="field">
+              <label>Issuing Authority / Ministry <span class="req">*</span></label>
+              <input v-model.trim="form.issuing_authority" type="text" class="civic-input" placeholder="e.g. Ministry of Urban Affairs" :class="{ 'has-error': errors.issuing_authority }"/>
+              <ErrorText :message="errors.issuing_authority"/>
+            </div>
+            <div class="field">
+              <label>Order Received Date <span class="req">*</span></label>
+              <DatePicker v-model="form.order_received_date" :max-date="todayDate" :class="{ 'has-error': errors.order_received_date }"/>
+              <ErrorText :message="errors.order_received_date"/>
+            </div>
+          </div>
+        </section>
+
+        <!-- §2 Project Information -->
+        <section class="section-card" data-anim="section">
+          <div class="sc-header">
+            <div class="sc-seal">02</div>
+            <div>
+              <h3>Project Information</h3>
+              <p>Core identifiers and classification</p>
+            </div>
+          </div>
+          <div class="sc-grid two-col">
+            <div class="field">
+              <label>Project Name <span class="req">*</span></label>
+              <input v-model.trim="form.name" type="text" class="civic-input" placeholder="e.g. Smart Streetlights Phase II" :class="{ 'has-error': errors.name }"/>
+              <ErrorText :message="errors.name"/>
+            </div>
+            <div class="field">
+              <label>Project Code <span class="req">*</span></label>
+              <div class="code-row">
+                <input v-model.trim="form.code" type="text" class="civic-input mono" placeholder="PRJ-YYYYMM-XXXX" :class="{ 'has-error': errors.code }"/>
+                <button type="button" class="suggest-btn" @click="suggestCode" :disabled="isSuggesting">
+                  <Wand2 :size="12"/>
+                  <span>{{ isSuggesting ? '…' : 'Suggest' }}</span>
+                </button>
+              </div>
+              <ErrorText :message="errors.code"/>
+            </div>
+            <div class="field">
+              <label>Department / Executing Agency <span class="req">*</span></label>
+              <input v-model.trim="form.department" type="text" class="civic-input" placeholder="e.g. Smart City Mission" :class="{ 'has-error': errors.department }"/>
+              <ErrorText :message="errors.department"/>
+            </div>
+            <div class="field">
+              <label>Project Category <span class="req">*</span></label>
+              <CustomSelect v-model="form.category" :options="categoryOptions" labelKey="label" valueKey="value" placeholder="Choose category…"/>
+              <ErrorText :message="errors.category"/>
+            </div>
+            <div class="field">
+              <label>Priority <span class="req">*</span></label>
+              <CustomSelect v-model="form.priority" :options="priorityOptions" labelKey="label" valueKey="value" placeholder="Choose priority…"/>
+              <ErrorText :message="errors.priority"/>
+            </div>
+            <div class="field">
+              <label>Project Type <span class="req">*</span></label>
+              <CustomSelect v-model="form.project_type" :options="projectTypeOptions" labelKey="label" valueKey="value" placeholder="Choose type…"/>
+              <ErrorText :message="errors.project_type"/>
+            </div>
+            <div class="field full">
+              <label>Project Description</label>
+              <textarea v-model.trim="form.description" rows="3" class="civic-input" placeholder="Brief description of scope, objectives, expected outcomes…"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- §3 Location & Timeline -->
+        <section class="section-card" data-anim="section">
+          <div class="sc-header">
+            <div class="sc-seal">03</div>
+            <div>
+              <h3>Location & Timeline</h3>
+              <p>Geographic scope and execution window</p>
+            </div>
+          </div>
+          <div class="sc-grid two-col">
+            <div class="field">
+              <label>State / Province <span class="req">*</span></label>
+              <input v-model.trim="form.state" type="text" class="civic-input" placeholder="e.g. Karnataka" :class="{ 'has-error': errors.state }"/>
+              <ErrorText :message="errors.state"/>
+            </div>
+            <div class="field">
+              <label>District / City</label>
+              <input v-model.trim="form.district" type="text" class="civic-input" placeholder="e.g. Bengaluru"/>
+            </div>
+            <div class="field">
+              <label>Expected Start Date <span class="req">*</span></label>
+              <DatePicker v-model="form.start_date" :class="{ 'has-error': errors.start_date }"/>
+              <ErrorText :message="errors.start_date"/>
+            </div>
+            <div class="field">
+              <label>Deadline / Completion Date <span class="req">*</span></label>
+              <DatePicker v-model="form.end_date" :min-date="form.start_date || todayDate" :class="{ 'has-error': errors.end_date }"/>
+              <ErrorText :message="errors.end_date"/>
+            </div>
+          </div>
+          <div class="duration-strip" v-if="projectDuration">
+            <Clock :size="12"/> <span>Duration: <strong>{{ projectDuration }}</strong></span>
+          </div>
+        </section>
+
+        <!-- §4 Budget -->
+        <section class="section-card" data-anim="section">
+          <div class="sc-header">
+            <div class="sc-seal">04</div>
+            <div>
+              <h3>Budget</h3>
+              <p>Order value and funding source</p>
+            </div>
+          </div>
+          <div class="sc-grid three-col">
+            <div class="field">
+              <label>Order Value <span class="req">*</span></label>
+              <CurrencyInput v-model="form.budget_amount" :currency="form.currency" :class="{ 'has-error': errors.budget_amount }"/>
+              <ErrorText :message="errors.budget_amount"/>
+            </div>
+            <div class="field">
+              <label>Currency</label>
+              <CustomSelect v-model="form.currency" :options="currencyOptions" labelKey="label" valueKey="value"/>
+            </div>
+            <div class="field">
+              <label>Funding Type</label>
+              <CustomSelect v-model="form.funding_type" :options="fundingTypeOptions" labelKey="label" valueKey="value" placeholder="Choose funding source…"/>
+            </div>
+          </div>
+        </section>
+
+        <!-- §5 Team & Responsibility -->
+        <section class="section-card" data-anim="section">
+          <div class="sc-header">
+            <div class="sc-seal">05</div>
+            <div>
+              <h3>Team & Responsibility</h3>
+              <p>Project leadership and stakeholders</p>
+            </div>
+          </div>
+          <div class="sc-grid two-col">
+            <div class="field">
+              <label>Project Head Name <span class="req">*</span></label>
+              <input v-model.trim="form.project_head_name" type="text" class="civic-input" placeholder="Full name" :class="{ 'has-error': errors.project_head_name }"/>
+              <ErrorText :message="errors.project_head_name"/>
+            </div>
+            <div class="field">
+              <label>Project Head Designation <span class="req">*</span></label>
+              <input v-model.trim="form.project_head_designation" type="text" class="civic-input" placeholder="e.g. Director, Smart City" :class="{ 'has-error': errors.project_head_designation }"/>
+              <ErrorText :message="errors.project_head_designation"/>
+            </div>
+            <div class="field full">
+              <label>Project Head Contact</label>
+              <input v-model.trim="form.project_head_contact" type="text" class="civic-input" placeholder="phone or email"/>
+            </div>
+            <div class="field">
+              <label>Nodal Officer</label>
+              <input v-model.trim="form.nodal_officer" type="text" class="civic-input" placeholder="Liaison officer"/>
+            </div>
+            <div class="field">
+              <label>Contractor / Agency Assigned</label>
+              <input v-model.trim="form.contractor" type="text" class="civic-input" placeholder="Vendor / executing agency"/>
+            </div>
+            <div class="field full">
+              <label>Initial Project Status</label>
+              <CustomSelect v-model="form.lifecycle_status" :options="lifecycleOptions" labelKey="label" valueKey="value"/>
+            </div>
+          </div>
+        </section>
+
+        <!-- §6 Project Order PDF (REQUIRED) -->
+        <section class="section-card" :class="{ 'has-error-glow': errors.project_order_path }" data-anim="section">
+          <div class="sc-header">
+            <div class="sc-seal">06</div>
+            <div>
+              <h3>Order Document <span class="req">*</span></h3>
+              <p>Upload the official government order PDF (mandatory)</p>
+            </div>
+          </div>
+          <FileUpload
+            :model-value="uploadedFileName"
+            accept="application/pdf"
+            :max-size-mb="5"
+            @file-selected="handleFileUpload"
+            @file-removed="handleFileRemove"
+          />
+          <ErrorText :message="errors.project_order_path || errors.project_order"/>
+        </section>
+
+        <!-- ACTION BAR -->
+        <div class="forge-actions cascade-right" style="animation-delay: 0.46s">
+          <button type="button" class="btn-ghost" @click="onCancel">
+            <X :size="14"/> Cancel
+          </button>
+          <button type="button" class="btn-draft" @click="onSubmit('draft')" :disabled="isSubmitting">
+            <FileEdit :size="14"/> Save as Draft
+          </button>
+          <button
+            type="button"
+            class="btn-stamp"
+            :class="{ stamping: stampAnim }"
+            @click="onSubmit('create')"
+            :disabled="isSubmitting"
+          >
+            <Loader2 v-if="isSubmitting" class="spin" :size="14"/>
+            <Stamp v-else :size="14"/>
+            <span>{{ isSubmitting ? 'Stamping…' : 'Create Project' }}</span>
+            <span class="stamp-flash" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT: live preview rail -->
+      <aside class="forge-preview">
+        <div class="preview-sticky">
+          <div class="prv-eyebrow"><Eye :size="10"/> LIVE PREVIEW</div>
+          <h4 class="prv-headline">As recorded in the registry</h4>
+          <div class="prv-card" data-anim="preview-card" ref="previewCardRef">
+            <div class="prv-card-top">
+              <div class="prv-cat-chip" :class="`cat-${(form.category || 'other').toLowerCase().replace(/[^a-z]/g, '')}`">{{ form.category || 'Uncategorized' }}</div>
+              <div class="prv-prio" :class="`prio-${(form.priority || 'low').toLowerCase()}`" :title="`Priority: ${form.priority || '—'}`">
+                <span class="prio-dot"></span>
+                {{ form.priority || '—' }}
               </div>
             </div>
+            <div class="prv-title">{{ form.name || 'Project name will appear here' }}</div>
+            <div class="prv-sub">{{ form.department || 'Executing agency' }} · {{ form.state || 'State' }}</div>
+            <div class="prv-sep"></div>
+            <div class="prv-budget">
+              <span class="prv-cur">{{ form.currency || 'USD' }}</span>
+              <span class="prv-amt">{{ formatAmount(form.budget_amount) }}</span>
+            </div>
+            <div class="prv-foot">
+              <span class="prv-code">{{ form.code || 'PRJ-XXXX-XXXX' }}</span>
+              <span class="prv-stage">{{ form.lifecycle_status || 'Order Received' }}</span>
+            </div>
+          </div>
 
-             <div class="input-wrapper">
-              <label class="floating-label">Department</label>
-              <div class="readonly-field">
-                <Building :size="16" class="field-icon" />
-                {{ user.department || 'General' }}
+          <!-- Stage track -->
+          <div class="prv-stages">
+            <div class="prv-stages-eyebrow">LIFECYCLE</div>
+            <div class="prv-stages-track">
+              <div
+                v-for="(s, i) in lifecycleStages"
+                :key="s"
+                class="prv-stage-pill"
+                :class="{ active: form.lifecycle_status === s, past: stageIndex > i }"
+              >
+                <span class="ps-dot"></span>
+                <span>{{ s }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Head -->
+          <div class="prv-head" v-if="form.project_head_name">
+            <div class="prv-head-eyebrow">PROJECT HEAD</div>
+            <div class="prv-head-card">
+              <div class="prv-head-avatar">{{ getInitials(form.project_head_name) }}</div>
+              <div class="prv-head-info">
+                <div class="prv-head-name">{{ form.project_head_name }}</div>
+                <div class="prv-head-role">{{ form.project_head_designation || 'Designation' }}</div>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- STEP 2: Core Details -->
-        <div v-show="currentStep === 2" class="step-content">
-          <h3>Project Core Details</h3>
-          <p class="section-desc">Define the primary attributes of the project.</p>
-
-          <div class="form-grid">
-            <div class="input-wrapper span-full" :class="{ 'has-error': errors.name }">
-              <label class="floating-label">Project Name <span class="req">*</span></label>
-              <input v-model="form.name" class="minimal-input" placeholder="e.g. Q4 Infrastructure Upgrade" />
-              <ErrorText v-if="errors.name">{{ errors.name }}</ErrorText>
-            </div>
-
-            <div class="input-wrapper">
-               <label class="floating-label">Project Code</label>
-               <input :value="projectCode" class="minimal-input disabled-field" placeholder="Auto-generated" disabled />
-            </div>
-
-            <div class="input-wrapper" :class="{ 'has-error': errors.project_type }">
-               <label class="floating-label">Project Type <span class="req">*</span></label>
-               <CustomSelect 
-                 v-model="form.project_type" 
-                 :options="projectTypes" 
-                 labelKey="name" 
-                 valueKey="id"
-                 placeholder="Select Type"
-               />
-               <ErrorText v-if="errors.project_type">{{ errors.project_type }}</ErrorText>
-            </div>
-
-            <div class="input-wrapper" :class="{ 'has-error': errors.cost_center }">
-               <label class="floating-label">Cost Center <span class="req">*</span></label>
-               <CustomSelect 
-                 v-model="form.cost_center" 
-                 :options="costCenters" 
-                 labelKey="name" 
-                 valueKey="id" 
-                 placeholder="Select Cost Center"
-                 searchable
-               />
-               <ErrorText v-if="errors.cost_center">{{ errors.cost_center }}</ErrorText>
-            </div>
-
-            <div class="input-wrapper" :class="{ 'has-error': errors.start_date }">
-              <label class="floating-label">Start Date <span class="req">*</span></label>
-              <DatePicker 
-                v-model="form.start_date" 
-                placeholder="Select start date"
-                :minDate="todayDate"
-                :error="errors.start_date"
-              />
-              <ErrorText v-if="errors.start_date">{{ errors.start_date }}</ErrorText>
-            </div>
-
-            <div class="input-wrapper" :class="{ 'has-error': errors.end_date }">
-              <label class="floating-label">End Date <span class="req">*</span></label>
-              <DatePicker 
-                v-model="form.end_date" 
-                placeholder="Select end date"
-                :minDate="form.start_date || todayDate"
-                :error="errors.end_date"
-              />
-              <ErrorText v-if="errors.end_date">{{ errors.end_date }}</ErrorText>
-            </div>
-
-            <!-- Duration Display -->
-            <div v-if="projectDuration" class="duration-box span-full">
-              <Clock :size="14" class="duration-icon" />
-              <span class="duration-label">Project Duration:</span>
-              <span class="duration-value">{{ projectDuration }}</span>
-            </div>
-
-            <div class="input-wrapper span-full" :class="{ 'has-error': errors.description }">
-              <label class="floating-label">Description <span class="req">*</span></label>
-              <textarea v-model="form.description" class="minimal-textarea" placeholder="Project goals and scope..."></textarea>
-              <ErrorText v-if="errors.description">{{ errors.description }}</ErrorText>
-            </div>
-
-            <!-- Project Order PDF Upload -->
-            <div class="input-wrapper span-full" :class="{ 'has-error': errors.project_order }">
-              <label class="floating-label">Project Order (PDF) <span class="req">*</span></label>
-              <div style="margin-top: 8px;">
-                <FileUpload
-                  v-model="form.project_order_path"
-                  v-model:fileName="uploadedFileName"
-                  label="Project Order (PDF)"
-                  helperText="PDF (max. 5MB)"
-                  accept=".pdf"
-                  :maxSizeMB="5"
-                  @file-selected="handleFileSelected"
-                  @error="(msg) => errors.project_order = msg"
-                  @remove="errors.project_order = ''"
-                />
-              </div>
-              <ErrorText v-if="errors.project_order">{{ errors.project_order }}</ErrorText>
-            </div>
-          </div>
-        </div>
-
-        <!-- STEP 3: Financials -->
-        <div v-show="currentStep === 3" class="step-content">
-           <h3>Financial Overview</h3>
-           <p class="section-desc">Estimate the required budget and classification.</p>
-
-           <div class="form-grid">
-             <div class="input-wrapper" :class="{ 'has-error': errors.budget_amount }">
-               <label class="floating-label">Estimated Budget <span class="req">*</span></label>
-               <CurrencyInput 
-                 v-model="form.budget_amount" 
-                 :currency="form.currency"
-                 placeholder="0.00"
-               />
-               <ErrorText v-if="errors.budget_amount">{{ errors.budget_amount }}</ErrorText>
-             </div>
-
-             <div class="input-wrapper">
-               <label class="floating-label">Currency</label>
-               <CustomSelect 
-                 v-model="form.currency" 
-                 :options="currencies" 
-                 labelKey="code" 
-                 valueKey="code" 
-               />
-             </div>
-
-             <div class="input-wrapper span-full" :class="{ 'has-error': errors.budget_type }">
-               <label class="label-heading">Budget Classification <span class="req">*</span></label>
-               <div class="radio-group">
-                 <label class="radio-card" :class="{ active: form.budget_type === 'Capex' }">
-                   <input type="radio" value="Capex" v-model="form.budget_type" />
-                   <div class="radio-content">
-                     <span class="radio-title">CAPEX</span>
-                     <span class="radio-desc">Capital Expenditure (Long-term assets)</span>
-                   </div>
-                 </label>
-                 <label class="radio-card" :class="{ active: form.budget_type === 'Opex' }">
-                   <input type="radio" value="Opex" v-model="form.budget_type" />
-                   <div class="radio-content">
-                     <span class="radio-title">OPEX</span>
-                     <span class="radio-desc">Operational Expenditure (Day-to-day)</span>
-                   </div>
-                 </label>
-               </div>
-             </div>
-           </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="wizard-actions">
-           <button 
-             v-if="currentStep > 1" 
-             class="btn-secondary" 
-             @click="prevStep" 
-             type="button"
-           >
-             Back
-           </button>
-           <div class="spacer"></div>
-           
-           <!-- Save Draft (only on Step 3) -->
-           <button 
-             v-if="currentStep === steps.length" 
-             class="btn-draft" 
-             @click="saveDraft" 
-             type="button"
-           >
-             Save Draft
-           </button>
-           
-           <button 
-             v-if="currentStep < steps.length" 
-             class="btn-primary" 
-             @click="nextStep" 
-             type="button"
-           >
-             Next Step <ChevronRight :size="16" />
-           </button>
-           <button 
-             v-else 
-             class="btn-submit" 
-             @click="openPreview" 
-             type="button"
-           >
-             Review & Submit <Check :size="16" />
-           </button>
-        </div>
-
-      </form>
+      </aside>
     </div>
-
-    <!-- Preview Modal -->
-    <div v-if="showPreview" class="modal-backdrop">
-      <div class="modal-card">
-        <div class="modal-header">
-           <h3>Confirm Project Creation</h3>
-           <button class="close-btn" @click="showPreview = false"><X :size="20" /></button>
-        </div>
-        <div class="modal-body">
-           <div class="review-grid">
-             <div class="review-item">
-               <span class="label">Project Name</span>
-               <span class="value">{{ form.name }}</span>
-             </div>
-             <div class="review-item">
-               <span class="label">Type</span>
-               <span class="value">{{ getTypeName(form.project_type) }}</span>
-             </div>
-             <div class="review-item">
-               <span class="label">Cost Center</span>
-               <span class="value">{{ getCCName(form.cost_center) }}</span>
-             </div>
-             <div class="review-item">
-               <span class="label">Budget</span>
-               <span class="value">{{ form.currency }} {{ form.budget_amount?.toLocaleString() || '0' }} ({{ form.budget_type }})</span>
-             </div>
-             <div class="review-item">
-               <span class="label">Duration</span>
-               <span class="value">{{ projectDuration || 'Not set' }}</span>
-             </div>
-             <div class="review-item">
-               <span class="label">Created Date</span>
-               <span class="value">{{ createdDate }}</span>
-             </div>
-             <div class="review-item">
-               <span class="label">Created By</span>
-               <span class="value">{{ user.full_name || 'Current User' }}</span>
-             </div>
-           </div>
-           <p class="modal-note" v-if="isSuperuser">
-              <Info :size="14" /> 
-              This project will be created and <b>automatically approved</b> since you are an administrator.
-            </p>
-            <p class="modal-note" v-else>
-              <Info :size="14" /> 
-              This project will be created in <b>Pending Approval</b> state. Admin approval is required before activation.
-            </p>
-        </div>
-        <div class="modal-footer">
-           <button class="btn-text" @click="showPreview = false">Cancel</button>
-           <button class="btn-primary" @click="submitProject" :disabled="isSubmitting">
-             <span v-if="!isSubmitting">Confirm Creation</span>
-             <span v-else>Creating...</span>
-           </button>
-        </div>
-      </div>
-    </div>
-
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, reactive, computed, watch, nextTick } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import CustomSelect from '../components/ui/CustomSelect.vue'
 import ErrorText from '../components/ui/ErrorText.vue'
 import DatePicker from '../components/ui/DatePicker.vue'
 import CurrencyInput from '../components/ui/CurrencyInput.vue'
 import FileUpload from '../components/ui/FileUpload.vue'
-import { Check, ChevronRight, User as UserIcon, Shield, Building, Hash, X, Info, Clock } from 'lucide-vue-next'
-import { useToast } from '../composables/useToast'
+import {
+  Crown, Sparkles, Hammer, User as UserIcon, Building, CalendarDays, Clock,
+  Wand2, X, FileEdit, Stamp, Loader2, Eye
+} from 'lucide-vue-next'
+import { useToast } from 'vue-toastification'
+import { useGsapAnim } from '../composables/useGsapAnim'
+import { useParallaxOrbs } from '../composables/useParallaxOrbs'
+import { createProjectEntry, pulseScale, focusGlow, blurGlow, errorShake } from '../animations/pageChoreography'
+
+const pageRoot = ref(null)
+const previewCardRef = ref(null)
 
 const router = useRouter()
-const { success, error } = useToast()
+const route = useRoute()
+const toast = useToast()
+const API_BASE = 'http://localhost:8000'
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
+const getToken = () => isAdminRoute.value
+  ? (localStorage.getItem('admin_token') || localStorage.getItem('user_token'))
+  : (localStorage.getItem('user_token') || localStorage.getItem('admin_token'))
+const portal = computed(() => isAdminRoute.value ? 'admin' : 'user')
 
-// State
-const currentStep = ref(1)
-const steps = ['User Info', 'Core Details', 'Financials']
-const showPreview = ref(false)
-const isSubmitting = ref(false)
-const isDataLoaded = ref(false)
-
-// File upload state - reduced to just filename as component handles the rest
-const uploadedFileName = ref('')
-
+// User / draft state
 const user = ref({})
-const isSuperuser = ref(false)
-const projectCode = ref('')
+const isSubmitting = ref(false)
+const isSuggesting = ref(false)
+const uploadedFileName = ref('')
+const stampAnim = ref(false)
+const firstFieldRef = ref(null)
 
-// Generate project code
-const generateProjectCode = () => {
-  const prefix = 'PRJ'
-  const date = new Date()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const year = date.getFullYear()
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-  return `${prefix}-${year}${month}-${random}`
-}
-
-// Dropdown Data
-const projectTypes = ref([])
-const costCenters = ref([])
-const currencies = ref([])
-
-// Computed
-const todayDate = computed(() => {
-  return new Date().toISOString().split('T')[0]
-})
-
-const projectDuration = computed(() => {
-  if (!form.start_date || !form.end_date) return null
-  const start = new Date(form.start_date)
-  const end = new Date(form.end_date)
-  const diffTime = Math.abs(end - start)
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  
-  if (diffDays < 30) return `${diffDays} days`
-  if (diffDays < 365) {
-    const months = Math.floor(diffDays / 30)
-    const days = diffDays % 30
-    return days > 0 ? `${months} months, ${days} days` : `${months} months`
-  }
-  const years = Math.floor(diffDays / 365)
-  const months = Math.floor((diffDays % 365) / 30)
-  return months > 0 ? `${years} years, ${months} months` : `${years} years`
-})
-
-const createdDate = computed(() => {
-  return new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
-})
-
-// Form Data
+// Form (binds DB column names verbatim — keeps backend contract clean)
 const form = reactive({
+  // §1 Government Order
+  government_order_no: '',
+  order_date: '',
+  issuing_authority: '',
+  order_received_date: '',
+  // §2 Project Information
   name: '',
+  code: '',
+  department: '',
+  category: '',
+  priority: 'Medium',
+  project_type: 'Other',
   description: '',
-  project_type: '',
-  cost_center: '',
+  // §3 Location & Timeline
+  state: '',
+  district: '',
   start_date: '',
   end_date: '',
+  // §4 Budget
   budget_amount: '',
-  currency: 'USD',
-  budget_type: 'Capex',
-  project_order_path: ''  // Path to uploaded PDF
+  currency: 'INR',
+  funding_type: '',
+  // §5 Team
+  project_head_name: '',
+  project_head_designation: '',
+  project_head_contact: '',
+  nodal_officer: '',
+  contractor: '',
+  lifecycle_status: 'Order Received',
+  // §6 Order PDF
+  project_order_path: '',
 })
 
 const errors = ref({})
 
-// Helpers
-const getTypeName = (id) => projectTypes.value.find(p => p.id === id)?.name || id
-const getCCName = (id) => costCenters.value.find(c => c.id === id)?.name || id
+// Dropdown options
+const categoryOptions = [
+  { value: 'Infrastructure',            label: 'Infrastructure' },
+  { value: 'Roads & Bridges',           label: 'Roads & Bridges' },
+  { value: 'Water & Sanitation',        label: 'Water & Sanitation' },
+  { value: 'Buildings & Construction',  label: 'Buildings & Construction' },
+  { value: 'IT & Digital',              label: 'IT & Digital' },
+  { value: 'Social Welfare',            label: 'Social Welfare' },
+  { value: 'Defence',                   label: 'Defence' },
+  { value: 'Energy',                    label: 'Energy' },
+  { value: 'Other',                     label: 'Other' },
+]
+const priorityOptions = [
+  { value: 'High',   label: 'High' },
+  { value: 'Medium', label: 'Medium' },
+  { value: 'Low',    label: 'Low' },
+]
+const projectTypeOptions = [
+  { value: 'Government', label: 'Government' },
+  { value: 'Civic',      label: 'Civic' },
+  { value: 'Infra',      label: 'Infrastructure' },
+  { value: 'Service',    label: 'Service' },
+  { value: 'Other',      label: 'Other' },
+]
+const currencyOptions = [
+  { value: 'INR', label: 'INR (₹)' },
+  { value: 'USD', label: 'USD ($)' },
+  { value: 'EUR', label: 'EUR (€)' },
+]
+const fundingTypeOptions = [
+  { value: 'Central Govt.',    label: 'Central Govt.' },
+  { value: 'State Govt.',      label: 'State Govt.' },
+  { value: 'Central + State',  label: 'Central + State' },
+  { value: 'External Aid',     label: 'External Aid' },
+  { value: 'PPP',              label: 'PPP (Public-Private Partnership)' },
+]
+const lifecycleOptions = [
+  { value: 'Order Received', label: 'Order Received' },
+  { value: 'Planning',       label: 'Planning' },
+  { value: 'Tendering',      label: 'Tendering' },
+  { value: 'In Progress',    label: 'In Progress' },
+]
+const lifecycleStages = ['Order Received', 'Planning', 'Tendering', 'In Progress', 'Active', 'Completed']
 
-// API Calls
-onMounted(async () => {
-  const isAdminRoute = window.location.pathname.startsWith('/admin')
-  const token = isAdminRoute ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
-  isSuperuser.value = isAdminRoute // Admin routes imply superuser
-  
-  if (!token) {
-    console.warn('No auth token found. Redirecting to login.')
-    error('Please log in to continue.')
-    return
+// Derived helpers
+const todayDate = computed(() => new Date().toISOString().split('T')[0])
+const createdDate = computed(() =>
+  new Date().toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
+)
+const projectDuration = computed(() => {
+  if (!form.start_date || !form.end_date) return null
+  const start = new Date(form.start_date); const end = new Date(form.end_date)
+  const days = Math.ceil(Math.abs(end - start) / 86400000)
+  if (days < 30) return `${days} days`
+  if (days < 365) {
+    const m = Math.floor(days / 30); const d = days % 30
+    return d ? `${m} months, ${d} days` : `${m} months`
   }
-  
-  const headers = { Authorization: `Bearer ${token}` }
-  
-  try {
-    // Fetch user info first
-    const userRes = await axios.get('http://localhost:8000/api/auth/me', { headers })
-    user.value = userRes.data
-    console.log('User loaded:', user.value)
-  } catch (e) {
-    console.error('Failed to load user:', e.response?.status, e.message)
-    error('Failed to load user data. Please log in again.')
-    return
-  }
-  
-  try {
-    // Fetch settings data in parallel
-    const [ptRes, ccRes, curRes] = await Promise.all([
-      axios.get('http://localhost:8000/api/settings/project-types', { headers }),
-      axios.get('http://localhost:8000/api/settings/cost-centers', { headers }),
-      axios.get('http://localhost:8000/api/settings/currencies', { headers })
-    ])
-    
-    projectTypes.value = ptRes.data
-    costCenters.value = ccRes.data
-    currencies.value = curRes.data
-    
-    isDataLoaded.value = true
-    console.log('Wizard Data Loaded:', { types: projectTypes.value.length, ccs: costCenters.value.length })
-    
-  } catch (e) {
-    console.error('Failed to load settings:', e.response?.status, e.message)
-    error('Failed to load form data. Please refresh.')
-  }
+  const y = Math.floor(days / 365); const m = Math.floor((days % 365) / 30)
+  return m ? `${y} years, ${m} months` : `${y} years`
 })
-
-// Validation
-const validateStep = (step) => {
-   errors.value = {}
-   let valid = true
-   
-   // Step 1 validation - ensure data is loaded
-   if (step === 1) {
-     if (!isDataLoaded.value) {
-       error('Please wait for data to load or refresh the page.')
-       return false
-     }
-   }
-   
-   if (step === 2) {
-      if (!form.name.trim()) { errors.value.name = 'Project Name is required'; valid = false; }
-      if (!form.project_type) { errors.value.project_type = 'Type is required'; valid = false; }
-      if (!form.cost_center) { errors.value.cost_center = 'Cost Center is required'; valid = false; }
-      if (!form.description || !form.description.trim()) { errors.value.description = 'Description is required'; valid = false; }
-      
-      // Date validation
-      if (!form.start_date) { 
-        errors.value.start_date = 'Start Date is required'; valid = false; 
-      } else if (form.start_date < todayDate.value) {
-        errors.value.start_date = 'Start Date cannot be in the past'; valid = false;
-      }
-      
-      if (!form.end_date) { 
-        errors.value.end_date = 'End Date is required'; valid = false; 
-      } else if (form.start_date && form.end_date <= form.start_date) {
-        errors.value.end_date = 'End Date must be after Start Date'; valid = false;
-      }
-      
-      // Project Order PDF validation
-      if (!form.project_order_path) {
-        errors.value.project_order = 'Project Order PDF is required'; valid = false;
-      }
-    }
-   
-   if (step === 3) {
-      const budgetValue = Number(form.budget_amount)
-      if (!form.budget_amount || isNaN(budgetValue) || budgetValue <= 0) { errors.value.budget_amount = 'Budget amount is required and must be greater than 0'; valid = false; }
-      if (!form.currency) { errors.value.currency = 'Currency is required'; valid = false; }
-      if (!form.budget_type) { errors.value.budget_type = 'Budget type (Capex/Opex) is required'; valid = false; }
-    }
-   
-   return valid
+const stageIndex = computed(() => lifecycleStages.indexOf(form.lifecycle_status))
+const getInitials = (n) => (n || 'U').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
+const formatAmount = (n) => {
+  const v = Number(n)
+  if (!v) return '—'
+  if (v >= 1e7) return (v / 1e7).toFixed(2) + ' Cr'
+  if (v >= 1e5) return (v / 1e5).toFixed(2) + ' L'
+  if (v >= 1e3) return (v / 1e3).toFixed(2) + 'K'
+  return v.toLocaleString()
 }
 
-// Navigation
-const nextStep = () => {
-  if (validateStep(currentStep.value)) {
-    // Generate project code when leaving Step 1
-    if (currentStep.value === 1 && !projectCode.value) {
-      projectCode.value = generateProjectCode()
-    }
-    currentStep.value++
-  }
-}
-
-const prevStep = () => {
-  if (currentStep.value > 1) currentStep.value--
-}
-
-// Open preview only after validating Step 3
-const openPreview = () => {
-  if (validateStep(3)) {
-    showPreview.value = true
-  }
-}
-
-// Submit
-const submitProject = async () => {
-  isSubmitting.value = true
-  const isAdmin = window.location.pathname.startsWith('/admin')
-  const token = isAdmin ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
-  
+// ---- Suggest code ----
+const suggestCode = async () => {
+  isSuggesting.value = true
   try {
-    await axios.post('http://localhost:8000/api/projects/', form, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    success('Project created successfully!')
-    router.push(isAdmin ? '/admin/projects/adminprojects' : '/dashboard/projects/all')
+    const res = await axios.get(`${API_BASE}/api/projects/suggest-code`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    form.code = res.data.code
+    if (errors.value.code) delete errors.value.code
   } catch (e) {
-    if (e.response?.data?.detail) {
-      error(e.response.data.detail)
-    } else {
-      error('Failed to create project')
-    }
-  } finally {
-    isSubmitting.value = false
-    showPreview.value = false
-  }
+    toast.error('Could not suggest a code — please type one.')
+  } finally { isSuggesting.value = false }
 }
 
-// Save as Draft
-const saveDraft = async () => {
-  // Validate budget before saving draft
-  if (!validateStep(3)) {
-    return
-  }
-  
-  const isAdmin = window.location.pathname.startsWith('/admin')
-  const token = isAdmin ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
-  
+// ---- File upload (same flow as legacy form) ----
+const handleFileUpload = async (file) => {
+  if (!file) return
   try {
-    await axios.post('http://localhost:8000/api/projects/', {
-      ...form,
-      status: 'Draft'
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    success('Project saved as draft!')
-    router.push(isAdmin ? '/admin/projects/adminprojects' : '/dashboard/projects/all')
-  } catch (e) {
-    if (e.response?.data?.detail) {
-      error(e.response.data.detail)
-    } else {
-      error('Failed to save draft')
-    }
-  }
-}
-
-// File Upload Handler
-const handleFileSelected = async ({ file, setUploading, setError }) => {
-  setUploading(true)
-  
-  const isAdmin = window.location.pathname.startsWith('/admin')
-  const token = isAdmin ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
-  const authHeaders = { Authorization: `Bearer ${token}` }
-
-  try {
-    // Delete previous file if exists
     if (form.project_order_path) {
       const oldFilename = form.project_order_path.split('/').pop()
       if (oldFilename) {
-        try {
-          await axios.delete(`http://localhost:8000/api/uploads/project-order/${oldFilename}`, {
-            headers: authHeaders
-          })
-          console.log('Previous file deleted:', oldFilename)
-        } catch (delErr) {
-          console.warn('Failed to delete previous file:', delErr)
-          // Continue with upload even if delete fails
-        }
+        try { await axios.delete(`${API_BASE}/api/uploads/project-order/${oldFilename}`, { headers: { Authorization: `Bearer ${getToken()}` } }) } catch {}
       }
     }
-
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const res = await axios.post('http://localhost:8000/api/uploads/project-order', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        ...authHeaders
-      }
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await axios.post(`${API_BASE}/api/uploads/project-order`, fd, {
+      headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${getToken()}` }
     })
-    
-    if (res.data.success) {
+    if (res.data?.success) {
       form.project_order_path = res.data.file_path
       uploadedFileName.value = res.data.original_filename
       if (errors.value.project_order) delete errors.value.project_order
-      success('Project Order uploaded successfully')
+      toast.success('Order document uploaded')
     }
   } catch (e) {
-    console.error('Upload failed:', e)
-    setError(e.response?.data?.detail || 'Failed to upload file')
-    error(e.response?.data?.detail || 'Failed to upload file')
-  } finally {
-    setUploading(false)
+    errors.value.project_order = e.response?.data?.detail || 'Upload failed'
+    toast.error(errors.value.project_order)
+  }
+}
+const handleFileRemove = async () => {
+  if (form.project_order_path) {
+    const fn = form.project_order_path.split('/').pop()
+    try { await axios.delete(`${API_BASE}/api/uploads/project-order/${fn}`, { headers: { Authorization: `Bearer ${getToken()}` } }) } catch {}
+  }
+  form.project_order_path = ''
+  uploadedFileName.value = ''
+}
+
+// ---- Validation ----
+// Required fields for the *full* Create flow. Draft path validates a subset.
+const REQUIRED_CREATE = [
+  ['government_order_no',      'Government Order No. is required'],
+  ['order_date',                'Order Date is required'],
+  ['issuing_authority',         'Issuing Authority is required'],
+  ['order_received_date',       'Order Received Date is required'],
+  ['name',                      'Project Name is required'],
+  ['code',                      'Project Code is required'],
+  ['department',                'Department is required'],
+  ['category',                  'Category is required'],
+  ['priority',                  'Priority is required'],
+  ['project_type',              'Project Type is required'],
+  ['state',                     'State is required'],
+  ['start_date',                'Start Date is required'],
+  ['end_date',                  'Deadline is required'],
+  ['budget_amount',             'Order Value is required'],
+  ['project_head_name',         'Project Head Name is required'],
+  ['project_head_designation',  'Project Head Designation is required'],
+  ['project_order_path',        'Order Document (PDF) is required'],
+]
+const REQUIRED_DRAFT = [
+  ['government_order_no',  'Government Order No. is required'],
+  ['issuing_authority',    'Issuing Authority is required'],
+  ['name',                 'Project Name is required'],
+  ['code',                 'Project Code is required'],
+  ['project_order_path',   'Order Document (PDF) is required'],
+]
+
+const validate = (mode) => {
+  const list = mode === 'draft' ? REQUIRED_DRAFT : REQUIRED_CREATE
+  const next = {}
+  for (const [field, msg] of list) {
+    const v = form[field]
+    if (v === '' || v == null || v === undefined) next[field] = msg
+  }
+  if (mode === 'create' && form.budget_amount && Number(form.budget_amount) <= 0) {
+    next.budget_amount = 'Amount must be greater than 0'
+  }
+  if (form.end_date && form.start_date && new Date(form.end_date) < new Date(form.start_date)) {
+    next.end_date = 'Deadline must be after start date'
+  }
+  errors.value = next
+  return Object.keys(next).length === 0
+}
+
+const scrollToFirstError = async () => {
+  await nextTick()
+  const el = document.querySelector('.has-error') || document.querySelector('.civic-input.has-error')
+  if (el?.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
+
+// ---- Submit ----
+const buildPayload = () => {
+  const today = new Date().toISOString()
+  // Backend ProjectBase still treats name/description/project_type/cost_center/start_date/end_date/budget_amount/budget_type as required.
+  // For drafts we ship safe defaults so the API doesn't 422 — the user can refine later.
+  return {
+    name:          form.name || `Draft — ${form.government_order_no || 'untitled'}`,
+    description:   form.description || ' ',
+    project_type:  form.project_type || 'Other',
+    start_date:    form.start_date || today,
+    end_date:      form.end_date   || today,
+    budget_amount: Number(form.budget_amount || 0),
+    currency:      form.currency || 'INR',
+    code:          form.code,
+    project_order_path: form.project_order_path || null,
+    // Government fields
+    government_order_no:  form.government_order_no || null,
+    order_date:           form.order_date || null,
+    issuing_authority:    form.issuing_authority || null,
+    order_received_date:  form.order_received_date || null,
+    department:           form.department || null,
+    category:             form.category || null,
+    priority:             form.priority || null,
+    state:                form.state || null,
+    district:             form.district || null,
+    funding_type:         form.funding_type || null,
+    project_head_name:        form.project_head_name || null,
+    project_head_designation: form.project_head_designation || null,
+    project_head_contact:     form.project_head_contact || null,
+    nodal_officer:            form.nodal_officer || null,
+    contractor:               form.contractor || null,
+    lifecycle_status:         form.lifecycle_status || 'Order Received',
   }
 }
 
+const onSubmit = async (mode) => {
+  if (!validate(mode)) {
+    toast.error('Please fix the highlighted fields')
+    scrollToFirstError()
+    return
+  }
+  isSubmitting.value = true
+  stampAnim.value = mode === 'create'
+  setTimeout(() => (stampAnim.value = false), 800)
+  try {
+    const payload = buildPayload()
+    if (mode === 'draft') payload.status = 'Draft'
+    const res = await axios.post(`${API_BASE}/api/projects/`, payload, {
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` }
+    })
+    toast.success(mode === 'draft' ? 'Draft saved' : 'Project created — entered the records hall.')
+    // Navigate to the new project's details
+    router.push(`/${portal.value}/projects/projectdetails/${res.data.id}`)
+  } catch (e) {
+    const msg = e.response?.data?.detail || 'Failed to create project'
+    toast.error(typeof msg === 'string' ? msg : 'Failed to create project')
+    if (typeof msg === 'string' && /code/i.test(msg)) errors.value.code = msg
+  } finally { isSubmitting.value = false }
+}
+
+const onCancel = () => router.push(`/${portal.value}/projects/allprojects`)
+
+// ---- Init ----
+const fetchUser = async () => {
+  try {
+    const res = await axios.get(`${API_BASE}/api/auth/me`, { headers: { Authorization: `Bearer ${getToken()}` } })
+    user.value = res.data
+  } catch { /* silent */ }
+}
+
+// GSAP animation wiring
+const { run } = useGsapAnim(pageRoot)
+useParallaxOrbs(pageRoot, { strength: 28 })
+run(() => { createProjectEntry(pageRoot.value) })
+
+// Reactive preview pulse — debounced + cooled-down to avoid spam-tweens
+let _previewCooldown = 0
+let _previewDebounce = null
+const triggerPreviewPulse = () => {
+  if (!previewCardRef.value) return
+  const now = Date.now()
+  if (now - _previewCooldown < 200) return
+  _previewCooldown = now
+  pulseScale(previewCardRef.value, { scale: 1.015, duration: 0.18 })
+}
+watch(
+  () => [form.name, form.code, form.category, form.priority, form.budget_amount, form.lifecycle_status],
+  () => {
+    if (_previewDebounce) clearTimeout(_previewDebounce)
+    _previewDebounce = setTimeout(triggerPreviewPulse, 80)
+  },
+  { deep: false }
+)
+
+// Form field focus/blur glow (delegated, single listener)
+const handleFieldFocus = (e) => {
+  const el = e.target
+  if (el.matches && el.matches('.civic-input')) focusGlow(el)
+}
+const handleFieldBlur = (e) => {
+  const el = e.target
+  if (el.matches && el.matches('.civic-input')) blurGlow(el)
+}
+
+// Error shake on first error appearance
+const _previousErrors = {}
+watch(() => ({ ...(errors.value || {}) }), (val) => {
+  Object.keys(val || {}).forEach((k) => {
+    if (val[k] && !_previousErrors[k]) {
+      const inputEl = pageRoot.value?.querySelector(`.has-error`)
+      if (inputEl) errorShake(inputEl)
+    }
+    _previousErrors[k] = val[k]
+  })
+}, { deep: false })
+
+onMounted(async () => {
+  pageRoot.value?.addEventListener('focusin', handleFieldFocus)
+  pageRoot.value?.addEventListener('focusout', handleFieldBlur)
+  await fetchUser()
+  await suggestCode()  // pre-fill code on mount for convenience
+  await nextTick()
+  firstFieldRef.value?.focus?.()
+})
 </script>
 
 <style scoped>
-.page-container {
-  max-width: 900px;
+/* ============================================================
+   CIVIC FORGE — Create Project page
+   Palette tokens (sapphire/cyan accent, amber kept for required-field marker):
+     --civic-primary:        #f59e0b   sapphire
+     --civic-primary-dark:   #d97706
+     --civic-secondary:      #f97316   cyan
+     --civic-gradient:       linear-gradient(135deg, #f59e0b 0%, #f97316 100%)
+     --required-mark:        #fbbf24   amber (kept from family)
+   ============================================================ */
+.forge-root {
+  position: relative;
+  min-height: calc(100vh - 52px);
+  width: 100%;
+  max-width: 1500px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: 28px 28px 80px;
+  color: #f5f5f7;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Outfit", sans-serif;
 }
 
-.header {
-  margin-bottom: 40px;
-  text-align: center;
+/* ----- BACKDROP ----- */
+.forge-backdrop { position: fixed; inset: 52px 0 0 0; pointer-events: none; z-index: -1; overflow: hidden; }
+.forge-base { position: absolute; inset: 0; background: radial-gradient(ellipse at top left, #061018 0%, #04070b 50%, #02030a 100%); }
+.forge-grid { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.55; mix-blend-mode: screen; }
+.forge-orb { position: absolute; border-radius: 50%; filter: blur(90px); will-change: transform; transform: translate(var(--orb-parallax-x, 0px), var(--orb-parallax-y, 0px)); }
+.forge-orb-1 { width: 520px; height: 520px; top: -160px; right: -120px; background: radial-gradient(circle, rgba(245, 158, 11, 0.16), transparent 70%); }
+.forge-orb-2 { width: 380px; height: 380px; bottom: -100px; left: -80px; background: radial-gradient(circle, rgba(249, 115, 22, 0.12), transparent 70%); }
+@keyframes orb-drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-30px, 30px) scale(1.06); }
 }
-.header h1 { font-size: 28px; font-weight: 700; color: #f5f5f5; margin-bottom: 8px; }
-.subtitle { color: #8e8e93; font-size: 15px; }
-
-/* Stepper */
-.stepper-header {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 40px;
-}
-
-.step-item {
-  display: flex;
-  align-items: center;
-  position: relative;
+@keyframes orb-drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(40px, -25px) scale(1.05); }
 }
 
-.step-circle {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: #2c2c2e;
-  border: 2px solid #3a3a3c;
-  color: #8e8e93;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 600;
-  z-index: 2;
-  transition: all 0.3s;
+/* ----- ORDER NOTICE BANNER ----- */
+.order-notice {
+  position: relative; display: flex; align-items: center; gap: 16px;
+  padding: 16px 22px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.10) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.30);
+  overflow: hidden;
+  margin-bottom: 24px;
 }
-
-.step-label {
-  margin-left: 10px;
-  margin-right: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #8e8e93;
-}
-
-.step-line {
-  width: 60px;
-  height: 2px;
-  background: #3a3a3c;
-  margin-right: 20px;
-}
-
-/* Active/Completed States */
-.step-item.active .step-circle {
-  border-color: #3b82f6;
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-.step-item.active .step-label { color: #f5f5f5; }
-
-.step-item.completed .step-circle {
-  background: #3b82f6;
-  border-color: #3b82f6;
-  color: white;
-}
-.step-item.completed .step-line { background: #3b82f6; }
-
-
-/* Form Card */
-.wizard-card {
-  background: #1c1c1e;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 32px;
-}
-
-.step-content h3 { font-size: 18px; font-weight: 600; color: #f5f5f5; margin-bottom: 6px; }
-.section-desc { color: #8e8e93; font-size: 13px; margin-bottom: 24px; }
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.span-full { grid-column: span 2; }
-
-/* Input Styles - Compact */
-.input-wrapper { display: flex; flex-direction: column; gap: 4px; }
-.floating-label { font-size: 10px; font-weight: 700; color: #8e8e93; text-transform: uppercase; letter-spacing: 0.5px; }
-.req { color: #ff453a; }
-
-.minimal-input, .minimal-textarea {
-  background: #121214;
-  border: 1px solid #3a3a3c;
-  border-radius: 6px;
-  padding: 0 10px;
-  color: #f5f5f5;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-.minimal-input { height: 36px; }
-.minimal-textarea { height: 70px; padding: 8px 10px; font-family: inherit; resize: vertical; }
-
-.minimal-input:focus, .minimal-textarea:focus { border-color: #3b82f6; background: #000; outline: none; }
-.minimal-input:disabled { opacity: 0.5; cursor: not-allowed; background: #0a0a0a; }
-
-/* Disabled/Readonly Field Styling */
-.disabled-field {
-  background: #0a0a0a !important;
-  border: 1px dashed #3a3a3c !important;
-  color: #6e6e73 !important;
-  cursor: not-allowed;
-}
-
-.readonly-field {
-  height: 36px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #0a0a0a;
-  border: 1px dashed #3a3a3c;
-  border-radius: 6px;
-  padding: 0 10px;
-  color: #6e6e73;
-  font-size: 13px;
-}
-.field-icon { color: #5e5e63; }
-
-.hint { font-size: 10px; color: #6e6e73; }
-
-/* Input with Icon Prefix */
-.input-with-icon {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.input-icon {
-  position: absolute;
-  left: 10px;
-  color: #6e6e73;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.icon-input {
-  padding-left: 32px !important;
-}
-
-/* Radio Group */
-.radio-group { display: flex; gap: 12px; }
-.radio-card {
-  flex: 1;
-  background: #121214;
-  border: 1px solid #3a3a3c;
-  border-radius: 8px;
-  padding: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  transition: all 0.2s;
-}
-.radio-card:hover { border-color: #666; }
-.radio-card.active { border-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
-
-.radio-content { display: flex; flex-direction: column; }
-.radio-title { font-weight: 600; color: #f5f5f5; font-size: 14px; }
-.radio-desc { font-size: 12px; color: #8e8e93; }
-
-/* Duration Display */
-.duration-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  border-radius: 8px;
-  margin-top: 8px;
-}
-
-.duration-icon { color: #3b82f6; }
-.duration-label { font-size: 12px; color: #8e8e93; }
-.duration-value { font-size: 13px; font-weight: 600; color: #3b82f6; }
-
-/* Actions */
-.wizard-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 40px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 24px;
-}
-.spacer { flex: 1; }
-
-.btn-primary, .btn-secondary {
-  height: 34px;
-  padding: 0 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  border: none;
-  transition: transform 0.1s;
-}
-
-.btn-primary { background: #3b82f6; color: white; }
-.btn-primary:hover { background: #2563eb; }
-.btn-primary.success { background: #10b981; }
-.btn-primary.success:hover { background: #059669; }
-
-.btn-secondary { background: transparent; color: #8e8e93; border: 1px solid #3a3a3c; }
-.btn-secondary:hover { color: #f5f5f5; border-color: #666; }
-
-/* Draft Button */
-.btn-draft {
-  height: 34px;
-  padding: 0 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  background: rgba(255, 149, 0, 0.1);
-  color: #ff9500;
-  border: 1px solid rgba(255, 149, 0, 0.3);
-  transition: all 0.2s;
-}
-.btn-draft:hover {
-  background: rgba(255, 149, 0, 0.2);
-  border-color: #ff9500;
-}
-
-/* Submit Button */
-.btn-submit {
-  height: 34px;
-  padding: 0 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 12px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
-  border: none;
-  transition: all 0.2s;
-}
-.btn-submit:hover {
-  background: linear-gradient(135deg, #059669, #047857);
-  transform: translateY(-1px);
-}
-
-/* Modal */
-.modal-backdrop {
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+.on-seal {
+  flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: #1a1208;
   display: flex; align-items: center; justify-content: center;
-  z-index: 2000;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35), 0 0 0 4px rgba(251, 191, 36, 0.08);
 }
-.modal-card {
-  background: #1c1c1e;
-  border: 1px solid #3a3a3c;
-  border-radius: 16px;
-  width: 500px;
-  max-width: 90%;
+.on-body { flex: 1; min-width: 0; }
+.on-eyebrow { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 700; letter-spacing: 0.22em; color: #fbbf24; margin-bottom: 4px; }
+.on-text { font-size: 13px; color: rgba(255, 255, 255, 0.78); line-height: 1.5; }
+.on-text strong { color: #fbbf24; }
+.on-decoration { position: absolute; inset: 0; pointer-events: none; }
+.on-corner-1, .on-corner-2 {
+  position: absolute; width: 80px; height: 80px;
+  border-radius: 50%; filter: blur(50px);
 }
-.modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex; justify-content: space-between; align-items: center;
-}
-.modal-header h3 { font-size: 16px; font-weight: 600; color: #f5f5f5; }
-.close-btn { background: none; border: none; color: #8e8e93; cursor: pointer; }
+.on-corner-1 { top: -40px; right: 80px; background: rgba(251, 191, 36, 0.20); }
+.on-corner-2 { bottom: -40px; right: -20px; background: rgba(245, 158, 11, 0.15); }
 
-.modal-body { padding: 24px; }
-.review-grid { display: grid; gap: 12px; margin-bottom: 20px; }
-.review-item { display: flex; justify-content: space-between; font-size: 14px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-.review-item .label { color: #8e8e93; }
-.review-item .value { color: #f5f5f5; font-weight: 500; }
+/* ----- HERO ----- */
+.forge-hero {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 32px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 28px;
+}
+.hero-left { flex: 1; min-width: 0; }
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.22em;
+  color: #f97316;
+  padding: 5px 12px; border-radius: 999px;
+  background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.20);
+  margin-bottom: 14px;
+}
+.hero-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 44px; font-weight: 700; line-height: 1.05; margin: 0 0 8px;
+  letter-spacing: -0.022em;
+  color: #fff;
+}
+.hero-title span {
+  background: linear-gradient(120deg, #f59e0b 0%, #f97316 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.hero-sub { font-size: 13px; color: rgba(255, 255, 255, 0.50); margin: 0; max-width: 500px; }
+.hero-meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.hero-meta-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 11px; color: rgba(255, 255, 255, 0.70);
+}
+.hero-meta-pill svg { color: #f97316; }
+.hero-meta-pill strong { color: #fff; font-weight: 600; }
 
-.modal-note {
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.15);
-  border-radius: 8px;
-  padding: 12px;
-  font-size: 13px; color: #93c5fd;
-  display: flex; gap: 10px;
+/* ----- BODY ----- */
+.forge-body {
+  display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: flex-start;
+}
+.forge-form { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+/* ----- SECTION CARD ----- */
+.section-card {
+  position: relative;
+  padding: 24px 26px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0.005) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  overflow: hidden;
+}
+.section-card::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, #f59e0b 0%, #f97316 100%);
+  border-radius: 18px 0 0 18px;
+  opacity: 0.55;
+  transition: opacity 0.3s ease;
+}
+.section-card:hover::before { opacity: 0.95; }
+
+.sc-header { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.sc-seal {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px; font-weight: 700; letter-spacing: 0.08em;
+  padding: 6px 12px; border-radius: 10px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(249, 115, 22, 0.10));
+  color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.25);
+}
+.sc-header h3 { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 600; color: #fff; margin: 0; letter-spacing: -0.01em; }
+.sc-header p { font-size: 11px; color: rgba(255, 255, 255, 0.40); margin: 2px 0 0; }
+
+.sc-grid { display: grid; gap: 16px; }
+.sc-grid.two-col { grid-template-columns: 1fr 1fr; }
+.sc-grid.three-col { grid-template-columns: 1fr 1fr 1fr; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field.full { grid-column: 1 / -1; }
+.field label { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; color: rgba(255, 255, 255, 0.55); text-transform: uppercase; }
+.req { color: #fbbf24; font-weight: 800; }
+
+.civic-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.30); border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 11px; padding: 11px 14px; color: #fff; font-size: 13px;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+.civic-input::placeholder { color: rgba(255, 255, 255, 0.28); }
+.civic-input:focus {
+  outline: none; border-color: rgba(245, 158, 11, 0.45);
+  background: rgba(245, 158, 11, 0.04);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.10);
+}
+.civic-input.mono { font-family: 'SF Mono', ui-monospace, monospace; letter-spacing: 0.02em; }
+.civic-input.has-error,
+.has-error :deep(.input-wrap),
+.has-error :deep(.dp-input) {
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  background: rgba(239, 68, 68, 0.04) !important;
+  animation: amber-pulse 1.2s ease-out 1;
+}
+@keyframes amber-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55); }
+  100% { box-shadow: 0 0 0 12px rgba(251, 191, 36, 0); }
+}
+textarea.civic-input { resize: vertical; min-height: 70px; line-height: 1.5; }
+
+.code-row { display: flex; gap: 6px; }
+.code-row .civic-input { flex: 1; }
+.suggest-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0 14px; border-radius: 11px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(249, 115, 22, 0.10));
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  color: #fde68a; font-size: 11px; font-weight: 600;
+  cursor: pointer; flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+.suggest-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(249, 115, 22, 0.16));
+  color: #fff; transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.20);
+}
+.suggest-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.suggest-btn svg { color: #f97316; }
+
+.duration-strip {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 16px;
+  padding: 6px 12px; border-radius: 999px;
+  background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.18);
+  font-size: 11px; color: rgba(255, 255, 255, 0.70);
+}
+.duration-strip strong { color: #fbbf24; font-weight: 700; }
+
+/* ----- ACTION BAR ----- */
+.forge-actions {
+  display: flex; gap: 10px; justify-content: flex-end;
+  padding: 18px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-top: 6px;
+}
+.btn-ghost, .btn-draft, .btn-stamp {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 18px; border-radius: 12px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.65);
+}
+.btn-ghost:hover { background: rgba(255, 255, 255, 0.04); color: #fff; border-color: rgba(255, 255, 255, 0.18); }
+.btn-draft {
+  background: rgba(251, 191, 36, 0.10);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  color: #fbbf24;
+}
+.btn-draft:hover:not(:disabled) {
+  background: rgba(251, 191, 36, 0.18);
+  border-color: rgba(251, 191, 36, 0.40);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(251, 191, 36, 0.15);
+}
+.btn-stamp {
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  color: #fff; border: none;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.30);
+}
+.btn-stamp:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(245, 158, 11, 0.42);
+}
+.btn-stamp:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-stamp.stamping {
+  animation: civic-stamp 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.btn-stamp .stamp-flash {
+  position: absolute; inset: 0; opacity: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.40), transparent 60%);
+}
+.btn-stamp.stamping .stamp-flash { animation: stamp-flash 0.7s ease-out; }
+@keyframes civic-stamp {
+  0%   { transform: rotate(0deg) scale(1); }
+  30%  { transform: rotate(-3deg) scale(0.96); }
+  60%  { transform: rotate(4deg) scale(1.04); }
+  100% { transform: rotate(0deg) scale(1); }
+}
+@keyframes stamp-flash {
+  0%   { opacity: 0; }
+  40%  { opacity: 1; }
+  100% { opacity: 0; }
 }
 
-.modal-footer {
-  padding: 16px 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex; justify-content: flex-end; gap: 12px;
+/* ----- LIVE PREVIEW RAIL ----- */
+.forge-preview { position: relative; }
+.preview-sticky {
+  position: sticky; top: 76px;
+  display: flex; flex-direction: column; gap: 18px;
 }
-.btn-text { background: none; border: none; color: #8e8e93; font-weight: 600; cursor: pointer; }
-
-/* Animation */
-.fade-in { animation: fadeInUp 0.5s ease-out; }
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.prv-eyebrow { display: inline-flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 700; letter-spacing: 0.22em; color: #f97316; }
+.prv-headline { font-family: 'Outfit', sans-serif; font-size: 13px; color: rgba(255, 255, 255, 0.55); font-weight: 500; margin: 4px 0 0; }
+.prv-card {
+  position: relative;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(245, 158, 11, 0.06) 0%, rgba(255, 255, 255, 0.02) 60%),
+    rgba(8, 10, 14, 0.65);
+  border: 1px solid rgba(245, 158, 11, 0.20);
+  backdrop-filter: blur(24px);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.prv-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
+.prv-cat-chip {
+  font-size: 9px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  letter-spacing: 0.04em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;
+}
+.prv-prio {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.80);
+}
+.prio-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, 0.50); }
+.prv-prio.prio-high   { background: rgba(239, 68, 68, 0.08);  border-color: rgba(239, 68, 68, 0.30);  color: #fda4af; }
+.prv-prio.prio-high .prio-dot   { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.7); animation: hi-pulse 2.4s ease-in-out infinite; }
+.prv-prio.prio-medium { background: rgba(251, 191, 36, 0.08); border-color: rgba(251, 191, 36, 0.30); color: #fde68a; }
+.prv-prio.prio-medium .prio-dot { background: #fbbf24; }
+.prv-prio.prio-low    { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.30); color: #6ee7b7; }
+.prv-prio.prio-low .prio-dot    { background: #10b981; }
+@keyframes hi-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.7); transform: scale(1); }
+  50%      { box-shadow: 0 0 14px rgba(239, 68, 68, 1); transform: scale(1.18); }
 }
 
-/* Error Text helper */
-.error-text-component { font-size: 11px; color: #ff453a; display: block; margin-top: 4px; }
+.prv-title {
+  font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 600; color: #fff;
+  line-height: 1.3; margin: 0 0 4px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.prv-sub { font-size: 11px; color: rgba(255, 255, 255, 0.45); }
+.prv-sep { height: 1px; background: linear-gradient(90deg, rgba(255, 255, 255, 0.10), transparent); margin: 12px 0; }
+.prv-budget { display: flex; align-items: baseline; gap: 6px; }
+.prv-cur { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: rgba(255, 255, 255, 0.40); }
+.prv-amt { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 700; color: #fff;
+  background: linear-gradient(180deg, #fff, #fde68a); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.prv-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255, 255, 255, 0.06); font-size: 10px; }
+.prv-code { font-family: 'SF Mono', monospace; color: rgba(255, 255, 255, 0.45); }
+.prv-stage { color: #fbbf24; font-weight: 600; letter-spacing: 0.04em; }
+
+/* Stage track */
+.prv-stages { display: flex; flex-direction: column; gap: 6px; }
+.prv-stages-eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 0.22em; color: rgba(255, 255, 255, 0.40); }
+.prv-stages-track { display: flex; flex-direction: column; gap: 4px; }
+.prv-stage-pill {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 12px; border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 11px; color: rgba(255, 255, 255, 0.40);
+  transition: all 0.25s ease;
+}
+.prv-stage-pill .ps-dot {
+  flex-shrink: 0; width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.20);
+  transition: all 0.25s ease;
+}
+.prv-stage-pill.active {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.14), rgba(249, 115, 22, 0.06));
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fff;
+}
+.prv-stage-pill.active .ps-dot { background: linear-gradient(135deg, #f59e0b, #f97316); box-shadow: 0 0 10px rgba(245, 158, 11, 0.55); }
+.prv-stage-pill.past .ps-dot { background: rgba(34, 211, 238, 0.5); }
+.prv-stage-pill.past { color: rgba(255, 255, 255, 0.60); }
+
+/* Project head card in preview */
+.prv-head { display: flex; flex-direction: column; gap: 6px; }
+.prv-head-eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 0.22em; color: rgba(255, 255, 255, 0.40); }
+.prv-head-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025); border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.prv-head-avatar {
+  flex-shrink: 0; width: 38px; height: 38px; border-radius: 11px;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.30);
+}
+.prv-head-name { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.2; }
+.prv-head-role { font-size: 11px; color: rgba(255, 255, 255, 0.45); margin-top: 1px; }
+
+/* ----- Animations ----- */
+.cascade-right { animation: cascade-right-anim 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes cascade-right-anim {
+  0%   { opacity: 0; transform: translateX(24px); filter: blur(4px); }
+  100% { opacity: 1; transform: translateX(0); filter: blur(0); }
+}
+.fade-up { animation: fade-up-anim 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes fade-up-anim {
+  0%   { opacity: 0; transform: translateY(18px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.pop-in { animation: pop-in-anim 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes pop-in-anim {
+  0%   { opacity: 0; transform: scale(0.94); }
+  60%  { opacity: 1; transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.spin { animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.custom-scroll::-webkit-scrollbar { width: 6px; }
+.custom-scroll::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.20); border-radius: 999px; }
+.custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.40); }
+
+/* Responsive */
+@media (max-width: 1080px) {
+  .forge-body { grid-template-columns: 1fr; }
+  .forge-preview { display: none; }
+}
+@media (max-width: 720px) {
+  .sc-grid.two-col, .sc-grid.three-col { grid-template-columns: 1fr; }
+  .hero-title { font-size: 32px; }
+  .forge-hero { flex-direction: column; align-items: flex-start; gap: 16px; }
+}
 </style>

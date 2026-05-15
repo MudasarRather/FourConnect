@@ -127,10 +127,24 @@ onUnmounted(() => {
 
 .note-card:hover {
   background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(255, 255, 255, 0.16);
+  border-color: rgba(245, 158, 11, 0.22);
   transform: translateY(-4px) scale(1.01);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255,255,255,0.06);
 }
+
+/* Paper-curl hover highlight — light catches the lifted top-left corner */
+.note-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.06) 35%, transparent 65%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+  border-top-left-radius: 20px;
+}
+.note-card:hover::before { opacity: 1; }
 
 .note-card:hover :deep(.card-actions) {
   opacity: 1; transform: translateY(0);

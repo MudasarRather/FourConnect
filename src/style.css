@@ -91,6 +91,25 @@ a:hover {
   }
 }
 
+/* ===== GSAP animation utilities ===== */
+.gsap-will-animate { opacity: 0; }
+.gsap-tilt-layer { transform-style: preserve-3d; }
+
+[data-anim="hero-title"] .word-mask { display: inline-block; overflow: hidden; vertical-align: bottom; line-height: 1; }
+[data-anim="hero-title"] .word-inner { display: inline-block; will-change: transform, opacity; }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .gsap-will-animate { opacity: 1 !important; }
+}
+
 /* ===== Custom Scrollbars ===== */
 ::-webkit-scrollbar {
   width: 6px;

@@ -262,9 +262,10 @@ const gridLines = computed(() => {
 /* Header */
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
 .header-left { display: flex; align-items: center; gap: 12px; }
-.icon-box { 
-  width: 32px; height: 32px; background: rgba(59, 130, 246, 0.1); 
-  border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #3b82f6;
+.icon-box {
+  width: 32px; height: 32px; background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fbbf24;
 }
 h3 { font-size: 16px; font-weight: 600; color: white; margin: 0; }
 
@@ -273,7 +274,7 @@ h3 { font-size: 16px; font-weight: 600; color: white; margin: 0; }
 .l-dot { width: 6px; height: 6px; border-radius: 50%; }
 .l-item.pending .l-dot { background: #eab308; box-shadow: 0 0 6px rgba(234, 179, 8, 0.4); }
 .l-item.in_progress .l-dot { background: #f97316; box-shadow: 0 0 6px rgba(249, 115, 22, 0.4); }
-.l-item.completed .l-dot { background: #3b82f6; box-shadow: 0 0 6px rgba(59, 130, 246, 0.4); }
+.l-item.completed .l-dot { background: #fbbf24; box-shadow: 0 0 6px rgba(251, 191, 36, 0.5); }
 
 /* Gantt Layout */
 .gantt-container {
@@ -350,8 +351,8 @@ h3 { font-size: 16px; font-weight: 600; color: white; margin: 0; }
 .gantt-bar-inner.in_progress { background: rgba(249, 115, 22, 0.2); border: 1px solid rgba(249, 115, 22, 0.3); }
 .gantt-bar-inner.in_progress .bar-progress { background: #f97316; }
 
-.gantt-bar-inner.completed { background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.3); }
-.gantt-bar-inner.completed .bar-progress { background: #3b82f6; }
+.gantt-bar-inner.completed { background: rgba(245, 158, 11, 0.18); border: 1px solid rgba(245, 158, 11, 0.32); }
+.gantt-bar-inner.completed .bar-progress { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
 
 .bar-progress { height: 100%; opacity: 0.8; }
 
@@ -381,7 +382,7 @@ h3 { font-size: 16px; font-weight: 600; color: white; margin: 0; }
 .ph-bar-fill { height: 100%; border-radius: 1.5px; }
 .ph-bar-fill.pending { background: #eab308; }
 .ph-bar-fill.in_progress { background: #f97316; }
-.ph-bar-fill.completed { background: #3b82f6; }
+.ph-bar-fill.completed { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
 
 .pop-body { padding: 12px 16px; }
 .pop-tasks { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }

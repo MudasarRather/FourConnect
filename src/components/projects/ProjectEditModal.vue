@@ -48,14 +48,83 @@
             <div class="modal-body">
               <!-- Step 1: Details -->
               <div v-show="currentStep === 1" class="step-content">
+                <!-- Government order block: visible if any govt field is set OR we're editing -->
+                <div class="govt-block" v-if="mode === 'edit' || form.government_order_no || form.category || form.priority || form.lifecycle_status">
+                  <div class="govt-block-title">
+                    <Crown :size="11"/> GOVERNMENT ORDER
+                  </div>
+                  <div class="form-grid compact">
+                    <div class="field-group">
+                      <label><Hash :size="12"/> Order No.</label>
+                      <input v-if="mode === 'edit'" v-model="form.government_order_no" class="input-sm" placeholder="e.g. GO/2024/12345"/>
+                      <div v-else class="preview-value">{{ form.government_order_no || '—' }}</div>
+                    </div>
+                    <div class="field-group">
+                      <label><Building :size="12"/> Issuing Authority</label>
+                      <input v-if="mode === 'edit'" v-model="form.issuing_authority" class="input-sm" placeholder="Ministry / Authority"/>
+                      <div v-else class="preview-value">{{ form.issuing_authority || '—' }}</div>
+                    </div>
+                    <div class="field-group">
+                      <label><Layers :size="12"/> Department</label>
+                      <input v-if="mode === 'edit'" v-model="form.department" class="input-sm" placeholder="Department / Executing Agency"/>
+                      <div v-else class="preview-value">{{ form.department || '—' }}</div>
+                    </div>
+                    <div class="field-group">
+                      <label><Tag :size="12"/> Category</label>
+                      <CustomSelect v-if="mode === 'edit'" v-model="form.category" :options="categoryOptionsEdit" labelKey="label" valueKey="value" placeholder="Choose category" compact/>
+                      <div v-else class="preview-value">{{ form.category || '—' }}</div>
+                    </div>
+                    <div class="field-group">
+                      <label><Flame :size="12"/> Priority</label>
+                      <CustomSelect v-if="mode === 'edit'" v-model="form.priority" :options="priorityOptionsEdit" labelKey="label" valueKey="value" placeholder="Choose priority" compact/>
+                      <div v-else class="preview-value">{{ form.priority || '—' }}</div>
+                    </div>
+                    <div class="field-group">
+                      <label><Activity :size="12"/> Lifecycle Status</label>
+                      <CustomSelect v-if="mode === 'edit'" v-model="form.lifecycle_status" :options="lifecycleOptionsEdit" labelKey="label" valueKey="value" placeholder="Choose stage" compact/>
+                      <div v-else class="preview-value">{{ form.lifecycle_status || '—' }}</div>
+                    </div>
+                    <div class="field-group">
+                      <label><MapPin :size="12"/> State</label>
+                      <input v-if="mode === 'edit'" v-model="form.state" class="input-sm" placeholder="State / Province"/>
+                      <div v-else class="preview-value">{{ form.state || '—' }}</div>
+                    </div>
+                    <div class="field-group">
+                      <label><MapPin :size="12"/> District</label>
+                      <input v-if="mode === 'edit'" v-model="form.district" class="input-sm" placeholder="District / City"/>
+                      <div v-else class="preview-value">{{ form.district || '—' }}</div>
+                    </div>
+                    <div class="field-group">
+                      <label><Coins :size="12"/> Funding Type</label>
+                      <CustomSelect v-if="mode === 'edit'" v-model="form.funding_type" :options="fundingOptionsEdit" labelKey="label" valueKey="value" placeholder="Funding source" compact/>
+                      <div v-else class="preview-value">{{ form.funding_type || '—' }}</div>
+                    </div>
+                    <div class="field-group">
+                      <label><User :size="12"/> Project Head</label>
+                      <input v-if="mode === 'edit'" v-model="form.project_head_name" class="input-sm" placeholder="Head Name"/>
+                      <div v-else class="preview-value">{{ form.project_head_name || '—' }}</div>
+                    </div>
+                    <div class="field-group">
+                      <label><Briefcase :size="12"/> Designation</label>
+                      <input v-if="mode === 'edit'" v-model="form.project_head_designation" class="input-sm" placeholder="Head Designation"/>
+                      <div v-else class="preview-value">{{ form.project_head_designation || '—' }}</div>
+                    </div>
+                    <div class="field-group">
+                      <label><Mail :size="12"/> Head Contact</label>
+                      <input v-if="mode === 'edit'" v-model="form.project_head_contact" class="input-sm" placeholder="phone or email"/>
+                      <div v-else class="preview-value">{{ form.project_head_contact || '—' }}</div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="form-grid compact">
                   <div class="field-group full">
                     <label><FileText :size="12" /> Project Name</label>
-                    <input 
-                      v-if="mode === 'edit'" 
-                      v-model="form.name" 
-                      class="input-sm" 
-                      placeholder="Project name" 
+                    <input
+                      v-if="mode === 'edit'"
+                      v-model="form.name"
+                      class="input-sm"
+                      placeholder="Project name"
                     />
                     <div v-else class="preview-value">{{ form.name || '-' }}</div>
                   </div>
@@ -84,20 +153,6 @@
                       compact
                     />
                     <div v-else class="preview-value">{{ getProjectTypeName(form.project_type) }}</div>
-                  </div>
-
-                  <div class="field-group">
-                    <label><Target :size="12" /> Cost Center</label>
-                    <CustomSelect 
-                      v-if="mode === 'edit'"
-                      v-model="form.cost_center" 
-                      :options="costCenters" 
-                      labelKey="name" 
-                      valueKey="id"
-                      placeholder="Select cost center"
-                      compact
-                    />
-                    <div v-else class="preview-value">{{ getCostCenterName(form.cost_center) }}</div>
                   </div>
 
                   <div class="field-group full">
@@ -185,31 +240,6 @@
                       compact
                     />
                     <div v-else class="preview-value">{{ form.currency }}</div>
-                  </div>
-
-                  <div class="field-group full">
-                    <label><PieChart :size="12" /> Budget Type</label>
-                    <div v-if="mode === 'edit'" class="budget-type-selector">
-                      <button 
-                        type="button"
-                        class="type-btn" 
-                        :class="{ active: form.budget_type === 'Capex' }"
-                        @click="form.budget_type = 'Capex'"
-                      >
-                        <TrendingUp :size="14" />
-                        CAPEX
-                      </button>
-                      <button 
-                        type="button"
-                        class="type-btn" 
-                        :class="{ active: form.budget_type === 'Opex' }"
-                        @click="form.budget_type = 'Opex'"
-                      >
-                        <Activity :size="14" />
-                        OPEX
-                      </button>
-                    </div>
-                    <div v-else class="preview-value">{{ form.budget_type || 'Not set' }}</div>
                   </div>
 
                   <!-- Summary Card -->
@@ -360,8 +390,41 @@ import {
   X, Check, ChevronLeft, ChevronRight, CheckCircle, XCircle, Save, Info,
   FileText, AlignLeft, Layers, Target, Building, Calendar, CalendarCheck,
   Clock, User, DollarSign, Globe, PieChart, TrendingUp, Activity,
-  Eye, CheckCircle2
+  Eye, CheckCircle2, Crown, Hash, Tag, Flame, MapPin, Coins, Briefcase, Mail
 } from 'lucide-vue-next'
+
+// Govt-aware dropdown options for the new fields. Kept local — no shared module.
+const categoryOptionsEdit = [
+  { value: 'Infrastructure',           label: 'Infrastructure' },
+  { value: 'Roads & Bridges',          label: 'Roads & Bridges' },
+  { value: 'Water & Sanitation',       label: 'Water & Sanitation' },
+  { value: 'Buildings & Construction', label: 'Buildings & Construction' },
+  { value: 'IT & Digital',             label: 'IT & Digital' },
+  { value: 'Social Welfare',           label: 'Social Welfare' },
+  { value: 'Defence',                  label: 'Defence' },
+  { value: 'Energy',                   label: 'Energy' },
+  { value: 'Other',                    label: 'Other' },
+]
+const priorityOptionsEdit = [
+  { value: 'High',   label: 'High' },
+  { value: 'Medium', label: 'Medium' },
+  { value: 'Low',    label: 'Low' },
+]
+const lifecycleOptionsEdit = [
+  { value: 'Order Received', label: 'Order Received' },
+  { value: 'Planning',       label: 'Planning' },
+  { value: 'Tendering',      label: 'Tendering' },
+  { value: 'In Progress',    label: 'In Progress' },
+  { value: 'Active',         label: 'Active' },
+  { value: 'Completed',      label: 'Completed' },
+]
+const fundingOptionsEdit = [
+  { value: 'Central Govt.',   label: 'Central Govt.' },
+  { value: 'State Govt.',     label: 'State Govt.' },
+  { value: 'Central + State', label: 'Central + State' },
+  { value: 'External Aid',    label: 'External Aid' },
+  { value: 'PPP',             label: 'PPP' },
+]
 import { useToast } from '../../composables/useToast'
 import DatePicker from '../ui/DatePicker.vue'
 import CurrencyInput from '../ui/CurrencyInput.vue'
@@ -391,18 +454,32 @@ const form = ref({
   name: '',
   description: '',
   project_type: '',
-  cost_center: '',
   organization: '',
   start_date: '',
   end_date: '',
   budget_amount: 0,
   currency: 'USD',
-  budget_type: ''
+  // --- Government-order fields (optional on edit; legacy projects show blank) ---
+  government_order_no: '',
+  order_date: '',
+  issuing_authority: '',
+  order_received_date: '',
+  department: '',
+  category: '',
+  priority: '',
+  state: '',
+  district: '',
+  funding_type: '',
+  project_head_name: '',
+  project_head_designation: '',
+  project_head_contact: '',
+  nodal_officer: '',
+  contractor: '',
+  lifecycle_status: '',
 })
 
 // Settings
 const projectTypes = ref([])
-const costCenters = ref([])
 const currencies = ref([
   { code: 'USD', symbol: '$' },
   { code: 'EUR', symbol: '€' },
@@ -460,13 +537,28 @@ watch(() => props.project, async (p) => {
       name: p.name || '',
       description: p.description || '',
       project_type: p.project_type || '',
-      cost_center: p.cost_center || '',
       organization: p.organization || '',
       start_date: p.start_date ? p.start_date.split('T')[0] : '',
       end_date: p.end_date ? p.end_date.split('T')[0] : '',
       budget_amount: p.budget_amount || 0,
       currency: p.currency || 'USD',
-      budget_type: p.budget_type || ''
+      // Govt fields — null on legacy rows
+      government_order_no: p.government_order_no || '',
+      order_date: p.order_date ? p.order_date.split('T')[0] : '',
+      issuing_authority: p.issuing_authority || '',
+      order_received_date: p.order_received_date ? p.order_received_date.split('T')[0] : '',
+      department: p.department || '',
+      category: p.category || '',
+      priority: p.priority || '',
+      state: p.state || '',
+      district: p.district || '',
+      funding_type: p.funding_type || '',
+      project_head_name: p.project_head_name || '',
+      project_head_designation: p.project_head_designation || '',
+      project_head_contact: p.project_head_contact || '',
+      nodal_officer: p.nodal_officer || '',
+      contractor: p.contractor || '',
+      lifecycle_status: p.lifecycle_status || '',
     }
     currentStep.value = 1
     await fetchCreatorName(p.created_by_id)
@@ -482,12 +574,8 @@ const fetchSettingsData = async () => {
   try {
     const token = props.isAdmin ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
     const headers = { Authorization: `Bearer ${token}` }
-    const [pt, cc] = await Promise.all([
-      axios.get('http://localhost:8000/api/settings/project-types', { headers }),
-      axios.get('http://localhost:8000/api/settings/cost-centers', { headers })
-    ])
+    const pt = await axios.get('http://localhost:8000/api/settings/project-types', { headers })
     projectTypes.value = pt.data
-    costCenters.value = cc.data
   } catch (e) {
     console.error('Failed to fetch settings:', e)
   }
@@ -524,20 +612,18 @@ const validateStep = (step) => {
     if (!form.value.name?.trim()) validationErrors.value.name = 'Project name is required'
     if (!form.value.description?.trim()) validationErrors.value.description = 'Description is required'
     if (!form.value.project_type) validationErrors.value.project_type = 'Project type is required'
-    if (!form.value.cost_center) validationErrors.value.cost_center = 'Cost center is required'
   }
-  
+
   if (step === 2) {
     if (!form.value.start_date) validationErrors.value.start_date = 'Start date is required'
     if (!form.value.end_date) validationErrors.value.end_date = 'End date is required'
   }
-  
+
   if (step === 3) {
     if (!form.value.budget_amount || Number(form.value.budget_amount) <= 0) {
-      validationErrors.value.budget_amount = 'Budget must be greater than 0'
+      validationErrors.value.budget_amount = 'Order Value must be greater than 0'
     }
     if (!form.value.currency) validationErrors.value.currency = 'Currency is required'
-    if (!form.value.budget_type) validationErrors.value.budget_type = 'Budget type is required'
   }
   
   return Object.keys(validationErrors.value).length === 0
@@ -570,26 +656,23 @@ const handleClose = () => emit('close')
 
 // Actions
 const validateAllFields = () => {
-  // Validate all 3 steps
   validationErrors.value = {}
-  
+
   // Step 1 checks
   if (!form.value.name?.trim()) validationErrors.value.name = 'Project name is required'
   if (!form.value.description?.trim()) validationErrors.value.description = 'Description is required'
   if (!form.value.project_type) validationErrors.value.project_type = 'Project type is required'
-  if (!form.value.cost_center) validationErrors.value.cost_center = 'Cost center is required'
-  
+
   // Step 2 checks
   if (!form.value.start_date) validationErrors.value.start_date = 'Start date is required'
   if (!form.value.end_date) validationErrors.value.end_date = 'End date is required'
-  
+
   // Step 3 checks
   if (!form.value.budget_amount || Number(form.value.budget_amount) <= 0) {
-    validationErrors.value.budget_amount = 'Budget must be greater than 0'
+    validationErrors.value.budget_amount = 'Order Value must be greater than 0'
   }
   if (!form.value.currency) validationErrors.value.currency = 'Currency is required'
-  if (!form.value.budget_type) validationErrors.value.budget_type = 'Budget type is required'
-  
+
   return Object.keys(validationErrors.value).length === 0
 }
 
@@ -669,10 +752,6 @@ const getProjectTypeName = (id) => {
   return pt?.name || id || '-'
 }
 
-const getCostCenterName = (id) => {
-  const cc = costCenters.value.find(c => c.id === id)
-  return cc?.name || id || '-'
-}
 </script>
 
 <style scoped>
@@ -909,4 +988,20 @@ label { font-size: 12px; font-weight: 500; color: #a1a1aa; display: flex; align-
 .modal-container.preview-mode label svg { color: #fbbf24; }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Government-order block at top of Step 1 (extension — non-breaking) */
+.govt-block {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.06), rgba(245, 158, 11, 0.025));
+  border: 1px solid rgba(251, 191, 36, 0.20);
+}
+.govt-block-title {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.22em; color: #fbbf24;
+  margin-bottom: 8px;
+}
+.govt-block-title svg { color: #f59e0b; }
+.govt-block .form-grid.compact { gap: 8px 12px; }
 </style>

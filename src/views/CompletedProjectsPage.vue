@@ -1,6 +1,6 @@
 <template>
-  <div class="completed-projects-page">
-    <div class="page-header">
+  <div ref="pageRoot" class="completed-projects-page">
+    <div class="page-header" data-anim="page-header">
       <div class="header-left">
         <h1>Completed Projects</h1>
         <p class="subtitle">Showcase of successfully delivered initiatives</p>
@@ -11,7 +11,7 @@
     </div>
 
     <!-- Search/Filter -->
-    <div class="filter-bar">
+    <div class="filter-bar" data-anim="filter-bar">
       <div class="search-box">
          <Search :size="16" class="search-icon" />
          <input type="text" v-model="searchQuery" placeholder="Search completed projects..." />
@@ -39,10 +39,12 @@
 
     <!-- Grid -->
     <div v-else class="project-grid">
-      <div 
-        v-for="project in filteredProjects" 
-        :key="project.id" 
+      <div
+        v-for="project in filteredProjects"
+        :key="project.id"
         class="project-card-glass"
+        data-anim="completed-card"
+        v-tilt="{ max: 6 }"
         @click="viewProject(project)"
       >
          <div class="card-content">
@@ -61,8 +63,14 @@
             <div class="project-identity">
                <h3 class="title">{{ project.project_name }}</h3>
                <span class="project-code-glass" v-if="project.code">{{ project.code }}</span>
+               <div class="govt-chips-row" v-if="project.category || project.priority">
+                  <span class="g-chip cat" v-if="project.category">{{ project.category }}</span>
+                  <span class="g-chip prio" :class="`prio-${(project.priority || 'low').toLowerCase()}`" v-if="project.priority">
+                    <span class="g-prio-dot"></span> {{ project.priority }}
+                  </span>
+               </div>
             </div>
-            
+
             <p class="desc">{{ truncate(project.description, 80) }}</p>
 
             <!-- Metrics Grid -->
@@ -122,6 +130,10 @@ import axios from 'axios'
 import { Search, Loader2, Award, CheckCircle2, Calendar, ArrowRight } from 'lucide-vue-next'
 import { useToast } from '../composables/useToast'
 import ProjectEditModal from '../components/projects/ProjectEditModal.vue'
+import { useGsapAnim } from '../composables/useGsapAnim'
+import { completedProjectsEntry } from '../animations/pageChoreography'
+
+const pageRoot = ref(null)
 
 const { error } = useToast()
 
@@ -217,6 +229,9 @@ const getDuration = (start, end) => {
    return `${diffDays} days`
 }
 
+const { run } = useGsapAnim(pageRoot)
+run(() => { completedProjectsEntry(pageRoot.value) })
+
 onMounted(() => {
   fetchProjects()
 })
@@ -290,13 +305,14 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: rgba(245, 158, 11, 0.10);
+  border: 1px solid rgba(245, 158, 11, 0.25);
   border-radius: 20px;
-  color: #4ade80;
+  color: #fbbf24;
   font-size: 13px;
   font-weight: 600;
 }
+.success-icon { color: #fbbf24; }
 
 /* Grid */
 .project-grid {
@@ -325,9 +341,43 @@ onMounted(() => {
 
 .project-card-glass:hover {
   transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(245, 158, 11, 0.18);
   background: rgba(40, 40, 45, 0.6);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(245, 158, 11, 0.32);
+}
+
+/* Trophy "gold gleam" — single diagonal sweep on hover */
+.project-card-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 35%, rgba(255, 230, 170, 0.14) 50%, transparent 65%);
+  transform: translate(-100%, -100%) rotate(0deg);
+  pointer-events: none;
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 24px;
+  z-index: 3;
+}
+.project-card-glass:hover::after {
+  transform: translate(100%, 100%) rotate(0deg);
+}
+
+/* Stats-pill entry gleam (toggled by JS for one-shot) */
+.stats-pill.trophy-gleam {
+  position: relative;
+  overflow: hidden;
+}
+.stats-pill.trophy-gleam::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 35%, rgba(255, 255, 255, 0.32) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: pillSweepOnce 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes pillSweepOnce {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 /* Card Header */
@@ -356,11 +406,11 @@ onMounted(() => {
   font-size: 11px; font-weight: 700;
   letter-spacing: 0.02em;
 }
-.success-glass { 
-    background: rgba(16, 185, 129, 0.1); 
-    color: #34d399; 
-    border: 1px solid rgba(16, 185, 129, 0.2); 
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+.success-glass {
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.30);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.18);
 }
 
 /* Identity */
@@ -448,4 +498,24 @@ onMounted(() => {
 .loading-state { text-align: center; padding: 60px; color: #71717a; }
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* Government-aware chips inside completed-project cards (additive, non-disruptive) */
+.govt-chips-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.g-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 9px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 3px 9px; border-radius: 999px;
+  white-space: nowrap; max-width: 160px; overflow: hidden; text-overflow: ellipsis;
+}
+.g-chip.cat {
+  background: rgba(59, 130, 246, 0.10); color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.22);
+}
+.g-chip.prio .g-prio-dot { width: 6px; height: 6px; border-radius: 50%; }
+.g-chip.prio.prio-high { background: rgba(217, 119, 6, 0.12); color: #fdba74; border: 1px solid rgba(217, 119, 6, 0.32); }
+.g-chip.prio.prio-high .g-prio-dot { background: #d97706; box-shadow: 0 0 6px rgba(217, 119, 6, 0.7); }
+.g-chip.prio.prio-medium { background: rgba(251, 191, 36, 0.10); color: #fde68a; border: 1px solid rgba(251, 191, 36, 0.30); }
+.g-chip.prio.prio-medium .g-prio-dot { background: #fbbf24; }
+.g-chip.prio.prio-low { background: rgba(245, 158, 11, 0.10); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.28); }
+.g-chip.prio.prio-low .g-prio-dot { background: #facc15; }
 </style>

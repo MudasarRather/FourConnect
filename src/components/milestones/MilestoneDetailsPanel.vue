@@ -132,7 +132,7 @@
                 <label>Start Date</label>
 
                 <div v-if="!isEditing" class="value">
-                   <PlayCircle :size="14" class="text-emerald-400" /> 
+                   <PlayCircle :size="14" class="text-amber-warning" />
                    {{ formatDate(milestone.start_date) || '—' }}
                 </div>
                  <DatePicker 
@@ -167,7 +167,7 @@
                 <label>Est. Hours</label>
 
                 <div v-if="!isEditing" class="value">
-                   <Clock :size="14" class="text-blue-400" />
+                   <Clock :size="14" class="text-amber-warning" />
                    {{ formatHours(milestone.estimated_hours) }}
                 </div>
                 <template v-else>
@@ -195,7 +195,7 @@
                  <label>Milestone Type</label>
 
                  <div v-if="!isEditing" class="value">
-                    <Tag :size="14" class="text-purple-400" />
+                    <Tag :size="14" class="text-amber-warning" />
                     {{ milestone.milestone_type || 'Other' }}
                  </div>
                  <CustomSelect 
@@ -262,7 +262,7 @@
                  <div class="attachment-manager">
                     <div v-if="milestone.file_path" class="existing-file-card">
                        <div class="file-row">
-                          <FileText :size="14" class="text-indigo-400"/>
+                          <FileText :size="14" class="text-amber-warning"/>
                           <span class="file-name-scroll">{{ milestone.file_path.split('/').pop() }}</span>
                        </div>
                        <a :href="getFileUrl(milestone.file_path)" target="_blank" class="link-view">View</a>
@@ -646,9 +646,9 @@ const toggleMember = (id) => {
   }
 }
 
-// Consistent colors for avatars
+// Consistent colors for avatars — amber/orange family only
 const getColor = (name) => {
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1']
+    const colors = ['#fbbf24', '#f59e0b', '#f97316', '#d97706', '#fdba74', '#facc15']
     let hash = 0
     if (name) {
         for(let i=0; i<name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
@@ -1007,8 +1007,8 @@ const getFileUrl = (path) => `http://localhost:8000/${path}`
 .member-item:hover { background: rgba(255,255,255,0.05); }
 
 .member-item.selected {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(245, 158, 11, 0.10);
+  border-color: rgba(245, 158, 11, 0.40);
 }
 
 .member-info { display: flex; align-items: center; gap: 10px; color: #f5f5f7; font-size: 13px; }
@@ -1022,8 +1022,8 @@ const getFileUrl = (path) => `http://localhost:8000/${path}`
 }
 
 .member-item.selected .checkbox-circle {
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: #f59e0b;
+  border-color: #f59e0b;
 }
 .check-icon { font-size: 12px; color: white; font-weight: 800; }
 
@@ -1074,8 +1074,8 @@ const getFileUrl = (path) => `http://localhost:8000/${path}`
 
 .status-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; }
 .status-badge.pending { color: #fbbf24; background: rgba(245, 158, 11, 0.1); }
-.status-badge.in_progress { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
-.status-badge.completed { color: #34d399; background: rgba(16, 185, 129, 0.1); }
+.status-badge.in_progress { color: #fdba74; background: rgba(249, 115, 22, 0.12); }
+.status-badge.completed { color: #fbbf24; background: rgba(245, 158, 11, 0.12); }
 
 .close-btn { 
   background: none; border: none; color: rgba(255,255,255,0.4); 
@@ -1126,7 +1126,7 @@ const getFileUrl = (path) => `http://localhost:8000/${path}`
 .priority-tag.urgent { color: #ef4444; }
 .priority-tag.high { color: #f97316; }
 .priority-tag.medium { color: #fbbf24; }
-.priority-tag.low { color: #3b82f6; }
+.priority-tag.low { color: #facc15; }
 
 .user-chip { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #f5f5f7; }
 .avatar-xs { width: 24px; height: 24px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; }
@@ -1196,8 +1196,8 @@ const getFileUrl = (path) => `http://localhost:8000/${path}`
   display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; 
   border: none; font-size: 11px; font-weight: 600; cursor: pointer; text-transform: uppercase; letter-spacing: 0.02em;
 }
-.btn-sm.success { background: #10b981; color: white; }
-.btn-sm.success:hover { background: #059669; }
+.btn-sm.success { background: linear-gradient(135deg, #f59e0b, #f97316); color: white; }
+.btn-sm.success:hover { background: linear-gradient(135deg, #f97316, #d97706); }
 .btn-sm.danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
 .btn-sm.danger:hover { background: rgba(239, 68, 68, 0.3); }
 
@@ -1219,15 +1219,17 @@ const getFileUrl = (path) => `http://localhost:8000/${path}`
 
 .file-row { display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; }
 
-.text-indigo-400 { color: #818cf8; flex-shrink: 0; }
+.text-indigo-400 { color: #fde68a; flex-shrink: 0; }
+.text-amber-warning { color: #fbbf24; flex-shrink: 0; }
+.text-emerald-400, .text-blue-400, .text-purple-400 { color: #fbbf24; flex-shrink: 0; }
 
 .file-name-scroll { 
   font-size: 12px; color: #f5f5f7; font-family: monospace; 
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.9; 
 }
 
-.link-view { font-size: 11px; color: #818cf8; text-decoration: none; font-weight: 600; cursor: pointer; white-space: nowrap; }
-.link-view:hover { text-decoration: underline; color: #a5b4fc; }
+.link-view { font-size: 11px; color: #fbbf24; text-decoration: none; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.link-view:hover { text-decoration: underline; color: #fde68a; }
 
 /* Decline Banner */
 .declined-banner {
@@ -1269,9 +1271,9 @@ const getFileUrl = (path) => `http://localhost:8000/${path}`
     font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 4px;
 }
 .status-pill.pending { color: #fbbf24; background: rgba(245, 158, 11, 0.1); }
-.status-pill.in_progress { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
-.status-pill.declined { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
-.status-pill.completed { color: #34d399; background: rgba(16, 185, 129, 0.1); }
+.status-pill.in_progress { color: #fdba74; background: rgba(249, 115, 22, 0.12); }
+.status-pill.declined { color: #d97706; background: rgba(217, 119, 6, 0.12); }
+.status-pill.completed { color: #fbbf24; background: rgba(245, 158, 11, 0.12); }
 
 .reason-mini { font-size: 10px; color: #ef4444; font-style: italic; max-width: 150px; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 

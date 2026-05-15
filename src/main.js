@@ -6,6 +6,11 @@ import router from './router'
 import Toast from "vue-toastification"
 import "vue-toastification/dist/index.css"
 
+import { attachRouterCleanup } from './composables/useGsapAnim'
+import vReveal from './directives/vReveal'
+import vTilt from './directives/vTilt'
+import vMagnetic from './directives/vMagnetic'
+
 const app = createApp(App)
 app.use(router)
 app.use(Toast, {
@@ -22,4 +27,11 @@ app.use(Toast, {
     icon: true,
     rtl: false
 })
+
+app.directive('reveal', vReveal)
+app.directive('tilt', vTilt)
+app.directive('magnetic', vMagnetic)
+
+attachRouterCleanup()
+
 app.mount('#app')

@@ -1,54 +1,77 @@
 <template>
-  <div class="assign-team-page">
-    <!-- Header -->
-    <header class="page-header">
+  <div ref="pageRoot" class="assign-team-page atlas-skin">
+    <!-- Ambient backdrop unique to the project section -->
+    <div class="atlas-backdrop" aria-hidden="true" data-anim="backdrop">
+      <div class="atlas-base"></div>
+      <svg class="atlas-grid" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <defs>
+          <pattern id="forge-bp" width="6" height="6" patternUnits="userSpaceOnUse">
+            <path d="M 6 0 L 0 0 0 6" fill="none" stroke="rgba(245,158,11,0.05)" stroke-width="0.2"/>
+          </pattern>
+        </defs>
+        <rect width="100" height="100" fill="url(#forge-bp)"/>
+      </svg>
+      <div class="atlas-orb a-orb-1" data-orb="1"></div>
+      <div class="atlas-orb a-orb-2" data-orb="2"></div>
+    </div>
+
+    <!-- Header: Forge Assignment -->
+    <header class="page-header forge-assignment-hero">
       <div class="header-left">
-        <div class="header-icon">
-          <UsersRound :size="24" />
+        <div class="header-icon" data-anim="header-icon">
+          <UsersRound :size="22" />
         </div>
         <div class="header-text">
-          <h1>Team Assignment</h1>
-          <p>Manage teams for approved projects</p>
+          <div class="hero-eyebrow" data-anim="hero-eyebrow"><Compass :size="11"/> FORGE ASSIGNMENT</div>
+          <h1 data-anim="hero-title">Team Assignment</h1>
+          <p data-anim="hero-subtitle">Stage teams against approved government projects.</p>
         </div>
       </div>
-      <div class="header-right">
-        <!-- Search Bar -->
+      <div class="header-right" data-anim="hero-cta">
         <div class="search-bar">
           <Search :size="14" class="search-icon" />
-          <input v-model="searchQuery" type="text" placeholder="Search projects..." />
+          <input v-model="searchQuery" type="text" placeholder="Search projects, codes, departments…" />
         </div>
       </div>
     </header>
 
     <!-- Stats Dashboard -->
     <div class="stats-dashboard">
-      <StatsCard label="Active Projects" :value="totalRecords">
-        <template #icon>
-          <FolderKanban :size="24" />
-        </template>
-      </StatsCard>
+      <div data-anim="stat-tile">
+        <StatsCard label="Active Projects" :value="totalRecords">
+          <template #icon>
+            <FolderKanban :size="24" />
+          </template>
+        </StatsCard>
+      </div>
 
-      <StatsCard label="Unassigned Projects" :value="unassignedProjectsCount">
-        <template #icon>
-          <AlertCircle :size="24" />
-        </template>
-      </StatsCard>
+      <div data-anim="stat-tile">
+        <StatsCard label="Unassigned Projects" :value="unassignedProjectsCount">
+          <template #icon>
+            <AlertCircle :size="24" />
+          </template>
+        </StatsCard>
+      </div>
 
-      <StatsCard label="Pending Invites" :value="pendingInvitesCount">
-        <template #icon>
-          <Clock :size="24" />
-        </template>
-      </StatsCard>
+      <div data-anim="stat-tile">
+        <StatsCard label="Pending Invites" :value="pendingInvitesCount">
+          <template #icon>
+            <Clock :size="24" />
+          </template>
+        </StatsCard>
+      </div>
 
-      <StatsCard label="Total Budget" :value="formatCompactNumber(totalBudget)">
-        <template #icon>
-          <span class="currency-symbol">$</span>
-        </template>
-      </StatsCard>
+      <div data-anim="stat-tile">
+        <StatsCard label="Total Budget" :value="formatCompactNumber(totalBudget)">
+          <template #icon>
+            <span class="currency-symbol">$</span>
+          </template>
+        </StatsCard>
+      </div>
     </div>
 
     <!-- Invitation Status Filter (User Panel Only) -->
-    <div v-if="!isAdmin" class="filter-tabs">
+    <div v-if="!isAdmin" class="filter-tabs" data-anim="filter-bar">
       <button 
         class="filter-tab" 
         :class="{ active: inviteFilter === 'all' }"
@@ -91,7 +114,7 @@
     </div>
 
     <!-- Admin Filters -->
-    <div v-if="isAdmin" class="admin-filters">
+    <div v-if="isAdmin" class="admin-filters" data-anim="filter-bar">
       <DatePicker 
         v-model="startDate" 
         placeholder="Start Date" 
@@ -127,123 +150,227 @@
       </button>
     </div>
 
-    <!-- Custom Geometric Table -->
-    <GeoTable
-      :title="tableTitle"
-      :columns="tableColumns"
-      :items="filteredProjects"
-      :loading="isLoading"
-      empty-text="No approved projects available"
-      @row-click="openProjectDetails"
-    >
-      <!-- Project Name Column -->
-      <template #name="{ item }">
-        <div class="cell-project">
-          <div class="project-indicator"></div>
-          <div class="project-info">
-            <span class="project-name">{{ item.name }}</span>
-            <span class="project-code">{{ item.code }}</span>
-          </div>
+    <!-- Reinvented Assignment Table -->
+    <section class="atp-table" data-anim="table">
+      <header class="atp-table__chrome">
+        <div class="atp-chrome__left">
+          <span class="atp-chrome__indicator" aria-hidden="true"></span>
+          <h2 class="atp-chrome__title">{{ tableTitle }}</h2>
+          <span class="atp-chrome__count">{{ filteredProjects.length }}</span>
         </div>
-      </template>
+      </header>
 
-      <!-- Focus Area Column -->
-      <template #focus="{ item }">
-        <div class="cell-focus">
-          <span class="focus-org" :title="item.organization">{{ item.organization || '—' }}</span>
-          <span class="focus-type">{{ item.project_type || 'General' }}</span>
-        </div>
-      </template>
+      <div class="atp-legend" aria-hidden="true">
+        <span class="atp-legend__cell legend-project">Project</span>
+        <span class="atp-legend__cell legend-meta">Focus · Organisation</span>
+        <span class="atp-legend__cell legend-timeline">Timeline</span>
+        <span class="atp-legend__cell legend-budget">Budget</span>
+        <span class="atp-legend__cell legend-team">Team</span>
+        <span class="atp-legend__cell legend-owner">Owner</span>
+        <span class="atp-legend__cell legend-action"></span>
+      </div>
 
-      <template #timeline="{ item }">
-        <div class="cell-timeline">
-          <div class="timeline-pill">
-            <div class="timeline-row dates">
-              <Calendar :size="12" class="icon-muted" />
-              <span>{{ formatDateCompact(item.start_date) }} - {{ formatDateCompact(item.end_date) }}</span>
+      <TransitionGroup name="atp-row" tag="ol" class="atp-rows">
+        <li
+          v-for="p in filteredProjects"
+          :key="p.id"
+          class="atp-row"
+          :class="{ 'atp-row--expanded': expandedId === p.id, 'atp-row--invite': inviteFilter === 'received' }"
+          data-anim="row"
+          @click="toggleExpand(p)"
+        >
+          <span
+            class="atp-row__ribbon"
+            :class="`atp-ribbon--${(p.priority || 'low').toLowerCase()}`"
+            :title="`Priority: ${p.priority || '—'}`"
+            aria-hidden="true"
+          ></span>
+
+          <div class="atp-row__grid" :data-org="p.organization || '—'" :data-type="p.project_type || 'General'">
+            <!-- 1 Project -->
+            <div class="atp-cell atp-cell--project">
+              <div class="atp-project__head">
+                <h3 class="atp-project__name">{{ p.name }}</h3>
+                <span class="atp-project__code">{{ p.code }}</span>
+              </div>
+              <div class="atp-tagrail" v-if="p.category || p.lifecycle_status || p.priority">
+                <span class="atp-tag atp-tag--cat"  v-if="p.category">{{ p.category }}</span>
+                <span class="atp-tag atp-tag--life" v-if="p.lifecycle_status">{{ p.lifecycle_status }}</span>
+                <span class="atp-tag atp-tag--prio" v-if="p.priority">{{ p.priority }}</span>
+              </div>
             </div>
-            <div class="timeline-row duration">
-              <Clock :size="12" class="icon-muted" />
-              <span>{{ getDuration(item.start_date, item.end_date) }}</span>
+
+            <!-- 2 Meta -->
+            <div class="atp-cell atp-cell--meta">
+              <span class="atp-meta__org" :title="p.organization">{{ p.organization || '—' }}</span>
+              <span class="atp-meta__sep">·</span>
+              <span class="atp-meta__type">{{ p.project_type || 'General' }}</span>
+            </div>
+
+            <!-- 3 Timeline -->
+            <div class="atp-cell atp-cell--timeline">
+              <div class="atp-track">
+                <span class="atp-track__bar" aria-hidden="true"></span>
+                <span class="atp-track__fill" :style="trackFillStyle(p)" aria-hidden="true"></span>
+                <span class="atp-track__now" :style="trackNowStyle(p)" aria-hidden="true"></span>
+              </div>
+              <div class="atp-track__labels">
+                <span class="atp-track__start">{{ formatDateCompact(p.start_date) }}</span>
+                <span class="atp-track__dur">{{ getDuration(p.start_date, p.end_date) }}</span>
+                <span class="atp-track__end">{{ formatDateCompact(p.end_date) }}</span>
+              </div>
+            </div>
+
+            <!-- 4 Budget -->
+            <div class="atp-cell atp-cell--budget">
+              <span class="atp-budget__sym">{{ currencySymbol(p.currency) }}</span>
+              <span class="atp-budget__amt">{{ formatBudget(p.budget_amount) }}</span>
+              <span class="atp-budget__ccy">{{ p.currency || 'USD' }}</span>
+            </div>
+
+            <!-- 5 Team -->
+            <div class="atp-cell atp-cell--team">
+              <ul class="atp-avatars" v-if="p.team_members && p.team_members.length">
+                <li
+                  v-for="(m, i) in p.team_members.slice(0, 4)"
+                  :key="i"
+                  class="atp-avatar"
+                  :class="{ 'atp-avatar--declined': m.status === 'declined' }"
+                  :style="{ background: getAvatarColor(m), zIndex: 4 - i }"
+                  :title="`${m.user_name || 'User'} · ${m.status}`"
+                >
+                  {{ getInitials(m.user_name || 'User') }}
+                </li>
+                <li
+                  v-if="p.team_members.length > 4"
+                  class="atp-avatar atp-avatar--more"
+                  :title="`+${p.team_members.length - 4} more`"
+                >
+                  +{{ p.team_members.length - 4 }}
+                </li>
+              </ul>
+              <span v-else class="atp-avatars__empty">No team</span>
+            </div>
+
+            <!-- 6 Owner -->
+            <div class="atp-cell atp-cell--owner">
+              <span class="atp-owner__dot" :style="{ background: getGradient(p.created_by_name) }">
+                {{ getInitials(p.created_by_name) }}
+              </span>
+              <span class="atp-owner__name" :title="p.created_by_name">{{ p.created_by_name }}</span>
+            </div>
+
+            <!-- 7 Action -->
+            <div class="atp-cell atp-cell--action" @click.stop>
+              <div v-if="inviteFilter === 'received'" class="atp-action__pair">
+                <button
+                  class="atp-iconbtn atp-iconbtn--accept"
+                  title="Accept invitation"
+                  @click="respondToInvite(p, true)"
+                >
+                  <Check :size="15" />
+                </button>
+                <button
+                  class="atp-iconbtn atp-iconbtn--decline"
+                  title="Decline invitation"
+                  @click="respondToInvite(p, false)"
+                >
+                  <X :size="15" />
+                </button>
+              </div>
+              <button
+                v-else
+                class="atp-manage"
+                @click="openTeamPanel(p)"
+              >
+                <span>Manage</span>
+                <ArrowRight :size="13" />
+              </button>
             </div>
           </div>
-        </div>
-      </template>
 
-      <!-- Budget Column -->
-      <template #budget="{ item }">
-        <div class="cell-budget">
-          <span class="currency">{{ item.currency || 'USD' }}</span>
-          <span class="amount">{{ formatBudget(item.budget_amount) }}</span>
-        </div>
-      </template>
-
-      <!-- Status Column -->
-      <template #status="{ item }">
-         <StatusBadge :status="item.status" />
-      </template>
-
-      <!-- Team Column -->
-      <template #team="{ item }">
-        <div class="cell-team">
-          <div class="avatar-stack" v-if="item.team_members && item.team_members.length">
-            <div 
-              v-for="(member, idx) in item.team_members.slice(0, 3)" 
-              :key="idx"
-              class="stack-avatar"
-              :class="{ 'declined': member.status === 'declined' }"
-              :style="{ 
-                background: getAvatarColor(member),
-                zIndex: 3 - idx 
-              }"
+          <Transition
+            :css="false"
+            @before-enter="onDetailBeforeEnter"
+            @enter="onDetailEnter"
+            @leave="onDetailLeave"
+          >
+            <div
+              v-if="expandedId === p.id"
+              class="atp-row__detail"
+              @click.stop
             >
-              {{ getInitials(member.user_name || 'User') }}
+              <div class="atp-detail__col">
+                <span class="atp-detail__label">Milestones</span>
+                <span class="atp-detail__value">{{ p.milestone_count != null ? p.milestone_count : '—' }}</span>
+              </div>
+              <div class="atp-detail__col">
+                <span class="atp-detail__label">Lifecycle</span>
+                <span class="atp-detail__value">{{ p.lifecycle_status || '—' }}</span>
+              </div>
+              <div class="atp-detail__col">
+                <span class="atp-detail__label">Last activity</span>
+                <span class="atp-detail__value">{{ formatDate(p.updated_at || p.last_activity_at) }}</span>
+              </div>
+              <div class="atp-detail__col">
+                <span class="atp-detail__label">Created</span>
+                <span class="atp-detail__value">{{ formatDate(p.created_at) }}</span>
+              </div>
+              <div class="atp-detail__actions">
+                <button class="atp-link" @click="openProjectDetails(p)">
+                  Full details
+                  <ArrowRight :size="12" />
+                </button>
+              </div>
             </div>
-            <div v-if="item.team_members.length > 3" class="avatar-more">
-              +{{ item.team_members.length - 3 }}
+          </Transition>
+        </li>
+      </TransitionGroup>
+
+      <!-- Skeleton rows -->
+      <ol v-if="isLoading" class="atp-rows atp-rows--skeleton" aria-hidden="true">
+        <li v-for="n in 5" :key="`sk-${n}`" class="atp-row atp-row--skeleton">
+          <span class="atp-row__ribbon atp-ribbon--skeleton"></span>
+          <div class="atp-row__grid">
+            <div class="atp-cell atp-cell--project">
+              <div class="sk-bar w-60"></div>
+              <div class="sk-bar w-40 sk-thin"></div>
             </div>
+            <div class="atp-cell atp-cell--meta"><div class="sk-bar w-80 sk-thin"></div></div>
+            <div class="atp-cell atp-cell--timeline"><div class="sk-bar w-100 sk-thin"></div></div>
+            <div class="atp-cell atp-cell--budget"><div class="sk-bar w-50"></div></div>
+            <div class="atp-cell atp-cell--team">
+              <div class="sk-dot"></div><div class="sk-dot"></div><div class="sk-dot"></div>
+            </div>
+            <div class="atp-cell atp-cell--owner">
+              <div class="sk-dot"></div><div class="sk-bar w-50 sk-thin"></div>
+            </div>
+            <div class="atp-cell atp-cell--action"><div class="sk-btn"></div></div>
           </div>
-          <span v-else class="no-team">No team</span>
-        </div>
-      </template>
+        </li>
+      </ol>
 
-      <!-- Owner Column -->
-      <template #owner="{ item }">
-        <div class="cell-owner">
-          <div class="owner-avatar" :style="{ background: getGradient(item.created_by_name) }">
-            {{ getInitials(item.created_by_name) }}
-          </div>
-          <span>{{ item.created_by_name }}</span>
+      <!-- Empty state -->
+      <div v-if="!isLoading && filteredProjects.length === 0" class="atp-empty">
+        <div class="atp-empty__art" aria-hidden="true">
+          <svg viewBox="0 0 120 120" width="100" height="100">
+            <defs>
+              <linearGradient id="atp-empty-grad" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.55"/>
+                <stop offset="100%" stop-color="#f97316" stop-opacity="0.20"/>
+              </linearGradient>
+            </defs>
+            <polygon points="60,12 102,36 102,84 60,108 18,84 18,36"
+                     fill="none" stroke="url(#atp-empty-grad)" stroke-width="1.5"/>
+            <circle cx="60" cy="60" r="34" fill="none" stroke="rgba(251,191,36,0.35)" stroke-dasharray="3 5" stroke-width="1"/>
+            <circle cx="60" cy="60" r="6" fill="#f97316"/>
+          </svg>
         </div>
-      </template>
-
-      <!-- Action Column -->
-      <template #action="{ item }">
-        <div class="cell-action">
-          <div v-if="inviteFilter === 'received'" class="action-buttons">
-             <button 
-              class="btn-icon-action accept" 
-              title="Accept Invitation"
-              @click.stop="respondToInvite(item, true)"
-            >
-              <Check :size="16" />
-            </button>
-            <button 
-              class="btn-icon-action decline" 
-              title="Decline Invitation"
-              @click.stop="respondToInvite(item, false)"
-            >
-              <X :size="16" />
-            </button>
-          </div>
-          <TableManageButton 
-            v-else
-            @click.stop="openTeamPanel(item)" 
-            label="Manage" 
-          />
-        </div>
-      </template>
-    </GeoTable>
+        <h3 class="atp-empty__title">No projects in this view</h3>
+        <p class="atp-empty__sub">Switch the filter above, or invite teammates to a project.</p>
+        <button class="atp-empty__cta" @click="setInviteFilter('all')">View all projects</button>
+      </div>
+    </section>
 
     <!-- Pagination -->
     <PaginationControls 
@@ -256,41 +383,34 @@
        @update:limit="fetchProjects"
     />
 
-    <!-- Project Details Modal -->
-    <GeoModal
-      v-model="showDetailsModal"
+    <!-- Project Details — transparent side drawer (matches Document Drive pattern) -->
+    <SidePanelDrawer
+      :is-open="showDetailsModal"
       :title="selectedProject?.name || 'Project Details'"
       :subtitle="selectedProject?.code"
-      icon-bg="rgba(255, 255, 255, 0.05)"
+      :icon="Briefcase"
+      :width="560"
+      @close="showDetailsModal = false"
     >
-      <template #icon>
-        <Briefcase :size="20" />
-      </template>
-
       <ProjectDetailsPanel v-if="selectedProject" :project="selectedProject" @refresh="fetchProjects" />
 
       <template #footer>
-        <div class="modal-actions-right">
-           <button class="btn-text" @click="showDetailsModal = false">Close</button>
-           <button class="btn-primary" @click="openTeamPanelFromDetails">
-             Manage Team
-           </button>
-        </div>
+        <button class="spd-btn-text" @click="showDetailsModal = false">Close</button>
+        <button class="spd-btn-primary" @click="openTeamPanelFromDetails">
+          Manage Team
+        </button>
       </template>
-    </GeoModal>
+    </SidePanelDrawer>
 
-    <!-- Team Management Modal -->
-    <GeoModal
-      v-model="showTeamModal"
+    <!-- Team Management — transparent side drawer (matches Project Details drawer) -->
+    <SidePanelDrawer
+      :is-open="showTeamModal"
       :title="'Assign Team'"
       :subtitle="teamProject?.name"
-      icon-bg="rgba(255, 255, 255, 0.05)"
-      width="750px"
+      :icon="UsersRound"
+      :width="640"
+      @close="showTeamModal = false"
     >
-      <template #icon>
-        <UsersRound :size="20" />
-      </template>
-
       <!-- Structured Content -->
       <div class="team-modal-content">
         <!-- Search Section -->
@@ -386,22 +506,18 @@
       </div>
 
       <template #footer>
-        <div class="modal-actions-right">
-          <button class="btn-secondary" @click="clearSelected">
-            <span>Clear</span>
-          </button>
-          <button 
-            class="btn-primary" 
-            @click="submitTeam"
-            :disabled="!selectedUsers.length || isSubmitting"
-          >
-            <Loader2 v-if="isSubmitting" :size="16" class="spin" />
-            <Send v-else :size="16" />
-            <span>Assign {{ selectedUsers.length ? `(${selectedUsers.length})` : '' }}</span>
-          </button>
-        </div>
+        <button class="spd-btn-text" @click="clearSelected">Clear</button>
+        <button
+          class="spd-btn-primary"
+          @click="submitTeam"
+          :disabled="!selectedUsers.length || isSubmitting"
+        >
+          <Loader2 v-if="isSubmitting" :size="16" class="spin" />
+          <Send v-else :size="16" />
+          <span>Assign {{ selectedUsers.length ? `(${selectedUsers.length})` : '' }}</span>
+        </button>
       </template>
-    </GeoModal>
+    </SidePanelDrawer>
 
     <!-- Remove Reason Dialog using ConfirmationModal -->
     <ConfirmationModal
@@ -486,21 +602,24 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { useToast } from '../composables/useToast'
-import GeoTable from '../components/ui/GeoTable.vue'
-import GeoModal from '../components/ui/GeoModal.vue'
+import SidePanelDrawer from '../components/ui/SidePanelDrawer.vue'
 import ProjectDetailsPanel from '../components/projects/ProjectDetailsPanel.vue'
 import DatePicker from '../components/ui/DatePicker.vue'
 import CustomSelect from '../components/ui/CustomSelect.vue'
 import ProjectOwnerSelect from '../components/ui/ProjectOwnerSelect.vue'
 import StatusBadge from '../components/ui/StatusBadge.vue'
-import TableManageButton from '../components/ui/TableManageButton.vue'
 import StatsCard from '../components/ui/StatsCard.vue'
 import ConfirmationModal from '../components/ui/ConfirmationModal.vue'
-import { 
+import {
   UsersRound, Search, FolderKanban, Briefcase, UserPlus, Users, Calendar,
-  Check, Plus, Send, Loader2, AlertCircle, Clock, X, UserMinus, Crown, Trash2, UserCheck
+  Check, Plus, Send, Loader2, AlertCircle, Clock, X, UserMinus, Crown, Trash2, UserCheck,
+  Compass, ArrowRight
 } from 'lucide-vue-next'
 import PaginationControls from '../components/ui/PaginationControls.vue'
+import gsap from 'gsap'
+import { useGsapAnim } from '../composables/useGsapAnim'
+import { useParallaxOrbs } from '../composables/useParallaxOrbs'
+import { assignTeamEntry } from '../animations/pageChoreography'
 
 const route = useRoute()
 const { success, error } = useToast()
@@ -642,17 +761,78 @@ const assignedMembers = computed(() => {
   return teamProject.value.team_members.filter(m => m.status === 'accepted' || m.status === 'declined')
 })
 
-// Table Columns
-const tableColumns = [
-  { key: 'name', label: 'Project', flex: '1.5' },
-  { key: 'focus', label: 'Focus Area', width: '220px' },
-  { key: 'timeline', label: 'Timeline', width: '200px' },
-  { key: 'budget', label: 'Budget', width: '120px' },
-  { key: 'status', label: 'Status', width: '110px' },
-  { key: 'team', label: 'Team', width: '140px' },
-  { key: 'owner', label: 'Owner', width: '150px' },
-  { key: 'action', label: '', width: '100px' }
-]
+// Expand state for inline detail panel
+const expandedId = ref(null)
+const toggleExpand = (p) => {
+  expandedId.value = expandedId.value === p.id ? null : p.id
+}
+
+// GSAP-driven height + column stagger for the row detail panel.
+// Replaces the old CSS max-height transition which jittered on close
+// because of the grid-row constraint and the hardcoded 140px ceiling.
+const onDetailBeforeEnter = (el) => {
+  el.style.height = '0px'
+  el.style.opacity = '0'
+  const cols = el.querySelectorAll('.atp-detail__col, .atp-detail__actions')
+  gsap.set(cols, { y: 14, opacity: 0 })
+}
+const onDetailEnter = (el, done) => {
+  // Measure natural height
+  const prevHeight = el.style.height
+  el.style.height = 'auto'
+  const target = el.offsetHeight
+  el.style.height = prevHeight
+  // Height + opacity in
+  gsap.to(el, {
+    height: target,
+    opacity: 1,
+    duration: 0.42,
+    ease: 'power3.out',
+    onComplete: () => {
+      el.style.height = 'auto'
+      done()
+    }
+  })
+  // Inner cols cascade up
+  gsap.to(el.querySelectorAll('.atp-detail__col, .atp-detail__actions'), {
+    y: 0,
+    opacity: 1,
+    duration: 0.45,
+    stagger: 0.05,
+    delay: 0.08,
+    ease: 'expo.out'
+  })
+}
+const onDetailLeave = (el, done) => {
+  // Lock current height (in px) so collapse is consistent
+  const current = el.offsetHeight
+  el.style.height = current + 'px'
+  // Cols fade-down first
+  gsap.to(el.querySelectorAll('.atp-detail__col, .atp-detail__actions'), {
+    y: 8,
+    opacity: 0,
+    duration: 0.20,
+    stagger: 0.03,
+    ease: 'power2.in'
+  })
+  gsap.to(el, {
+    height: 0,
+    opacity: 0,
+    duration: 0.40,
+    delay: 0.10,
+    ease: 'power3.inOut',
+    onComplete: done
+  })
+}
+
+// Page root for animations
+const pageRoot = ref(null)
+const { run } = useGsapAnim(pageRoot)
+useParallaxOrbs(pageRoot, { strength: 24 })
+
+run(() => {
+  assignTeamEntry(pageRoot.value)
+})
 
 // Computed
 const totalMembers = computed(() => 
@@ -752,12 +932,32 @@ const getGradient = (name) => {
   return '#f97316' // Solid orange as requested
 }
 
-// Get avatar color based on member status - color coded for each status
+// Get avatar color based on member status — orange/amber family across the board
 const getAvatarColor = (member) => {
-  if (member.status === 'declined') return '#a855f7' // Purple for declined
-  if (member.status === 'pending') return '#f59e0b' // Amber for pending
-  if (member.status === 'removed') return '#ef4444' // Red for removed
-  return '#f97316' // Orange for accepted/others
+  if (member.status === 'declined') return '#d97706'  // Burnt amber
+  if (member.status === 'pending')  return '#fbbf24'  // Amber-400
+  if (member.status === 'removed')  return '#92400e'  // Deep amber
+  return '#f97316' // Orange-500 for accepted/others
+}
+
+const currencySymbol = (ccy) => {
+  const map = { USD: '$', EUR: '€', GBP: '£', INR: '₹', AED: 'AED', JPY: '¥' }
+  return map[ccy] || '$'
+}
+
+const trackFillStyle = (p) => {
+  if (!p.start_date || !p.end_date) return { '--fill': '0%' }
+  const start = new Date(p.start_date).getTime()
+  const end   = new Date(p.end_date).getTime()
+  const now   = Date.now()
+  if (now <= start) return { '--fill': '0%' }
+  if (now >= end)   return { '--fill': '100%' }
+  const pct = ((now - start) / (end - start)) * 100
+  return { '--fill': `${pct.toFixed(1)}%` }
+}
+const trackNowStyle = (p) => {
+  if (!p.start_date || !p.end_date) return { display: 'none' }
+  return { '--now': trackFillStyle(p)['--fill'] }
 }
 
 const formatCompactNumber = (num) => {
@@ -1306,11 +1506,11 @@ onUnmounted(() => {
   background: rgba(249, 115, 22, 0.15);
 }
 
-/* Declined filter tab - purple theme */
+/* Received filter tab — orange theme (unified) */
 .filter-tab.received.active {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.32);
 }
 
 .admin-filters {
@@ -1349,248 +1549,32 @@ onUnmounted(() => {
   color: #f5f5f5;
   border-color: #52525b;
 }
-/* Declined filter tab - purple theme */
+/* Declined filter tab — burnt-amber theme */
 .filter-tab.declined.active {
-  background: rgba(168, 85, 247, 0.1);
-  border-color: rgba(168, 85, 247, 0.3);
-  color: #a855f7;
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #d97706;
 }
+.filter-tab.declined.active:hover { background: rgba(217, 119, 6, 0.16); }
 
-.filter-tab.declined.active:hover {
-  background: rgba(168, 85, 247, 0.15);
-}
-
-/* Received filter tab - blue theme */
+/* Received filter tab — amber theme */
 .filter-tab.received.active {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.3);
-  color: #3b82f6;
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.32);
+  color: #fbbf24;
 }
+.filter-tab.received.active:hover { background: rgba(245, 158, 11, 0.18); }
 
-.filter-tab.received.active:hover {
-  background: rgba(59, 130, 246, 0.15);
-}
+/* Legacy .action-buttons / .btn-icon-action removed — replaced by .atp-iconbtn */
 
-/* Action Buttons */
-.action-buttons {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.btn-icon-action {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.btn-icon-action:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.btn-icon-action.accept:hover {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: rgba(16, 185, 129, 0.3);
-  color: #10b981;
-}
-
-.btn-icon-action.decline:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
-  color: #ef4444;
-}
-
-/* Table Cell Content Animations */
-.cell-project, .cell-focus, .cell-timeline, .cell-budget, .cell-team, .cell-owner {
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease;
-}
-
-/* On Row Hover - Subtle Lift/Shift */
-:deep(.table-row:hover) .cell-project { transform: translateX(6px); }
-:deep(.table-row:hover) .cell-focus { transform: translateX(4px); opacity: 1; }
-:deep(.table-row:hover) .cell-timeline { transform: translateX(2px); }
-:deep(.table-row:hover) .cell-budget { transform: scale(1.05); transform-origin: left center; }
-:deep(.table-row:hover) .cell-owner { transform: translateX(-4px); }
-
-.cell-focus {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  overflow: hidden;
-}
-
-.focus-org {
-  font-size: 13px;
-  color: #e5e5e7;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-  max-width: 100%;
-}
-
-.focus-type {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.cell-project {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.project-indicator {
-  width: 3px;
-  height: 24px;
-  background: #f97316; /* Orange as requested */
-  border-radius: 2px;
-}
-
-.project-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  overflow: hidden;
-}
-
-.project-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #f5f5f7;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.project-code {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.4);
-  font-family: monospace;
-}
-
-.cell-budget {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.currency {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.4);
-  text-transform: uppercase;
-}
-
-.amount {
-  font-size: 14px;
-  font-weight: 600;
-  color: #10b981;
-}
-
-.cell-team {
-  display: flex;
-  align-items: center;
-}
-
-.cell-calendar {
-  color: rgba(255, 255, 255, 0.5);
-  display: flex;
-  align-items: center;
-}
-
-.timeline-pill {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 8px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  color: #f5f5f7;
-  white-space: nowrap;
-  width: fit-content;
-}
-
-.icon-muted {
-  color: rgba(255, 255, 255, 0.4);
-}
-
-.avatar-stack {
-  display: flex;
-}
-
-.stack-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 600;
-  color: white;
-  border: 2px solid #141417;
-  margin-left: -8px;
-}
-
-.stack-avatar:first-child {
-  margin-left: 0;
-}
-
-.avatar-more {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-left: -8px;
-  border: 2px solid #141417;
-}
-
-.no-team {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.3);
-}
-
-.cell-owner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.owner-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 600;
-  color: white;
-}
+/* Legacy table cell styles removed — replaced by .atp-* design system below */
 
 .btn-manage {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #f59e0b 0%, #2563eb 100%);
   border: none;
   border-radius: 8px;
   color: white;
@@ -1602,7 +1586,7 @@ onUnmounted(() => {
 
 .btn-manage:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
 }
 
 /* Details Modal Sections */
@@ -1635,8 +1619,8 @@ onUnmounted(() => {
 }
 
 .count-badge {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
   padding: 2px 8px;
   border-radius: 10px;
   font-size: 10px;
@@ -1662,7 +1646,7 @@ onUnmounted(() => {
 
 .detail-value.mono {
   font-family: monospace;
-  color: #a5b4fc;
+  color: #fde68a;
 }
 
 .description-text {
@@ -1686,7 +1670,7 @@ onUnmounted(() => {
 .budget-amount {
   font-size: 32px;
   font-weight: 700;
-  color: #10b981;
+  color: #fbbf24;
 }
 
 .timeline-display {
@@ -1699,7 +1683,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #60a5fa;
+  color: #fbbf24;
 }
 
 .timeline-label {
@@ -2024,8 +2008,8 @@ onUnmounted(() => {
 }
 
 .user-role.accepted {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background: rgba(245, 158, 11, 0.10);
+  color: #fbbf24;
 }
 
 /* Remove Dialog */
@@ -2247,7 +2231,7 @@ onUnmounted(() => {
 }
 
 .assigned-status.accepted {
-  color: #10b981;
+  color: #fbbf24;
 }
 
 /* Remove Button */
@@ -2500,27 +2484,613 @@ onUnmounted(() => {
   margin-top: 6px;
   display: block;
 }
-/* Timeline Column */
-.cell-timeline {
+/* Legacy timeline column styles replaced by .atp-track in the .atp-* block below */
+
+/* Atlas overlay + ATP table styles live in the consolidated block below */
+
+/* ============================================================
+   ATP — Assignment Table Reinvented
+   Hybrid card-row, sticky action column, ribbon, timeline track,
+   inline expand panel, skeleton + empty states, responsive.
+   Easing: cubic-bezier(0.16, 1, 0.3, 1)
+   ============================================================ */
+.atp-table {
+  background: linear-gradient(135deg, rgba(15,15,18,0.95) 0%, rgba(20,20,25,0.95) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  margin-bottom: 24px;
+}
+
+.atp-table__chrome {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(245,158,11,0.04), transparent);
+}
+.atp-chrome__left { display: flex; align-items: center; gap: 14px; }
+.atp-chrome__indicator {
+  width: 4px; height: 22px;
+  background: linear-gradient(180deg, #f59e0b 0%, #f97316 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 12px rgba(245,158,11,0.55);
+  animation: atp-pulse 2.4s ease-in-out infinite;
+}
+@keyframes atp-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.atp-chrome__title {
+  font-family: 'Outfit', system-ui, sans-serif;
+  font-size: 15px; font-weight: 600;
+  color: #f5f5f7;
+  letter-spacing: -0.01em;
+}
+.atp-chrome__count {
+  font: 600 11px/1 ui-monospace, 'JetBrains Mono', monospace;
+  color: #fbbf24;
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.22);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.atp-legend {
+  display: grid;
+  grid-template-columns: 6px minmax(260px, 1.6fr) minmax(220px, 1.2fr) minmax(180px, 1.1fr) 140px 150px 160px 120px;
+  column-gap: 20px;
+  padding: 10px 24px 10px 24px;
+  background: rgba(255,255,255,0.015);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font: 700 10px/1 'Inter', sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.32);
+}
+.atp-legend .legend-project { grid-column: 2; }
+.atp-legend .legend-meta    { grid-column: 3; }
+.atp-legend .legend-timeline{ grid-column: 4; }
+.atp-legend .legend-budget  { grid-column: 5; text-align: right; }
+.atp-legend .legend-team    { grid-column: 6; }
+.atp-legend .legend-owner   { grid-column: 7; }
+.atp-legend .legend-action  { grid-column: 8; }
+
+.atp-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.atp-row {
+  position: relative;
+  display: block;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: background 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  contain: layout style;
+  padding-left: 6px;
+}
+.atp-row:last-child { border-bottom: none; }
+.atp-row::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(249,115,22,0.10) 0%, rgba(245,158,11,0.04) 30%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.atp-row:hover::before { opacity: 1; }
+.atp-row--expanded { background: rgba(255,255,255,0.018); }
+.atp-row--expanded::before { opacity: 1; }
+
+.atp-row__ribbon {
+  position: absolute;
+  left: 0;
+  top: 16px;
+  bottom: 16px;
+  width: 3px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #f59e0b, #f97316);
+  box-shadow: 0 0 6px rgba(245,158,11,0.35);
+  transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s ease,
+              top 0.3s ease,
+              bottom 0.3s ease;
+  pointer-events: none;
+}
+.atp-row:hover .atp-row__ribbon {
+  width: 6px;
+  top: 8px;
+  bottom: 8px;
+  box-shadow: 0 0 14px rgba(249,115,22,0.55);
+}
+.atp-ribbon--high   { background: linear-gradient(180deg, #d97706, #f97316); box-shadow: 0 0 10px rgba(217,119,6,0.55); }
+.atp-ribbon--medium { background: linear-gradient(180deg, #fbbf24, #f59e0b); }
+.atp-ribbon--low    { background: linear-gradient(180deg, #facc15, #f97316 70%); }
+.atp-ribbon--skeleton { background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); box-shadow: none; }
+
+.atp-row__grid {
+  display: grid;
+  grid-template-columns:
+    minmax(260px, 1.6fr)
+    minmax(220px, 1.2fr)
+    minmax(180px, 1.1fr)
+    140px
+    150px
+    160px
+    120px;
+  column-gap: 20px;
+  align-items: center;
+  padding: 18px 18px 18px 18px;
+  min-width: 0;
+}
+
+/* --- 1 Project cell --- */
+.atp-cell { min-width: 0; }
+.atp-cell--project {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+  min-width: 0;
 }
+.atp-project__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+.atp-project__name {
+  font: 600 15px/1.25 'Outfit', system-ui, sans-serif;
+  color: #f5f5f7;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+.atp-project__code {
+  font: 500 11px/1 ui-monospace, 'JetBrains Mono', monospace;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 0.04em;
+  padding: 3px 7px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.atp-tagrail {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.atp-tag {
+  font: 700 9px/1 'Inter', sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 3px;
+  white-space: nowrap;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.atp-tag--cat  { background: rgba(245,158,11,0.10); color: #fde68a;  border: 1px solid rgba(245,158,11,0.22); }
+.atp-tag--life { background: rgba(249,115,22,0.07); color: #fbbf24;  border: 1px solid rgba(249,115,22,0.18); }
+.atp-tag--prio { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.08); }
 
-.timeline-row {
+/* --- 2 Meta cell --- */
+.atp-cell--meta {
   display: flex;
   align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font: 500 12px/1.4 'Inter', sans-serif;
+  color: rgba(229,229,231,0.85);
+}
+.atp-meta__org  { color: #e5e5e7; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.atp-meta__sep  { color: rgba(255,255,255,0.25); }
+.atp-meta__type { color: rgba(255,255,255,0.5); white-space: nowrap; }
+
+/* --- 3 Timeline cell --- */
+.atp-cell--timeline {
+  display: flex;
+  flex-direction: column;
   gap: 6px;
-  font-size: 13px;
-  color: #e4e4e7;
+  min-width: 0;
+}
+.atp-track {
+  position: relative;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.06);
+  overflow: visible;
+}
+.atp-track__bar { position: absolute; inset: 0; border-radius: 2px; }
+.atp-track__fill {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(245,158,11,0.4);
+  width: var(--fill, 0%);
+  transition: width 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.atp-track__now {
+  position: absolute;
+  top: 50%;
+  left: var(--now, 0%);
+  transform: translate(-50%, -50%);
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #fbbf24;
+  box-shadow: 0 0 0 2px #141417, 0 0 10px rgba(251,191,36,0.6);
+  transition: left 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.atp-track__labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font: 500 10px/1 'Inter', sans-serif;
+  color: rgba(255,255,255,0.45);
+}
+.atp-track__dur {
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+  color: rgba(251,191,36,0.7);
+  padding: 0 6px;
 }
 
-.timeline-row.duration {
+/* --- 4 Budget cell --- */
+.atp-cell--budget {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+  font-family: ui-monospace, 'JetBrains Mono', monospace;
+}
+.atp-budget__sym { font-size: 11px; color: rgba(255,255,255,0.4); }
+.atp-budget__amt { font-size: 15px; font-weight: 600; color: #f5f5f7; letter-spacing: -0.02em; }
+.atp-budget__ccy { font-size: 9px; color: rgba(255,255,255,0.35); text-transform: uppercase; margin-left: 2px; }
+
+/* --- 5 Team cell --- */
+.atp-cell--team { display: flex; align-items: center; }
+.atp-avatars {
+  display: flex;
+  list-style: none;
+  margin: 0; padding: 0;
+}
+.atp-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font: 600 10px/1 'Inter', sans-serif;
+  color: #fff;
+  border: 2px solid #141417;
+  margin-left: -8px;
+  transition: margin-left 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.atp-avatar:first-child { margin-left: 0; }
+.atp-avatar--more {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7);
+  font-size: 9px;
+}
+.atp-avatar--declined { opacity: 0.55; filter: grayscale(0.35); }
+.atp-row:hover .atp-avatar { margin-left: -2px; }
+.atp-row:hover .atp-avatar:first-child { margin-left: 0; }
+.atp-avatars__empty {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  font-style: italic;
+}
+
+/* --- 6 Owner cell --- */
+.atp-cell--owner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.atp-owner__dot {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font: 600 10px/1 'Inter', sans-serif;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+}
+.atp-owner__name {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(229,229,231,0.75);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.timeline-row .icon-muted {
-  color: rgba(255, 255, 255, 0.3);
+/* --- 7 Action cell (sticky right, inset to clear rounded border) --- */
+.atp-cell--action {
+  position: sticky;
+  right: 6px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  z-index: 2;
+  background: linear-gradient(90deg, transparent 0%, rgba(15,15,18,0.95) 24%);
+  padding-left: 16px;
+  padding-right: 6px;
 }
+.atp-row:hover .atp-cell--action {
+  background: linear-gradient(90deg, transparent 0%, rgba(20,15,12,0.96) 24%);
+}
+.atp-manage {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 16px;
+  border-radius: 10px;
+  font: 600 12px/1 'Inter', sans-serif;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(249,115,22,0.95), rgba(245,158,11,0.95));
+  border: 1px solid rgba(251,191,36,0.4);
+  box-shadow: 0 4px 14px rgba(249,115,22,0.25), inset 0 1px 0 rgba(255,255,255,0.18);
+  cursor: pointer;
+  transition: background 0.25s ease, border-color 0.25s ease;
+  max-width: 100%;
+  transform: none !important;
+}
+.atp-manage:hover {
+  background: linear-gradient(135deg, rgba(249,115,22,1), rgba(245,158,11,1));
+  border-color: rgba(251,191,36,0.65);
+}
+.atp-manage svg { transition: transform 0.25s ease; }
+.atp-manage:hover svg { transform: translateX(3px); }
+
+/*
+ * Accept/Decline icon buttons keep semantic green/red — they're "yes/no"
+ * action affordances on an invite, not status badges. This is the one
+ * intentional exception to the orange-only palette in this view.
+ */
+.atp-action__pair { display: flex; gap: 6px; }
+.atp-iconbtn {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.atp-iconbtn--accept:hover  { background: rgba(34,197,94,0.15);  border-color: rgba(34,197,94,0.35);  color: #4ade80; }
+.atp-iconbtn--decline:hover { background: rgba(220,38,38,0.15);  border-color: rgba(220,38,38,0.35);  color: #f87171; }
+
+/* --- Expand detail panel (GSAP-driven height, no max-height) --- */
+.atp-row__detail {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) auto;
+  gap: 24px;
+  padding: 4px 24px 20px 18px;
+  border-top: 1px dashed rgba(245,158,11,0.18);
+  margin-top: 4px;
+  overflow: hidden;
+  will-change: height, opacity;
+}
+.atp-detail__col { display: flex; flex-direction: column; gap: 4px; }
+.atp-detail__label {
+  font: 700 9px/1 'Inter', sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(251,191,36,0.65);
+}
+.atp-detail__value {
+  font: 500 13px/1.2 'Inter', sans-serif;
+  color: #e5e5e7;
+}
+.atp-detail__actions { display: flex; align-items: center; justify-content: flex-end; }
+.atp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #fbbf24;
+  font: 600 12px/1 'Inter', sans-serif;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.atp-link:hover {
+  background: rgba(251,191,36,0.10);
+  transform: translateX(2px);
+}
+
+/* --- TransitionGroup classes --- */
+.atp-row-enter-active,
+.atp-row-leave-active,
+.atp-row-move {
+  transition: opacity 0.35s ease,
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.atp-row-enter-from { opacity: 0; transform: translateY(10px); }
+.atp-row-leave-active { position: absolute; left: 0; right: 0; pointer-events: none; }
+.atp-row-leave-to { opacity: 0; transform: translateX(14px); }
+
+/* GSAP owns the .atp-row__detail height + col stagger animation in the script */
+
+/* --- Skeleton --- */
+.atp-rows--skeleton { padding: 0; margin: 0; list-style: none; }
+.atp-row--skeleton { pointer-events: none; }
+.sk-bar, .sk-pill, .sk-dot, .sk-btn {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.10) 50%, rgba(255,255,255,0.04) 100%);
+  background-size: 200% 100%;
+  border-radius: 6px;
+  animation: atp-shimmer 1.6s ease-in-out infinite;
+}
+@keyframes atp-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.sk-bar { height: 12px; margin-top: 4px; }
+.sk-bar.sk-thin { height: 8px; opacity: 0.7; }
+.sk-bar.w-30  { width: 30%; } .sk-bar.w-40  { width: 40%; }
+.sk-bar.w-50  { width: 50%; } .sk-bar.w-60  { width: 60%; }
+.sk-bar.w-80  { width: 80%; } .sk-bar.w-100 { width: 100%; }
+.sk-dot { width: 26px; height: 26px; border-radius: 50%; margin-left: -6px; }
+.sk-dot:first-child { margin-left: 0; }
+.sk-btn { width: 96px; height: 34px; border-radius: 10px; }
+
+/* --- Empty state --- */
+.atp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 72px 24px;
+  color: rgba(255,255,255,0.55);
+}
+.atp-empty__art {
+  width: 120px; height: 120px;
+  background: radial-gradient(circle at center, rgba(245,158,11,0.18), transparent 65%);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.atp-empty__title { font: 600 16px/1.2 'Outfit', system-ui; color: #f5f5f7; }
+.atp-empty__sub   { font: 500 13px/1.4 'Inter', sans-serif; color: rgba(255,255,255,0.45); }
+.atp-empty__cta {
+  margin-top: 6px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(249,115,22,0.92), rgba(245,158,11,0.92));
+  color: #fff;
+  font: 600 12px/1 'Inter', sans-serif;
+  border: 1px solid rgba(251,191,36,0.36);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(249,115,22,0.25);
+  transition: box-shadow 0.25s ease;
+}
+.atp-empty__cta:hover { box-shadow: 0 8px 22px rgba(249,115,22,0.4); }
+
+/* --- Responsive --- */
+@media (max-width: 1399px) {
+  .atp-legend {
+    grid-template-columns: 6px minmax(260px, 2fr) minmax(180px, 1.1fr) 140px 130px 120px;
+  }
+  .atp-legend .legend-meta,
+  .atp-legend .legend-owner { display: none; }
+  .atp-legend .legend-project { grid-column: 2; }
+  .atp-legend .legend-timeline { grid-column: 3; }
+  .atp-legend .legend-budget { grid-column: 4; }
+  .atp-legend .legend-team { grid-column: 5; }
+  .atp-legend .legend-action { grid-column: 6; }
+  .atp-row__grid {
+    grid-template-columns:
+      minmax(260px, 2fr)
+      minmax(180px, 1.1fr)
+      140px
+      130px
+      120px;
+  }
+  .atp-cell--meta,
+  .atp-cell--owner { display: none; }
+  .atp-cell--project::after {
+    content: attr(data-org) " · " attr(data-type);
+    font: 500 11px/1.3 'Inter', sans-serif;
+    color: rgba(255,255,255,0.5);
+    display: block;
+    margin-top: 2px;
+  }
+}
+
+@media (max-width: 1099px) {
+  .atp-legend { display: none; }
+  .atp-row { grid-template-columns: 6px 1fr; }
+  .atp-row__grid {
+    grid-template-columns: 1fr !important;
+    padding: 16px 18px;
+    row-gap: 12px;
+  }
+  .atp-cell--action {
+    position: static;
+    background: none;
+    justify-content: flex-start;
+    padding-left: 0;
+  }
+  .atp-cell--owner { display: flex; }
+  .atp-cell--meta { display: flex; }
+  .atp-manage { width: 100%; justify-content: center; }
+  .atp-row__detail {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+/* ============================================================
+   CIVIC ATLAS OVERLAY — appended below the legacy styles so they
+   take precedence. Adds the sapphire/cyan accent + backdrop + new
+   govt chips to surface category/priority/lifecycle on the table row.
+   ============================================================ */
+.assign-team-page.atlas-skin { position: relative; }
+.atlas-backdrop { position: fixed; inset: 52px 0 0 0; pointer-events: none; z-index: -1; overflow: hidden; }
+.atlas-base { position: absolute; inset: 0; background: radial-gradient(ellipse at top left, #061018 0%, #04070b 60%, #02030a 100%); }
+.atlas-grid { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.55; }
+.atlas-orb { position: absolute; border-radius: 50%; filter: blur(90px); will-change: transform; }
+.a-orb-1 { width: 480px; height: 480px; top: -120px; right: -100px; background: radial-gradient(circle, rgba(245, 158, 11, 0.16), transparent 70%); }
+.a-orb-2 { width: 360px; height: 360px; bottom: -90px; left: -60px; background: radial-gradient(circle, rgba(249, 115, 22, 0.12), transparent 70%); }
+.atlas-orb { transform: translate(var(--orb-parallax-x, 0px), var(--orb-parallax-y, 0px)); }
+
+.forge-assignment-hero { position: relative; }
+.forge-assignment-hero .header-icon {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(249, 115, 22, 0.10));
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  color: #fde68a;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.20);
+}
+.forge-assignment-hero .hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.22em; color: #f97316;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(249, 115, 22, 0.08); border: 1px solid rgba(249, 115, 22, 0.20);
+  margin-bottom: 8px;
+}
+.forge-assignment-hero .header-text h1 {
+  font-family: 'Outfit', sans-serif;
+  background: linear-gradient(120deg, #fff 30%, #fde68a 75%, #fbbf24 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* SidePanelDrawer footer buttons */
+.spd-btn-text {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.65);
+  padding: 9px 18px;
+  border-radius: 10px;
+  font: 600 12px/1 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.spd-btn-text:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+.spd-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.95), rgba(245, 158, 11, 0.95));
+  border: 1px solid rgba(251, 191, 36, 0.40);
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font: 600 12px/1 'Inter', sans-serif;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.25);
+  transition: box-shadow 0.25s ease;
+}
+.spd-btn-primary:hover { box-shadow: 0 8px 22px rgba(249, 115, 22, 0.40); }
 </style>

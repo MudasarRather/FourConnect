@@ -38,10 +38,11 @@
       </div>
 
       <!-- Items -->
-      <div 
-        v-for="m in milestones" 
-        :key="m.id" 
+      <div
+        v-for="m in milestones"
+        :key="m.id"
         class="ms-row item"
+        data-anim="milestone"
         @click="$emit('select', m)"
       >
         <!-- Status Dot -->
@@ -172,7 +173,8 @@ const getInitials = (n) => {
 }
 
 const getColor = (name) => {
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1']
+    // Amber/orange family — each user gets a unique tint within the same hue family
+    const colors = ['#fbbf24', '#f59e0b', '#f97316', '#d97706', '#fdba74', '#facc15']
     let hash = 0
     if (name) {
         for(let i=0; i<name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
@@ -182,10 +184,10 @@ const getColor = (name) => {
 
 const getAvatarBackground = (assign) => {
   if (assign.status) {
-      if (assign.status === 'pending') return '#fbbf24' // Yellow
-      if (assign.status === 'in_progress') return '#f97316' // Orange
-      if (assign.status === 'declined') return '#ef4444' // Red
-      if (assign.status === 'completed') return '#10b981' // Green
+      if (assign.status === 'pending')     return '#fbbf24' // Amber-400
+      if (assign.status === 'in_progress') return '#f97316' // Orange-500
+      if (assign.status === 'declined')    return '#d97706' // Burnt amber
+      if (assign.status === 'completed')   return '#fbbf24' // Amber-400 (was emerald)
   }
   return getColor(assign.user?.full_name)
 }
@@ -258,7 +260,7 @@ const isLight = (color) => {
   border: 1.5px solid rgba(255, 255, 255, 0.1);
   display: flex; align-items: center; justify-content: center;
 }
-.status-indicator.completed { background: #4ade80; border-color: #4ade80; color: #000; }
+.status-indicator.completed { background: #fbbf24; border-color: #fbbf24; color: #000; }
 .status-indicator.pending { border-color: #fbbf24; }
 .status-indicator.pending .pulse-dot { width: 5px; height: 5px; background: #fbbf24; border-radius: 50%; }
 
@@ -289,7 +291,7 @@ const isLight = (color) => {
   font-size: 10px; padding: 2px 8px; border-radius: 10px; 
   text-transform: capitalize; border: 1px solid transparent; 
 }
-.ms-badge.completed { background: rgba(74, 222, 128, 0.1); color: #4ade80; border-color: rgba(74, 222, 128, 0.2); }
+.ms-badge.completed { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border-color: rgba(245, 158, 11, 0.28); }
 .ms-badge.pending { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border-color: rgba(251, 191, 36, 0.2); }
 .ms-badge.expired { background: rgba(248, 113, 113, 0.1); color: #f87171; border-color: rgba(248, 113, 113, 0.2); }
 

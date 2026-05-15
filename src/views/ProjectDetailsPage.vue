@@ -1,5 +1,5 @@
 <template>
-  <div class="project-details-page">
+  <div ref="pageRoot" class="project-details-page">
     <!-- Loading State -->
     <div v-if="isLoading" class="page-loading">
       <Loader2 :size="32" class="spinner" />
@@ -10,7 +10,7 @@
     <div v-else-if="errorState" class="error-container">
       <div class="access-card">
          <div class="icon-circle">
-           <ShieldAlert :size="40" class="text-rose-500" />
+           <ShieldAlert :size="40" class="text-amber-warning" />
          </div>
          <h2>Access Restricted</h2>
          <p>"{{ errorState }}"</p>
@@ -50,7 +50,7 @@
     <!-- Main Content -->
     <div v-else class="content-wrapper">
       <!-- Breadcrumb / Back -->
-      <nav class="breadcrumb">
+      <nav class="breadcrumb" data-anim="breadcrumb">
         <button class="btn-text" @click="$router.push(backPath)">
           <ArrowLeft :size="16" />
           Back to Projects
@@ -61,23 +61,23 @@
       <header class="page-header">
         <div class="header-main">
           <div class="title-row">
-             <div class="project-icon">
+             <div class="project-icon" data-anim="header-icon">
                <Briefcase :size="24" />
              </div>
              <div>
-               <h1 class="page-title">{{ project.name }}</h1>
+               <h1 class="page-title" data-anim="hero-title">{{ project.name }}</h1>
                <div class="meta-row">
                  <span class="code">{{ project.code }}</span>
                  <span class="dot">•</span>
-                 <span class="status-badge" :class="project.status?.toLowerCase().replace(' ', '-')">
+                 <span class="status-badge" data-anim="status-badge" :class="project.status?.toLowerCase().replace(' ', '-')">
                    {{ project.status }}
                  </span>
                </div>
              </div>
           </div>
-          
+
           <!-- Completed Watermark -->
-          <div v-if="project.completion_percentage >= 100" class="completed-watermark">
+          <div v-if="project.completion_percentage >= 100" class="completed-watermark" data-anim="watermark">
              <div class="watermark-content">
                <Check :size="16" stroke-width="3" />
                <span>COMPLETED</span>
@@ -115,7 +115,7 @@
           
 
           <!-- Key Metrics -->
-          <div class="content-card metrics-card">
+          <div class="content-card metrics-card" data-anim="detail-card">
             <div class="card-header">
               <BarChart2 :size="18" class="icon" />
               <h3>Project Stats</h3>
@@ -151,7 +151,7 @@
           </div>
 
           <!-- Team Summary -->
-          <div class="content-card team-card">
+          <div class="content-card team-card" data-anim="detail-card">
             <div class="card-header">
               <Users :size="18" class="icon" />
               <h3>Team ({{ allTeamMembers.length }})</h3>
@@ -173,7 +173,7 @@
           </div>
 
           <!-- Info -->
-          <div class="content-card info-card">
+          <div class="content-card info-card" data-anim="detail-card">
              <div class="card-header">
               <Info :size="18" class="icon" />
               <h3>Details</h3>
@@ -185,17 +185,105 @@
                 </span>
                 <span class="value">{{ project.organization }}</span>
               </div>
-              <div class="info-row">
-                <span class="label icon-label">
-                  <Hash :size="13" /> Cost Center
-                </span>
-                <span class="value mono">{{ project.cost_center }}</span>
-              </div>
                <div class="info-row">
                 <span class="label icon-label">
                   <Tag :size="13" /> Type
                 </span>
                 <span class="value">{{ project.project_type }}</span>
+              </div>
+              <div class="info-row" v-if="project.category">
+                <span class="label icon-label"><Tag :size="13"/> Category</span>
+                <span class="value">{{ project.category }}</span>
+              </div>
+              <div class="info-row" v-if="project.priority">
+                <span class="label icon-label"><Flame :size="13"/> Priority</span>
+                <span class="value">{{ project.priority }}</span>
+              </div>
+              <div class="info-row" v-if="project.lifecycle_status">
+                <span class="label icon-label"><Activity :size="13"/> Lifecycle</span>
+                <span class="value">{{ project.lifecycle_status }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Government Order (only when present) -->
+          <div class="content-card info-card" data-anim="detail-card" v-if="project.government_order_no || project.issuing_authority || project.order_date || project.order_received_date || project.department">
+            <div class="card-header">
+              <Crown :size="18" class="icon"/>
+              <h3>Government Order</h3>
+            </div>
+            <div class="card-content">
+              <div class="info-row" v-if="project.government_order_no">
+                <span class="label icon-label"><Hash :size="13"/> Order No.</span>
+                <span class="value mono">{{ project.government_order_no }}</span>
+              </div>
+              <div class="info-row" v-if="project.issuing_authority">
+                <span class="label icon-label"><Building2 :size="13"/> Authority</span>
+                <span class="value">{{ project.issuing_authority }}</span>
+              </div>
+              <div class="info-row" v-if="project.department">
+                <span class="label icon-label"><Briefcase :size="13"/> Department</span>
+                <span class="value">{{ project.department }}</span>
+              </div>
+              <div class="info-row" v-if="project.order_date">
+                <span class="label icon-label"><CalendarRange :size="13"/> Order Date</span>
+                <span class="value">{{ formatGovtDate(project.order_date) }}</span>
+              </div>
+              <div class="info-row" v-if="project.order_received_date">
+                <span class="label icon-label"><CalendarRange :size="13"/> Received</span>
+                <span class="value">{{ formatGovtDate(project.order_received_date) }}</span>
+              </div>
+              <div class="info-row" v-if="project.funding_type">
+                <span class="label icon-label"><Coins :size="13"/> Funding</span>
+                <span class="value">{{ project.funding_type }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Location (only when present) -->
+          <div class="content-card info-card" data-anim="detail-card" v-if="project.state || project.district">
+            <div class="card-header">
+              <MapPin :size="18" class="icon"/>
+              <h3>Location</h3>
+            </div>
+            <div class="card-content">
+              <div class="info-row" v-if="project.state">
+                <span class="label icon-label"><MapPin :size="13"/> State</span>
+                <span class="value">{{ project.state }}</span>
+              </div>
+              <div class="info-row" v-if="project.district">
+                <span class="label icon-label"><MapPin :size="13"/> District</span>
+                <span class="value">{{ project.district }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Project Head (only when present) -->
+          <div class="content-card info-card" data-anim="detail-card" v-if="project.project_head_name || project.nodal_officer || project.contractor">
+            <div class="card-header">
+              <User :size="18" class="icon"/>
+              <h3>Project Head</h3>
+            </div>
+            <div class="card-content">
+              <div class="info-row" v-if="project.project_head_name">
+                <span class="label icon-label"><User :size="13"/> Head</span>
+                <span class="value">{{ project.project_head_name }}</span>
+              </div>
+              <div class="info-row" v-if="project.project_head_designation">
+                <span class="label icon-label"><Briefcase :size="13"/> Designation</span>
+                <span class="value">{{ project.project_head_designation }}</span>
+              </div>
+              <div class="info-row" v-if="project.project_head_contact">
+                <span class="label icon-label"><Mail :size="13"/> Contact</span>
+                <span class="value">{{ project.project_head_contact }}</span>
+              </div>
+              <div class="info-row" v-if="project.nodal_officer">
+                <span class="label icon-label"><User :size="13"/> Nodal Officer</span>
+                <span class="value">{{ project.nodal_officer }}</span>
+              </div>
+              <div class="info-row" v-if="project.contractor">
+                <span class="label icon-label"><Briefcase :size="13"/> Contractor</span>
+                <span class="value">{{ project.contractor }}</span>
               </div>
             </div>
           </div>
@@ -240,16 +328,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
-import { Loader2, ArrowLeft, ShieldAlert, Briefcase, BarChart2, Users, Info, DollarSign, Clock, CalendarRange, Building2, Hash, Tag, PieChart, Check } from 'lucide-vue-next'
+import { Loader2, ArrowLeft, ShieldAlert, Briefcase, BarChart2, Users, Info, DollarSign, Clock, CalendarRange, Building2, Hash, Tag, PieChart, Check, Crown, MapPin, Coins, Flame, Activity, User, Mail } from 'lucide-vue-next'
 import MilestoneList from '../components/milestones/MilestoneList.vue'
 import CreateMilestoneModal from '../components/milestones/CreateMilestoneModal.vue'
 import ProjectDescription from '../components/project-console/ProjectDescription.vue'
 import MilestoneDetailsPanel from '../components/milestones/MilestoneDetailsPanel.vue'
 import { useToast } from '../composables/useToast'
+import { useGsapAnim } from '../composables/useGsapAnim'
+import { projectDetailsEntry } from '../animations/pageChoreography'
 
+const pageRoot = ref(null)
 const route = useRoute()
 const router = useRouter()
 const projectId = route.params.id
@@ -373,6 +464,11 @@ const fetchMilestones = async () => {
 // Alias for template usage
 const fetchProjectDetails = fetchMilestones
 
+// GSAP wiring — defer entry until the v-else content tree is actually rendered.
+// (Otherwise pageRoot.querySelectorAll('[data-anim=*]') returns nothing because
+// `v-if="isLoading"` keeps the content out of the DOM.)
+const { run } = useGsapAnim(pageRoot)
+
 onMounted(async () => {
   if (!projectId) return
   await fetchProject()
@@ -380,11 +476,14 @@ onMounted(async () => {
     await fetchMilestones()
   }
   isLoading.value = false
+  await nextTick()
+  run(() => { projectDetailsEntry(pageRoot.value) })
 })
 
 // Formatters
 const formatNumber = (num) => new Intl.NumberFormat('en-US').format(num || 0)
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
+const formatGovtDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'
 const getInitials = (n) => n ? n.split(' ').map(c => c[0]).join('').slice(0, 2).toUpperCase() : '??'
 
 const getDuration = (start, end) => {
@@ -394,7 +493,7 @@ const getDuration = (start, end) => {
 }
 
 const getGradient = (name) => {
-   return 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)'
+   return 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)'
 }
 
 // Handlers
@@ -633,15 +732,15 @@ const handleMilestoneDelete = (deletedId) => {
 .header-main { display: flex; justify-content: space-between; align-items: flex-start; }
 
 .completed-watermark {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  color: #4ade80;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(249, 115, 22, 0.06) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  color: #fbbf24;
   padding: 8px 16px;
   border-radius: 99px;
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
   animation: stampIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -681,8 +780,9 @@ const handleMilestoneDelete = (deletedId) => {
   padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; text-transform: uppercase;
   border: 1px solid transparent;
 }
-.status-badge.approved { background: rgba(16, 185, 129, 0.1); color: #34d399; border-color: rgba(16, 185, 129, 0.2); }
-.status-badge.pending-approval { background: rgba(245, 158, 11, 0.1); color: #fbbf24; border-color: rgba(245, 158, 11, 0.2); }
+.status-badge.approved { background: rgba(245, 158, 11, 0.10); color: #fbbf24; border-color: rgba(245, 158, 11, 0.28); }
+.status-badge.pending-approval { background: rgba(249, 115, 22, 0.10); color: #fdba74; border-color: rgba(249, 115, 22, 0.28); }
+.status-badge.rejected { background: rgba(217, 119, 6, 0.10); color: #d97706; border-color: rgba(217, 119, 6, 0.28); }
 
 /* Grid */
 .details-grid {
@@ -774,4 +874,7 @@ const handleMilestoneDelete = (deletedId) => {
 .spinner { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Orange/amber utility classes (replacing prior rose/emerald/blue usages) */
+.text-amber-warning { color: #f97316; }
 </style>

@@ -149,9 +149,9 @@ h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin:
   border-color: rgba(255,255,255,0.05);
 }
 
-.f-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; color: #3b82f6; flex-shrink: 0; }
-.milestone-icon { color: #8b5cf6; } /* Purple for milestones */
-.file-item:hover .f-icon { background: rgba(59, 130, 246, 0.2); }
+.f-icon { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(245, 158, 11, 0.10); border: 1px solid rgba(245, 158, 11, 0.22); border-radius: 8px; color: #fbbf24; flex-shrink: 0; }
+.milestone-icon { color: #fdba74; } /* Warm orange for milestones */
+.file-item:hover .f-icon { background: rgba(245, 158, 11, 0.18); }
 
 .f-info { display: flex; flex-direction: column; flex: 1; overflow: hidden; gap: 2px; }
 .f-top { display: flex; justify-content: space-between; align-items: center; }

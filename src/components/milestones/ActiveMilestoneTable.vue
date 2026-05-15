@@ -139,12 +139,12 @@ const formatHours = (h) => {
 }
 const formatStatus = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1).replace('_', ' ') : 'Pending')
 
-// Avatar Color Logic (Matching AssignTeamPage)
+// Avatar Color Logic — orange/amber family across the board
 const getAvatarColor = (status) => {
-  if (status === 'declined') return '#a855f7' // Purple
-  if (status === 'pending') return '#f59e0b' // Amber
-  if (status === 'removed') return '#ef4444' // Red
-  return '#f97316' // Orange (Accepted/In Progress)
+  if (status === 'declined') return '#d97706' // Burnt amber
+  if (status === 'pending')  return '#fbbf24' // Amber-400
+  if (status === 'removed')  return '#92400e' // Deep amber
+  return '#f97316'                            // Orange-500 (Accepted/In Progress)
 }
 
 const isExpired = (m) => {
@@ -270,8 +270,8 @@ const getActiveAssignments = (milestone) => {
   text-transform: capitalize; border: 1px solid transparent; 
   font-weight: 600; white-space: nowrap;
 }
-.ms-badge.completed { background: rgba(74, 222, 128, 0.1); color: #4ade80; border-color: rgba(74, 222, 128, 0.2); }
-.ms-badge.in_progress { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-color: rgba(59, 130, 246, 0.2); }
+.ms-badge.completed { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border-color: rgba(245, 158, 11, 0.28); }
+.ms-badge.in_progress { background: rgba(249, 115, 22, 0.12); color: #fdba74; border-color: rgba(249, 115, 22, 0.28); }
 .ms-badge.pending { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border-color: rgba(251, 191, 36, 0.2); }
 .ms-badge.expired { background: rgba(248, 113, 113, 0.1); color: #f87171; border-color: rgba(248, 113, 113, 0.2); }
 

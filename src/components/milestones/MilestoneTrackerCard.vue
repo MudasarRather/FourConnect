@@ -174,10 +174,10 @@ watch(() => props.milestone, (newVal) => {
 .title-row { display: flex; gap: 12px; align-items: center; }
 .icon-box {
   width: 36px; height: 36px;
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(245, 158, 11, 0.10);
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.28);
 }
 
 .header-text h3 {
@@ -189,9 +189,9 @@ watch(() => props.milestone, (newVal) => {
 
 .contribution-badge {
    display: flex; align-items: center; gap: 6px;
-   background: rgba(16, 185, 129, 0.1);
-   border: 1px solid rgba(16, 185, 129, 0.2);
-   color: #34d399;
+   background: rgba(245, 158, 11, 0.12);
+   border: 1px solid rgba(245, 158, 11, 0.28);
+   color: #fbbf24;
    padding: 4px 8px;
    border-radius: 6px;
    font-size: 12px; font-weight: 500;
@@ -231,11 +231,11 @@ watch(() => props.milestone, (newVal) => {
 }
 
 .btn-primary-sm {
-   background: #3b82f6; color: white; border: none;
+   background: linear-gradient(135deg, #f59e0b, #f97316); color: white; border: none;
    padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 500;
    display: flex; align-items: center; gap: 6px; cursor: pointer;
-   transition: background 0.2s;
+   transition: box-shadow 0.2s;
 }
-.btn-primary-sm:hover { background: #2563eb; }
+.btn-primary-sm:hover { box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4); }
 .btn-primary-sm:disabled { opacity: 0.6; cursor: not-allowed; }
 </style>

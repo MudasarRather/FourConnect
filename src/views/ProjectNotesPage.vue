@@ -1,8 +1,8 @@
 <template>
-  <div class="notes-page-container">
-    
+  <div ref="pageRoot" class="notes-page-container">
+
     <!-- HEADER SECTION (matches Financials design) -->
-    <header class="glass-header">
+    <header class="glass-header" data-anim="page-header">
        <div class="header-content">
           <div class="project-identity">
              <div class="project-icon-box" v-if="selectedProject">
@@ -55,7 +55,7 @@
        </div>
 
        <!-- TYPE TABS -->
-       <div class="tabs-dock">
+       <div class="tabs-dock" data-anim="tabs-dock">
           <button 
             v-for="tab in typeTabs" 
             :key="tab.id"
@@ -72,7 +72,7 @@
     </header>
 
     <!-- TOOLBAR -->
-    <div class="notes-toolbar" v-if="selectedProject">
+    <div class="notes-toolbar" data-anim="toolbar" v-if="selectedProject">
        <div class="toolbar-left">
           <div class="search-input">
              <Search :size="14" />
@@ -115,13 +115,14 @@
           <p>Create a note to get started via the button above</p>
        </div>
        <div v-else class="notes-grid">
-          <NoteCard 
-            v-for="note in notes" 
+          <NoteCard
+            v-for="note in notes"
             :key="note.id"
             :note="note"
             :token="token"
             :is-admin="isAdmin"
             :is-editing="editingNoteId === note.id"
+            data-anim="note-card"
             @edit-start="editingNoteId = note.id"
             @edit-end="editingNoteId = null"
             @update="handleNoteUpdate"
@@ -146,7 +147,7 @@
     <div v-else-if="selectedProject && isPending" class="empty-container">
        <div class="empty-box flex-layout">
          <div class="icon-glow">
-            <ShieldAlert :size="40" class="text-yellow-500" />
+            <ShieldAlert :size="40" class="text-amber-warning" />
          </div>
          <h2 class="mt-4 text-xl font-semibold">Access Restricted</h2>
          <p class="text-base opacity-70 mb-4 max-w-md mx-auto">
@@ -182,6 +183,10 @@ import NoteCard from '../components/notes/NoteCard.vue'
 import ConfirmDialog from '../components/common/ConfirmDialog.vue'
 import NotificationBell from '../components/ui/NotificationBell.vue'
 import { useToast } from '../composables/useToast'
+import { useGsapAnim } from '../composables/useGsapAnim'
+import { projectNotesEntry } from '../animations/pageChoreography'
+
+const pageRoot = ref(null)
 
 const route = useRoute()
 const router = useRouter()
@@ -510,6 +515,9 @@ const vClickOutside = {
   unmounted(el) { document.body.removeEventListener('click', el.clickOutsideEvent); }
 };
 
+const { run } = useGsapAnim(pageRoot)
+run(() => { projectNotesEntry(pageRoot.value) })
+
 onMounted(() => {
    fetchProjects()
    fetchCurrentUser()
@@ -545,9 +553,9 @@ onUnmounted(() => {
 
 .project-identity { display: flex; align-items: center; gap: 16px; }
 .project-icon-box {
-  width: 40px; height: 40px; background: linear-gradient(135deg, #f59e0b, #ef4444);
+  width: 40px; height: 40px; background: linear-gradient(135deg, #f59e0b, #f97316);
   border-radius: 12px; display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 18px; color: white; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  font-weight: 700; font-size: 18px; color: white; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.30);
 }
 
 .identity-text { display: flex; flex-direction: column; gap: 2px; }
@@ -793,4 +801,6 @@ onUnmounted(() => {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+.text-amber-warning { color: #f97316; }
 </style>

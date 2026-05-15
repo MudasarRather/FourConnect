@@ -115,27 +115,29 @@ const convertAmount = (amount, from, to) => {
 }
 
 // 20-Color Harmonic Palette (Gold/Orange Bias + Cool Accents)
+// Amber/orange/yellow palette only — each chart segment gets a unique tint
+// within the brand hue family so the chart reads as a unified gradient.
 const PALETTE = [
   '#f59e0b', // Amber 500
+  '#f97316', // Orange 500
+  '#fbbf24', // Amber 400
+  '#fdba74', // Orange 300
+  '#facc15', // Yellow 400
+  '#fde68a', // Amber 200
+  '#d97706', // Amber 600
   '#ea580c', // Orange 600
   '#eab308', // Yellow 500
-  '#ef4444', // Red 500
-  '#8b5cf6', // Violet 500
-  '#3b82f6', // Blue 500
-  '#10b981', // Emerald 500
-  '#ec4899', // Pink 500
-  '#06b6d4', // Cyan 500
-  '#f97316', // Orange 500 (Brighter)
-  '#6366f1', // Indigo 500
-  '#14b8a6', // Teal 500
-  '#84cc16', // Lime 500
-  '#d946ef', // Fuchsia 500
-  '#f43f5e', // Rose 500
-  '#0ea5e9', // Sky 500
-  '#a855f7', // Purple 500
-  '#22c55e', // Green 500
-  '#e11d48', // Rose 600
-  '#f59e0b'  // Loop Amber
+  '#b45309', // Amber 700
+  '#92400e', // Amber 800
+  '#fed7aa', // Orange 200
+  '#fef3c7', // Amber 100
+  '#ca8a04', // Yellow 600
+  '#c2410c', // Orange 700
+  '#fef08a', // Yellow 200
+  '#a16207', // Yellow 700
+  '#f59e0b', // Loop Amber
+  '#f97316',
+  '#fbbf24'
 ]
 
 const totalBudget = computed(() => props.project?.budget_amount || 1)
@@ -254,7 +256,7 @@ const formatCurrency = (val) => {
 h3 { font-size: 15px; font-weight: 600; color: white; margin: 0; }
 
 .badge { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; }
-.badge.healthy { background: rgba(34, 197, 94, 0.1); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.2); }
+.badge.healthy { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.28); }
 .badge.warning { background: rgba(234, 179, 8, 0.1); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.2); }
 .badge.critical { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
 
@@ -303,7 +305,7 @@ h3 { font-size: 15px; font-weight: 600; color: white; margin: 0; }
 .m-icon { width: 12px; height: 12px; }
 .m-icon.pending { color: #eab308; }
 .m-icon.in_progress { color: #f97316; }
-.m-icon.completed { color: #3b82f6; }
+.m-icon.completed { color: #fbbf24; }
 
 .m-cost-col { display: flex; flex-direction: column; align-items: flex-end; margin-left: auto; }
 .m-cost { font-size: 13px; font-weight: 600; color: white; font-variant-numeric: tabular-nums; }

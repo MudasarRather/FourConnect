@@ -119,7 +119,9 @@ h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin:
 }
 .av-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
 .av-placeholder {
-  width: 100%; height: 100%; border-radius: 50%; background: #3b82f6; 
+  width: 100%; height: 100%; border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
   display: flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 700; color: white;
 }

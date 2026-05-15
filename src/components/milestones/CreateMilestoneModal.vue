@@ -438,7 +438,7 @@ const getInitials = (name) => {
 
 // Consistent colors for avatars
 const getColor = (name) => {
-    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1']
+    const colors = ['#fbbf24', '#f59e0b', '#f97316', '#d97706', '#fdba74', '#facc15']
     let hash = 0
     const clean = name ? name.split('(')[0].trim() : ''
     for(let i=0; i<clean.length; i++) hash = clean.charCodeAt(i) + ((hash << 5) - hash)
@@ -682,10 +682,10 @@ const handleSubmit = async () => {
 /* Progress */
 .progress-bar-container { padding: 20px 32px 0; display: flex; flex-direction: column; gap: 8px; }
 .progress-track { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
-.progress-fill { height: 100%; background: #3b82f6; border-radius: 2px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #f59e0b, #f97316); border-radius: 2px; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
 
 .step-meta { display: flex; justify-content: space-between; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(255,255,255,0.4); }
-.step-label { color: #3b82f6; }
+.step-label { color: #fbbf24; }
 
 /* Body */
 .modal-body { padding: 24px 32px 32px; min-height: 380px; }
@@ -709,7 +709,7 @@ const handleSubmit = async () => {
   padding: 10px 12px; color: #f5f5f7; font-size: 13px; font-family: inherit; width: 100%;
   transition: 0.2s;
 }
-.text-input:focus { outline: none; border-color: #3b82f6; background: rgba(0,0,0,0.4); }
+.text-input:focus { outline: none; border-color: #f59e0b; background: rgba(0,0,0,0.4); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.10); }
 .text-input.has-error { border-color: #ef4444; }
 .textarea { resize: none; line-height: 1.5; }
 
@@ -725,17 +725,17 @@ const handleSubmit = async () => {
 /* Conversion Display */
 .conversion-pill {
     margin-top: 8px;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    background: rgba(245, 158, 11, 0.10);
+    border: 1px solid rgba(245, 158, 11, 0.22);
     border-radius: 6px;
     padding: 6px 10px;
     display: flex; align-items: center; gap: 6px;
     font-size: 11px;
-    color: #3b82f6;
+    color: #fbbf24;
     width: fit-content;
 }
 .approx { opacity: 0.7; }
-.conv-val { font-weight: 600; color: #60a5fa; }
+.conv-val { font-weight: 600; color: #fdba74; }
 .rate-info { color: rgba(255,255,255,0.4); margin-left: 4px; font-size: 10px; }
 
 /* Currency Warning */

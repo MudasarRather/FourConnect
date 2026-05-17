@@ -64,9 +64,12 @@ npm run build         # production build → dist/
 npm run preview       # preview the production build
 ```
 
-### Start backend (from `backend/`)
+### Start backend (from `C:\Projects\FourConnectService`)
+
+> **Backend location:** The active FastAPI backend lives at `C:\Projects\FourConnectService\` (the `app/` package is inside it). An older `c:\Projects\FourConnect\backend\` path no longer exists — do not look for it.
+
 ```powershell
-cd backend
+cd C:\Projects\FourConnectService
 & "C:\Users\91700\AppData\Local\Programs\Python\Python314\python.exe" -m pip install -r requirements.txt   # first time
 & "C:\Users\91700\AppData\Local\Programs\Python\Python314\python.exe" -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -74,7 +77,7 @@ cd backend
 Backend API docs: http://localhost:8000/api/docs
 Backend Redoc: http://localhost:8000/api/redoc
 
-### Database migrations (from `backend/`)
+### Database migrations (from `C:\Projects\FourConnectService`)
 ```powershell
 # Apply all pending migrations
 alembic upgrade head
@@ -86,7 +89,7 @@ alembic revision --autogenerate -m "describe_what_changed"
 alembic downgrade -1
 ```
 
-> **Warning:** Many schema changes in this repo were applied via ad-hoc `backend/add_*.py` / `backend/fix_*.py` scripts rather than Alembic revisions. Before creating a new migration, run `alembic current` to check current revision state, and inspect `backend/alembic/versions/` to avoid conflicts.
+> **Warning:** Many schema changes in this repo were applied via ad-hoc `add_*.py` / `fix_*.py` scripts at the backend root rather than Alembic revisions. Before creating a new migration, run `alembic current` to check current revision state, and inspect `alembic/versions/` to avoid conflicts.
 
 ### Environment config
 Copy or create `backend/.env` to override defaults from [backend/app/config.py](backend/app/config.py):

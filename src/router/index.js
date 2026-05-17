@@ -103,9 +103,25 @@ const routes = [
             { path: 'projects/all', redirect: '/user/projects/allprojects' }, // Legacy
             { path: 'projects/completed', name: 'UserCompletedProjects', component: () => import('../views/CompletedProjectsPage.vue') },
             { path: 'projects/archive', name: 'UserArchivedProjects', component: () => import('../views/ArchivedProjectsPage.vue') },
-            { path: 'finance/:pathMatch(.*)*', name: 'Finance', component: PlaceholderPage, props: route => ({ type: 'finance' }) },
+            // Legacy: redirect old Finance menu links (now replaced by HR in admin only)
+            { path: 'finance/:pathMatch(.*)*', redirect: '/user/dashboard' },
             { path: 'reports/:pathMatch(.*)*', name: 'Reports', component: PlaceholderPage, props: route => ({ type: 'reports' }) },
             { path: 'settings/:pathMatch(.*)*', name: 'UserSettings', component: SettingsPage },
+
+            // ============================================
+            // SELF SERVICE PORTAL (USER ONLY)
+            // ============================================
+            { path: 'self-service/profile', name: 'SelfServiceProfile', component: () => import('../views/hr/SelfServiceProfilePage.vue') },
+            { path: 'self-service/attendance', name: 'SelfServiceAttendance', component: () => import('../views/hr/SelfServiceAttendancePage.vue') },
+            { path: 'self-service/leave', name: 'SelfServiceLeave', component: () => import('../views/hr/SelfServiceLeavePage.vue') },
+            { path: 'self-service/payslips', name: 'SelfServicePayslips', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Payslips', phase: 'Phase 3 — Payroll' }) },
+            { path: 'self-service/tax-documents', name: 'SelfServiceTaxDocuments', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Tax Documents', phase: 'Phase 3 — Payroll' }) },
+            { path: 'self-service/reimbursements', name: 'SelfServiceReimbursements', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Reimbursements', phase: 'Phase 3 — Payroll' }) },
+            { path: 'self-service/training', name: 'SelfServiceTraining', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Training', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'self-service/assets', name: 'SelfServiceAssets', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Assets', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'self-service/documents', name: 'SelfServiceDocuments', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Documents', phase: 'Phase 1 — Foundation' }) },
+            { path: 'self-service/performance', name: 'SelfServicePerformance', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Performance Reviews', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'self-service/:pathMatch(.*)*', name: 'SelfServiceCatchall', component: PlaceholderPage, props: () => ({ type: 'self-service' }) },
             { path: ':pathMatch(.*)*', name: 'DynamicPlaceholder', component: PlaceholderPage, props: route => ({ type: route.params.pathMatch[0] || 'dashboard' }) }
         ]
     },
@@ -162,6 +178,44 @@ const routes = [
             { path: 'documents', name: 'AdminDocumentsHub', component: () => import('../views/documents/DocumentsHubPage.vue') },
             { path: 'documents/:pathMatch(.*)*', name: 'AdminDocuments', component: PlaceholderPage, props: route => ({ type: 'documents' }) },
             { path: 'settings/:pathMatch(.*)*', name: 'AdminSettings', component: SettingsPage },
+
+            // ============================================
+            // HR MODULE (ADMIN ONLY) — Phase 0 scaffolding
+            // ============================================
+            { path: 'hr', redirect: '/admin/hr/dashboard' },
+            { path: 'hr/dashboard', name: 'HrDashboard', component: () => import('../views/hr/HrDashboardPage.vue') },
+            { path: 'hr/employees', redirect: '/admin/hr/employees/all' },
+            {
+                path: 'hr/employees/:tab(all|directory|profiles|history|lifecycle|transfers|promotions|confirmations|probation|suspended|inactive|archived|add)',
+                name: 'HrEmployeesTab',
+                component: () => import('../views/hr/employees/HrEmployeesWorkspacePage.vue'),
+            },
+            {
+                path: 'hr/employees/profile/:id',
+                name: 'HrEmployeeProfile',
+                component: () => import('../views/hr/employees/EmployeeProfilePage.vue'),
+                props: true,
+            },
+            { path: 'hr/org-structure', name: 'HrOrgStructure', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Organization Structure', phase: 'Phase 1 — Foundation' }) },
+            { path: 'hr/employee-documents', name: 'HrEmployeeDocuments', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Employee Documents', phase: 'Phase 1 — Foundation' }) },
+            { path: 'hr/recruitment', name: 'HrRecruitment', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Recruitment', phase: 'Phase 4 — Hiring' }) },
+            { path: 'hr/onboarding', name: 'HrOnboarding', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Onboarding', phase: 'Phase 4 — Hiring' }) },
+            { path: 'hr/attendance', name: 'HrAttendance', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Attendance', phase: 'Phase 2 — Time Management' }) },
+            { path: 'hr/leave', name: 'HrLeave', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Leave Management', phase: 'Phase 2 — Time Management' }) },
+            { path: 'hr/shifts', name: 'HrShifts', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Shifts & Rosters', phase: 'Phase 2 — Time Management' }) },
+            { path: 'hr/payroll', name: 'HrPayroll', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Payroll (India)', phase: 'Phase 3 — Pay & Benefits' }) },
+            { path: 'hr/reimbursements', name: 'HrReimbursements', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Reimbursements', phase: 'Phase 3 — Pay & Benefits' }) },
+            { path: 'hr/compliance', name: 'HrCompliance', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Compliance & Statutory (PF/ESI/PT/TDS)', phase: 'Phase 3 — Pay & Benefits' }) },
+            { path: 'hr/performance', name: 'HrPerformance', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Performance Management', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'hr/training', name: 'HrTraining', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Training & Certifications', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'hr/assets', name: 'HrAssets', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Assets Management', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'hr/travel', name: 'HrTravel', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Travel Management', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'hr/exit', name: 'HrExit', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Exit Management', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'hr/reports', name: 'HrReports', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Reports & Analytics', phase: 'Phase 6 — Reports & Hardening' }) },
+            { path: 'hr/settings', name: 'HrSettings', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'HR Settings', phase: 'Phase 6 — Reports & Hardening' }) },
+            { path: 'hr/audit-logs', name: 'HrAuditLogs', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'HR Audit Logs', phase: 'Phase 1 — Foundation' }) },
+            { path: 'hr/:pathMatch(.*)*', name: 'AdminHrCatchall', component: PlaceholderPage, props: () => ({ type: 'hr' }) },
+
             { path: ':pathMatch(.*)*', name: 'AdminPlaceholder', component: PlaceholderPage, props: route => ({ type: 'admin' }) }
         ]
     }

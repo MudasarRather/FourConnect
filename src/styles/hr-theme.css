@@ -1,0 +1,209 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   HR module theme tokens — "Mission Control"
+   Dark canvas + gold/amber/orange palette, monospace metadata, ambient gradients.
+   Layered on top of the app's existing dark glassmorphism.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* ── Accent ramp (gold → amber → orange → deep orange) ── */
+  --hr-accent-gold: #fbbf24;
+  --hr-accent-gold-soft: rgba(251, 191, 36, 0.12);
+  --hr-accent-gold-border: rgba(251, 191, 36, 0.28);
+  --hr-accent-gold-glow: 0 0 24px rgba(251, 191, 36, 0.22);
+  --hr-accent-gold-strong: #f59e0b;
+  --hr-amber: #f59e0b;
+  --hr-orange: #fb923c;
+  --hr-orange-strong: #ea580c;
+  --hr-orange-soft: rgba(251, 146, 60, 0.12);
+  --hr-orange-border: rgba(251, 146, 60, 0.28);
+
+  /* Signature gradients */
+  --hr-gradient-hero: linear-gradient(135deg, #fbbf24 0%, #fb923c 55%, #f97316 100%);
+  --hr-gradient-rail-active: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+  --hr-gradient-warm-glow: radial-gradient(60% 80% at 50% 0%, rgba(251, 191, 36, 0.18), transparent 70%);
+  --hr-gradient-ambient: linear-gradient(90deg,
+    transparent 0%,
+    rgba(251, 191, 36, 0.35) 30%,
+    rgba(251, 146, 60, 0.45) 50%,
+    rgba(251, 191, 36, 0.35) 70%,
+    transparent 100%);
+  --hr-glow-warm: 0 0 32px rgba(251, 146, 60, 0.18);
+
+  /* ── Lifecycle palette ── */
+  --hr-active: #34d399;
+  --hr-active-soft: rgba(52, 211, 153, 0.12);
+  --hr-probation: #fbbf24;
+  --hr-probation-soft: rgba(251, 191, 36, 0.12);
+  --hr-notice: #fb923c;
+  --hr-notice-soft: rgba(251, 146, 60, 0.12);
+  --hr-suspended: #f87171;
+  --hr-suspended-soft: rgba(248, 113, 113, 0.12);
+  --hr-inactive: #9ca3af;
+  --hr-inactive-soft: rgba(156, 163, 175, 0.08);
+  --hr-exited: #c084fc;
+  --hr-exited-soft: rgba(192, 132, 252, 0.12);
+
+  /* ── Surfaces & borders ── */
+  --hr-canvas: #050505;
+  --hr-surface: rgba(20, 20, 22, 0.66);
+  --hr-surface-elevated: rgba(28, 28, 30, 0.86);
+  --hr-surface-glass: rgba(14, 14, 16, 0.7);
+  --hr-surface-deep: rgba(10, 10, 12, 0.92);
+  --hr-border: rgba(255, 255, 255, 0.06);
+  --hr-border-strong: rgba(255, 255, 255, 0.12);
+  --hr-border-warm: rgba(251, 191, 36, 0.18);
+
+  /* ── Text ── */
+  --hr-text: #f5f5f7;
+  --hr-text-secondary: #c5c5c8;
+  --hr-text-muted: #8e8e93;
+  --hr-text-dim: #6b6b70;
+
+  /* ── Form control tokens (shared by all Hr* form components) ── */
+  --hr-input-bg: rgba(0, 0, 0, 0.34);
+  --hr-input-bg-hover: rgba(0, 0, 0, 0.46);
+  --hr-input-bg-focus: rgba(0, 0, 0, 0.52);
+  --hr-input-border: rgba(255, 255, 255, 0.08);
+  --hr-input-border-hover: rgba(255, 255, 255, 0.18);
+  --hr-input-border-focus: var(--hr-accent-gold-border);
+  --hr-input-text: var(--hr-text);
+  --hr-input-placeholder: var(--hr-text-dim);
+  --hr-input-error: #ef4444;
+  --hr-input-error-soft: rgba(239, 68, 68, 0.12);
+  --hr-input-height: 40px;
+
+  /* ── Typography ── */
+  --hr-mono: ui-monospace, "JetBrains Mono", SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  /* ── Motion ── */
+  --hr-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --hr-spring-out: cubic-bezier(0.36, 0, 0.66, -0.56);
+  --hr-ease-quint: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ─── Reduced motion guard ────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .hr-animate,
+  .hr-stagger > *,
+  [data-magnetic],
+  [data-spotlight],
+  [data-aurora],
+  .hr-confetti {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ─── Shared keyframes ────────────────────────────────────────────────────── */
+@keyframes hr-pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 currentColor; }
+  50% { opacity: 0.55; box-shadow: 0 0 0 6px transparent; }
+}
+
+@keyframes hr-pulse-dot-gold {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.55);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(251, 191, 36, 0);
+    transform: scale(1.08);
+  }
+}
+
+@keyframes hr-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes hr-shimmer-warm {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes hr-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hr-fade-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hr-aurora {
+  0%   { background-position:   0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position:   0% 50%; }
+}
+
+@keyframes hr-rotate-conic {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes hr-pan-gradient {
+  0%   { background-position: 0%   50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes hr-scanline {
+  0%, 90%, 100% { transform: translateY(-100%); opacity: 0; }
+  35%, 55%      { transform: translateY(0);     opacity: 0.45; }
+}
+
+@keyframes hr-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+@keyframes hr-check-pop {
+  0% { stroke-dashoffset: 24; transform: scale(0.7); opacity: 0; }
+  60% { stroke-dashoffset: 0; transform: scale(1.08); opacity: 1; }
+  100% { stroke-dashoffset: 0; transform: scale(1); opacity: 1; }
+}
+
+@keyframes hr-confetti-rise {
+  0%   { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate(var(--cx, 0px), var(--cy, -160px)) rotate(var(--cr, 540deg)); opacity: 0; }
+}
+
+@keyframes hr-ripple {
+  0%   { transform: scale(0); opacity: 0.45; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+@keyframes hr-conic-fade {
+  0% { stroke-dashoffset: 282; }
+  100% { stroke-dashoffset: var(--hr-arc, 0); }
+}
+
+/* ─── Utility classes ─────────────────────────────────────────────────────── */
+.hr-mono { font-family: var(--hr-mono); }
+
+.hr-spotlight {
+  position: relative;
+}
+.hr-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(251, 191, 36, 0.10),
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity 200ms var(--hr-spring);
+}
+.hr-spotlight[data-spotlight-active="true"]::before { opacity: 1; }
+
+/* Magnetic CTA: parent sets data-magnetic, JS writes --mx/--my translate offsets */
+[data-magnetic] {
+  transition: transform 220ms var(--hr-spring), box-shadow 220ms var(--hr-spring);
+  will-change: transform;
+}

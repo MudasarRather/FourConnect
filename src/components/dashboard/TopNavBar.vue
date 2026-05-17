@@ -99,7 +99,7 @@ import axios from 'axios'
 import { useToast } from '../../composables/useToast'
 import Logo from '../icons/Logo.vue'
 import NotificationBell from '../ui/NotificationBell.vue'
-import { 
+import {
   ChevronDown, LayoutDashboard, User, AlertCircle, History, Bookmark,
   Briefcase, Plus, Edit, Users, BarChart3, FileText, StickyNote, Archive, RotateCcw,
   CheckSquare, List, UserPlus, XCircle, Info, GitBranch, Copy, UsersRound,
@@ -108,27 +108,50 @@ import {
   Upload, Eye, Grid, Link, ShieldCheck, Download, Calendar,
   Building, Globe, CreditCard, Zap, Bell, UserCheck, Shield,
   ShieldAlert, LogOut, Banknote, KeyRound, Handshake, FilePieChart, FileBox,
-  DollarSign
+  DollarSign,
+  UserCog, Building2, Fingerprint, CalendarOff, CalendarClock, Receipt,
+  BadgeCheck, GraduationCap, Boxes, Plane, Scale, LineChart, IdCard,
+  LogIn, ClipboardList, Award, FileSignature, HeartPulse
 } from 'lucide-vue-next'
 
 const router = useRouter()
 const { info } = useToast()
 const activeMenuIndex = ref(null)
 const userMenuOpen = ref(false)
-const isSuperuser = ref(false) // Will be set from API response
+
+// Hydrate from localStorage immediately so HR menu renders on first paint
+// (no flash, no required refresh). The /me fetch refreshes the cache.
+const _isAdminPath = () => router.currentRoute.value.path.startsWith('/admin')
+const _readCachedUser = () => {
+  try {
+    const key = _isAdminPath() ? 'admin_user' : 'user'
+    const raw = localStorage.getItem(key)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch { return null }
+}
+const _cached = _readCachedUser()
+
+const isSuperuser = ref(
+  _cached?.is_superuser === true || (_isAdminPath() && !!localStorage.getItem('admin_token'))
+)
 
 const user = ref({
-  full_name: 'User',
-  initials: 'U',
-  avatar_url: null
+  full_name: _cached?.full_name || 'User',
+  initials: ((_cached?.full_name || 'U').split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('') || 'U').toUpperCase(),
+  avatar_url: _cached?.avatar_url || null,
 })
 
 const fetchUser = async () => {
   try {
-    const isAdmin = router.currentRoute.value.path.startsWith('/admin')
+    const isAdmin = _isAdminPath()
     const token = isAdmin ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
-    
-    if (!token) return
+
+    if (!token) {
+      // No token at all — clear stale state
+      isSuperuser.value = false
+      return
+    }
 
     const response = await axios.get('http://localhost:8000/api/auth/me', {
       headers: { Authorization: `Bearer ${token}` }
@@ -136,14 +159,26 @@ const fetchUser = async () => {
     const data = response.data
     user.value = {
       full_name: data.full_name || 'User',
-      initials: (data.full_name || 'U').split(' ').map(n => n[0]).join('').toUpperCase(),
+      initials: (data.full_name || 'U').split(' ').map(n => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'U',
       avatar_url: data.avatar_url || null
     }
-    // Set superuser status from API response - this is the source of truth
     isSuperuser.value = data.is_superuser === true
+    // Refresh the localStorage cache so next page-load hydrates instantly
+    try {
+      const cacheKey = isAdmin ? 'admin_user' : 'user'
+      localStorage.setItem(cacheKey, JSON.stringify({
+        full_name: data.full_name,
+        avatar_url: data.avatar_url,
+        is_superuser: data.is_superuser,
+      }))
+    } catch {}
   } catch (err) {
+    // Network/auth failure: keep optimistic hydration if path implies admin + admin_token exists,
+    // otherwise fall back to non-admin.
+    if (!_isAdminPath() || !localStorage.getItem('admin_token')) {
+      isSuperuser.value = false
+    }
     console.warn('Failed to fetch user for nav')
-    isSuperuser.value = false // Default to non-admin on error
   }
 }
 
@@ -260,6 +295,8 @@ const visibleMenuItems = computed(() => {
   return rawMenuItems.map(item => {
     // Check role visibility
     if (item.superadminOnly && !isSuperuser.value) return null
+    if (item.adminOnlyMenu && !isAdminContext.value) return null
+    if (item.userOnlyMenu && isAdminContext.value) return null
     if (item.label === 'Administration' && !isSuperuser.value) return null // Double check
 
     // Adjust item to
@@ -384,31 +421,79 @@ const rawMenuItems = [
        ]}
     ]]
   },
-   {
-    label: 'Finance',
-    icon: Banknote,
+  {
+    label: 'HR',
+    icon: UserCog,
     children: true,
+    adminOnlyMenu: true, // Only render in admin panel context
+    superadminOnly: true, // Belt-and-suspenders: only superadmins
     columns: [[
-      { title: 'Budgeting', items: [
-         { label: 'Project Budgets', to: '/dashboard/finance/budgets', icon: Calculator },
-         { label: 'Create Budget', to: '/dashboard/finance/budgets/new', icon: Plus },
-         { label: 'Edit Budget', to: '/dashboard/finance/budgets/edit', icon: Edit },
-         { label: 'Allocation', to: '/dashboard/finance/allocation', icon: PieChart },
-         { label: 'Utilization', to: '/dashboard/finance/utilization', icon: TrendingUp }
+      { title: 'Overview', items: [
+         { label: 'HR Dashboard', to: '/dashboard/hr/dashboard', icon: LayoutDashboard },
+         { label: 'Reports & Analytics', to: '/dashboard/hr/reports', icon: LineChart }
+      ]},
+      { title: 'People', items: [
+         { label: 'Employees', to: '/dashboard/hr/employees', icon: Users },
+         { label: 'Organization Structure', to: '/dashboard/hr/org-structure', icon: Building2 },
+         { label: 'Employee Documents', to: '/dashboard/hr/employee-documents', icon: FileSignature }
+      ]},
+      { title: 'Hiring', items: [
+         { label: 'Recruitment', to: '/dashboard/hr/recruitment', icon: UserPlus },
+         { label: 'Onboarding', to: '/dashboard/hr/onboarding', icon: ClipboardList }
       ]}
     ], [
-      { title: 'Payments', items: [
-         { label: 'Requests', to: '/dashboard/finance/requests', icon: FileText },
-         { label: 'Approve Payments', to: '/dashboard/finance/approve', icon: CheckCircle },
-         { label: 'Payment History', to: '/dashboard/finance/history', icon: History }
+      { title: 'Time & Attendance', items: [
+         { label: 'Attendance', to: '/dashboard/hr/attendance', icon: Fingerprint },
+         { label: 'Leave Management', to: '/dashboard/hr/leave', icon: CalendarOff },
+         { label: 'Shifts & Rosters', to: '/dashboard/hr/shifts', icon: CalendarClock }
       ]},
-      { title: 'Accounting', items: [
-         { label: 'Financial Ledger', to: '/dashboard/finance/ledger', icon: BookOpen },
-         { label: 'Cost Centers', to: '/dashboard/finance/cost-centers', icon: Target },
-         { label: 'Close Period', to: '/dashboard/finance/close-period', icon: Lock }
+      { title: 'Pay & Benefits', items: [
+         { label: 'Payroll', to: '/dashboard/hr/payroll', icon: Banknote },
+         { label: 'Reimbursements', to: '/dashboard/hr/reimbursements', icon: Receipt },
+         { label: 'Compliance & Statutory', to: '/dashboard/hr/compliance', icon: Scale }
+      ]},
+      { title: 'Growth', items: [
+         { label: 'Performance Management', to: '/dashboard/hr/performance', icon: Target },
+         { label: 'Training & Certifications', to: '/dashboard/hr/training', icon: GraduationCap }
+      ]}
+    ], [
+      { title: 'Lifecycle', items: [
+         { label: 'Assets Management', to: '/dashboard/hr/assets', icon: Boxes },
+         { label: 'Travel Management', to: '/dashboard/hr/travel', icon: Plane },
+         { label: 'Exit Management', to: '/dashboard/hr/exit', icon: LogOut }
+      ]},
+      { title: 'Governance', items: [
+         { label: 'HR Settings', to: '/dashboard/hr/settings', icon: Settings },
+         { label: 'Audit Logs', to: '/dashboard/hr/audit-logs', icon: History }
       ]}
     ]]
-
+  },
+  {
+    label: 'Self Service Portal',
+    icon: IdCard,
+    children: true,
+    userOnlyMenu: true, // Only render in user panel context (hidden in admin)
+    columns: [[
+      { title: 'Profile & Documents', items: [
+         { label: 'My Profile', to: '/dashboard/self-service/profile', icon: User },
+         { label: 'My Documents', to: '/dashboard/self-service/documents', icon: FileSignature }
+      ]},
+      { title: 'Time', items: [
+         { label: 'My Attendance', to: '/dashboard/self-service/attendance', icon: Fingerprint },
+         { label: 'My Leave', to: '/dashboard/self-service/leave', icon: CalendarOff }
+      ]}
+    ], [
+      { title: 'Pay', items: [
+         { label: 'My Payslips', to: '/dashboard/self-service/payslips', icon: Banknote },
+         { label: 'My Tax Documents', to: '/dashboard/self-service/tax-documents', icon: Scale },
+         { label: 'My Reimbursements', to: '/dashboard/self-service/reimbursements', icon: Receipt }
+      ]},
+      { title: 'Growth & Assets', items: [
+         { label: 'My Training', to: '/dashboard/self-service/training', icon: GraduationCap },
+         { label: 'My Performance Reviews', to: '/dashboard/self-service/performance', icon: Award },
+         { label: 'My Assets', to: '/dashboard/self-service/assets', icon: Boxes }
+      ]}
+    ]]
   },
   {
     label: 'Notes',

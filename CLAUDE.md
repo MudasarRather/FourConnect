@@ -387,3 +387,10 @@ Track these before any public or production deployment:
 8. **`datetime.utcnow()` in older models** — deprecated in Python 3.12+. Migrate to `datetime.now(timezone.utc)` in `Project`, `Milestone`, `DprDocument`, and similar older models.
 9. **No `/health` endpoint** — add a health check route that pings the DB for load balancer use.
 10. **No test project** — first test added should target the auth flow and ownership check paths as they are the highest-risk surfaces.
+
+
+# Design System
+
+## Aesthetic Direction
+Ultra-modern dark tech aesthetic. Think: Apple Vision Pro meets brutalist editorial.
+NEVER use generic layouts. Every page must have a unique visual identity.

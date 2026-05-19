@@ -222,6 +222,7 @@ defineExpose({ open: openIt, close })
 <style scoped>
 .hr-select { display: block; position: relative; }
 .hr-select-trigger {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -236,9 +237,24 @@ defineExpose({ open: openIt, close })
   font-family: inherit;
   cursor: pointer;
   text-align: left;
-  transition: background 200ms var(--hr-spring),
-              border-color 200ms var(--hr-spring),
-              box-shadow 220ms var(--hr-spring);
+  overflow: hidden;
+  transition: background 220ms var(--hr-spring),
+              border-color 220ms var(--hr-spring),
+              box-shadow 280ms var(--hr-spring);
+}
+.hr-select-trigger::after {
+  content: '';
+  position: absolute;
+  left: 12px; right: 12px;
+  bottom: 0;
+  height: 2px;
+  background: var(--hr-gradient-hero);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: center;
+  opacity: 0;
+  transition: transform 320ms var(--hr-spring), opacity 220ms var(--hr-spring);
+  pointer-events: none;
 }
 .hr-select-trigger:hover:not(:disabled) {
   background: var(--hr-input-bg-hover);
@@ -248,7 +264,14 @@ defineExpose({ open: openIt, close })
 .hr-select.focused .hr-select-trigger {
   background: var(--hr-input-bg-focus);
   border-color: var(--hr-input-border-focus);
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.10);
+  box-shadow:
+    0 0 0 3px rgba(251, 191, 36, 0.14),
+    0 0 24px -8px rgba(251, 146, 60, 0.4);
+}
+.hr-select.open .hr-select-trigger::after,
+.hr-select.focused .hr-select-trigger::after {
+  transform: scaleX(1);
+  opacity: 0.85;
 }
 .hr-select.error .hr-select-trigger {
   border-color: var(--hr-input-error);

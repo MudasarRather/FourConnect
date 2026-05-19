@@ -14,6 +14,35 @@
       <Confetti :fire="confettiTick" />
     </header>
 
+    <!-- ════════ Offer prefill banner ════════ -->
+    <section class="offer-banner" v-if="!form._offer_id">
+      <div class="ob-icon"><Sparkles :size="16" /></div>
+      <div class="ob-body">
+        <div class="ob-title">Hiring from a signed offer?</div>
+        <div class="ob-sub">Pick an accepted offer — we'll prefill name, contact, role and compensation.</div>
+        <HrSearchCombobox
+          v-model="offerPickerId"
+          :search="searchAcceptedOffers"
+          placeholder="Search accepted offers by candidate name…"
+          @change="onOfferPicked"
+        />
+      </div>
+    </section>
+    <section class="offer-banner offer-banner-linked" v-else>
+      <div class="ob-icon ob-icon-on"><CheckCircle :size="16" /></div>
+      <div class="ob-body">
+        <div class="ob-title">Linked to {{ form._offer_code }}</div>
+        <div class="ob-sub">
+          {{ form.create_full_name || '—' }}
+          <span v-if="form._offer_position_title"> · {{ form._offer_position_title }}</span>
+          <span v-if="form._offer_offered_salary" class="ob-money"> · CTC {{ formatCtc(form._offer_offered_salary) }}</span>
+        </div>
+      </div>
+      <button type="button" class="ob-unlink" @click="unlinkOffer">
+        <X :size="13" /> Unlink prefill
+      </button>
+    </section>
+
     <div class="wiz-body">
       <transition :name="`wiz-${slideDir}`" mode="out-in">
         <section :key="stepIdx" class="wiz-step">
@@ -413,7 +442,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import {
-  X, UserPlus, ArrowLeft, ArrowRight, Check, Loader2,
+  X, UserPlus, ArrowLeft, ArrowRight, Check, Loader2, Sparkles, CheckCircle,
 } from 'lucide-vue-next'
 
 import ProfileDrawer from '../../../components/hr/ProfileDrawer.vue'
@@ -431,6 +460,7 @@ import HrRadio from '../../../components/hr/forms/HrRadio.vue'
 import HrSearchCombobox from '../../../components/hr/forms/HrSearchCombobox.vue'
 
 import { useEmployees, useHrReference } from '../../../composables/useEmployees'
+import { useOffers } from '../../../composables/useRecruitment'
 import { useToast } from '../../../composables/useToast'
 import { useSpotlight } from '../../../composables/useSpotlight'
 import { useMagnetic } from '../../../composables/useMagnetic'
@@ -444,6 +474,11 @@ const emit = defineEmits(['update:open', 'created'])
 const { success, error } = useToast()
 const { reference, loadReferenceData } = useHrReference()
 const { create } = useEmployees()
+const { listAccepted: listAcceptedOffers, getOnboardingPrefill } = useOffers()
+
+// Local state for the offer-prefill combobox (only the id is tracked here —
+// once picked we transfer the offer data into `form._offer_*` and reset this).
+const offerPickerId = ref(null)
 
 const stepCfg = [
   { key: 'basic', label: 'Basic Info' },
@@ -571,6 +606,14 @@ const initialForm = () => ({
   _pickedUserLabel: '',
   _reportingManagerLabel: '',
   _hrManagerLabel: '',
+
+  // Back-link to a recruitment Offer, set by the prefill banner. Only the
+  // `_offer_id` value is sent to the backend; the rest are UI-only hints.
+  _offer_id: null,
+  _offer_code: '',
+  _offer_position_title: '',
+  _offer_offered_salary: null,
+
   create_email: '',
   create_full_name: '',
   employee_code: '',
@@ -608,6 +651,7 @@ const initialForm = () => ({
   hr_manager_id: null,
   grade_id: null,
   pay_level: '',
+  work_location_id: null,
   work_location_text: '',
 
   bank_name: '',
@@ -664,6 +708,131 @@ const onUserPicked = (user) => {
   form.create_email = user.email || ''
   form.create_full_name = user.full_name || ''
   if (!form.employee_code) form.employee_code = user.employee_id || ''
+}
+
+// ─── Offer prefill — fetches accepted, unlinked offers and applies the
+//     picked offer's candidate/position/comp data into the wizard form.
+const searchAcceptedOffers = async (term) => {
+  try {
+    const items = await listAcceptedOffers({ unlinkedOnly: true, limit: 50 })
+    const t = (term || '').toLowerCase()
+    const filtered = !t
+      ? items
+      : items.filter(o =>
+          (o.candidate_name || '').toLowerCase().includes(t) ||
+          (o.position_title || '').toLowerCase().includes(t) ||
+          (o.offer_code || '').toLowerCase().includes(t)
+        )
+    // Shape into the HrSearchCombobox row format
+    return filtered.slice(0, 10).map(o => ({
+      id: o.id,
+      full_name: o.candidate_name || '—',
+      email: `${o.position_title || '—'} · ${o.offer_code}`,
+      avatar_url: null,
+      __raw: o,
+    }))
+  } catch {
+    return []
+  }
+}
+
+const onOfferPicked = async (item) => {
+  if (!item) { return }
+  await prefillFromOffer(item.id, item.__raw)
+}
+
+const prefillFromOffer = async (offerId, summary = null) => {
+  try {
+    const p = await getOnboardingPrefill(offerId)
+    applyPrefill(p, summary)
+    success(`Prefilled from offer ${p.offer_code}`)
+  } catch (e) {
+    const detail = e?.response?.data?.detail
+    if (typeof detail === 'object' && detail?.employee_id) {
+      error(`This offer is already linked to employee ${detail.employee_id}`)
+    } else {
+      error(typeof detail === 'string' ? detail : 'Could not load offer details')
+    }
+    // Reset the picker so user can try again
+    offerPickerId.value = null
+  }
+}
+
+const applyPrefill = (p, summary = null) => {
+  // Always create a brand-new User shell when prefilling — the candidate
+  // doesn't have a User account yet.
+  form.linkMode = 'new'
+  form.user_id = null
+  form._pickedUserLabel = ''
+
+  const c = p.candidate || {}
+  const pos = p.position || {}
+  const o = p.offer || {}
+
+  // Identity (Step 1)
+  if (c.full_name) form.create_full_name = c.full_name
+  if (c.email)     form.create_email = c.email
+  if (c.gender)    form.gender = c.gender
+  if (c.dob)       form.dob = String(c.dob).slice(0, 10)
+
+  // Contact (Step 2)
+  if (c.mobile) {
+    // Strip any non-digits & keep last 10 chars (10-digit national format)
+    const digits = String(c.mobile).replace(/\D/g, '')
+    form.mobile = digits.slice(-10)
+  }
+  if (c.current_city || c.current_state || c.current_country) {
+    const addr = [c.current_city, c.current_state, c.current_country]
+      .filter(Boolean).join(', ')
+    if (addr && !form.current_address) form.current_address = addr
+  }
+
+  // Employment (Step 3) — prefer offer-level overrides over the position's defaults
+  if (o.department_id || pos.department_id) form.department_id = o.department_id || pos.department_id
+  if (pos.designation_id) form.designation_id = pos.designation_id
+  if (o.grade_id || pos.grade_id) form.grade_id = o.grade_id || pos.grade_id
+  const locId = o.location_id || pos.location_id
+  if (locId) {
+    form.work_location_id = locId
+    // Resolve to a human-readable name for the work_location_text input
+    const match = (reference.locations || []).find(l => l.id === locId)
+    if (match && !form.work_location_text) form.work_location_text = match.name || ''
+  }
+  if (pos.employment_type) form.employment_type = pos.employment_type
+  if (o.joining_date) form.joining_date = String(o.joining_date).slice(0, 10)
+  if (c.notice_period_days != null) form.notice_period_days = c.notice_period_days
+  if (o.reporting_manager_id) form.reporting_manager_id = o.reporting_manager_id
+
+  // Bank & Salary (Step 4)
+  // Offer.offered_salary is annual CTC (per project convention)
+  if (o.offered_salary != null) {
+    const annual = Number(o.offered_salary)
+    form.annual_ctc = annual
+    form.monthly_ctc = Math.round(annual / 12)
+  }
+
+  // Stash linkage + UI metadata
+  form._offer_id = p.offer_id
+  form._offer_code = p.offer_code
+  form._offer_position_title = pos.job_title || summary?.position_title || ''
+  form._offer_offered_salary = o.offered_salary ?? null
+}
+
+const unlinkOffer = () => {
+  form._offer_id = null
+  form._offer_code = ''
+  form._offer_position_title = ''
+  form._offer_offered_salary = null
+  offerPickerId.value = null
+  // Note: field values prefilled from the offer are intentionally retained
+  // so the recruiter doesn't lose typed edits.
+}
+
+const formatCtc = (v) => {
+  if (v == null) return ''
+  const n = Number(v)
+  if (!Number.isFinite(n)) return ''
+  return n.toLocaleString('en-IN', { maximumFractionDigits: 0 })
 }
 const onReportingManagerPicked = (user) => {
   form._reportingManagerLabel = user ? user.full_name : ''
@@ -827,7 +996,7 @@ const buildPayload = () => {
     'department_id', 'designation_id', 'employment_type', 'employee_category',
     'joining_date', 'probation_months', 'notice_period_days',
     'reporting_manager_id', 'hr_manager_id', 'grade_id', 'pay_level',
-    'work_location_text', 'bank_name', 'account_number', 'ifsc',
+    'work_location_id', 'work_location_text', 'bank_name', 'account_number', 'ifsc',
     'uan', 'pf_number', 'esic_number', 'tax_regime',
     'monthly_ctc', 'annual_ctc',
   ]
@@ -837,6 +1006,9 @@ const buildPayload = () => {
   }
   if (payload.pan) payload.pan = String(payload.pan).toUpperCase()
   if (payload.ifsc) payload.ifsc = String(payload.ifsc).toUpperCase()
+
+  // Back-link to the recruitment offer (UI-only fields stay client-side)
+  if (form._offer_id) payload.offer_id = form._offer_id
   return payload
 }
 
@@ -920,6 +1092,74 @@ watch(() => props.open, async (v) => { if (v) await loadReferenceData() })
   letter-spacing: 0.4px;
   border: 1px solid var(--hr-accent-gold-border);
   margin-left: 4px;
+}
+
+/* ──────────────────────────── Offer prefill banner ──────────────────────── */
+.offer-banner {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin: 16px 24px 0;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(251, 146, 60, 0.04));
+  border: 1px solid var(--hr-accent-gold-border);
+  border-radius: 14px;
+  box-shadow: 0 8px 26px -18px rgba(251, 146, 60, 0.45);
+  animation: rec-banner-in 0.42s var(--hr-spring) both;
+}
+@keyframes rec-banner-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.offer-banner .ob-icon {
+  display: grid; place-items: center;
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(251, 146, 60, 0.10));
+  border: 1px solid var(--hr-accent-gold-border);
+  color: var(--hr-accent-gold);
+  flex-shrink: 0;
+}
+.offer-banner .ob-icon-on {
+  background: linear-gradient(135deg, #fbbf24, #fb923c);
+  color: #1a1a1c;
+  border-color: rgba(251, 191, 36, 0.6);
+}
+.offer-banner .ob-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.offer-banner .ob-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--hr-text);
+  letter-spacing: -0.01em;
+}
+.offer-banner .ob-sub {
+  font-size: 11.5px;
+  color: var(--hr-text-muted);
+  line-height: 1.45;
+}
+.offer-banner .ob-money { color: var(--hr-accent-gold); font-weight: 600; }
+.offer-banner .ob-unlink {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--hr-border-strong);
+  border-radius: 8px;
+  color: var(--hr-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 180ms var(--hr-spring);
+  align-self: center;
+}
+.offer-banner .ob-unlink:hover {
+  background: rgba(248, 113, 113, 0.10);
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.32);
+}
+.offer-banner-linked {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.14), rgba(251, 146, 60, 0.07));
+  border-color: rgba(251, 191, 36, 0.4);
 }
 
 .wiz-body {

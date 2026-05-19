@@ -87,10 +87,26 @@ defineExpose({ focus: () => inputEl.value?.focus(), blur: () => inputEl.value?.b
   border: 1px solid var(--hr-input-border);
   border-radius: 10px;
   padding: 0 12px;
-  transition: background 200ms var(--hr-spring),
-              border-color 200ms var(--hr-spring),
-              box-shadow 220ms var(--hr-spring);
+  transition: background 220ms var(--hr-spring),
+              border-color 220ms var(--hr-spring),
+              box-shadow 280ms var(--hr-spring),
+              transform 220ms var(--hr-spring);
   position: relative;
+  overflow: hidden;
+}
+.hr-input-shell::after {
+  content: '';
+  position: absolute;
+  left: 12px; right: 12px;
+  bottom: 0;
+  height: 2px;
+  background: var(--hr-gradient-hero);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: center;
+  opacity: 0;
+  transition: transform 320ms var(--hr-spring), opacity 220ms var(--hr-spring);
+  pointer-events: none;
 }
 .hr-input-shell:hover:not(.disabled):not(.focused) {
   background: var(--hr-input-bg-hover);
@@ -99,7 +115,13 @@ defineExpose({ focus: () => inputEl.value?.focus(), blur: () => inputEl.value?.b
 .hr-input-shell.focused {
   background: var(--hr-input-bg-focus);
   border-color: var(--hr-input-border-focus);
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.10);
+  box-shadow:
+    0 0 0 3px rgba(251, 191, 36, 0.14),
+    0 0 24px -8px rgba(251, 146, 60, 0.4);
+}
+.hr-input-shell.focused::after {
+  transform: scaleX(1);
+  opacity: 0.85;
 }
 .hr-input-shell.error {
   border-color: var(--hr-input-error);

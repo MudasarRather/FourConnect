@@ -109,7 +109,7 @@ import {
   Building, Globe, CreditCard, Zap, Bell, UserCheck, Shield,
   ShieldAlert, LogOut, Banknote, KeyRound, Handshake, FilePieChart, FileBox,
   DollarSign,
-  UserCog, Building2, Fingerprint, CalendarOff, CalendarClock, Receipt,
+  UserCog, Fingerprint, CalendarOff, CalendarClock, Receipt,
   BadgeCheck, GraduationCap, Boxes, Plane, Scale, LineChart, IdCard,
   LogIn, ClipboardList, Award, FileSignature, HeartPulse
 } from 'lucide-vue-next'
@@ -434,7 +434,6 @@ const rawMenuItems = [
       ]},
       { title: 'People', items: [
          { label: 'Employees', to: '/dashboard/hr/employees', icon: Users },
-         { label: 'Organization Structure', to: '/dashboard/hr/org-structure', icon: Building2 },
          { label: 'Employee Documents', to: '/dashboard/hr/employee-documents', icon: FileSignature }
       ]},
       { title: 'Hiring', items: [

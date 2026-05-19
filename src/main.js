@@ -6,6 +6,8 @@ import router from './router'
 import Toast from "vue-toastification"
 import "vue-toastification/dist/index.css"
 
+import { MotionPlugin } from '@vueuse/motion'
+
 import { attachRouterCleanup } from './composables/useGsapAnim'
 import vReveal from './directives/vReveal'
 import vTilt from './directives/vTilt'
@@ -13,6 +15,7 @@ import vMagnetic from './directives/vMagnetic'
 
 const app = createApp(App)
 app.use(router)
+app.use(MotionPlugin)
 app.use(Toast, {
     position: "top-right",
     timeout: 3000,

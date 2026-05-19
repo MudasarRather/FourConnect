@@ -42,41 +42,93 @@ const props = defineProps({
   min: { type: Number, default: null },
   max: { type: Number, default: null },
   stepBy: { type: Number, default: 1 },
+  // When true, allow decimal entry (e.g. "2.5"). Defaults to true if stepBy is non-integer.
+  allowDecimal: { type: Boolean, default: undefined },
+  // Optional cap on decimal places (only used when decimals are allowed).
+  decimals: { type: Number, default: 2 },
 })
 const emit = defineEmits(['update:modelValue'])
 
 const inputEl = ref(null)
 const focused = ref(false)
 
+const decimalsAllowed = computed(() =>
+  props.allowDecimal === undefined ? !Number.isInteger(props.stepBy) : props.allowDecimal
+)
+
 const display = computed(() => (props.modelValue === null || props.modelValue === undefined ? '' : String(props.modelValue)))
 
 const atMin = computed(() => props.min !== null && Number(props.modelValue ?? 0) <= props.min)
 const atMax = computed(() => props.max !== null && Number(props.modelValue ?? 0) >= props.max)
 
-const clamp = (v) => {
+// Soft normalization while typing — only validates type, NOT range.
+// Range clamping happens on blur so users can type intermediate values
+// like "2" on the way to "2024" without being snapped to min=1950.
+const roundDecimals = (n) => {
+  if (decimalsAllowed.value && Number.isInteger(props.decimals)) {
+    const factor = Math.pow(10, props.decimals)
+    return Math.round(n * factor) / factor
+  }
+  return n
+}
+
+const clampRange = (v) => {
   if (v === '' || v === null) return null
   let n = Number(v)
   if (Number.isNaN(n)) return props.modelValue
   if (props.min !== null && n < props.min) n = props.min
   if (props.max !== null && n > props.max) n = props.max
-  return n
+  return roundDecimals(n)
+}
+
+const parseLoose = (v) => {
+  if (v === '' || v === null) return null
+  const n = Number(v)
+  if (Number.isNaN(n)) return props.modelValue
+  return roundDecimals(n)
 }
 
 const onInput = (e) => {
-  const raw = e.target.value.replace(/[^\d-]/g, '')
-  if (raw === '' || raw === '-') {
+  let raw = e.target.value
+  // Strip anything other than digits, minus (only at start), and decimal point if allowed
+  if (decimalsAllowed.value) {
+    raw = raw.replace(/[^\d.-]/g, '')
+    raw = raw.replace(/(?!^)-/g, '')
+    const firstDot = raw.indexOf('.')
+    if (firstDot >= 0) {
+      raw = raw.slice(0, firstDot + 1) + raw.slice(firstDot + 1).replace(/\./g, '')
+    }
+  } else {
+    raw = raw.replace(/[^\d-]/g, '')
+    raw = raw.replace(/(?!^)-/g, '')
+  }
+  if (e.target.value !== raw) e.target.value = raw
+
+  if (raw === '' || raw === '-' || raw === '.') {
     emit('update:modelValue', null)
     return
   }
-  emit('update:modelValue', clamp(raw))
+  if (decimalsAllowed.value && raw.endsWith('.')) {
+    emit('update:modelValue', raw)
+    return
+  }
+  // While typing, parse without applying min/max bounds.
+  emit('update:modelValue', parseLoose(raw))
 }
 
 const onFocus = () => { focused.value = true }
-const onBlur = () => { focused.value = false }
+const onBlur = () => {
+  focused.value = false
+  // Apply min/max bounds on blur so typed intermediate values are accepted live.
+  if (props.modelValue !== null && props.modelValue !== '' && props.modelValue !== undefined) {
+    const clamped = clampRange(props.modelValue)
+    if (clamped !== props.modelValue) emit('update:modelValue', clamped)
+  }
+}
 
 const step = (delta) => {
   const cur = Number(props.modelValue ?? 0)
-  emit('update:modelValue', clamp(cur + delta))
+  emit('update:modelValue', clampRange(cur + delta))
 }
 
 const onKey = (e) => {

@@ -124,52 +124,57 @@
         </div>
       </div>
 
-      <table v-else class="emp-table">
-        <thead>
-          <tr>
-            <th class="th-check">
-              <HrCheckbox
-                :model-value="allOnPageSelected"
-                @change="toggleAllOnPage"
-              />
-            </th>
-            <th @click="sort('full_name')">Name <SortIcon :col="'full_name'" :active="filters.sort_by" :dir="filters.sort_dir" /></th>
-            <th @click="sort('employee_id')">Employee ID <SortIcon :col="'employee_id'" :active="filters.sort_by" :dir="filters.sort_dir" /></th>
-            <th>Designation</th>
-            <th>Department</th>
-            <th @click="sort('joining_date')">Joined <SortIcon :col="'joining_date'" :active="filters.sort_by" :dir="filters.sort_dir" /></th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
+      <div v-else class="emp-table" role="table">
+        <div class="emp-thead" role="row">
+          <div class="th th-check" role="columnheader">
+            <HrCheckbox
+              :model-value="allOnPageSelected"
+              @change="toggleAllOnPage"
+            />
+          </div>
+          <div class="th th-sort" role="columnheader" @click="sort('full_name')">
+            Name <SortIcon :col="'full_name'" :active="filters.sort_by" :dir="filters.sort_dir" />
+          </div>
+          <div class="th th-sort" role="columnheader" @click="sort('employee_id')">
+            Employee ID <SortIcon :col="'employee_id'" :active="filters.sort_by" :dir="filters.sort_dir" />
+          </div>
+          <div class="th" role="columnheader">Designation</div>
+          <div class="th" role="columnheader">Department</div>
+          <div class="th th-sort" role="columnheader" @click="sort('joining_date')">
+            Joined <SortIcon :col="'joining_date'" :active="filters.sort_by" :dir="filters.sort_dir" />
+          </div>
+          <div class="th" role="columnheader">Status</div>
+        </div>
+        <div class="emp-tbody" role="rowgroup">
+          <div
             v-for="(e, idx) in employees"
             :key="e.id"
             class="emp-row hr-animate"
             :class="{ selected: isSelected(e.id) }"
             :style="{ '--i': idx }"
+            role="row"
             @click="onRowClick($event, e)"
           >
-            <td class="td-check" @click.stop>
+            <div class="td td-check" role="cell" @click.stop>
               <HrCheckbox :model-value="isSelected(e.id)" @change="toggleOne(e.id)" />
-            </td>
-            <td class="td-name">
+            </div>
+            <div class="td td-name" role="cell">
               <EmployeeAvatar :name="e.full_name" :avatar-url="e.avatar_url" :seed="e.employee_id" size="sm" />
               <div class="name-block">
                 <span class="full-name">{{ e.full_name || '—' }}</span>
                 <span class="email">{{ e.email }}</span>
               </div>
-            </td>
-            <td><span class="mono emp-id">{{ e.employee_id }}</span></td>
-            <td>{{ e.designation_name || '—' }}</td>
-            <td>{{ e.department_name || '—' }}</td>
-            <td class="mono date">{{ fmtDate(e.joining_date) }}</td>
-            <td>
+            </div>
+            <div class="td" role="cell"><span class="mono emp-id">{{ e.employee_id }}</span></div>
+            <div class="td" role="cell">{{ e.designation_name || '—' }}</div>
+            <div class="td" role="cell">{{ e.department_name || '—' }}</div>
+            <div class="td mono date" role="cell">{{ fmtDate(e.joining_date) }}</div>
+            <div class="td" role="cell">
               <LifecycleBadge :state="e.lifecycle_state" size="sm" />
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div v-if="!loading && employees.length === 0" class="empty-state">
         <UsersIcon :size="36" />
@@ -463,39 +468,69 @@ const SortIcon = {
   overflow: hidden;
   position: relative;
 }
-.emp-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+/* ─── CSS Grid layout — guarantees header + data column alignment ─── */
+.emp-table {
+  display: grid;
+  width: 100%;
+  /* checkbox | name | emp-id | designation | department | joined | status */
+  grid-template-columns: 36px minmax(260px, 1.6fr) 130px 1fr 1fr 140px 130px;
+}
+.emp-thead, .emp-tbody, .emp-row { display: contents; }
 
-.emp-table th {
+.emp-table .th {
   background: transparent;
   padding: 14px 16px 12px;
-  text-align: left;
   font-size: 9.5px;
   font-weight: 700;
   color: var(--hr-text-muted);
   text-transform: uppercase;
   letter-spacing: 1.4px;
-  cursor: pointer;
   user-select: none;
   white-space: nowrap;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   transition: color 180ms var(--hr-spring);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.emp-table th:hover { color: var(--hr-text-secondary); }
-.emp-table th:first-child, .emp-table td:first-child { padding-left: 20px; }
-.emp-table th:last-child, .emp-table td:last-child { padding-right: 20px; }
-.th-check { width: 36px; cursor: default; }
-.td-check { width: 36px; }
+.emp-table .th.th-sort { cursor: pointer; }
+.emp-table .th.th-sort:hover { color: var(--hr-text-secondary); }
+.emp-table .th:first-child,
+.emp-table .td:first-child { padding-left: 20px; }
+.emp-table .th:last-child,
+.emp-table .td:last-child { padding-right: 20px; }
+.th-check { cursor: default; }
 
 .emp-row {
   cursor: pointer;
-  position: relative;
-  transition: background 200ms var(--hr-spring);
   animation: hr-fade-up 0.3s var(--hr-spring) backwards;
   animation-delay: calc(var(--i, 0) * 28ms);
 }
 
-/* Left accent bar — appears on hover/selected (no glow on the row itself) */
-.emp-row::before {
+.emp-table .td {
+  padding: 13px 16px;
+  font-size: 12.5px;
+  color: var(--hr-text);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+  transition: background 200ms var(--hr-spring);
+}
+.emp-row:hover > .td { background: rgba(255, 255, 255, 0.025); }
+.emp-row.selected > .td { background: rgba(251, 191, 36, 0.04); }
+.emp-row:last-child > .td { border-bottom: 0; }
+
+/* Left accent bar — applied to the FIRST cell because .emp-row is
+   display: contents and has no box of its own. */
+.emp-table .emp-row > .td:first-child { position: relative; }
+.emp-table .emp-row > .td:first-child::before {
   content: '';
   position: absolute;
   left: 0;
@@ -503,25 +538,22 @@ const SortIcon = {
   bottom: 0;
   width: 2px;
   background: var(--hr-accent-gold);
+  border-radius: 0 2px 2px 0;
   opacity: 0;
   transform: scaleY(0.3);
+  transform-origin: center;
   transition: opacity 220ms var(--hr-spring), transform 280ms var(--hr-spring);
+  pointer-events: none;
+  box-shadow: 0 0 8px 0 rgba(251, 191, 36, 0.5);
 }
-.emp-row:hover::before { opacity: 0.5; transform: scaleY(1); }
-.emp-row.selected::before { opacity: 1; transform: scaleY(1); }
-
-.emp-row:hover { background: rgba(255, 255, 255, 0.025); }
-.emp-row.selected { background: rgba(251, 191, 36, 0.04); }
-
-.emp-table td {
-  padding: 13px 16px;
-  font-size: 12.5px;
-  color: var(--hr-text);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+.emp-table .emp-row:hover > .td:first-child::before {
+  opacity: 0.7; transform: scaleY(1);
 }
-.emp-row:last-child td { border-bottom: 0; }
+.emp-table .emp-row.selected > .td:first-child::before {
+  opacity: 1; transform: scaleY(1);
+}
 
-.td-name { display: flex; align-items: center; gap: 12px; }
+.td-name { gap: 12px; }
 .name-block { display: flex; flex-direction: column; gap: 1px; }
 .full-name { font-weight: 600; color: var(--hr-text); font-size: 13px; letter-spacing: -0.005em; }
 .email { font-size: 10.5px; color: var(--hr-text-muted); }

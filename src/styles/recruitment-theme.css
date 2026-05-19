@@ -1,0 +1,723 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Recruitment module theme — extends HR "Mission Control" (gold/amber/orange)
+
+   Inherits HR theme tokens (--hr-accent-gold, --hr-spring, etc.) and adds
+   recruitment-specific helpers: stage palette aligned to the gold ramp, a
+   shared `.rec-table-card` mirroring the Employees table-card, the
+   `.rec-search-pill` rounded input, and small motion utilities.
+
+   Visual noise removed in this revision: previous orbs / scanline /
+   flow-particles rules are gone in favour of one soft radial highlight
+   per surface plus deliberate, action-tied animations.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@import './hr-theme.css';
+
+:root {
+  /* ── Recruitment stage palette — derived from HR gold ramp ── */
+  --rec-stage-applied:     #fde68a;
+  --rec-stage-screening:   #fbbf24;
+  --rec-stage-shortlisted: #f59e0b;
+  --rec-stage-interview:   #fb923c;
+  --rec-stage-selected:    #ea580c;
+  --rec-stage-offer:       #f97316;
+  --rec-stage-joined:      #34d399;
+  --rec-stage-rejected:    #f87171;
+  --rec-stage-withdrawn:   #9ca3af;
+
+  --rec-stage-applied-soft:     rgba(253, 230, 138, 0.10);
+  --rec-stage-screening-soft:   rgba(251, 191, 36, 0.12);
+  --rec-stage-shortlisted-soft: rgba(245, 158, 11, 0.14);
+  --rec-stage-interview-soft:   rgba(251, 146, 60, 0.14);
+  --rec-stage-selected-soft:    rgba(234, 88, 12, 0.16);
+  --rec-stage-offer-soft:       rgba(249, 115, 22, 0.16);
+  --rec-stage-joined-soft:      rgba(52, 211, 153, 0.14);
+  --rec-stage-rejected-soft:    rgba(248, 113, 113, 0.14);
+
+  /* ── Aliases to HR tokens (so --rec-* keeps working in components) ── */
+  --rec-text:            var(--hr-text);
+  --rec-text-secondary:  var(--hr-text-secondary);
+  --rec-text-muted:      var(--hr-text-muted);
+  --rec-text-dim:        var(--hr-text-dim);
+  --rec-surface:         var(--hr-surface);
+  --rec-surface-elevated:var(--hr-surface-elevated);
+  --rec-surface-glass:   var(--hr-surface-glass);
+  --rec-surface-deep:    var(--hr-surface-deep);
+  --rec-border:          var(--hr-border);
+  --rec-border-strong:   var(--hr-border-strong);
+  --rec-mono:            var(--hr-mono);
+  --rec-spring:          var(--hr-spring);
+  --rec-ease-out:        var(--hr-ease-quint);
+}
+
+/* ─── Reduced-motion guard ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .rec-animate,
+  .rec-stagger > *,
+  .rec-fade-up,
+  .rec-fade-up-soft,
+  .rec-shimmer {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* ─── Keyframes ─────────────────────────────────────────────────────────── */
+@keyframes rec-rise      { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes rec-rise-soft { from { opacity: 0; transform: translateY(8px);  } to { opacity: 1; transform: translateY(0); } }
+@keyframes rec-shimmer-band { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes rec-orbit-spin { to { transform: rotate(360deg); } }
+@keyframes rec-pulse-gold {
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(251,191,36,0.55); }
+  50%      { transform: scale(1.08); box-shadow: 0 0 0 10px rgba(251,191,36,0); }
+}
+@keyframes rec-input-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes rec-pill-sweep {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(260%)  skewX(-18deg); }
+}
+@keyframes rec-glow-soft {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+  50%      { box-shadow: 0 0 24px -4px rgba(251, 191, 36, 0.45); }
+}
+
+/* ─── Utilities ─────────────────────────────────────────────────────────── */
+.rec-mono { font-family: var(--rec-mono); }
+
+.rec-text-gradient {
+  background: var(--hr-gradient-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.rec-pulse-gold { animation: rec-pulse-gold 2.2s ease-out infinite; }
+
+.rec-fade-up      { animation: rec-rise 0.42s var(--hr-spring) both; }
+.rec-fade-up-soft { animation: rec-rise-soft 0.34s var(--hr-spring) both; }
+
+.rec-stagger > *                    { animation: rec-rise 0.42s var(--hr-spring) both; }
+.rec-stagger > *:nth-child(1) { animation-delay: 40ms; }
+.rec-stagger > *:nth-child(2) { animation-delay: 80ms; }
+.rec-stagger > *:nth-child(3) { animation-delay: 120ms; }
+.rec-stagger > *:nth-child(4) { animation-delay: 160ms; }
+.rec-stagger > *:nth-child(5) { animation-delay: 200ms; }
+.rec-stagger > *:nth-child(6) { animation-delay: 240ms; }
+.rec-stagger > *:nth-child(7) { animation-delay: 280ms; }
+.rec-stagger > *:nth-child(8) { animation-delay: 320ms; }
+.rec-stagger > *:nth-child(9) { animation-delay: 360ms; }
+
+/* Skeleton */
+.rec-skel {
+  background: linear-gradient(90deg,
+    rgba(255,255,255,0.03), rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  background-size: 200% 100%;
+  animation: rec-shimmer-band 1.4s linear infinite;
+  border-radius: 8px;
+}
+
+/* Stage chips */
+.rec-stage-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  background: transparent;
+  white-space: nowrap;
+}
+.rec-stage-chip .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px 1px currentColor;
+}
+
+.rec-stage-applied     { color: var(--rec-stage-applied); }
+.rec-stage-screening   { color: var(--rec-stage-screening); }
+.rec-stage-shortlisted { color: var(--rec-stage-shortlisted); }
+.rec-stage-interview   { color: var(--rec-stage-interview); }
+.rec-stage-selected    { color: var(--rec-stage-selected); }
+.rec-stage-offer       { color: var(--rec-stage-offer); }
+.rec-stage-joined      { color: var(--rec-stage-joined); }
+.rec-stage-rejected    { color: var(--rec-stage-rejected); }
+.rec-stage-withdrawn   { color: var(--rec-stage-withdrawn); }
+
+/* ─── Glass card ────────────────────────────────────────────────────────── */
+.rec-card {
+  background: var(--rec-surface);
+  border: 1px solid var(--rec-border);
+  border-radius: 18px;
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  position: relative;
+  overflow: hidden;
+}
+.rec-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 30%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.rec-card-glow { position: relative; }
+.rec-card-glow::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--hr-gradient-hero);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 240ms var(--hr-spring);
+  pointer-events: none;
+}
+.rec-card-glow:hover::after { opacity: 0.85; }
+
+/* ─── Shared table-card (mirror of Employees) ───────────────────────────── */
+.rec-table-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+/* ─── Recruitment table (CSS Grid layout) ─────────────────────────────────
+   We switched away from <table> because the table-layout engine kept
+   misaligning headers and data rows. CSS Grid gives us a single grid
+   container with `display: contents` on thead/tbody/tr so the th and td
+   cells flow directly into the grid columns. */
+.rec-table-card { overflow-x: auto; }
+.rec-table-card .rec-table {
+  display: grid;
+  width: 100%;
+  min-width: 720px;
+  grid-template-columns: var(--rec-grid-cols, repeat(auto-fit, minmax(120px, 1fr)));
+  align-items: stretch;
+}
+.rec-table-card .rec-table .rec-thead,
+.rec-table-card .rec-table .rec-tbody,
+.rec-table-card .rec-table .rec-row {
+  /* These are layout wrappers only — their cells become direct grid children */
+  display: contents;
+}
+.rec-table-card .rec-table .rec-thead > th,
+.rec-table-card .rec-table .rec-thead > [role="columnheader"] {
+  /* Header cells share the same grid as the data cells */
+  padding: 14px 16px 12px;
+  background: transparent;
+  text-align: left;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--rec-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  user-select: none;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rec-table-card .rec-table .rec-row > td,
+.rec-table-card .rec-table .rec-row > [role="cell"] {
+  padding: 13px 16px;
+  font-size: 12.5px;
+  color: var(--rec-text);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+  transition: background 200ms var(--hr-spring);
+}
+.rec-table-card .rec-table .rec-row { cursor: pointer; }
+.rec-table-card .rec-table .rec-row:hover > td,
+.rec-table-card .rec-table .rec-row:hover > [role="cell"] {
+  background: rgba(255, 255, 255, 0.025);
+}
+/* Wrap cells can break lines and grow taller */
+.rec-table-card .rec-table .cell-wrap {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+.rec-table-card .rec-table .cell-code {
+  font-variant-numeric: tabular-nums;
+}
+/* Per-column padding refinements still work */
+.rec-table-card .rec-table .rec-thead > *:first-child,
+.rec-table-card .rec-table .rec-row > *:first-child { padding-left: 20px; }
+.rec-table-card .rec-table .rec-thead > *:last-child,
+.rec-table-card .rec-table .rec-row > *:last-child  { padding-right: 20px; }
+/* Legacy <table> th/td selectors removed — grid-based selectors above
+   handle both header and body cell styling now. */
+
+/* .rec-row is display: contents (defined above); animate the cells instead.
+   Selected/hover state is handled via cell backgrounds. */
+.rec-table-card .rec-row.selected > td,
+.rec-table-card .rec-row.selected > [role="cell"] {
+  background: rgba(251, 191, 36, 0.04);
+}
+.rec-table-card .rec-row:last-child > td,
+.rec-table-card .rec-row:last-child > [role="cell"] { border-bottom: 0; }
+
+/* Gold-bar row indicator on hover/selected — applied to the FIRST cell
+   because .rec-row itself is display: contents and has no box. */
+.rec-table-card .rec-table .rec-row > td:first-child,
+.rec-table-card .rec-table .rec-row > [role="cell"]:first-child {
+  position: relative;
+}
+.rec-table-card .rec-table .rec-row > td:first-child::before,
+.rec-table-card .rec-table .rec-row > [role="cell"]:first-child::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--hr-accent-gold);
+  border-radius: 0 2px 2px 0;
+  opacity: 0;
+  transform: scaleY(0.3);
+  transform-origin: center;
+  transition: opacity 220ms var(--hr-spring), transform 280ms var(--hr-spring);
+  pointer-events: none;
+  box-shadow: 0 0 8px 0 rgba(251, 191, 36, 0.5);
+}
+.rec-table-card .rec-table .rec-row:hover > td:first-child::before,
+.rec-table-card .rec-table .rec-row:hover > [role="cell"]:first-child::before {
+  opacity: 0.7;
+  transform: scaleY(1);
+}
+.rec-table-card .rec-table .rec-row.selected > td:first-child::before,
+.rec-table-card .rec-table .rec-row.selected > [role="cell"]:first-child::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+.rec-table-card .cell-code  { color: var(--hr-accent-gold); font-family: var(--rec-mono);
+                              font-weight: 600; font-size: 11.5px; letter-spacing: 0.4px; }
+.rec-table-card .cell-title { color: var(--rec-text); font-weight: 600; }
+.rec-table-card .cell-dim   { color: var(--rec-text-muted); font-size: 11.5px; }
+
+/* Pagination strip (shared) */
+.rec-pagination-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  background: transparent;
+}
+.rec-pagination-bar .page-info { font-size: 11px; color: var(--rec-text-muted); }
+.rec-pagination-bar .page-chips { display: flex; gap: 4px; align-items: center; }
+.rec-pagination-bar .page-chip {
+  min-width: 28px; height: 28px;
+  border-radius: 8px;
+  border: 1px solid var(--hr-border-strong);
+  background: transparent;
+  color: var(--rec-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 6px;
+  transition: all 0.2s;
+}
+.rec-pagination-bar .page-chip:hover:not(:disabled):not(.active) {
+  background: rgba(255,255,255,0.04);
+  color: var(--rec-text);
+  border-color: var(--hr-accent-gold-border);
+}
+.rec-pagination-bar .page-chip.active {
+  background: var(--hr-accent-gold-soft);
+  color: var(--hr-accent-gold);
+  border-color: var(--hr-accent-gold-border);
+}
+.rec-pagination-bar .page-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── Pill search input ─────────────────────────────────────────────────── */
+.rec-search-pill {
+  position: relative;
+  display: flex; align-items: center;
+  flex: 1 1 280px;
+  min-width: 240px;
+}
+.rec-search-pill .ic {
+  position: absolute;
+  left: 12px;
+  color: var(--rec-text-muted);
+  pointer-events: none;
+}
+.rec-search-pill input {
+  width: 100%;
+  height: 34px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--hr-border-strong);
+  border-radius: 999px;
+  padding: 0 14px 0 32px;
+  color: var(--rec-text);
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+.rec-search-pill input:focus {
+  border-color: var(--hr-accent-gold-border);
+  background: rgba(0, 0, 0, 0.4);
+}
+.rec-search-pill input::placeholder { color: var(--rec-text-dim); }
+
+/* ─── Ghost-mini button ─────────────────────────────────────────────────── */
+.rec-ghost-mini {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent;
+  border: 1px solid var(--hr-border-strong);
+  border-radius: 999px;
+  color: var(--rec-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 11px;
+  cursor: pointer;
+  transition: all 0.2s var(--hr-spring);
+}
+.rec-ghost-mini:hover:not(:disabled) {
+  background: rgba(255,255,255,0.06);
+  color: var(--rec-text);
+  border-color: var(--hr-accent-gold-border);
+}
+.rec-ghost-mini:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ─── Form inputs (unchanged) ──────────────────────────────────────────── */
+.rec-input {
+  width: 100%;
+  height: var(--hr-input-height, 40px);
+  padding: 0 14px;
+  background: var(--hr-input-bg);
+  border: 1px solid var(--hr-input-border);
+  border-radius: 10px;
+  color: var(--hr-input-text);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 180ms var(--hr-spring), background 180ms var(--hr-spring);
+}
+.rec-input:hover { border-color: var(--hr-input-border-hover); }
+.rec-input:focus {
+  border-color: var(--hr-accent-gold-border);
+  background: var(--hr-input-bg-focus);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.12);
+}
+
+.rec-textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 12px 14px;
+  background: var(--hr-input-bg);
+  border: 1px solid var(--hr-input-border);
+  border-radius: 10px;
+  color: var(--hr-input-text);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  transition: border-color 180ms var(--hr-spring);
+}
+.rec-textarea:focus {
+  border-color: var(--hr-accent-gold-border);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.12);
+}
+
+.rec-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--rec-text-muted);
+  margin-bottom: 6px;
+}
+
+.rec-select {
+  width: 100%;
+  height: var(--hr-input-height, 40px);
+  padding: 0 36px 0 14px;
+  background: var(--hr-input-bg);
+  border: 1px solid var(--hr-input-border);
+  border-radius: 10px;
+  color: var(--hr-input-text);
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px;
+  transition: border-color 180ms var(--hr-spring);
+}
+.rec-select:focus { border-color: var(--hr-accent-gold-border); }
+
+/* ─── Buttons ───────────────────────────────────────────────────────────── */
+.rec-btn-primary {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  background: var(--hr-gradient-hero);
+  color: #08090c;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(251, 146, 60, 0.32);
+  transition: transform 220ms var(--hr-spring), box-shadow 220ms var(--hr-spring);
+}
+.rec-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(251, 146, 60, 0.44);
+}
+.rec-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.rec-btn-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px;
+  background: rgba(255,255,255,0.04);
+  color: var(--rec-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 180ms var(--hr-spring),
+              border-color 180ms var(--hr-spring),
+              color 180ms var(--hr-spring);
+}
+.rec-btn-ghost:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: var(--hr-accent-gold-border);
+  color: var(--hr-accent-gold);
+}
+
+.rec-btn-danger {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 16px;
+  background: rgba(248,113,113,0.08);
+  color: #fca5a5;
+  font-size: 13px; font-weight: 500;
+  border: 1px solid rgba(248,113,113,0.24);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 180ms var(--hr-spring);
+}
+.rec-btn-danger:hover {
+  background: rgba(248,113,113,0.14);
+  border-color: rgba(248,113,113,0.4);
+}
+
+/* ─── Scrollbars ────────────────────────────────────────────────────────── */
+.rec-scroll-y { overflow-y: auto; }
+.rec-scroll-y::-webkit-scrollbar { width: 8px; }
+.rec-scroll-y::-webkit-scrollbar-track { background: transparent; }
+.rec-scroll-y::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+.rec-scroll-y::-webkit-scrollbar-thumb:hover { background: var(--hr-accent-gold-border); }
+
+.rec-scroll-x { overflow-x: auto; }
+.rec-scroll-x::-webkit-scrollbar { height: 8px; }
+.rec-scroll-x::-webkit-scrollbar-track { background: transparent; }
+.rec-scroll-x::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+.rec-scroll-x::-webkit-scrollbar-thumb:hover { background: var(--hr-accent-gold-border); }
+
+/* ─── Polished filter pill (used across all recruitment sections) ───────── */
+.rec-filter-pill {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 13px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--rec-text-secondary);
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
+  transition: color 220ms var(--hr-spring),
+              border-color 220ms var(--hr-spring),
+              background 220ms var(--hr-spring),
+              transform 220ms var(--hr-spring),
+              box-shadow 220ms var(--hr-spring);
+}
+.rec-filter-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.18), transparent);
+  transform: translateX(-120%) skewX(-18deg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 220ms var(--hr-spring);
+}
+.rec-filter-pill svg { transition: transform 220ms var(--hr-spring); }
+.rec-filter-pill:hover {
+  color: var(--hr-accent-gold);
+  border-color: rgba(251, 191, 36, 0.45);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.10), rgba(255, 255, 255, 0.02));
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -10px rgba(251, 146, 60, 0.4);
+}
+.rec-filter-pill:hover::before {
+  opacity: 1;
+  animation: rec-pill-sweep 700ms ease-out forwards;
+}
+.rec-filter-pill:hover svg { transform: scale(1.12); }
+.rec-filter-pill:active { transform: translateY(0); }
+.rec-filter-pill.is-active {
+  color: #1a1a1c;
+  background: var(--hr-gradient-hero);
+  border-color: rgba(251, 191, 36, 0.7);
+  box-shadow:
+    0 8px 22px -8px rgba(251, 146, 60, 0.7),
+    0 0 0 1px rgba(251, 191, 36, 0.35) inset,
+    0 0 24px -6px rgba(251, 191, 36, 0.55);
+  font-weight: 700;
+}
+.rec-filter-pill.is-active::before { display: none; }
+.rec-filter-pill .rec-pill-count {
+  display: inline-grid; place-items: center;
+  min-width: 18px; height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  margin-left: 4px;
+}
+.rec-filter-pill.is-active .rec-pill-count {
+  background: rgba(26, 26, 28, 0.25);
+  color: #1a1a1c;
+}
+
+/* ─── Polished toolbar surface (2-row stack: pills row | action row) ────── */
+.rec-toolbar-surface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.008));
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.rec-toolbar-surface::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(60% 100% at 0% 0%, rgba(251, 191, 36, 0.06), transparent 60%);
+  pointer-events: none;
+}
+.rec-toolbar-surface > * { position: relative; z-index: 1; }
+.rec-toolbar-surface .toolbar-left {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.rec-toolbar-surface .toolbar-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+/* When both left + right are present, place them on a single row when wide */
+.rec-toolbar-surface.is-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+/* Divider between rows */
+.rec-toolbar-surface .toolbar-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  margin: 2px -16px;
+}
+
+/* ─── Core input field animations ───────────────────────────────────────── */
+.rec-input,
+.rec-textarea,
+.rec-select {
+  position: relative;
+  transition:
+    border-color 220ms var(--hr-spring),
+    background 220ms var(--hr-spring),
+    box-shadow 320ms var(--hr-spring),
+    transform 220ms var(--hr-spring);
+}
+.rec-input:focus,
+.rec-textarea:focus,
+.rec-select:focus {
+  border-color: var(--hr-accent-gold-border);
+  background: var(--hr-input-bg-focus);
+  box-shadow:
+    0 0 0 3px rgba(251, 191, 36, 0.14),
+    0 0 24px -8px rgba(251, 146, 60, 0.4);
+}
+.rec-input:hover:not(:focus),
+.rec-textarea:hover:not(:focus),
+.rec-select:hover:not(:focus) {
+  border-color: rgba(251, 191, 36, 0.28);
+}
+
+/* Floating-label wrapper: gives inputs an animated focus underline accent */
+.rec-input-wrap {
+  position: relative;
+  display: block;
+}
+.rec-input-wrap::after {
+  content: '';
+  position: absolute;
+  left: 14px; right: 14px;
+  bottom: 0;
+  height: 2px;
+  background: var(--hr-gradient-hero);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 320ms var(--hr-spring), opacity 220ms;
+  opacity: 0;
+  pointer-events: none;
+}
+.rec-input-wrap:focus-within::after {
+  transform: scaleX(1);
+  opacity: 0.9;
+}
+
+/* ─── Universal entrance class: applied per-section via .rec-section ─── */
+.rec-section { animation: rec-rise 0.42s var(--hr-spring) both; }
+.rec-section > * { animation: rec-rise-soft 0.42s var(--hr-spring) both; }
+.rec-section > *:nth-child(1) { animation-delay: 40ms; }
+.rec-section > *:nth-child(2) { animation-delay: 100ms; }
+.rec-section > *:nth-child(3) { animation-delay: 160ms; }
+.rec-section > *:nth-child(4) { animation-delay: 220ms; }
+.rec-section > *:nth-child(5) { animation-delay: 280ms; }

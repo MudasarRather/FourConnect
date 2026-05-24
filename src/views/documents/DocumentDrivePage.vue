@@ -110,7 +110,7 @@
               <div class="recent-card hover-lift" v-for="(doc, i) in recentDocs" :key="doc.id" :style="{ animationDelay: `${i * 0.05}s` }" @click="openDocDetails(doc)">
                 <div class="rc-preview" :class="doc.file_type">
                   <!-- Show actual image if it's an image file -->
-                  <img v-if="doc.file_type === 'image' && doc.file_url" :src="`http://localhost:8000${doc.file_url}`" class="rc-image-cover" />
+                  <img v-if="doc.file_type === 'image' && doc.file_url" :src="`${API_BASE}${doc.file_url}`" class="rc-image-cover" />
                   
                   <!-- Fallback to icon -->
                   <template v-else>
@@ -263,7 +263,7 @@
 
           <!-- Document Preview (Fallback if not image) -->
           <div v-if="selectedDoc.file_type === 'image' && selectedDoc.file_url" class="doc-image-preview scale-up mt-6 mb-8">
-             <img :src="`http://localhost:8000${selectedDoc.file_url}`" />
+             <img :src="`${API_BASE}${selectedDoc.file_url}`" />
           </div>
           <div v-else class="doc-generic-preview scale-up mt-6 mb-8">
              <div class="generic-bg-glow" :class="selectedDoc.file_type"></div>
@@ -735,6 +735,7 @@ import axios from 'axios'
 import { debounce } from 'lodash'
 import { useToast } from '../../composables/useToast'
 import { useRoute } from 'vue-router'
+import { API, API_BASE } from '@/utils/api'
 
 // STATE
 const route = useRoute()
@@ -839,20 +840,20 @@ const getToken = () => isAdminRoute.value
 
 const fetchStats = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/api/drive/stats', {
+    const res = await axios.get(`${API}/drive/stats`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
     stats.value = res.data
     categories.value = res.data.categories || []
     
     // Fetch favorites for sidebar
-    const favRes = await axios.get('http://localhost:8000/api/drive/documents?favorites_only=true&page_size=5', {
+    const favRes = await axios.get(`${API}/drive/documents?favorites_only=true&page_size=5`, {
        headers: { Authorization: `Bearer ${getToken()}` }
     })
     favoriteDocs.value = favRes.data.documents || []
 
     // Fetch recent for grid
-    const recRes = await axios.get('http://localhost:8000/api/drive/recent?limit=4', {
+    const recRes = await axios.get(`${API}/drive/recent?limit=4`, {
        headers: { Authorization: `Bearer ${getToken()}` }
     })
     recentDocs.value = recRes.data
@@ -864,7 +865,7 @@ const fetchStats = async () => {
 
 const fetchUsers = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/api/team/users', {
+    const res = await axios.get(`${API}/team/users`, {
        headers: { Authorization: `Bearer ${getToken()}` }
     })
     usersList.value = res.data
@@ -876,11 +877,11 @@ const fetchUsers = async () => {
 const fetchDocuments = async () => {
   isLoading.value = true
   try {
-    let endpoint = 'http://localhost:8000/api/drive/documents'
+    let endpoint = `${API}/drive/documents`
     let params = { page: currentPage.value, page_size: 15 }
     
     if (currentTab.value === 'trash') {
-      endpoint = 'http://localhost:8000/api/drive/trash'
+      endpoint = `${API}/drive/trash`
       params = {}
     } else {
       if (searchQuery.value) params.search = searchQuery.value
@@ -910,7 +911,7 @@ const fetchDocuments = async () => {
 
 const fetchActivityForDoc = async (docId) => {
    try {
-      const actRes = await axios.get(`http://localhost:8000/api/drive/activity?document_id=${docId}&limit=15`, {
+      const actRes = await axios.get(`${API}/drive/activity?document_id=${docId}&limit=15`, {
          headers: { Authorization: `Bearer ${getToken()}` }
       })
       docActivities.value = actRes.data
@@ -924,7 +925,7 @@ watch(currentTab, () => { currentPage.value = 1; fetchDocuments() })
 const toggleFavorite = async (doc) => {
   doc.is_favorite = !doc.is_favorite
   try {
-    await axios.post(`http://localhost:8000/api/drive/documents/${doc.id}/favorite`, {}, {
+    await axios.post(`${API}/drive/documents/${doc.id}/favorite`, {}, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
     fetchStats()
@@ -948,12 +949,12 @@ const executeDeleteDocument = async () => {
   const docId = docToDelete.value.id
   try {
     if (isPermanentDelete.value) {
-       await axios.delete(`http://localhost:8000/api/drive/documents/${docId}/permanent`, {
+       await axios.delete(`${API}/drive/documents/${docId}/permanent`, {
          headers: { Authorization: `Bearer ${getToken()}` }
        })
        toastSuccess("Document permanently destroyed")
     } else {
-       await axios.delete(`http://localhost:8000/api/drive/documents/${docId}`, {
+       await axios.delete(`${API}/drive/documents/${docId}`, {
          headers: { Authorization: `Bearer ${getToken()}` }
        })
        toastSuccess("Document moved to trash")
@@ -975,7 +976,7 @@ const executeDeleteDocument = async () => {
 
 const approveDocument = async (doc) => {
   try {
-    await axios.put(`http://localhost:8000/api/drive/documents/${doc.id}`, { status: 'Active' }, {
+    await axios.put(`${API}/drive/documents/${doc.id}`, { status: 'Active' }, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
     toastSuccess("Document approved successfully!")
@@ -990,7 +991,7 @@ const approveDocument = async (doc) => {
 
 const restoreDocument = async (doc) => {
   try {
-    await axios.post(`http://localhost:8000/api/drive/documents/${doc.id}/restore`, {}, {
+    await axios.post(`${API}/drive/documents/${doc.id}/restore`, {}, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
     fetchDocuments()
@@ -1000,10 +1001,10 @@ const restoreDocument = async (doc) => {
 
 const downloadFile = async (doc) => {
   try {
-    await axios.post(`http://localhost:8000/api/drive/documents/${doc.id}/download`, {}, {
+    await axios.post(`${API}/drive/documents/${doc.id}/download`, {}, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
-    window.open(`http://localhost:8000${doc.file_url}`, '_blank')
+    window.open(`${API_BASE}${doc.file_url}`, '_blank')
     fetchStats()
   } catch (e) {}
 }
@@ -1070,7 +1071,7 @@ const executeShare = async () => {
   shareError.value = ''
   try {
     const res = await axios.post(
-      `http://localhost:8000/api/drive/documents/${docToShare.value.id}/share`,
+      `${API}/drive/documents/${docToShare.value.id}/share`,
       { user_ids: shareSelectedUsers.value },
       { headers: { Authorization: `Bearer ${getToken()}` } }
     )
@@ -1139,7 +1140,7 @@ const handleUpload = async () => {
   }
 
   try {
-    await axios.post('http://localhost:8000/api/drive/upload', formData, {
+    await axios.post(`${API}/drive/upload`, formData, {
       headers: { 'Authorization': `Bearer ${getToken()}`, 'Content-Type': 'multipart/form-data' }
     })
     showUploadModal.value = false

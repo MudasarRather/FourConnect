@@ -72,7 +72,7 @@ const stats = computed(() => {
 // Fetch User
 const fetchUser = async () => {
     try {
-        const res = await axios.get('http://localhost:8000/api/auth/me', {
+        const res = await axios.get(`${API}/auth/me`, {
             headers: { Authorization: `Bearer ${props.token}` }
         })
         currentUser.value = res.data
@@ -86,7 +86,7 @@ const selectedPayment = ref({})
 const fetchPayments = async () => {
    if (!props.projectId) return
    try {
-      const res = await axios.get(`http://localhost:8000/api/project-financials/${props.projectId}/payments`, {
+      const res = await axios.get(`${API}/project-financials/${props.projectId}/payments`, {
          headers: { Authorization: `Bearer ${props.token}` }
       })
       payments.value = res.data
@@ -96,7 +96,7 @@ const fetchPayments = async () => {
 const fetchMilestones = async () => {
    if (!props.projectId) return
    try {
-      const res = await axios.get(`http://localhost:8000/api/projects/${props.projectId}/milestones`, {
+      const res = await axios.get(`${API}/projects/${props.projectId}/milestones`, {
          headers: { Authorization: `Bearer ${props.token}` }
       })
       milestones.value = res.data
@@ -107,7 +107,7 @@ const handleRowSelect = async (id) => {
     selectedPaymentId.value = id
     // Fetch full details
     try {
-        const res = await axios.get(`http://localhost:8000/api/project-financials/payments/${id}`, {
+        const res = await axios.get(`${API}/project-financials/payments/${id}`, {
             headers: { Authorization: `Bearer ${props.token}` }
         })
         selectedPayment.value = res.data
@@ -127,6 +127,7 @@ const handlePaymentDeleted = () => {
 }
 
 import { useToast } from '../../composables/useToast'
+import { API } from '@/utils/api'
 
 const { success, error } = useToast()
 
@@ -152,13 +153,13 @@ const handleSave = async (data) => {
    try {
       if (editPaymentData.value) {
           // Edit Mode
-          await axios.put(`http://localhost:8000/api/project-financials/payments/${editPaymentData.value.id}`, data, {
+          await axios.put(`${API}/project-financials/payments/${editPaymentData.value.id}`, data, {
              headers: { Authorization: `Bearer ${props.token}` }
           })
           success('Payment updated successfully')
       } else {
           // Create Mode
-          await axios.post(`http://localhost:8000/api/project-financials/${props.projectId}/payments`, data, {
+          await axios.post(`${API}/project-financials/${props.projectId}/payments`, data, {
              headers: { Authorization: `Bearer ${props.token}` }
           })
           success('Payment recorded successfully')

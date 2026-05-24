@@ -42,6 +42,7 @@ import BudgetVsActualChart from './overview/BudgetVsActualChart.vue'
 import SpendTrendChart from './overview/SpendTrendChart.vue'
 import CategoryBreakdownChart from './overview/CategoryBreakdownChart.vue'
 import QuickFinancialActions from './overview/QuickFinancialActions.vue'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   projectId: String,
@@ -67,9 +68,9 @@ const fetchData = async () => {
        
        // Fetch all data in parallel
        const [sumRes, payRes, milRes] = await Promise.all([
-            axios.get(`http://localhost:8000/api/project-financials/${props.projectId}/financials/summary`, { headers }).catch(e => { console.error('Summary API error:', e); return { data: null } }),
-            axios.get(`http://localhost:8000/api/project-financials/${props.projectId}/payments`, { headers }).catch(e => { console.error('Payments API error:', e); return { data: [] } }),
-            axios.get(`http://localhost:8000/api/projects/${props.projectId}/milestones`, { headers }).catch(e => { console.error('Milestones API error:', e); return { data: [] } })
+            axios.get(`${API}/project-financials/${props.projectId}/financials/summary`, { headers }).catch(e => { console.error('Summary API error:', e); return { data: null } }),
+            axios.get(`${API}/project-financials/${props.projectId}/payments`, { headers }).catch(e => { console.error('Payments API error:', e); return { data: [] } }),
+            axios.get(`${API}/projects/${props.projectId}/milestones`, { headers }).catch(e => { console.error('Milestones API error:', e); return { data: [] } })
        ])
        
        payments.value = payRes.data || []

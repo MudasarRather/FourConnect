@@ -259,7 +259,7 @@ const currencyOptions = ref([])
 
 onMounted(async () => {
     try {
-        const res = await axios.get('http://localhost:8000/api/settings/currencies', {
+        const res = await axios.get(`${API}/settings/currencies`, {
             headers: { Authorization: `Bearer ${props.token}` }
         })
         // Ensure options have 'value' key
@@ -378,6 +378,7 @@ const errors = reactive({
 
 // Watchers for Currency
 import { watch } from 'vue'
+import { API } from '@/utils/api'
 
 watch(() => [form.currency, form.budget_amount], async ([newCurrency]) => {
     if (!newCurrency) return
@@ -607,7 +608,7 @@ const handleSubmit = async () => {
     if (form.file) formData.append('file', form.file)
 
     await axios.post(
-      `http://localhost:8000/api/projects/${props.projectId}/milestones`,
+      `${API}/projects/${props.projectId}/milestones`,
       formData,
       { headers: { 
           Authorization: `Bearer ${props.token}`,

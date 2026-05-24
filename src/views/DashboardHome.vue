@@ -115,6 +115,7 @@ import {
   ArcElement
 } from 'chart.js'
 import { Radar, Doughnut } from 'vue-chartjs'
+import { API } from '@/utils/api'
 
 ChartJS.register(
   RadialLinearScale,
@@ -213,15 +214,15 @@ const fetchDashboardData = async () => {
     const config = { headers: { Authorization: `Bearer ${token}` } }
     
     // Fetch User
-    const userRes = await axios.get('http://localhost:8000/api/auth/me', config)
+    const userRes = await axios.get(`${API}/auth/me`, config)
     user.value = { name: userRes.data.full_name || 'Admin' }
 
     // Fetch Summary
-    const summaryRes = await axios.get('http://localhost:8000/api/dashboard/summary', config)
+    const summaryRes = await axios.get(`${API}/dashboard/summary`, config)
     dashboardData.value = summaryRes.data
 
     // Fetch Projects
-    const projectsRes = await axios.get('http://localhost:8000/api/projects', config)
+    const projectsRes = await axios.get(`${API}/projects`, config)
     const items = projectsRes.data.items || []
     projects.value = items.map(p => ({
       id: p.id,

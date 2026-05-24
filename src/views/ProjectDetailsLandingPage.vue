@@ -154,6 +154,7 @@ import ActiveMilestoneTable from '../components/milestones/ActiveMilestoneTable.
 import MilestoneTrackerModal from '../components/milestones/MilestoneTrackerModal.vue'
 import DashboardSeparator from '../components/ui/DashboardSeparator.vue'
 import { Activity } from 'lucide-vue-next'
+import { API } from '@/utils/api'
 
 const route = useRoute()
 const isAdmin = computed(() => route.path.startsWith('/admin'))
@@ -170,7 +171,7 @@ const hydrateCurrentUser = async () => {
 
   if (!token.value) return
   try {
-    const res = await axios.get('http://localhost:8000/api/auth/me', {
+    const res = await axios.get(`${API}/auth/me`, {
       headers: { Authorization: `Bearer ${token.value}` }
     })
     if (res.data) {
@@ -240,7 +241,7 @@ const progressPercentage = computed(() => {
 // Navigation / Actions
 const fetchProjects = async () => {
    try {
-     const res = await axios.get('http://localhost:8000/api/projects/', {
+     const res = await axios.get(`${API}/projects/`, {
         headers: { Authorization: `Bearer ${token.value}` },
         params: { limit: 100, status: 'Approved' }
      })
@@ -265,7 +266,7 @@ const fetchProjects = async () => {
 
 const fetchGlobalActiveMilestones = async () => {
    try {
-      const res = await axios.get('http://localhost:8000/api/milestones/active', {
+      const res = await axios.get(`${API}/milestones/active`, {
           headers: { Authorization: `Bearer ${token.value}` }
       })
       globalActiveMilestones.value = res.data
@@ -276,7 +277,7 @@ const fetchGlobalActiveMilestones = async () => {
 
 const fetchMilestones = async (pid) => {
    try {
-     const res = await axios.get(`http://localhost:8000/api/projects/${pid}/milestones`, {
+     const res = await axios.get(`${API}/projects/${pid}/milestones`, {
          headers: { Authorization: `Bearer ${token.value}` }
      })
      milestones.value = res.data
@@ -288,7 +289,7 @@ const fetchMilestones = async (pid) => {
 
 const fetchTeam = async (pid) => {
     try {
-        const res = await axios.get(`http://localhost:8000/api/team/${pid}`, {
+        const res = await axios.get(`${API}/team/${pid}`, {
             headers: { Authorization: `Bearer ${token.value}` }
         })
         team.value = res.data
@@ -304,7 +305,7 @@ const selectProject = async (p) => {
    
    // Fetch full details (includes file_size, etc.)
    try {
-     const res = await axios.get(`http://localhost:8000/api/projects/${p.id}`, {
+     const res = await axios.get(`${API}/projects/${p.id}`, {
          headers: { Authorization: `Bearer ${token.value}` }
      })
      selectedProject.value = res.data

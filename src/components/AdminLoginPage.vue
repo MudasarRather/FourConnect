@@ -73,6 +73,7 @@ import Logo from './icons/Logo.vue'
 import ThemeToggle from './common/ThemeToggle.vue'
 import { Mail, Lock, Eye, EyeOff, Loader2, Shield } from 'lucide-vue-next'
 import { useToast } from '../composables/useToast'
+import { API } from '@/utils/api'
 
 const router = useRouter()
 const { success, error } = useToast()
@@ -106,7 +107,7 @@ const handleLogin = async () => {
     // Do NOT clear user_token - allow concurrent admin+user sessions
     localStorage.removeItem('admin_token')
     
-    const response = await axios.post('http://localhost:8000/api/auth/login', {
+    const response = await axios.post(`${API}/auth/login`, {
        email: email.value,
        password: password.value
     })

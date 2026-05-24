@@ -61,6 +61,7 @@
 import { ref, onMounted } from 'vue'
 import { Activity, Loader2, History, ArrowRight, Quote } from 'lucide-vue-next'
 import axios from 'axios'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   taskId: { type: String, required: true }
@@ -73,7 +74,7 @@ const fetchHistory = async () => {
   loading.value = true
   try {
     const token = localStorage.getItem('user_token') || localStorage.getItem('admin_token')
-    const res = await axios.get(`http://localhost:8000/api/tasks/${props.taskId}/assignments`, {
+    const res = await axios.get(`${API}/tasks/${props.taskId}/assignments`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     logs.value = res.data
@@ -272,4 +273,59 @@ defineExpose({ refresh: fetchHistory })
 
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   LIGHT THEME — preserve brand amber accent (#facc15) on cream
+   ═════════════════════════════════════════════════════════════════════════ */
+[data-theme="light"] .history-wrapper {
+  background: rgba(40, 25, 10, 0.03);
+  border: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .history-header {
+  background: rgba(40, 25, 10, 0.04);
+  border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .header-left .icon { color: #d97706; }  /* deepen amber for cream */
+[data-theme="light"] .title { color: var(--text-primary); }
+[data-theme="light"] .history-badge {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .timeline-container::-webkit-scrollbar-thumb {
+  background: rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .item-line { background: linear-gradient(to bottom, #d97706, transparent); opacity: 0.18; }
+[data-theme="light"] .item-dot { background: #d97706; box-shadow: 0 0 10px rgba(217, 119, 6, 0.5); }
+[data-theme="light"] .item-card {
+  background: rgba(255, 250, 240, 0.78);
+  border: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .item-card:hover {
+  border-color: rgba(217, 119, 6, 0.30);
+}
+
+[data-theme="light"] .action-type { color: #b45309; }
+[data-theme="light"] .timestamp { color: var(--text-tertiary); }
+[data-theme="light"] .arrow { color: #b45309; }
+
+[data-theme="light"] .user { color: var(--text-secondary); }
+[data-theme="light"] .user.highlight { color: var(--text-primary); }
+
+[data-theme="light"] .notes-block {
+  background: rgba(40, 25, 10, 0.05);
+}
+[data-theme="light"] .quote-icon { color: rgba(40, 25, 10, 0.20); }
+[data-theme="light"] .notes-block p { color: var(--text-secondary); }
+
+[data-theme="light"] .meta-label { color: rgba(40, 25, 10, 0.40); }
+[data-theme="light"] .meta-val { color: var(--text-secondary); }
+
+[data-theme="light"] .role-badge {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-secondary);
+}
+
+[data-theme="light"] .empty-icon { color: rgba(40, 25, 10, 0.18); }
+[data-theme="light"] .timeline-empty p { color: var(--text-secondary); }
 </style>

@@ -95,6 +95,7 @@ import SlaPayment from '../../views/documents/sla-steps/SlaPayment.vue'
 import SlaLegal from '../../views/documents/sla-steps/SlaLegal.vue'
 import SlaSignatories from '../../views/documents/sla-steps/SlaSignatories.vue'
 import SlaReview from '../../views/documents/sla-steps/SlaReview.vue'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -381,7 +382,7 @@ const saveDraft = async (targetStatus = 'Draft') => {
         if (payload.start_date === '') payload.start_date = null
         if (payload.end_date === '') payload.end_date = null
         const token = props.isAdmin ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
-        await axios.put(`http://localhost:8000/api/sla/${form.id}`, payload, {
+        await axios.put(`${API}/sla/${form.id}`, payload, {
             headers: { Authorization: `Bearer ${token}` }
         })
         

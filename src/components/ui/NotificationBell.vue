@@ -104,6 +104,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
+import { API } from '@/utils/api'
 import { 
   Bell, BellOff, Loader2, CheckCheck, Check, X,
   UserPlus, UserCheck, UserX, ShieldCheck, Mail, AtSign, Flag, CheckCircle, XCircle, Trash2, Wallet
@@ -144,7 +145,7 @@ const fetchNotifications = async () => {
     const token = getToken()
     if (!token) return
     
-    const res = await axios.get('http://localhost:8000/api/notifications/', {
+    const res = await axios.get(`${API}/notifications/`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     notifications.value = res.data.items || []
@@ -160,7 +161,7 @@ const fetchUnreadCount = async () => {
     const token = getToken()
     if (!token) return
     
-    const res = await axios.get('http://localhost:8000/api/notifications/unread-count', {
+    const res = await axios.get(`${API}/notifications/unread-count`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     unreadCount.value = res.data.count
@@ -179,7 +180,7 @@ const togglePanel = () => {
 const markAllRead = async () => {
   try {
     const token = getToken()
-    await axios.put('http://localhost:8000/api/notifications/read-all', {}, {
+    await axios.put(`${API}/notifications/read-all`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     })
     notifications.value.forEach(n => n.is_read = true)
@@ -192,7 +193,7 @@ const markAllRead = async () => {
 const markAsRead = async (notifId) => {
   try {
     const token = getToken()
-    await axios.put(`http://localhost:8000/api/notifications/${notifId}/read`, {}, {
+    await axios.put(`${API}/notifications/${notifId}/read`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     })
     const notif = notifications.value.find(n => n.id === notifId)
@@ -208,7 +209,7 @@ const markAsRead = async (notifId) => {
 const dismissNotification = async (notifId) => {
   try {
     const token = getToken()
-    await axios.delete(`http://localhost:8000/api/notifications/${notifId}`, {
+    await axios.delete(`${API}/notifications/${notifId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     const idx = notifications.value.findIndex(n => n.id === notifId)
@@ -244,7 +245,7 @@ const respondToInvite = async (notif, accept) => {
   try {
     const token = getToken()
     await axios.post(
-      `http://localhost:8000/api/team/${notif.related_team_member_id}/respond`,
+      `${API}/team/${notif.related_team_member_id}/respond`,
       { accept: true },
       { headers: { Authorization: `Bearer ${token}` } }
     )
@@ -273,7 +274,7 @@ const confirmDecline = async () => {
   try {
     const token = getToken()
     await axios.post(
-      `http://localhost:8000/api/team/${declineNotif.value.related_team_member_id}/respond`,
+      `${API}/team/${declineNotif.value.related_team_member_id}/respond`,
       { accept: false, reason: declineReason.value.trim() },
       { headers: { Authorization: `Bearer ${token}` } }
     )

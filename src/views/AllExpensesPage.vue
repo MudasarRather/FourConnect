@@ -323,11 +323,11 @@ import {
 import ExpenseDetailsDrawer from '../components/expenses/ExpenseDetailsDrawer.vue'
 import EditExpenseModal from '../components/expenses/EditExpenseModal.vue'
 import CustomSelect from '../components/ui/CustomSelect.vue'
+import { API } from '@/utils/api'
 
 const route = useRoute()
 const router = useRouter()
 const isAdmin = computed(() => route.path.startsWith('/admin'))
-const API = 'http://localhost:8000/api'
 
 const getHeaders = () => {
   const token = isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
@@ -569,14 +569,64 @@ onMounted(fetchData)
   color: #f5f5f7;
 }
 
-/* ── Header ── */
+/* ── Header — transparent, sits directly on page, with ultra-modern accents ── */
 .glass-header {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(9, 9, 11, 0.75);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding: 0 40px;
+  overflow: hidden;
+  animation: ghFadeDown 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes ghFadeDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* Breathing golden hairline along the bottom border */
+.glass-header::after {
+  content: '';
+  position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.55), transparent);
+  animation: ghSweep 5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ghSweep {
+  0%, 100% { opacity: 0.35; transform: translateX(-12%); }
+  50%      { opacity: 1;    transform: translateX(12%); }
+}
+/* Soft radial spotlight at top edge */
+.glass-header::before {
+  content: '';
+  position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 200px;
+  background: radial-gradient(ellipse, rgba(245, 158, 11, 0.07), transparent 60%);
+  pointer-events: none;
+  animation: ghGlow 6s ease-in-out infinite;
+}
+@keyframes ghGlow {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+/* Header icon — subtle continuous pulse halo */
+.header-icon-box {
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.header-icon-box::after {
+  content: ''; position: absolute; inset: -3px; border-radius: 12px;
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  opacity: 0; animation: ghIconRing 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ghIconRing {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.10); }
+}
+.action-btn.primary {
+  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.30);
+}
+.action-btn.primary:hover {
+  box-shadow: 0 10px 24px rgba(234, 179, 8, 0.40);
 }
 .header-content {
   height: 76px; display: flex; align-items: center; justify-content: space-between;
@@ -892,4 +942,311 @@ onMounted(fetchData)
 [data-theme="light"] .col.date { color: var(--text-secondary); }
 [data-theme="light"] .r-title { color: var(--text-primary); }
 [data-theme="light"] .r-meta { color: var(--text-secondary); }
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║ LIGHT THEME — comprehensive pass for every widget the user reported   ║
+   ║ Brand palette (orange/yellow/golden) preserved across both themes     ║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+
+/* Header — transparent in both themes, just swap hairline + glow to amber */
+[data-theme="light"] .glass-header {
+  background: transparent;
+  border-bottom-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .glass-header::after {
+  background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.65), transparent);
+}
+[data-theme="light"] .glass-header::before {
+  background: radial-gradient(ellipse, rgba(217, 119, 6, 0.10), transparent 60%);
+}
+[data-theme="light"] .header-icon-box {
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  color: #b45309;
+}
+[data-theme="light"] .header-icon-box::after {
+  border-color: rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .action-btn.outline {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-primary);
+  border-color: rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .action-btn.outline:hover {
+  background: rgba(40, 25, 10, 0.10);
+  border-color: rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .action-btn.primary {
+  background: linear-gradient(135deg, #eab308, #d97706);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .action-btn.primary:hover {
+  background: linear-gradient(135deg, #facc15, #eab308);
+  box-shadow: 0 10px 24px rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .active-indicator { background: #d97706; }
+
+/* Summary cards — borders + stat-sub text */
+[data-theme="light"] .stat-card {
+  background: rgba(255, 250, 240, 0.65);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .stat-card:hover { border-color: rgba(40, 25, 10, 0.18); }
+[data-theme="light"] .stat-sub { color: var(--text-tertiary); }
+
+/* Glass cards (chart cards + others) */
+[data-theme="light"] .glass-card,
+[data-theme="light"] .chart-card,
+[data-theme="light"] .recent-card,
+[data-theme="light"] .table-card,
+[data-theme="light"] .mini-card {
+  background: rgba(255, 250, 240, 0.65);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
+
+/* Chart axes */
+[data-theme="light"] .geom-y-axis,
+[data-theme="light"] .geom-y-axis span,
+[data-theme="light"] .geom-x-axis span { color: var(--text-secondary); }
+
+/* Status bars — track visible on cream */
+[data-theme="light"] .status-bar-track {
+  background: rgba(40, 25, 10, 0.10);
+}
+
+/* Recent expenses section */
+[data-theme="light"] .recent-card .card-header { border-bottom-color: rgba(40, 25, 10, 0.08); }
+[data-theme="light"] .recent-item { border-bottom-color: rgba(40, 25, 10, 0.06); }
+[data-theme="light"] .recent-item:hover { background: rgba(217, 119, 6, 0.05); }
+[data-theme="light"] .r-icon-box {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+[data-theme="light"] .r-cat { color: #b45309; font-weight: 600; }
+[data-theme="light"] .r-amount { color: var(--text-primary); }
+[data-theme="light"] .view-all-btn { color: #b45309; }
+[data-theme="light"] .view-all-btn:hover { color: #92400e; }
+
+/* Empty state in recent + drawer + table */
+[data-theme="light"] .empty-state { color: var(--text-secondary); }
+[data-theme="light"] .empty-state svg { color: rgba(40, 25, 10, 0.30); }
+
+/* Table container */
+[data-theme="light"] .table-header { border-bottom-color: rgba(40, 25, 10, 0.08); }
+[data-theme="light"] .title-group h3 { color: var(--text-primary); }
+[data-theme="light"] .title-group p { color: var(--text-secondary); }
+[data-theme="light"] .search-box {
+  background: transparent;
+  border-color: rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .search-box input {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .search-box input::placeholder { color: rgba(26, 20, 16, 0.40) !important; }
+[data-theme="light"] .search-box svg { color: var(--text-secondary); }
+[data-theme="light"] .filter-select {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .filter-select option { background: #fffaf0; color: #1a1410; }
+
+/* pm-table-modern rows */
+[data-theme="light"] .pm-table-modern .pm-row-modern { border-bottom-color: rgba(40, 25, 10, 0.06); }
+[data-theme="light"] .pm-table-modern .pm-row-modern.header {
+  border-bottom-color: rgba(40, 25, 10, 0.12);
+  color: #6b5840;
+}
+[data-theme="light"] .pm-table-modern .pm-row-modern.item:hover {
+  background: rgba(217, 119, 6, 0.06);
+}
+[data-theme="light"] .pm-table-modern .mono { color: var(--text-secondary); }
+[data-theme="light"] .pm-table-modern .arrow { color: rgba(40, 25, 10, 0.30); }
+[data-theme="light"] .pm-table-modern .pm-row-modern.item:hover .arrow { color: var(--text-primary); }
+[data-theme="light"] .pm-table-modern .attach-icon { color: #b45309; }
+
+/* Status col — preserve dark theme color hues with cream-readable text */
+[data-theme="light"] .status-badge.approved {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.40);
+}
+[data-theme="light"] .status-badge.submitted,
+[data-theme="light"] .status-badge.pending {
+  background: rgba(252, 211, 77, 0.20);
+  color: #854d0e;
+  border-color: rgba(252, 211, 77, 0.45);
+}
+[data-theme="light"] .status-badge.rejected {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.40);
+}
+[data-theme="light"] .status-badge.draft {
+  background: rgba(161, 161, 170, 0.18);
+  color: #44403c;
+  border-color: rgba(161, 161, 170, 0.40);
+}
+
+/* Loading overlay */
+[data-theme="light"] .loading-overlay { background: rgba(40, 25, 10, 0.30); }
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║ pm-table cells — defeat inline white styles with !important           ║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+[data-theme="light"] .pm-table-modern .col,
+[data-theme="light"] .pm-table-modern .col span,
+[data-theme="light"] .pm-table-modern .col div,
+[data-theme="light"] .pm-table-modern .v-name,
+[data-theme="light"] .pm-table-modern .col.amount,
+[data-theme="light"] .pm-table-modern .col.amount.font-mono {
+  color: var(--text-primary) !important;
+}
+/* Re-mute secondary cells (sn, date, ref subline) */
+[data-theme="light"] .pm-table-modern .col.sn,
+[data-theme="light"] .pm-table-modern .col.date,
+[data-theme="light"] .pm-table-modern .col.category .v-ref {
+  color: var(--text-secondary) !important;
+}
+/* Mode pill + expense_type pill — inline styled white-on-white */
+[data-theme="light"] .pm-table-modern .col .pill {
+  background: rgba(40, 25, 10, 0.06) !important;
+  color: var(--text-primary) !important;
+}
+/* Attach paperclip */
+[data-theme="light"] .pm-table-modern .col.attach svg {
+  color: rgba(40, 25, 10, 0.40) !important;
+}
+/* Empty-state inside the table (inline styled) */
+[data-theme="light"] .pm-table-modern .empty-state h4 { color: var(--text-primary); }
+[data-theme="light"] .pm-table-modern .empty-state p { color: var(--text-secondary); }
+[data-theme="light"] .pm-table-modern .empty-state .empty-icon { color: rgba(40, 25, 10, 0.30) !important; }
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║ chart-card ultra-modern (BOTH THEMES) — premium glass + animations    ║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+.chart-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Subtle top-edge accent that breathes */
+.chart-card::before {
+  content: ''; position: absolute; top: 0; left: 8%; right: 8%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.55), transparent);
+  animation: chartTopLine 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes chartTopLine {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+/* Soft radial glow that follows the corner */
+.chart-card::after {
+  content: ''; position: absolute; top: -40%; right: -20%;
+  width: 320px; height: 320px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.07), transparent 60%);
+  pointer-events: none;
+  animation: chartGlow 8s ease-in-out infinite;
+}
+@keyframes chartGlow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.1); }
+}
+.chart-card:hover {
+  border-color: rgba(245, 158, 11, 0.30);
+  transform: translateY(-3px);
+  box-shadow: 0 22px 50px -16px rgba(0, 0, 0, 0.45), 0 0 32px -10px rgba(245, 158, 11, 0.25);
+}
+.chart-card .card-header h3 svg {
+  color: #facc15;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.35));
+}
+.chart-card .badge {
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11px;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+/* Bar chart — bars grow in with easing + hover glow */
+.geom-svg .val-bar {
+  transform-origin: bottom;
+  transform-box: fill-box;
+  animation: barGrowChart 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+  filter: drop-shadow(0 0 6px rgba(234, 179, 8, 0.30));
+  transition: filter 0.25s, fill 0.25s;
+}
+@keyframes barGrowChart {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+.geom-svg .bar-group:hover .val-bar {
+  filter: drop-shadow(0 0 14px rgba(234, 179, 8, 0.65));
+  fill: #facc15;
+}
+.geom-svg .bar-group:hover .bg-bar {
+  fill: rgba(245, 158, 11, 0.08);
+}
+
+/* Donut — segments stagger draw + gentle hover scale */
+.donut-svg .donut-segment {
+  transform-origin: 60px 60px;
+  animation: donutSegDraw 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  transition: filter 0.3s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes donutSegDraw {
+  from { opacity: 0; transform: rotate(-10deg) scale(0.92); }
+  to   { opacity: 1; transform: rotate(0) scale(1); }
+}
+.donut-svg .donut-segment:hover {
+  filter: drop-shadow(0 0 10px currentColor);
+  transform: scale(1.04);
+}
+
+/* Legend rows — soft hover lift */
+.legend-item {
+  transition: background 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 6px 8px; border-radius: 8px;
+}
+.legend-item:hover { background: rgba(255, 255, 255, 0.03); transform: translateX(4px); }
+.legend-dot {
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* Light theme parallels for chart-card */
+[data-theme="light"] .chart-card {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.78), rgba(252, 240, 220, 0.55));
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .chart-card::before {
+  background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.55), transparent);
+}
+[data-theme="light"] .chart-card::after {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.10), transparent 60%);
+}
+[data-theme="light"] .chart-card:hover {
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow: 0 22px 50px -16px rgba(40, 25, 10, 0.18), 0 0 32px -10px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .chart-card .card-header h3 svg {
+  color: #b45309;
+  filter: drop-shadow(0 0 4px rgba(217, 119, 6, 0.35));
+}
+[data-theme="light"] .chart-card .badge {
+  background: rgba(40, 25, 10, 0.05);
+  border-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .geom-svg .bg-bar { fill: rgba(40, 25, 10, 0.06); }
+[data-theme="light"] .geom-svg .bar-group:hover .bg-bar { fill: rgba(217, 119, 6, 0.08); }
+[data-theme="light"] .donut-svg text:first-of-type { fill: var(--text-primary); }
+[data-theme="light"] .donut-svg text:last-of-type { fill: var(--text-secondary); }
+[data-theme="light"] .legend-item:hover { background: rgba(217, 119, 6, 0.06); }
 </style>

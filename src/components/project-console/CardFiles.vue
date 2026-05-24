@@ -46,6 +46,7 @@
 <script setup>
 import { computed } from 'vue'
 import { FolderOpen, FileText, Download, Flag } from 'lucide-vue-next'
+import { API_BASE } from '@/utils/api'
 
 const props = defineProps({
   project: Object,
@@ -93,7 +94,7 @@ const getFileUrl = (path) => {
   if (!path) return '#'
   // Normalize path separators
   const safePath = path.replace(/\\/g, '/')
-  return `http://localhost:8000/${safePath}`
+  return `${API_BASE}/${safePath}`
 }
 
 const formatDate = (d) => {

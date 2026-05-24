@@ -130,6 +130,7 @@ import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { Users, KeyRound, Loader2, ShieldCheck, Shield, Copy, CheckCircle } from 'lucide-vue-next'
 import { useToast } from '../composables/useToast'
+import { API } from '@/utils/api'
 
 const { success, error } = useToast()
 
@@ -150,7 +151,7 @@ const fetchUsers = async () => {
   isLoading.value = true
   try {
     const token = localStorage.getItem('admin_token')
-    const response = await axios.get('http://localhost:8000/api/auth/admin/users', {
+    const response = await axios.get(`${API}/auth/admin/users`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     users.value = response.data
@@ -167,7 +168,7 @@ const generateCode = async (user) => {
   try {
     const token = localStorage.getItem('admin_token')
     const response = await axios.post(
-      `http://localhost:8000/api/auth/admin/generate-code/${user.id}`,
+      `${API}/auth/admin/generate-code/${user.id}`,
       {},
       { headers: { Authorization: `Bearer ${token}` } }
     )

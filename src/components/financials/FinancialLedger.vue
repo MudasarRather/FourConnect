@@ -94,6 +94,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import axios from 'axios'
 import { Download, Check, Clock, AlertCircle, Paperclip, Loader2, BookOpen } from 'lucide-vue-next'
 import ExpenseDetailsDrawer from '../expenses/ExpenseDetailsDrawer.vue'
+import { API } from '@/utils/api'
 
 const props = defineProps({ projectId: String, token: String, project: Object })
 
@@ -105,7 +106,7 @@ const fetchData = async () => {
    if (!props.projectId) return
    loading.value = true
    try {
-      const res = await axios.get(`http://localhost:8000/api/expenses/?limit=500`, {
+      const res = await axios.get(`${API}/expenses/?limit=500`, {
          headers: { Authorization: `Bearer ${props.token}` }
       })
       // Only keep expenses related to this project

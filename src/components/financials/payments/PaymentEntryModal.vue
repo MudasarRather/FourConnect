@@ -597,6 +597,7 @@ import CustomSelect from '../../ui/CustomSelect.vue'
 import DatePicker from '../../ui/CompactDatePicker.vue'
 import { useToast } from '../../../composables/useToast'
 import axios from 'axios'
+import { API } from '@/utils/api'
 
 
 const props = defineProps({
@@ -1083,7 +1084,7 @@ const uploadFile = async (file) => {
     // Get token (using props or localStorage directly as backup)
     const token = props.token || localStorage.getItem('user_token')
     
-    const res = await axios.post('http://localhost:8000/api/uploads/payment-document', formData, {
+    const res = await axios.post(`${API}/uploads/payment-document`, formData, {
         headers: { 
             'Content-Type': 'multipart/form-data',
             'Authorization': `Bearer ${token}`

@@ -153,6 +153,7 @@ import AnimatedNumber from '../../components/ui/AnimatedNumber.vue'
 import DprDetailsDrawer from '../../components/documents/DprDetailsDrawer.vue'
 import { useToast } from '../../composables/useToast'
 import { generateDprPdf } from '../../utils/dprPdfGenerator'
+import { API } from '@/utils/api'
 
 const { success: toastSuccess, error: toastError } = useToast()
 
@@ -221,7 +222,7 @@ const getToken = () => isAdmin.value ? localStorage.getItem('admin_token') : loc
 
 const fetchData = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/api/dpr/', {
+    const res = await axios.get(`${API}/dpr/`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
     allDprs.value = res.data
@@ -247,7 +248,7 @@ const editDpr = (dpr) => {
 
 const handleApprove = async (dpr) => {
   try {
-     await axios.put(`http://localhost:8000/api/dpr/${dpr.id}`, { status: 'Approved' }, {
+     await axios.put(`${API}/dpr/${dpr.id}`, { status: 'Approved' }, {
        headers: { Authorization: `Bearer ${getToken()}` }
      })
      toastSuccess('Proposal approved successfully')
@@ -263,7 +264,7 @@ const handleReject = async (dpr) => {
   const reason = prompt('Please enter rejection reason:')
   if (!reason) return
   try {
-     await axios.put(`http://localhost:8000/api/dpr/${dpr.id}`, { status: 'Rejected', rejection_reason: reason }, {
+     await axios.put(`${API}/dpr/${dpr.id}`, { status: 'Rejected', rejection_reason: reason }, {
        headers: { Authorization: `Bearer ${getToken()}` }
      })
      toastSuccess('Proposal rejected')

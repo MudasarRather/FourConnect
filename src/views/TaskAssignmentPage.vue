@@ -340,6 +340,7 @@ import ParticipantSelector from '../components/tasks/ParticipantSelector.vue'
 import DueDatePicker from '../components/tasks/DueDatePicker.vue'
 import NotificationSettings from '../components/tasks/NotificationSettings.vue'
 import TaskAssignmentHistory from '../components/tasks/TaskAssignmentHistory.vue'
+import { API } from '@/utils/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -381,13 +382,13 @@ const fetchInitialData = async () => {
     const token = localStorage.getItem('user_token') || localStorage.getItem('admin_token')
     
     // Always fetch available tasks for the selector (or if we need to fall back)
-    const listRes = await axios.get('http://localhost:8000/api/tasks', {
+    const listRes = await axios.get(`${API}/tasks`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     availableTasks.value = listRes.data.items || []
 
     if (taskId) {
-      const taskRes = await axios.get(`http://localhost:8000/api/tasks/${taskId}`, {
+      const taskRes = await axios.get(`${API}/tasks/${taskId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       
@@ -498,7 +499,7 @@ const handleAssign = async () => {
   submitting.value = true
   try {
     const token = localStorage.getItem('user_token') || localStorage.getItem('admin_token')
-    await axios.post(`http://localhost:8000/api/tasks/${task.value.id}/assign`, {
+    await axios.post(`${API}/tasks/${task.value.id}/assign`, {
       ...form,
       reviewers: [], // Explicitly clear reviewers as they were removed from UI
       assignment_type: task.value.assignee_id ? 'reassignment' : 'new_assignment'
@@ -695,10 +696,32 @@ watch(() => route.query.taskId, (newId) => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  background: rgba(255, 255, 255, 0.02);
-  padding: 20px;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.005));
+  padding: 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.v-row.personal::before {
+  content: ''; position: absolute; top: 0; left: 8%; right: 8%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.45), transparent);
+  animation: vRowTopLine 4.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes vRowTopLine {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+.v-row.personal:hover {
+  border-color: rgba(250, 204, 21, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+.v-row.personal .person-info {
+  position: relative;
+  z-index: 1;
 }
 
 .person-info {
@@ -1239,4 +1262,397 @@ watch(() => route.query.taskId, (newId) => {
   border-color: rgba(29, 78, 216, 0.30);
   color: #1d4ed8;
 }
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║ ULTRA-MODERN ENHANCEMENTS — apply to BOTH themes                      ║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+
+/* Back button — refined rotate + glow */
+.back-btn { transition: background 0.3s ease, border-color 0.3s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease; }
+.back-btn:hover {
+  box-shadow: 0 6px 18px rgba(250, 204, 21, 0.18), inset 0 0 0 1px rgba(250, 204, 21, 0.32);
+}
+.back-btn svg { transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.back-btn:hover svg { transform: translateX(-3px); }
+
+/* Header-right status box — ultra modern glass with gradient hairline */
+.status-indicator-box {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)) !important;
+  border: 1px solid rgba(250, 204, 21, 0.18) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.status-indicator-box::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.65), transparent);
+  animation: hbTopLine 4s ease-in-out infinite;
+}
+@keyframes hbTopLine {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+.priority-dot {
+  box-shadow: 0 0 8px currentColor;
+  animation: dotPulseTA 2.4s ease-in-out infinite;
+}
+@keyframes dotPulseTA {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.25); }
+}
+
+/* Search input — animated focus halo */
+.search-input:focus {
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.14), 0 4px 18px -4px rgba(250, 204, 21, 0.30);
+}
+.search-wrap svg { transition: color 0.25s, transform 0.25s; }
+.search-wrap:focus-within svg { color: #facc15; transform: scale(1.06); }
+
+/* Filter pills — smooth elastic */
+.filter-pill { transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.filter-pill:hover { transform: translateY(-2px); }
+.filter-pill.active { box-shadow: 0 6px 18px rgba(250, 204, 21, 0.32); }
+
+/* Task selection card — refined motion + shimmer + spotlight on hover */
+.task-selection-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.01));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  animation: tscFade 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.task-selection-card:nth-child(1) { animation-delay: 0.05s; }
+.task-selection-card:nth-child(2) { animation-delay: 0.10s; }
+.task-selection-card:nth-child(3) { animation-delay: 0.15s; }
+.task-selection-card:nth-child(4) { animation-delay: 0.20s; }
+.task-selection-card:nth-child(5) { animation-delay: 0.25s; }
+.task-selection-card:nth-child(6) { animation-delay: 0.30s; }
+.task-selection-card:nth-child(7) { animation-delay: 0.35s; }
+.task-selection-card:nth-child(8) { animation-delay: 0.40s; }
+@keyframes tscFade {
+  from { opacity: 0; transform: translateY(14px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+.task-selection-card::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: linear-gradient(120deg, transparent 25%, rgba(250, 204, 21, 0.08) 50%, transparent 75%);
+  transform: translateX(-100%);
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.task-selection-card:hover::after { transform: translateX(100%); }
+.task-selection-card:hover {
+  box-shadow: 0 22px 50px -10px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(250, 204, 21, 0.18), 0 0 36px -10px rgba(250, 204, 21, 0.30);
+}
+
+/* type-badge — keep yellow palette, refined */
+.type-badge { transition: background 0.25s, color 0.25s, transform 0.25s; }
+.type-badge:hover { transform: translateY(-1px); }
+
+/* Reset task button — refined hover */
+.reset-task-btn { transition: background 0.25s, color 0.25s, border-color 0.25s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+.reset-task-btn:hover { transform: translateY(-1px); border-color: rgba(250, 204, 21, 0.32); }
+
+/* Step indicator num — gentle pulse on active */
+.step-indicator.active .step-num {
+  box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.14), 0 6px 18px rgba(250, 204, 21, 0.30);
+  animation: stepNumPulse 2.4s ease-in-out infinite;
+}
+@keyframes stepNumPulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.14), 0 6px 18px rgba(250, 204, 21, 0.30); }
+  50%      { box-shadow: 0 0 0 8px rgba(250, 204, 21, 0.06), 0 6px 18px rgba(250, 204, 21, 0.30); }
+}
+
+/* Verification card + step content — entrance stagger */
+.verification-card,
+.field-group,
+.summary-card {
+  animation: stepEnterTA 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.field-group { animation-delay: 0.08s; }
+.summary-card { animation-delay: 0.12s; }
+@keyframes stepEnterTA {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Btn-nav — refined */
+.btn-nav { transition: background 0.25s, color 0.25s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s; }
+.btn-nav.primary,
+.btn-nav.glow {
+  background: linear-gradient(135deg, #facc15, #f59e0b);
+  box-shadow: 0 6px 18px rgba(250, 204, 21, 0.30);
+}
+.btn-nav.primary:not(:disabled):hover,
+.btn-nav.glow:not(:disabled):hover {
+  background: linear-gradient(135deg, #fbbf24, #facc15);
+  box-shadow: 0 14px 32px rgba(250, 204, 21, 0.45);
+  transform: translateY(-3px);
+}
+.btn-nav.glow {
+  position: relative; overflow: hidden;
+}
+.btn-nav.glow::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.42) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.7s;
+}
+.btn-nav.glow:not(:disabled):hover::before { transform: translateX(100%); }
+
+/* history-context-aid — refined accent + animated leading bar */
+.history-context-aid {
+  position: relative;
+  background: linear-gradient(135deg, rgba(250, 204, 21, 0.04), rgba(250, 204, 21, 0.01)) !important;
+  border: 1px solid rgba(250, 204, 21, 0.18) !important;
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+.history-context-aid::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
+  background: linear-gradient(180deg, #facc15, transparent);
+  animation: hcaBar 2.6s ease-in-out infinite;
+}
+@keyframes hcaBar {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+.aid-header svg { filter: drop-shadow(0 0 6px rgba(250, 204, 21, 0.40)); }
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║ LIGHT THEME — every widget that bleeds dark on cream                  ║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+
+/* Back button */
+[data-theme="light"] .back-btn {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .back-btn:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .back-btn svg { color: var(--text-primary); }
+
+/* Header-right status box */
+[data-theme="light"] .status-indicator-box {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.78), rgba(252, 240, 220, 0.62)) !important;
+  border: 1px solid rgba(217, 119, 6, 0.22) !important;
+  box-shadow: 0 6px 20px rgba(40, 25, 10, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+[data-theme="light"] .status-indicator-box::before {
+  background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.55), transparent);
+}
+[data-theme="light"] .indicator-sep { background: rgba(40, 25, 10, 0.14); }
+[data-theme="light"] .header-titles p span { color: #b45309; }
+[data-theme="light"] .indicator-value .text.status { color: #b45309; }
+/* priority dots keep their semantic palette */
+
+/* Search wrap + input */
+[data-theme="light"] .search-wrap svg {
+  color: rgba(60, 45, 30, 0.55);
+}
+[data-theme="light"] .search-wrap:focus-within svg { color: #b45309; }
+[data-theme="light"] .search-input {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .search-input::placeholder { color: rgba(26, 20, 16, 0.40); }
+[data-theme="light"] .search-input:focus {
+  background: rgba(255, 246, 226, 0.92);
+  border-color: rgba(217, 119, 6, 0.55);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.14), 0 4px 18px -4px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .search-count {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #92400e;
+}
+
+/* Filter pills */
+[data-theme="light"] .filter-pill {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: rgba(60, 45, 30, 0.65);
+}
+[data-theme="light"] .filter-pill:hover {
+  background: rgba(40, 25, 10, 0.08);
+  border-color: rgba(40, 25, 10, 0.22);
+  color: var(--text-primary);
+}
+[data-theme="light"] .filter-pill.active {
+  background: #fbbf24;
+  border-color: #fbbf24;
+  color: #1a0f00;
+  box-shadow: 0 6px 18px rgba(250, 204, 21, 0.32);
+}
+
+/* Task selection cards */
+[data-theme="light"] .task-selection-card {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.78), rgba(252, 240, 220, 0.55));
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .task-selection-card:hover {
+  border-color: rgba(217, 119, 6, 0.32);
+  box-shadow: 0 22px 50px -10px rgba(40, 25, 10, 0.22), 0 0 0 1px rgba(217, 119, 6, 0.18), 0 0 36px -10px rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .task-selection-card::after {
+  background: linear-gradient(120deg, transparent 25%, rgba(217, 119, 6, 0.10) 50%, transparent 75%);
+}
+
+/* type-badge — red background in light theme (text stays default) */
+[data-theme="light"] .type-badge {
+  background: rgba(239, 68, 68, 0.18) !important;
+  border: 1px solid rgba(239, 68, 68, 0.45) !important;
+}
+
+/* mini-avatar placeholder — visible cream chip with yellow initials */
+[data-theme="light"] .mini-avatar.placeholder {
+  background: rgba(250, 204, 21, 0.14);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.40);
+}
+
+/* v-row.personal — ultra-modern card (light theme) */
+[data-theme="light"] .v-row.personal {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.78), rgba(252, 240, 220, 0.55));
+  border: 1px solid rgba(217, 119, 6, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 4px 14px rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .v-row.personal::before {
+  background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.55), transparent);
+}
+[data-theme="light"] .v-row.personal:hover {
+  border-color: rgba(217, 119, 6, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 8px 24px rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .v-row.personal .person-info { color: var(--text-primary); }
+
+/* Assignment history border in light theme */
+[data-theme="light"] .assignment-history,
+[data-theme="light"] .history-wrapper {
+  border-color: rgba(40, 25, 10, 0.10);
+  background: rgba(40, 25, 10, 0.03);
+}
+
+/* Scrollbar */
+[data-theme="light"] .task-grid-scroll::-webkit-scrollbar-track {
+  background: rgba(40, 25, 10, 0.05);
+}
+[data-theme="light"] .task-grid-scroll::-webkit-scrollbar-thumb {
+  background: #d97706;
+  border: 3px solid rgba(255, 250, 240, 0.85);
+}
+[data-theme="light"] .task-grid-scroll::-webkit-scrollbar-thumb:hover { background: #b45309; }
+
+/* Reset task button */
+[data-theme="light"] .reset-task-btn {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .reset-task-btn:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #b45309;
+}
+
+/* Journey column — step indicators */
+[data-theme="light"] .step-num {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: rgba(60, 45, 30, 0.55);
+}
+[data-theme="light"] .step-indicator.active .step-num {
+  background: #fbbf24;
+  border-color: #fbbf24;
+  color: #1a0f00;
+}
+[data-theme="light"] .step-indicator.completed .step-num {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: #16a34a;
+  color: #166534;
+}
+[data-theme="light"] .step-line { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .step-indicator.completed .step-line { background: #16a34a; }
+
+/* Verification card */
+[data-theme="light"] .v-row.desc p { color: var(--text-secondary); }
+[data-theme="light"] .v-row.personal {
+  background: rgba(40, 25, 10, 0.05);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+
+/* Info alert */
+[data-theme="light"] .info-alert {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: var(--text-primary);
+}
+[data-theme="light"] .info-alert b { color: #b45309; }
+
+/* Textarea */
+[data-theme="light"] .nano-textarea {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .nano-textarea::placeholder { color: rgba(26, 20, 16, 0.40); }
+[data-theme="light"] .nano-textarea:focus {
+  background: rgba(255, 246, 226, 0.92);
+  border-color: rgba(217, 119, 6, 0.55);
+}
+
+/* Summary card */
+[data-theme="light"] .summary-card {
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .summary-line { color: var(--text-primary); }
+[data-theme="light"] .summary-line b { color: #b45309; }
+
+/* Btn-nav */
+[data-theme="light"] .btn-nav.secondary {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-primary);
+  border-color: rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .btn-nav.secondary:hover:not(:disabled) {
+  background: rgba(40, 25, 10, 0.10);
+  border-color: rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .btn-nav.primary,
+[data-theme="light"] .btn-nav.glow {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .btn-nav.primary:not(:disabled):hover,
+[data-theme="light"] .btn-nav.glow:not(:disabled):hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 14px 32px rgba(217, 119, 6, 0.45);
+}
+
+/* History column + context aid */
+[data-theme="light"] .history-context-aid {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.08), rgba(217, 119, 6, 0.03)) !important;
+  border: 1px solid rgba(217, 119, 6, 0.28) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+[data-theme="light"] .history-context-aid::before {
+  background: linear-gradient(180deg, #d97706, transparent);
+}
+[data-theme="light"] .aid-header { color: #b45309; }
+[data-theme="light"] .aid-header svg {
+  color: #b45309;
+  filter: drop-shadow(0 0 6px rgba(217, 119, 6, 0.40));
+}
+[data-theme="light"] .history-context-aid p { color: var(--text-secondary); }
+
+/* Empty state inside grid */
+[data-theme="light"] .muted-icon,
+[data-theme="light"] .empty-results { color: rgba(60, 45, 30, 0.50); }
 </style>

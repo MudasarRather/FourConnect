@@ -83,6 +83,7 @@ import ThemeToggle from './common/ThemeToggle.vue'
 import { Mail, Lock, Eye, EyeOff, Loader2, ShieldAlert } from 'lucide-vue-next'
 
 import { useToast } from '../composables/useToast'
+import { API } from '@/utils/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -115,7 +116,7 @@ const handleLogin = async () => {
 
   isLoading.value = true
   try {
-    const response = await axios.post('http://localhost:8000/api/auth/login', {
+    const response = await axios.post(`${API}/auth/login`, {
        email: email.value,
        password: password.value
     })

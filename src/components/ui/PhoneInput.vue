@@ -52,6 +52,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { Country } from 'country-state-city'
 import { ChevronDown } from 'lucide-vue-next'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   modelValue: String,
@@ -81,7 +82,7 @@ const placeholder = computed(() => {
 onMounted(async () => {
   // Try to fetch from API first
   try {
-    const response = await axios.get('http://localhost:8000/api/auth/country-codes')
+    const response = await axios.get(`${API}/auth/country-codes`)
     const apiCountries = response.data
     
     // Merge with country-state-city for flags

@@ -70,6 +70,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import { ChevronDown, Search, Check, User, Loader2 } from 'lucide-vue-next'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   modelValue: { type: String, default: null }
@@ -103,7 +104,7 @@ const fetchUsers = async () => {
   try {
     const token = localStorage.getItem('token') || localStorage.getItem('admin_token')
     // Corrected endpoint for Owners
-    const res = await axios.get('http://localhost:8000/api/team/owners', {
+    const res = await axios.get(`${API}/team/owners`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     users.value = res.data

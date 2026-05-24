@@ -339,6 +339,7 @@ import MilestoneDetailsPanel from '../components/milestones/MilestoneDetailsPane
 import { useToast } from '../composables/useToast'
 import { useGsapAnim } from '../composables/useGsapAnim'
 import { projectDetailsEntry } from '../animations/pageChoreography'
+import { API } from '@/utils/api'
 
 const pageRoot = ref(null)
 const route = useRoute()
@@ -431,7 +432,7 @@ const allTeamMembers = computed(() => {
 // Methods
 const fetchProject = async () => {
   try {
-    const res = await axios.get(`http://localhost:8000/api/projects/${projectId}`, {
+    const res = await axios.get(`${API}/projects/${projectId}`, {
       headers: { Authorization: `Bearer ${token.value}` }
     })
     project.value = res.data
@@ -449,7 +450,7 @@ const fetchProject = async () => {
 const fetchMilestones = async () => {
   milestonesLoading.value = true
   try {
-    const res = await axios.get(`http://localhost:8000/api/projects/${projectId}/milestones`, {
+    const res = await axios.get(`${API}/projects/${projectId}/milestones`, {
       headers: { Authorization: `Bearer ${token.value}` }
     })
     milestones.value = res.data.sort((a, b) => new Date(a.due_date) - new Date(b.due_date))

@@ -205,6 +205,7 @@ import DatePicker from '../ui/CompactDatePicker.vue'
 import CustomSelect from '../ui/CustomSelect.vue'
 import axios from 'axios'
 import { useToast } from '../../composables/useToast'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -267,7 +268,7 @@ const handleAccept = async () => {
     isSubmitting.value = true
     try {
          await axios.post(
-           `http://localhost:8000/api/milestones/${props.milestone.id}/accept`,
+           `${API}/milestones/${props.milestone.id}/accept`,
            {},
            { headers: { Authorization: `Bearer ${localStorage.getItem('user_token')}` } }
          )
@@ -395,7 +396,7 @@ const validateEndDate = (val) => {
 const fetchFreshDetails = async () => {
     if (!props.milestone?.id) return
     try {
-        const res = await axios.get(`http://localhost:8000/api/milestones/${props.milestone.id}`, {
+        const res = await axios.get(`${API}/milestones/${props.milestone.id}`, {
             headers: { Authorization: `Bearer ${localStorage.getItem('user_token')}` }
         })
         // Update local form with fresh data
@@ -476,7 +477,7 @@ const save = async () => {
           formData.append('tasks', JSON.stringify(localTasks.value))
       }
 
-      await axios.patch(`http://localhost:8000/api/milestones/${props.milestone.id}`, formData, {
+      await axios.patch(`${API}/milestones/${props.milestone.id}`, formData, {
          headers: { Authorization: `Bearer ${localStorage.getItem('user_token')}` } 
       })
       

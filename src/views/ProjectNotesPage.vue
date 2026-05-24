@@ -185,6 +185,7 @@ import NotificationBell from '../components/ui/NotificationBell.vue'
 import { useToast } from '../composables/useToast'
 import { useGsapAnim } from '../composables/useGsapAnim'
 import { projectNotesEntry } from '../animations/pageChoreography'
+import { API } from '@/utils/api'
 
 const pageRoot = ref(null)
 
@@ -252,7 +253,7 @@ const filteredProjects = computed(() => {
 // Fetch projects
 const fetchProjects = async () => {
    try {
-      const response = await axios.get('http://localhost:8000/api/projects/', {
+      const response = await axios.get(`${API}/projects/`, {
          headers: { Authorization: `Bearer ${token.value}` }
       })
       projects.value = response.data.items || response.data || []
@@ -271,7 +272,7 @@ const fetchProjects = async () => {
 // Fetch current user
 const fetchCurrentUser = async () => {
    try {
-      const res = await axios.get('http://localhost:8000/api/auth/me', {
+      const res = await axios.get(`${API}/auth/me`, {
          headers: { Authorization: `Bearer ${token.value}` }
       })
       currentUserId.value = res.data.id
@@ -285,7 +286,7 @@ const selectProject = async (project) => {
    
    // Fetch full details to get membership status
    try {
-     const res = await axios.get(`http://localhost:8000/api/projects/${project.id}`, {
+     const res = await axios.get(`${API}/projects/${project.id}`, {
          headers: { Authorization: `Bearer ${token.value}` }
      })
      selectedProject.value = res.data
@@ -315,7 +316,7 @@ const fetchNotes = async (silent = false) => {
       if (filterPinned.value) params.is_pinned = true
 
       const res = await axios.get(
-        `http://localhost:8000/api/project-notes/${selectedProject.value.id}/notes`,
+        `${API}/project-notes/${selectedProject.value.id}/notes`,
         { params }
       )
       if (!silent) {
@@ -363,7 +364,7 @@ const stopPolling = () => {
 //    if (!selectedProject.value) return
 //    try {
 //       const res = await axios.get(
-//         `http://localhost:8000/api/project-notes/${selectedProject.value.id}/notes/mentions`,
+//         `${API}/project-notes/${selectedProject.value.id}/notes/mentions`,
 //         { params: { token: token.value } }
 //       )
 //       mentionsList.value = res.data || []
@@ -411,7 +412,7 @@ const createNewNote = async () => {
       
       const payload = { title: 'New Note', content: '', note_type: typeToCreate }
       const res = await axios.post(
-         `http://localhost:8000/api/project-notes/${selectedProject.value.id}/notes`,
+         `${API}/project-notes/${selectedProject.value.id}/notes`,
          payload,
          { params: { token: token.value } }
       )
@@ -461,7 +462,7 @@ const executeDelete = async () => {
    if (!noteToDelete.value) return
    try {
       await axios.delete(
-        `http://localhost:8000/api/project-notes/${selectedProject.value.id}/notes/${noteToDelete.value.id}`,
+        `${API}/project-notes/${selectedProject.value.id}/notes/${noteToDelete.value.id}`,
         { params: { token: token.value } }
       )
       notes.value = notes.value.filter(n => n.id !== noteToDelete.value.id)
@@ -490,7 +491,7 @@ const handleNoteLock = (note) => {
 const executeLock = async (note) => {
    try {
       await axios.patch(
-         `http://localhost:8000/api/project-notes/${selectedProject.value.id}/notes/${note.id}/lock`,
+         `${API}/project-notes/${selectedProject.value.id}/notes/${note.id}/lock`,
          null,
          { params: { token: token.value } }
       )

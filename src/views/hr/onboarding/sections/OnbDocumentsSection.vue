@@ -131,6 +131,7 @@ import { FileCheck2, Upload, FileText, CheckCircle2, XCircle, ArrowUpRight, Cloc
 import OnbProcessPicker from '../components/OnbProcessPicker.vue'
 import { fetchSlots, uploadToSlot, verifySlot, rejectSlot } from '../composables/useOnbDocuments'
 import { useToast } from 'vue-toastification'
+import { API_BASE } from '@/utils/api'
 
 defineEmits(['refresh-stats'])
 
@@ -189,7 +190,7 @@ const formatDateTime = (iso) => new Date(iso).toLocaleString('en-IN', { day: '2-
 // Backend serves uploads via `/storage/...` — but the Vite proxy only forwards
 // `/api/*`. So we prepend the backend origin to make the link work in dev.
 // In production these resolve from the same host and the prefix is harmless.
-const BACKEND_ORIGIN = 'http://localhost:8000'
+const BACKEND_ORIGIN = `${API_BASE}`
 const resolveFileUrl = (url) => {
   if (!url) return ''
   if (/^https?:\/\//i.test(url)) return url

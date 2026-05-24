@@ -366,6 +366,7 @@ import { useToast } from 'vue-toastification'
 import { useGsapAnim } from '../composables/useGsapAnim'
 import { useParallaxOrbs } from '../composables/useParallaxOrbs'
 import { createProjectEntry, pulseScale, focusGlow, blurGlow, errorShake } from '../animations/pageChoreography'
+import { API_BASE } from '@/utils/api'
 
 const pageRoot = ref(null)
 const previewCardRef = ref(null)
@@ -373,7 +374,6 @@ const previewCardRef = ref(null)
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
-const API_BASE = 'http://localhost:8000'
 const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 const getToken = () => isAdminRoute.value
   ? (localStorage.getItem('admin_token') || localStorage.getItem('user_token'))

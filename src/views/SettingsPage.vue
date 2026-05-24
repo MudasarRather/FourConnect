@@ -316,6 +316,7 @@ import {
 import { useToast } from '../composables/useToast'
 import CustomSelect from '../components/ui/CustomSelect.vue'
 import PhoneInput from '../components/ui/PhoneInput.vue'
+import { API } from '@/utils/api'
 
 const { success, error, info } = useToast()
 const route = useRoute()
@@ -455,7 +456,7 @@ const fetchUser = async () => {
     
     if (!token) return
     
-    const response = await axios.get('http://localhost:8000/api/auth/me', {
+    const response = await axios.get(`${API}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     user.value = response.data
@@ -518,12 +519,12 @@ const saveProfile = async () => {
 
     if (!token) return
 
-    await axios.put('http://localhost:8000/api/auth/me', payload, {
+    await axios.put(`${API}/auth/me`, payload, {
       headers: { Authorization: `Bearer ${token}` }
     })
     success('Profile saved successfully')
 
-    const response = await axios.get('http://localhost:8000/api/auth/me', {
+    const response = await axios.get(`${API}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     user.value = response.data
@@ -571,7 +572,7 @@ const changePassword = async () => {
     const isAdmin = window.location.pathname.startsWith('/admin')
     const token = isAdmin ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
 
-    await axios.put('http://localhost:8000/api/auth/password', {
+    await axios.put(`${API}/auth/password`, {
       old_password: passwordForm.value.old_password,
       new_password: passwordForm.value.new_password
     }, {
@@ -609,7 +610,7 @@ const fetchSystemSettings = async () => {
   if (!user.value.is_superuser) return
   try {
      const token = localStorage.getItem('admin_token')
-     const response = await axios.get('http://localhost:8000/api/settings/', {
+     const response = await axios.get(`${API}/settings/`, {
         headers: { Authorization: `Bearer ${token}` }
      })
      // Map array to object
@@ -629,7 +630,7 @@ const toggleSystemSetting = async (key) => {
    
    try {
       const token = localStorage.getItem('admin_token')
-      await axios.put(`http://localhost:8000/api/settings/${key}`, { value: String(newVal) }, {
+      await axios.put(`${API}/settings/${key}`, { value: String(newVal) }, {
          headers: { Authorization: `Bearer ${token}` }
       })
       systemSettings.value[key] = newVal

@@ -14,6 +14,7 @@ import axios from 'axios'
 import { UploadCloud } from 'lucide-vue-next'
 import FinancialDocList from './documents/FinancialDocList.vue'
 import UploadDocModal from './documents/UploadDocModal.vue'
+import { API } from '@/utils/api'
 
 const props = defineProps({ projectId: String, token: String })
 const documents = ref([])
@@ -24,7 +25,7 @@ const fetchDocs = async () => {
    console.log("Fetching docs for project:", props.projectId)
    try {
       const token = props.token || localStorage.getItem('user_token')
-      const res = await axios.get(`http://localhost:8000/api/project-financials/${props.projectId}/documents`, {
+      const res = await axios.get(`${API}/project-financials/${props.projectId}/documents`, {
          headers: { Authorization: `Bearer ${token}` }
       })
       documents.value = res.data
@@ -36,7 +37,7 @@ const fetchDocs = async () => {
 
 const handleUpload = async (docData) => {
    try {
-      await axios.post(`http://localhost:8000/api/project-financials/${props.projectId}/documents`, docData, {
+      await axios.post(`${API}/project-financials/${props.projectId}/documents`, docData, {
          headers: { Authorization: `Bearer ${props.token}` }
       })
       fetchDocs()

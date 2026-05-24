@@ -101,6 +101,7 @@ import { useToast } from '../../composables/useToast'
 import Logo from '../icons/Logo.vue'
 import NotificationBell from '../ui/NotificationBell.vue'
 import ThemeToggle from '../common/ThemeToggle.vue'
+import { API } from '@/utils/api'
 import {
   ChevronDown, LayoutDashboard, User, AlertCircle, History, Bookmark,
   Briefcase, Plus, Edit, Users, BarChart3, FileText, StickyNote, Archive, RotateCcw,
@@ -155,7 +156,7 @@ const fetchUser = async () => {
       return
     }
 
-    const response = await axios.get('http://localhost:8000/api/auth/me', {
+    const response = await axios.get(`${API}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     const data = response.data

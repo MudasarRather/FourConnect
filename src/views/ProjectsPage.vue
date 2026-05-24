@@ -215,6 +215,7 @@ import CustomSelect from '../components/ui/CustomSelect.vue'
 import { useGsapAnim } from '../composables/useGsapAnim'
 import { useParallaxOrbs } from '../composables/useParallaxOrbs'
 import { projectsPageEntry } from '../animations/pageChoreography'
+import { API } from '@/utils/api'
 
 const pageRoot = ref(null)
 
@@ -361,13 +362,13 @@ const fetchProjects = async () => {
     const isAdminRoute = route.path.startsWith('/admin')
     const token = isAdminRoute ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
     if (!token) return
-    const userResponse = await axios.get('http://localhost:8000/api/auth/me', {
+    const userResponse = await axios.get(`${API}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     isAdmin.value = userResponse.data.is_superuser === true
     currentUserId.value = userResponse.data.id
 
-    const response = await axios.get('http://localhost:8000/api/projects/', {
+    const response = await axios.get(`${API}/projects/`, {
       headers: { Authorization: `Bearer ${token}` },
       params: {
         page: page.value,
@@ -425,7 +426,7 @@ const handleDeleteConfirm = async () => {
   try {
     const isAdminRoute = route.path.startsWith('/admin')
     const token = isAdminRoute ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
-    await axios.delete(`http://localhost:8000/api/projects/${projectToDelete.value.id}`, {
+    await axios.delete(`${API}/projects/${projectToDelete.value.id}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     success('Project deleted')
@@ -872,6 +873,22 @@ onMounted(() => {
 [data-theme="light"] .stat-eyebrow { color: #6b5840; font-weight: 700; }
 [data-theme="light"] .stat-value { color: var(--text-primary); }
 [data-theme="light"] .stat-num { color: var(--text-primary); }
+
+/* Stat tile + command bar shells — light-mode cards (the dark-mode rgba-white values are invisible on cream) */
+[data-theme="light"] .stat-tile {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.85), rgba(252, 240, 220, 0.55));
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  box-shadow: 0 1px 2px rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] .command-bar {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.85), rgba(252, 240, 220, 0.55));
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  box-shadow: 0 1px 2px rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] .command-bar.panel-open {
+  border-color: rgba(217, 119, 6, 0.35);
+  box-shadow: 0 12px 32px rgba(40, 25, 10, 0.10), 0 0 0 1px rgba(217, 119, 6, 0.08) inset;
+}
 
 /* Filter panel labels (CATEGORY / PRIORITY / DATE RANGE / OWNER) — deep amber so they pop on cream */
 [data-theme="light"] .cmd-field label { color: #b45309; font-weight: 800; }

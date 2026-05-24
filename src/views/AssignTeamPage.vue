@@ -620,6 +620,7 @@ import gsap from 'gsap'
 import { useGsapAnim } from '../composables/useGsapAnim'
 import { useParallaxOrbs } from '../composables/useParallaxOrbs'
 import { assignTeamEntry } from '../animations/pageChoreography'
+import { API } from '@/utils/api'
 
 const route = useRoute()
 const { success, error } = useToast()
@@ -1029,7 +1030,7 @@ const fetchProjects = async (background = false) => {
       }
     }
 
-    const res = await axios.get('http://localhost:8000/api/team/projects', {
+    const res = await axios.get(`${API}/team/projects`, {
       headers: { Authorization: `Bearer ${getToken()}` },
       params
     })
@@ -1058,7 +1059,7 @@ const fetchProjects = async (background = false) => {
 const fetchUsers = async () => {
   try {
     const isUserPanel = !route.path.startsWith('/admin')
-    const res = await axios.get('http://localhost:8000/api/team/users', {
+    const res = await axios.get(`${API}/team/users`, {
       headers: { Authorization: `Bearer ${getToken()}` },
       params: { 
         exclude_admins: isUserPanel,
@@ -1078,7 +1079,7 @@ const openProjectDetails = async (project) => {
   
   // Fetch fresh team members data
   try {
-    const teamRes = await axios.get(`http://localhost:8000/api/team/${project.id}`, {
+    const teamRes = await axios.get(`${API}/team/${project.id}`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
     // Update selectedProject with fresh team data
@@ -1094,7 +1095,7 @@ const openTeamPanel = async (project) => {
   
   // Fetch fresh team members from database
   try {
-    const teamRes = await axios.get(`http://localhost:8000/api/team/${project.id}`, {
+    const teamRes = await axios.get(`${API}/team/${project.id}`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
     teamProject.value = { ...project, team_members: teamRes.data }
@@ -1129,7 +1130,7 @@ const submitTeam = async () => {
   isSubmitting.value = true
   try {
     await axios.post(
-      `http://localhost:8000/api/team/${teamProject.value.id}/assign`,
+      `${API}/team/${teamProject.value.id}/assign`,
       { user_ids: selectedUsers.value.map(u => u.id) },
       { headers: { Authorization: `Bearer ${getToken()}` } }
     )
@@ -1165,7 +1166,7 @@ const respondToInvite = async (project, accept) => {
 
   try {
     await axios.post(
-      `http://localhost:8000/api/team/${member.id}/respond`,
+      `${API}/team/${member.id}/respond`,
       { accept: true },
       { headers: { Authorization: `Bearer ${getToken()}` } }
     )
@@ -1186,7 +1187,7 @@ const confirmDecline = async () => {
   declining.value = true
   try {
     await axios.post(
-      `http://localhost:8000/api/team/${declineItem.value.id}/respond`,
+      `${API}/team/${declineItem.value.id}/respond`,
       { accept: false, reason: declineReason.value },
       { headers: { Authorization: `Bearer ${getToken()}` } }
     )
@@ -1253,7 +1254,7 @@ const confirmOverride = async () => {
   
   try {
     await axios.post(
-      `http://localhost:8000/api/team/${memberToOverride.value.id}/override`,
+      `${API}/team/${memberToOverride.value.id}/override`,
       {},
       { 
         headers: { Authorization: `Bearer ${getToken()}` },
@@ -1267,7 +1268,7 @@ const confirmOverride = async () => {
     
     // Refresh team data
     if (teamProject.value) {
-      const teamRes = await axios.get(`http://localhost:8000/api/team/${teamProject.value.id}`, {
+      const teamRes = await axios.get(`${API}/team/${teamProject.value.id}`, {
         headers: { Authorization: `Bearer ${getToken()}` }
       })
       teamProject.value = { ...teamProject.value, team_members: teamRes.data }
@@ -1293,7 +1294,7 @@ const confirmRemove = async () => {
   
   try {
     await axios.delete(
-      `http://localhost:8000/api/team/${memberToRemove.value.id}/remove`,
+      `${API}/team/${memberToRemove.value.id}/remove`,
       { 
         headers: { Authorization: `Bearer ${getToken()}` },
         params: { reason: removeReason.value.trim() }
@@ -1307,7 +1308,7 @@ const confirmRemove = async () => {
     
     // Refresh team data for current project
     if (teamProject.value) {
-      const teamRes = await axios.get(`http://localhost:8000/api/team/${teamProject.value.id}`, {
+      const teamRes = await axios.get(`${API}/team/${teamProject.value.id}`, {
         headers: { Authorization: `Bearer ${getToken()}` }
       })
       teamProject.value = { ...teamProject.value, team_members: teamRes.data }
@@ -1324,7 +1325,7 @@ const confirmRemove = async () => {
 const fetchCurrentUser = async () => {
   if (isAdmin.value) return 
   try {
-    const res = await axios.get('http://localhost:8000/api/auth/me', {
+    const res = await axios.get(`${API}/auth/me`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
     currentUserId.value = res.data.id

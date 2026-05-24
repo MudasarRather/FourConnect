@@ -522,6 +522,7 @@ import EditSlaModal from '../../components/documents/EditSlaModal.vue'
 import RejectionModal from '../../components/documents/RejectionModal.vue'
 import { generateSlaPdf } from '../../utils/slaPdfGenerator'
 import axios from 'axios'
+import { API } from '@/utils/api'
 const route = useRoute()
 const isAdmin = computed(() => route.path.startsWith('/admin'))
 
@@ -731,7 +732,7 @@ const fetchData = async () => {
 
 const fetchPending = async (token) => {
   try {
-    const res = await axios.get('http://localhost:8000/api/sla/?status=Pending', {
+    const res = await axios.get(`${API}/sla/?status=Pending`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     pendingSlahs.value = res.data
@@ -767,7 +768,7 @@ const updateSlaStatus = async (id, status, reason = null) => {
   try {
     const payload = { status }
     if (reason) payload.rejection_reason = reason
-    await axios.put(`http://localhost:8000/api/sla/${id}`, payload, {
+    await axios.put(`${API}/sla/${id}`, payload, {
       headers: { Authorization: `Bearer ${token}` }
     })
     await fetchData()
@@ -778,7 +779,7 @@ const updateSlaStatus = async (id, status, reason = null) => {
 
 const fetchDrafts = async (token) => {
   try {
-    const res = await axios.get('http://localhost:8000/api/sla/?status=Draft', {
+    const res = await axios.get(`${API}/sla/?status=Draft`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     draftSlahs.value = res.data
@@ -789,7 +790,7 @@ const fetchDrafts = async (token) => {
 
 const fetchApproved = async (token) => {
   try {
-    const res = await axios.get('http://localhost:8000/api/sla/?status=Approved', {
+    const res = await axios.get(`${API}/sla/?status=Approved`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     approvedSlahs.value = res.data
@@ -800,7 +801,7 @@ const fetchApproved = async (token) => {
 
 const fetchRejected = async (token) => {
   try {
-    const res = await axios.get('http://localhost:8000/api/sla/?status=Rejected', {
+    const res = await axios.get(`${API}/sla/?status=Rejected`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     rejectedSlahs.value = res.data
@@ -816,7 +817,7 @@ onMounted(async () => {
   const token = isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
   if (token) {
     try {
-      const res = await axios.get('http://localhost:8000/api/auth/me', {
+      const res = await axios.get(`${API}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       userProfile.value = res.data

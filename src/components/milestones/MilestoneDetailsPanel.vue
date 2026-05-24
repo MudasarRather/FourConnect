@@ -368,6 +368,7 @@ import MilestoneContributionBadge from '../ui/MilestoneContributionBadge.vue'
 import DeclineReasonItem from './DeclineReasonItem.vue'
 import { Check, XCircle } from 'lucide-vue-next'
 import { useToast } from '../../composables/useToast'
+import { API, API_BASE } from '@/utils/api'
 
 const props = defineProps({
   isOpen: Boolean,
@@ -853,7 +854,7 @@ const handleSave = async () => {
     }
 
     const res = await axios.patch(
-      `http://localhost:8000/api/milestones/${props.milestone.id}`,
+      `${API}/milestones/${props.milestone.id}`,
       formData,
       { 
          headers: { 
@@ -894,7 +895,7 @@ const handleDelete = async () => {
 const executeDelete = async (reason = null) => {
   try {
      // Always use the specific delete endpoint
-     const endpoint = `http://localhost:8000/api/milestones/${props.milestone.id}/delete`
+     const endpoint = `${API}/milestones/${props.milestone.id}/delete`
      
      // Always send reason (it might be empty string but endpoint expects JSON body)
      await axios.post(endpoint, { reason: reason || "Admin Delete" }, { headers: { Authorization: `Bearer ${props.token}` } })
@@ -918,7 +919,7 @@ const handleAccept = async () => {
   isSubmitting.value = true
   try {
      const res = await axios.post(
-       `http://localhost:8000/api/milestones/${props.milestone.id}/accept`,
+       `${API}/milestones/${props.milestone.id}/accept`,
        {},
        { headers: { Authorization: `Bearer ${props.token}` } }
      )
@@ -971,7 +972,7 @@ const handleDecline = async (reason) => {
   isSubmitting.value = true
   try {
      const res = await axios.post(
-       `http://localhost:8000/api/milestones/${props.milestone.id}/decline`,
+       `${API}/milestones/${props.milestone.id}/decline`,
        { reason },
        { headers: { Authorization: `Bearer ${props.token}` } }
      )
@@ -991,7 +992,7 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-US', { month: '
 const formatNumber = (n) => new Intl.NumberFormat('en-US').format(n || 0)
 const formatStatus = (s) => s ? s.replace('_', ' ').toUpperCase() : ''
 const getInitials = (n) => n ? n.split(' ').map(c => c[0]).join('').slice(0, 2).toUpperCase() : '??'
-const getFileUrl = (path) => `http://localhost:8000/${path}`
+const getFileUrl = (path) => `${API_BASE}/${path}`
 
 </script>
 

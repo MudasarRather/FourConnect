@@ -132,6 +132,7 @@ import { useToast } from '../composables/useToast'
 import ProjectEditModal from '../components/projects/ProjectEditModal.vue'
 import { useGsapAnim } from '../composables/useGsapAnim'
 import { completedProjectsEntry } from '../animations/pageChoreography'
+import { API } from '@/utils/api'
 
 const pageRoot = ref(null)
 
@@ -167,7 +168,7 @@ const fetchProjects = async () => {
      if (!token) return
 
      // Fetch ALL projects to filter client-side 
-     const response = await axios.get('http://localhost:8000/api/projects/', {
+     const response = await axios.get(`${API}/projects/`, {
        headers: { Authorization: `Bearer ${token}` },
        params: { limit: 100 } 
      })

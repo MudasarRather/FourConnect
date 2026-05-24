@@ -135,11 +135,11 @@ import {
 import ExpenseDetailsDrawer from '../components/expenses/ExpenseDetailsDrawer.vue'
 import EditDraftModal from '../components/expenses/EditDraftModal.vue'
 import CustomSelect from '../components/ui/CustomSelect.vue'
+import { API } from '@/utils/api'
 
 const route = useRoute()
 const router = useRouter()
 const isAdmin = computed(() => route.path.startsWith('/admin'))
-const API = 'http://localhost:8000/api'
 
 const getHeaders = () => {
   const token = isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
@@ -258,14 +258,53 @@ onMounted(fetchData)
   color: #f5f5f7;
 }
 
-/* ── Header ── */
+/* ── Header — transparent on page, ultra-modern accents ── */
 .glass-header {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(9, 9, 11, 0.75);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding: 0 40px;
+  overflow: hidden;
+  animation: ghFadeDown 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes ghFadeDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.glass-header::after {
+  content: ''; position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.55), transparent);
+  animation: ghSweep 5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ghSweep {
+  0%, 100% { opacity: 0.35; transform: translateX(-12%); }
+  50%      { opacity: 1;    transform: translateX(12%); }
+}
+.glass-header::before {
+  content: ''; position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 200px;
+  background: radial-gradient(ellipse, rgba(245, 158, 11, 0.07), transparent 60%);
+  pointer-events: none;
+  animation: ghGlow 6s ease-in-out infinite;
+}
+@keyframes ghGlow {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+.header-icon-box {
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.header-icon-box::after {
+  content: ''; position: absolute; inset: -3px; border-radius: 12px;
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  opacity: 0; animation: ghIconRing 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ghIconRing {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.10); }
 }
 .header-content {
   height: 76px; display: flex; align-items: center; justify-content: space-between;
@@ -581,4 +620,119 @@ onMounted(fetchData)
 [data-theme="light"] .v-ref { color: var(--text-tertiary); }
 [data-theme="light"] .col.amount { color: var(--text-primary); }
 [data-theme="light"] .col.date { color: var(--text-secondary); }
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║ Light theme — transparent header, table cell visibility, search box  ║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+
+/* Header — keep transparent, swap accents to amber */
+[data-theme="light"] .glass-header {
+  background: transparent;
+  border-bottom-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .glass-header::after {
+  background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.65), transparent);
+}
+[data-theme="light"] .glass-header::before {
+  background: radial-gradient(ellipse, rgba(217, 119, 6, 0.10), transparent 60%);
+}
+[data-theme="light"] .header-icon-box {
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  color: #b45309;
+}
+[data-theme="light"] .header-icon-box::after {
+  border-color: rgba(217, 119, 6, 0.45);
+}
+
+/* Glass cards */
+[data-theme="light"] .glass-card,
+[data-theme="light"] .table-card {
+  background: rgba(255, 250, 240, 0.65);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+
+/* Search-box — kill cream overlay, defeat global rescue */
+[data-theme="light"] .search-box {
+  background: transparent !important;
+  border-color: rgba(40, 25, 10, 0.18) !important;
+}
+[data-theme="light"] .search-box input {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .search-box input::placeholder { color: rgba(26, 20, 16, 0.40) !important; }
+[data-theme="light"] .search-box svg { color: var(--text-secondary); }
+[data-theme="light"] .filter-select {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .filter-select option { background: #fffaf0; color: #1a1410; }
+
+/* Table container */
+[data-theme="light"] .table-header { border-bottom-color: rgba(40, 25, 10, 0.08); }
+
+/* pm-table cells — defeat inline white styles */
+[data-theme="light"] .pm-table-modern .col,
+[data-theme="light"] .pm-table-modern .col span,
+[data-theme="light"] .pm-table-modern .col div,
+[data-theme="light"] .pm-table-modern .v-name,
+[data-theme="light"] .pm-table-modern .col.amount,
+[data-theme="light"] .pm-table-modern .col.amount.font-mono {
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .pm-table-modern .col.sn,
+[data-theme="light"] .pm-table-modern .col.date,
+[data-theme="light"] .pm-table-modern .col.category .v-ref {
+  color: var(--text-secondary) !important;
+}
+[data-theme="light"] .pm-table-modern .col .pill {
+  background: rgba(40, 25, 10, 0.06) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .pm-table-modern .col.attach svg {
+  color: rgba(40, 25, 10, 0.40) !important;
+}
+[data-theme="light"] .pm-table-modern .pm-row-modern { border-bottom-color: rgba(40, 25, 10, 0.06); }
+[data-theme="light"] .pm-table-modern .pm-row-modern.header {
+  border-bottom-color: rgba(40, 25, 10, 0.12);
+  color: #6b5840;
+}
+[data-theme="light"] .pm-table-modern .pm-row-modern.item:hover { background: rgba(217, 119, 6, 0.06); }
+[data-theme="light"] .pm-table-modern .arrow { color: rgba(40, 25, 10, 0.30); }
+[data-theme="light"] .pm-table-modern .pm-row-modern.item:hover .arrow { color: var(--text-primary); }
+[data-theme="light"] .pm-table-modern .mono { color: var(--text-secondary); }
+[data-theme="light"] .pm-table-modern .attach-icon { color: #b45309; }
+
+/* Status badges — preserve dark theme hues with cream-readable text */
+[data-theme="light"] .status-badge.approved {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.40);
+}
+[data-theme="light"] .status-badge.submitted,
+[data-theme="light"] .status-badge.pending {
+  background: rgba(252, 211, 77, 0.20);
+  color: #854d0e;
+  border-color: rgba(252, 211, 77, 0.45);
+}
+[data-theme="light"] .status-badge.rejected {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.40);
+}
+[data-theme="light"] .status-badge.draft {
+  background: rgba(161, 161, 170, 0.18);
+  color: #44403c;
+  border-color: rgba(161, 161, 170, 0.40);
+}
+
+/* Empty state */
+[data-theme="light"] .empty-state { color: var(--text-secondary); }
+[data-theme="light"] .empty-state svg { color: rgba(40, 25, 10, 0.30); }
+
+/* Loading overlay */
+[data-theme="light"] .loading-overlay { background: rgba(40, 25, 10, 0.30); }
 </style>

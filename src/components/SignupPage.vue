@@ -265,6 +265,7 @@ import { Country, State, City } from 'country-state-city'
 import { User, Users, Mail, Lock, Eye, EyeOff, CheckCircle, Loader2, Hash, MapPin } from 'lucide-vue-next'
 
 import { useToast } from '../composables/useToast'
+import { API } from '@/utils/api'
 
 const router = useRouter()
 const { success, error } = useToast()
@@ -415,7 +416,7 @@ const handleSignup = async () => {
   isLoading.value = true
   
   try {
-     const response = await axios.post('http://localhost:8000/api/auth/signup', {
+     const response = await axios.post(`${API}/auth/signup`, {
       email: email.value,
       full_name: fullName.value,
       password: password.value,

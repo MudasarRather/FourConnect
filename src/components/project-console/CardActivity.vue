@@ -106,6 +106,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { Activity, Loader2, Check, Plus, User, Shield, FileText, Zap } from 'lucide-vue-next'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { API } from '@/utils/api'
 
 const route = useRoute()
 const props = defineProps({
@@ -128,7 +129,7 @@ const fetchActivity = async () => {
    if (!targetId.value) return
    loading.value = true
    try {
-      const res = await axios.get(`http://localhost:8000/api/projects/${targetId.value}/activity`, {
+      const res = await axios.get(`${API}/projects/${targetId.value}/activity`, {
           headers: { Authorization: `Bearer ${token.value}` }
       })
       activities.value = res.data

@@ -164,4 +164,28 @@ const isPastStartDate = computed(() => {
   align-items: center;
   justify-content: center;
 }
+
+/* ═════════ LIGHT THEME — preserves yellow active tab + warm cream surfaces ═════════ */
+[data-theme="light"] .adjustment-tabs {
+  background: rgba(40, 25, 10, 0.05);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .adj-tab { color: var(--text-secondary); }
+[data-theme="light"] .adj-tab:hover { color: var(--text-primary); }
+[data-theme="light"] .adj-tab.active {
+  background: #facc15;
+  color: #1a0f00;
+  box-shadow: 0 4px 12px rgba(250, 204, 21, 0.32);
+}
+[data-theme="light"] .adjustment-content {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .adjustment-content.is-new {
+  border-color: rgba(217, 119, 6, 0.32);
+  background: rgba(250, 204, 21, 0.06);
+}
+[data-theme="light"] .preview-label { color: var(--text-tertiary); }
+[data-theme="light"] .preview-value { color: #b45309; }
+[data-theme="light"] .date-warning { color: #c2410c; }
 </style>

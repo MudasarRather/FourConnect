@@ -113,6 +113,7 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   project: {
@@ -136,7 +137,7 @@ const overridePending = async (member) => {
   overriding.value = member.id
   try {
     await axios.post(
-      `http://localhost:8000/api/team/${member.id}/override-pending`,
+      `${API}/team/${member.id}/override-pending`,
       {},
       { headers: { Authorization: `Bearer ${getToken()}` } }
     )

@@ -275,7 +275,7 @@ const getStatusIcon = (status) => {
 const openFile = (url) => {
   if (!url) return
   // Handle relative vs absolute paths
-  const fullUrl = url.startsWith('http') ? url : `http://localhost:8000/${url}`
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE}/${url}`
   window.open(fullUrl, '_blank')
 }
 
@@ -298,7 +298,7 @@ const handleDeleteClick = async () => {
     isDeleting.value = true
     try {
         const token = localStorage.getItem('user_token')
-        await axios.delete(`http://localhost:8000/api/project-financials/payments/${props.payment.id}`, {
+        await axios.delete(`${API}/project-financials/payments/${props.payment.id}`, {
              headers: { Authorization: `Bearer ${token}` }
         })
         
@@ -316,6 +316,7 @@ const handleDeleteClick = async () => {
 }
 
 import { generatePaymentReceipt } from '../../../utils/receiptGenerator'
+import { API, API_BASE } from '@/utils/api'
 
 const handleDownloadReceipt = () => {
     try {

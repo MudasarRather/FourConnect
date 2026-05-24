@@ -70,6 +70,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import { ChevronDown, Search, Check, User, Loader2 } from 'lucide-vue-next'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   modelValue: { type: String, default: null }
@@ -102,7 +103,7 @@ const fetchUsers = async () => {
   isLoading.value = true
   try {
     const token = localStorage.getItem('admin_token')
-    const res = await axios.get('http://localhost:8000/api/auth/admin/regular-users', {
+    const res = await axios.get(`${API}/auth/admin/regular-users`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     users.value = res.data

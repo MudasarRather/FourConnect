@@ -351,6 +351,7 @@ import {
 import CustomSelect from '../ui/CustomSelect.vue'
 import DatePicker from '../ui/DatePicker.vue'
 import { useToast } from '../../composables/useToast'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -406,8 +407,8 @@ const fetchMeta = async () => {
     const token = localStorage.getItem('user_token') || localStorage.getItem('admin_token')
     const headers = { Authorization: `Bearer ${token}` }
     const [catRes, typeRes] = await Promise.all([
-      axios.get('http://localhost:8000/api/expenses/categories', { headers }).catch(() => ({ data: [] })),
-      axios.get('http://localhost:8000/api/expenses/types', { headers }).catch(() => ({ data: [] }))
+      axios.get(`${API}/expenses/categories`, { headers }).catch(() => ({ data: [] })),
+      axios.get(`${API}/expenses/types`, { headers }).catch(() => ({ data: [] }))
     ])
     categories.value = catRes.data?.length ? catRes.data : ['Travel', 'Office Supplies', 'Software', 'Marketing', 'Utilities', 'Meals', 'Equipment', 'Training', 'Professional Services', 'Miscellaneous']
     expenseTypes.value = typeRes.data?.length ? typeRes.data : ['Reimbursement', 'Direct Payment', 'Petty Cash', 'Corporate Card', 'Advance']
@@ -538,7 +539,7 @@ const handleSubmit = async () => {
       attachments: form.attachments, notes: form.notes, is_internal_note: form.is_internal_note,
       department: form.department, cost_center: form.cost_center,
     }
-    await axios.put(`http://localhost:8000/api/expenses/${props.expense.id}`, payload, {
+    await axios.put(`${API}/expenses/${props.expense.id}`, payload, {
       headers: { Authorization: `Bearer ${authToken}` }
     })
     toastSuccess('Expense updated successfully')

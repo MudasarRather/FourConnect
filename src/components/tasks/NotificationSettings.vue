@@ -147,4 +147,25 @@ const toggle = (key) => {
     grid-template-columns: 1fr;
   }
 }
+
+/* ═════════ LIGHT THEME — preserves yellow toggle + brand icon colors ═════════ */
+[data-theme="light"] .notify-card {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .notify-card:hover {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .notify-card.is-active {
+  background: rgba(250, 204, 21, 0.10);
+  border-color: rgba(217, 119, 6, 0.35);
+}
+[data-theme="light"] .card-icon { background: rgba(40, 25, 10, 0.06); }
+[data-theme="light"] .card-label { color: var(--text-primary); }
+[data-theme="light"] .card-desc { color: var(--text-secondary); }
+[data-theme="light"] .toggle-track { background: rgba(40, 25, 10, 0.14); }
+[data-theme="light"] .toggle-thumb { background: #fff; }
+[data-theme="light"] .is-active .toggle-track { background: #facc15; }
+[data-theme="light"] .is-active .toggle-thumb { background: #1a0f00; }
 </style>

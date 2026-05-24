@@ -70,6 +70,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { UserPlus, ChevronDown, Search, Loader2, Check } from 'lucide-vue-next'
 import axios from 'axios'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   modelValue: { type: String, default: null },
@@ -108,7 +109,7 @@ const fetchUsers = async () => {
   loading.value = true
   try {
     const token = localStorage.getItem('user_token') || localStorage.getItem('admin_token')
-    const res = await axios.get('http://localhost:8000/api/tasks/users/list', {
+    const res = await axios.get(`${API}/tasks/users/list`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     users.value = res.data
@@ -417,4 +418,64 @@ onMounted(fetchUsers)
   opacity: 0;
   transform: scale(0.9) translateY(-10px);
 }
+
+/* ═════════ LIGHT THEME — warm cream glass, preserves yellow palette ═════════ */
+[data-theme="light"] .selector-trigger {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .selector-trigger:hover {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow: 0 6px 18px rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .selector-trigger.is-active {
+  border-color: #d97706;
+  background: rgba(250, 204, 21, 0.10);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .selected-avatar,
+[data-theme="light"] .avatar-placeholder { background: #facc15; color: #1a0f00; }
+[data-theme="light"] .trigger-icon {
+  background: rgba(40, 25, 10, 0.06);
+  color: #b45309;
+}
+[data-theme="light"] .user-name { color: #b45309; }
+[data-theme="light"] .user-email { color: var(--text-secondary); }
+[data-theme="light"] .placeholder { color: var(--text-tertiary); }
+[data-theme="light"] .chevron { color: var(--text-secondary); }
+[data-theme="light"] .chevron.rotate { color: #b45309; }
+
+/* Dropdown — was solid #1c1c1e, now cream glass */
+[data-theme="light"] .selector-dropdown {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.95), rgba(252, 240, 220, 0.85));
+  border: 1px solid rgba(217, 119, 6, 0.24);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: 0 20px 50px rgba(40, 25, 10, 0.25);
+}
+[data-theme="light"] .search-wrapper { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .search-icon { color: #b45309; }
+[data-theme="light"] .search-wrapper input {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .search-wrapper input::placeholder { color: rgba(26, 20, 16, 0.40); }
+[data-theme="light"] .search-wrapper input:focus {
+  border-color: #d97706;
+  background: rgba(250, 204, 21, 0.08);
+}
+[data-theme="light"] .options-container::-webkit-scrollbar-thumb { background: rgba(40, 25, 10, 0.18); }
+[data-theme="light"] .user-option:hover { background: rgba(217, 119, 6, 0.08); }
+[data-theme="light"] .user-option.is-selected { background: rgba(250, 204, 21, 0.14); }
+[data-theme="light"] .option-avatar { background: rgba(40, 25, 10, 0.10); color: var(--text-primary); }
+[data-theme="light"] .info-name { color: var(--text-primary); }
+[data-theme="light"] .meta-email { color: var(--text-tertiary); }
+[data-theme="light"] .meta-dot { background: rgba(40, 25, 10, 0.25); }
+[data-theme="light"] .meta-job { color: #b45309; }
+[data-theme="light"] .selected-check { color: #b45309; }
+[data-theme="light"] .loading-state,
+[data-theme="light"] .empty-state { color: var(--text-secondary); }
+[data-theme="light"] .spin { color: #b45309; }
 </style>

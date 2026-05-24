@@ -31,7 +31,7 @@
             <a 
               v-for="(att, i) in note.attachment_urls.slice(0,2)" 
               :key="i" 
-              :href="att.url ? (att.url.startsWith('http') ? att.url : `http://localhost:8000${att.url}`) : '#'" 
+              :href="att.url ? (att.url.startsWith('http') ? att.url : `${API_BASE}${att.url}`) : '#'" 
               target="_blank"
               class="att-pill-mini" 
               :title="att.name"
@@ -48,7 +48,7 @@
               <a 
                 v-for="(att, i) in note.attachment_urls" 
                 :key="i" 
-                :href="att.url ? (att.url.startsWith('http') ? att.url : `http://localhost:8000${att.url}`) : '#'" 
+                :href="att.url ? (att.url.startsWith('http') ? att.url : `${API_BASE}${att.url}`) : '#'" 
                 target="_blank"
                 class="att-pill-mini" 
                 :title="att.name"
@@ -87,6 +87,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Pin, Lock, Unlock, Trash2, Paperclip } from 'lucide-vue-next'
+import { API_BASE } from '@/utils/api'
 
 const props = defineProps({
   note: { type: Object, required: true },

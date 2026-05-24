@@ -116,6 +116,7 @@ import {
 } from 'lucide-vue-next'
 import { useGsapAnim } from '../composables/useGsapAnim'
 import { projectFinancialsEntry } from '../animations/pageChoreography'
+import { API } from '@/utils/api'
 
 const pageRoot = ref(null)
 
@@ -168,7 +169,7 @@ const isPending = computed(() => {
 const fetchProjects = async () => {
    try {
       const token = localStorage.getItem('user_token') || localStorage.getItem('admin_token')
-      const response = await axios.get('http://localhost:8000/api/projects/', {
+      const response = await axios.get(`${API}/projects/`, {
          headers: { Authorization: `Bearer ${token}` }
       })
       // Keep full project objects to ensure all data is available
@@ -200,7 +201,7 @@ const selectProject = async (project) => {
    // Fetch full details (includes status for access check)
    try {
      const token = localStorage.getItem('user_token') || localStorage.getItem('admin_token')
-     const res = await axios.get(`http://localhost:8000/api/projects/${project.id}`, {
+     const res = await axios.get(`${API}/projects/${project.id}`, {
          headers: { Authorization: `Bearer ${token}` }
      })
      selectedProject.value = res.data

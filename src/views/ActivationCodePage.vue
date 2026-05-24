@@ -62,6 +62,7 @@ import Logo from '../components/icons/Logo.vue'
 import ThemeToggle from '../components/common/ThemeToggle.vue'
 import { ShieldCheck, Loader2 } from 'lucide-vue-next'
 import { useToast } from '../composables/useToast'
+import { API } from '@/utils/api'
 
 const router = useRouter()
 const { success, error } = useToast()
@@ -112,7 +113,7 @@ const handleActivate = async () => {
   
   try {
     const token = localStorage.getItem('user_token')
-    await axios.post('http://localhost:8000/api/auth/activate', {
+    await axios.post(`${API}/auth/activate`, {
       activation_code: code.value.join('')
     }, {
       headers: { Authorization: `Bearer ${token}` }

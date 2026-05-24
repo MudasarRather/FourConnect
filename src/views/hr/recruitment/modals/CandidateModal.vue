@@ -240,6 +240,7 @@ import FileUploadField from '../components/FileUploadField.vue'
 
 import axios from 'axios'
 import { useToast } from '../../../../composables/useToast'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -308,7 +309,7 @@ const authHeader = () => {
 const uploadFile = async (file) => {
   const fd = new FormData()
   fd.append('file', file)
-  const res = await axios.post('http://localhost:8000/api/uploads/', fd, {
+  const res = await axios.post(`${API}/uploads/`, fd, {
     headers: { ...authHeader(), 'Content-Type': 'multipart/form-data' },
   })
   // Common backends return either { url } or { path } or { filename }

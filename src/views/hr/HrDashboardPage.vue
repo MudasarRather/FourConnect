@@ -55,6 +55,7 @@ import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { UserCog, Users, CalendarOff, UserPlus, Fingerprint, LogOut, Info } from 'lucide-vue-next'
 import { useToast } from '../../composables/useToast'
+import { API } from '@/utils/api'
 
 const { error } = useToast()
 
@@ -85,7 +86,7 @@ const fetchStats = async () => {
   errorMsg.value = ''
   try {
     const token = localStorage.getItem('admin_token')
-    const res = await axios.get('http://localhost:8000/api/hr/dashboard-stats', {
+    const res = await axios.get(`${API}/hr/dashboard-stats`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     stats.value = { ...stats.value, ...res.data }

@@ -322,6 +322,7 @@ import {
 import { useToast } from '../composables/useToast'
 import { useGsapAnim } from '../composables/useGsapAnim'
 import { archivedProjectsEntry } from '../animations/pageChoreography'
+import { API } from '@/utils/api'
 
 const pageRoot = ref(null)
 
@@ -358,7 +359,7 @@ const fetchArchived = async () => {
     const params = { page: currentPage.value, limit: 20 }
     if (searchQuery.value) params.search = searchQuery.value
 
-    const response = await axios.get('http://localhost:8000/api/projects/archived/list', {
+    const response = await axios.get(`${API}/projects/archived/list`, {
       headers: { Authorization: `Bearer ${token}` },
       params
     })

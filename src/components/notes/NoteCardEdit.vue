@@ -102,6 +102,7 @@ import { FileText, DollarSign, Lock, Archive, Paperclip, Pin, Loader2 } from 'lu
 import EditorToolbar from './EditorToolbar.vue'
 import TableToolbar from './TableToolbar.vue'
 import MentionsDropdown from './MentionsDropdown.vue'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   note: { type: Object, required: true },
@@ -206,7 +207,7 @@ const checkGrammarInBackground = async () => {
     // OR send HTML if we want accurate "is polish needed" detection.
     // Plain text is safer/faster for just detection.
     const res = await axios.post(
-      'http://localhost:8000/api/project-notes/grammar-check',
+      `${API}/project-notes/grammar-check`,
       { text: trimmed }, 
       { params: { token: props.token } }
     )
@@ -234,7 +235,7 @@ const checkIfPolishNeeded = () => {
 const fetchTeamMembers = async () => {
   try {
     const res = await axios.get(
-      `http://localhost:8000/api/project-notes/${props.note.project_id}/notes/mentions`,
+      `${API}/project-notes/${props.note.project_id}/notes/mentions`,
       { params: { token: props.token } }
     )
     teamMembers.value = res.data
@@ -515,7 +516,7 @@ const onEditorKeydown = (e) => {
 const fetchMentions = async (q) => {
   try {
     const res = await axios.get(
-      `http://localhost:8000/api/project-notes/${props.note.project_id}/notes/mentions`,
+      `${API}/project-notes/${props.note.project_id}/notes/mentions`,
       { params: { q, token: props.token } }
     )
     mentionsList.value = res.data
@@ -605,7 +606,7 @@ const rewriteWithAI = async () => {
   try {
     // Call our backend proxy
     const res = await axios.post(
-      'http://localhost:8000/api/project-notes/grammar-check',
+      `${API}/project-notes/grammar-check`,
       { text: content },
       { params: { token: props.token } }
     )
@@ -654,7 +655,7 @@ const handleFileUpload = async (event) => {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const res = await axios.post('http://localhost:8000/api/uploads/file', fd, {
+      const res = await axios.post(`${API}/uploads/file`, fd, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${props.token}` }
       })
       form.attachment_urls.push({
@@ -741,7 +742,7 @@ const saveNote = async () => {
   try {
     const payload = { ...form }
     const res = await axios.put(
-      `http://localhost:8000/api/project-notes/${props.note.project_id}/notes/${props.note.id}`,
+      `${API}/project-notes/${props.note.project_id}/notes/${props.note.id}`,
       payload,
       { params: { token: props.token } }
     )

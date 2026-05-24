@@ -264,6 +264,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import { useToast } from 'vue-toastification'
+import { API_BASE } from '@/utils/api'
 import {
   Compass, Layers, Activity, HardDrive, ArrowUpRight, Inbox, Sparkles,
   Telescope, FolderOpen, Wind, Loader2,
@@ -281,7 +282,6 @@ const getToken = () => isAdminRoute.value
   ? (localStorage.getItem('admin_token') || localStorage.getItem('user_token'))
   : (localStorage.getItem('user_token') || localStorage.getItem('admin_token'))
 
-const API_BASE = 'http://localhost:8000'
 const STORAGE_QUOTA = 5 * 1024 * 1024 * 1024 // 5 GB
 
 const data = ref({
@@ -854,4 +854,362 @@ watch(() => route.path, fetchOverview)
   .vault-floor { grid-template-columns: repeat(2, 1fr); }
   .hero-title { font-size: 38px; }
 }
+
+/* ============================================================
+   EXTRA ULTRA-MODERN ANIMATIONS (active in both themes)
+   ============================================================ */
+
+/* 1) Hero eyebrow — soft gold shimmer sweep across the chip */
+.hero-eyebrow {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero-eyebrow::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 0%, transparent 35%,
+    rgba(251, 191, 36, 0.35) 50%,
+    transparent 65%, transparent 100%
+  );
+  background-size: 220% 100%;
+  animation: eyebrow-sheen 5s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+@keyframes eyebrow-sheen {
+  0%   { background-position: -120% 0; }
+  100% { background-position: 220% 0; }
+}
+
+/* 2) Hero gauge — pulsing amber halo behind the SVG */
+.hero-gauge {
+  position: relative;
+}
+.hero-gauge::before {
+  content: '';
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35);
+  animation: gauge-halo 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes gauge-halo {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.35); }
+  50%      { box-shadow: 0 0 0 14px rgba(245, 158, 11, 0); }
+}
+
+/* 3) Pulse dots — each gets its own breathing halo */
+.pulse-dot::after {
+  content: '';
+  position: absolute; inset: -4px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 0 currentColor;
+  animation: pulse-dot-halo 2.4s ease-in-out infinite;
+  pointer-events: none;
+  opacity: 0.55;
+}
+@keyframes pulse-dot-halo {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55); }
+  50%      { box-shadow: 0 0 0 7px rgba(245, 158, 11, 0); }
+}
+
+/* 4) Vault tile — diagonal shine that sweeps on hover */
+.vault-tile {
+  isolation: isolate;
+}
+.vault-tile::after {
+  content: '';
+  position: absolute; top: 0; left: -150%;
+  width: 60%; height: 100%;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+  pointer-events: none;
+  transition: left 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 0;
+}
+.vault-tile:hover::after,
+.vault-tile:focus-visible::after {
+  left: 160%;
+}
+
+/* 5) Atlas card — animated warm border glow on hover */
+.atlas-card {
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+}
+.atlas-card:hover {
+  border-color: rgba(245, 158, 11, 0.22);
+  box-shadow:
+    0 18px 40px -16px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(245, 158, 11, 0.08) inset;
+}
+
+/* 6) Mixed-row arrow — tiny rotate-and-glow on hover */
+.mixed-row:hover .mr-arrow {
+  filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.55));
+}
+
+/* Respect reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .hero-eyebrow::before,
+  .hero-gauge::before,
+  .pulse-dot::after,
+  .atlas-orb,
+  .atlas-mark,
+  .vault-tile::after { animation: none !important; }
+}
+
+/* ============================================================
+   LIGHT THEME OVERRIDES
+   Brand palette preserved end-to-end: amber #f59e0b, gold #fbbf24,
+   orange #f97316, deep-amber #d97706, teal-blue #38bdf8 (kept for
+   "shared/uploaded" pulse-dot variant the user wants preserved).
+   Only neutral surfaces and text colors invert for cream readability.
+   ============================================================ */
+[data-theme="light"] .atlas-root { color: var(--text-primary); }
+
+/* Backdrop — soft cream wash with warm orbs */
+[data-theme="light"] .atlas-base {
+  background: radial-gradient(ellipse at top right, #fff4dc 0%, #fbeed3 45%, #faf7f0 100%);
+}
+[data-theme="light"] .atlas-grain {
+  opacity: 0.30;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(217, 119, 6, 0.045) 1px, transparent 1px),
+    radial-gradient(circle at 80% 70%, rgba(180, 83, 9, 0.025) 1px, transparent 1px);
+}
+[data-theme="light"] .atlas-orb { opacity: 0.55; filter: blur(90px); }
+[data-theme="light"] .atlas-orb-1 { background: radial-gradient(circle, rgba(245, 158, 11, 0.35), transparent 70%); }
+[data-theme="light"] .atlas-orb-2 { background: radial-gradient(circle, rgba(249, 115, 22, 0.30), transparent 70%); }
+[data-theme="light"] .atlas-orb-3 { background: radial-gradient(circle, rgba(217, 119, 6, 0.20), transparent 70%); }
+[data-theme="light"] .atlas-mark { opacity: 0.12; }
+
+/* ── HERO ── */
+[data-theme="light"] .atlas-hero {
+  border-bottom: 1px solid rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .hero-eyebrow {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  color: #b45309;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+[data-theme="light"] .hero-title {
+  background: linear-gradient(120deg, #1a1410 25%, #d97706 65%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+[data-theme="light"] .hero-sub { color: #4a3a28; }
+
+[data-theme="light"] .hero-pill {
+  background: rgba(255, 250, 240, 0.75);
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  color: var(--text-primary);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+[data-theme="light"] .hero-pill :deep(svg) { color: #b45309; }
+[data-theme="light"] .hero-pill strong { color: var(--text-primary); }
+
+/* Gauge */
+[data-theme="light"] .gauge-svg circle:first-of-type { stroke: rgba(217, 119, 6, 0.18); }
+[data-theme="light"] .gauge-pct { fill: var(--text-primary); }
+[data-theme="light"] .gauge-label { fill: #6b5840; }
+[data-theme="light"] .gauge-foot { color: var(--text-primary); }
+[data-theme="light"] .gauge-foot .opacity-50 { color: #6b5840; }
+
+/* ── VAULT TILES ── */
+[data-theme="light"] .vault-tile {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.85) 0%, rgba(255, 250, 240, 0.65) 100%);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  box-shadow:
+    0 12px 30px -16px rgba(120, 75, 20, 0.22),
+    0 1px 0 rgba(255, 255, 255, 0.7) inset;
+}
+[data-theme="light"] .vault-tile::before {
+  background: linear-gradient(180deg, rgba(217, 119, 6, 0.08), transparent 50%);
+}
+[data-theme="light"] .vault-tile:hover,
+[data-theme="light"] .vault-tile:focus-visible {
+  border-color: rgba(217, 119, 6, 0.55);
+  box-shadow:
+    0 22px 50px -18px rgba(120, 75, 20, 0.36),
+    0 0 0 1px rgba(217, 119, 6, 0.18) inset;
+}
+[data-theme="light"] .vault-tile::after {
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(217, 119, 6, 0.18) 50%,
+    transparent 100%
+  );
+}
+
+/* Stacked papers — warm cream tones for the depth layers */
+[data-theme="light"] .vt-paper {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(217, 119, 6, 0.20);
+}
+/* .vt-paper-front keeps the amber gradient — brand palette */
+
+[data-theme="light"] .vt-eyebrow { color: #b45309; }
+[data-theme="light"] .vt-title { color: var(--text-primary); }
+[data-theme="light"] .vt-count {
+  background: linear-gradient(180deg, #92400e, #d97706);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .vt-suffix { color: #6b5840; }
+[data-theme="light"] .vt-recent li { color: #4a3a28; }
+[data-theme="light"] .vt-bullet {
+  background: #d97706;
+  box-shadow: 0 0 6px rgba(217, 119, 6, 0.5);
+}
+[data-theme="light"] .vt-empty { color: #8a6f4a; }
+[data-theme="light"] .vt-empty :deep(svg) { color: #b45309; }
+
+[data-theme="light"] .vt-cta {
+  border-top: 1px dashed rgba(217, 119, 6, 0.30);
+  color: #b45309;
+}
+[data-theme="light"] .vault-tile:hover .vt-cta { color: #92400e; }
+
+/* ── ATLAS CARDS (Pulse + Forge + Mixed) ── */
+[data-theme="light"] .atlas-card {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.78), rgba(255, 250, 240, 0.55));
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  box-shadow:
+    0 12px 30px -16px rgba(120, 75, 20, 0.22),
+    0 1px 0 rgba(255, 255, 255, 0.7) inset;
+}
+[data-theme="light"] .atlas-card:hover {
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow:
+    0 20px 44px -18px rgba(120, 75, 20, 0.32),
+    0 0 0 1px rgba(217, 119, 6, 0.14) inset;
+}
+[data-theme="light"] .ac-head {
+  border-bottom: 1px solid rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .ac-icon {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.35);
+}
+[data-theme="light"] .ac-head h4 { color: var(--text-primary); }
+[data-theme="light"] .ac-head p { color: #6b5840; }
+[data-theme="light"] .ac-tag {
+  background: rgba(217, 119, 6, 0.12);
+  border: 1px solid rgba(217, 119, 6, 0.32);
+  color: #92400e;
+}
+
+/* Pulse stream */
+[data-theme="light"] .pulse-loading { color: #b45309; }
+[data-theme="light"] .pulse-empty { color: #6b5840; }
+[data-theme="light"] .pulse-dot {
+  border: 3px solid #faf7f0;
+  box-shadow:
+    0 0 0 1px rgba(217, 119, 6, 0.45),
+    0 0 10px rgba(217, 119, 6, 0.40);
+}
+/* dot tones — keep brand colors vivid on cream too */
+[data-theme="light"] .pulse-dot.dot-amber {
+  background: #d97706;
+  box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.45), 0 0 10px rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .pulse-dot.dot-green {
+  background: #059669;
+  box-shadow: 0 0 0 1px rgba(5, 150, 105, 0.45), 0 0 10px rgba(5, 150, 105, 0.40);
+}
+[data-theme="light"] .pulse-dot.dot-red {
+  background: #dc2626;
+  box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.45), 0 0 10px rgba(220, 38, 38, 0.40);
+}
+[data-theme="light"] .pulse-dot.dot-blue {
+  background: #0ea5e9;
+  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.45), 0 0 10px rgba(14, 165, 233, 0.40);
+}
+[data-theme="light"] .pulse-rail {
+  background: linear-gradient(180deg, rgba(217, 119, 6, 0.40), rgba(217, 119, 6, 0.05));
+}
+[data-theme="light"] .pulse-line { color: var(--text-primary); }
+[data-theme="light"] .pulse-line strong { color: var(--text-primary); }
+[data-theme="light"] .pulse-line span { color: #4a3a28; }
+[data-theme="light"] .pulse-target { color: #b45309 !important; }
+[data-theme="light"] .pulse-time { color: #8a6f4a; }
+/* .pulse-kind-pill keeps amber/orange gradient — readable on cream because the
+   chip itself is gold-filled with dark text */
+
+/* Forge buttons */
+[data-theme="light"] .forge-btn {
+  background: rgba(255, 250, 240, 0.7);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  color: var(--text-primary);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+[data-theme="light"] .forge-btn:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(217, 119, 6, 0.10));
+  border-color: rgba(217, 119, 6, 0.50);
+}
+[data-theme="light"] .forge-btn :deep(svg:first-of-type) { color: #b45309; }
+[data-theme="light"] .forge-arrow { color: #8a6f4a; }
+[data-theme="light"] .forge-btn:hover .forge-arrow { color: #92400e; }
+[data-theme="light"] .forge-glow {
+  background: radial-gradient(80px 60px at var(--mx, 50%) var(--my, 50%), rgba(217, 119, 6, 0.22), transparent 60%);
+}
+
+/* Filter chips */
+[data-theme="light"] .filter-chip {
+  background: rgba(255, 250, 240, 0.65);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  color: #6b4f24;
+}
+[data-theme="light"] .filter-chip:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #92400e;
+}
+[data-theme="light"] .filter-chip.active {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  border-color: #b45309;
+  color: #fff8e7;
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.32);
+}
+
+/* Mixed rows */
+[data-theme="light"] .mixed-row::after {
+  background: rgba(217, 119, 6, 0.12);
+}
+[data-theme="light"] .mixed-row:hover {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.14), transparent);
+}
+[data-theme="light"] .mr-title { color: var(--text-primary); }
+[data-theme="light"] .mr-sub { color: #6b5840; }
+[data-theme="light"] .mr-status { color: var(--text-primary); }
+[data-theme="light"] .mr-time { color: #8a6f4a; }
+[data-theme="light"] .mr-arrow { color: #b45309; }
+/* status dots keep their semantic colors; tweak the default amber for cream contrast */
+[data-theme="light"] .mr-status-dot { background: #d97706; box-shadow: 0 0 5px rgba(217, 119, 6, 0.5); }
+[data-theme="light"] .mr-status-dot.status-active    { background: #059669; box-shadow: 0 0 5px rgba(5, 150, 105, 0.5); }
+[data-theme="light"] .mr-status-dot.status-expired   { background: #ea580c; }
+[data-theme="light"] .mr-status-dot.status-approved  { background: #d97706; }
+[data-theme="light"] .mr-status-dot.status-completed { background: #059669; }
+[data-theme="light"] .mr-status-dot.status-rejected  { background: #dc2626; }
+
+[data-theme="light"] .mixed-empty { color: #6b5840; }
+
+/* Scrollbar — deeper amber on cream */
+[data-theme="light"] .custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(217, 119, 6, 0.55);
+}
+
+/* Reduced motion already handled above */
 </style>

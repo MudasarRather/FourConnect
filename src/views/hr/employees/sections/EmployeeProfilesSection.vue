@@ -145,6 +145,7 @@ import LifecycleBadge from '../../../../components/hr/LifecycleBadge.vue'
 import HrInput from '../../../../components/hr/forms/HrInput.vue'
 import HrSelect from '../../../../components/hr/forms/HrSelect.vue'
 import axios from 'axios'
+import { API } from '@/utils/api'
 
 const router = useRouter()
 const emit = defineEmits(['open-profile'])
@@ -219,7 +220,7 @@ const fetchAll = async () => {
     const search = q.value.trim()
     if (search) params.search = search
     if (filterState.value) params.lifecycle_state = filterState.value
-    const res = await axios.get('http://localhost:8000/api/hr/employees/', {
+    const res = await axios.get(`${API}/hr/employees/`, {
       headers: { Authorization: `Bearer ${token}` },
       params,
     })

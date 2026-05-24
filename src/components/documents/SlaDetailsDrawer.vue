@@ -281,6 +281,7 @@ import { Clock, X, Edit2, Trash2, FileText, Check, XSquare, CheckCircle, AlertCi
 import { defineProps, defineEmits, ref } from 'vue'
 import axios from 'axios'
 import { useToast } from '../../composables/useToast'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   isOpen: Boolean,
@@ -306,7 +307,7 @@ const handleDeleteClick = async () => {
     
     try {
         const token = props.isAdminMode ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
-        await axios.delete(`http://localhost:8000/api/sla/${props.sla.id}`, {
+        await axios.delete(`${API}/sla/${props.sla.id}`, {
             headers: { Authorization: `Bearer ${token}` }
         })
         success("SLA Deleted")

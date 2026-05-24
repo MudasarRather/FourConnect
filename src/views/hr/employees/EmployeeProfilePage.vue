@@ -535,6 +535,7 @@ import LifecycleActionModal from '../../../components/hr/LifecycleActionModal.vu
 import { useEmployees, useHrReference } from '../../../composables/useEmployees'
 import { useToast } from '../../../composables/useToast'
 import { useSpotlight } from '../../../composables/useSpotlight'
+import { API } from '@/utils/api'
 
 // ─── Small inline display components ───
 const DataPair = {
@@ -814,7 +815,7 @@ const searchUsers = async (term) => {
   if (!term || term.length < 2) return []
   try {
     const token = localStorage.getItem('admin_token') || localStorage.getItem('user_token')
-    const res = await axios.get('http://localhost:8000/api/auth/admin/users', {
+    const res = await axios.get(`${API}/auth/admin/users`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     const t = term.toLowerCase()

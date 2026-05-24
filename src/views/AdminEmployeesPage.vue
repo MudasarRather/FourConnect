@@ -97,6 +97,7 @@ import { ref, onMounted } from 'vue'
 import axios from 'axios'
 import { UserPlus, Plus, Loader2, Users } from 'lucide-vue-next'
 import { useToast } from '../composables/useToast'
+import { API } from '@/utils/api'
 
 const { success, error } = useToast()
 const employees = ref([])
@@ -112,7 +113,7 @@ const fetchEmployees = async () => {
   isLoading.value = true
   try {
     const token = localStorage.getItem('admin_token')
-    const response = await axios.get('http://localhost:8000/api/admin/employees/', {
+    const response = await axios.get(`${API}/admin/employees/`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     employees.value = response.data
@@ -127,7 +128,7 @@ const addEmployee = async () => {
   isAdding.value = true
   try {
     const token = localStorage.getItem('admin_token')
-    await axios.post('http://localhost:8000/api/admin/employees/', {
+    await axios.post(`${API}/admin/employees/`, {
       employee_code: newEmployee.value.code,
       phone: newEmployee.value.phone
     }, {

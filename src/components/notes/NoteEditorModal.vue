@@ -132,6 +132,7 @@
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import { X, Paperclip, FileText, DollarSign, Lock, MoreHorizontal } from 'lucide-vue-next'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   note: { type: Object, default: null },
@@ -206,7 +207,7 @@ const handleFileUpload = async (event) => {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      const res = await axios.post('http://localhost:8000/api/uploads/file', fd, {
+      const res = await axios.post(`${API}/uploads/file`, fd, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${props.token}` }
       })
       form.attachment_urls.push({
@@ -237,13 +238,13 @@ const saveNote = async () => {
   try {
     if (isEditing.value) {
       await axios.put(
-        `http://localhost:8000/api/project-notes/${props.projectId}/notes/${props.note.id}`,
+        `${API}/project-notes/${props.projectId}/notes/${props.note.id}`,
         payload,
         { params: { token: props.token } }
       )
     } else {
       await axios.post(
-        `http://localhost:8000/api/project-notes/${props.projectId}/notes`,
+        `${API}/project-notes/${props.projectId}/notes`,
         payload,
         { params: { token: props.token } }
       )

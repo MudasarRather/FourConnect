@@ -507,6 +507,7 @@ import AnimatedNumber from '../../components/ui/AnimatedNumber.vue'
 import HandoverDetailsDrawer from '../../components/documents/HandoverDetailsDrawer.vue'
 import RejectionModal from '../../components/documents/RejectionModal.vue'
 import { generateHandoverPdf } from '../../utils/handoverPdfGenerator'
+import { API } from '@/utils/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -714,7 +715,7 @@ const handleRejectionConfirm = async (reason) => {
 const generatePdf = async (dpr) => {
   try {
     const token = isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
-    const res = await axios.get(`http://localhost:8000/api/handover/${dpr.id}`, {
+    const res = await axios.get(`${API}/handover/${dpr.id}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     generateHandoverPdf(res.data)
@@ -736,7 +737,7 @@ const updateStatus = async (id, status, reason = null) => {
       if (payload[key] === '') payload[key] = null
     })
     
-    await axios.put(`http://localhost:8000/api/handover/${id}`, payload, { headers: { Authorization: `Bearer ${getToken()}` } })
+    await axios.put(`${API}/handover/${id}`, payload, { headers: { Authorization: `Bearer ${getToken()}` } })
     await fetchData()
   } catch (e) {
     console.error('Status update failed:', e)
@@ -746,10 +747,10 @@ const updateStatus = async (id, status, reason = null) => {
 const fetchData = async () => {
   const token = getToken(); if (!token) return
   await Promise.allSettled([
-    axios.get('http://localhost:8000/api/handover/?status_filter=Draft', { headers: { Authorization: `Bearer ${token}` } }).then(r => draftDprs.value = r.data).catch(() => {}),
-    axios.get('http://localhost:8000/api/handover/?status_filter=Approved', { headers: { Authorization: `Bearer ${token}` } }).then(r => approvedDprs.value = r.data).catch(() => {}),
-    axios.get('http://localhost:8000/api/handover/?status_filter=Rejected', { headers: { Authorization: `Bearer ${token}` } }).then(r => rejectedDprs.value = r.data).catch(() => {}),
-    axios.get('http://localhost:8000/api/handover/?status_filter=Internal Review', { headers: { Authorization: `Bearer ${token}` } }).then(r => pendingDprs.value = r.data).catch(() => {})
+    axios.get(`${API}/handover/?status_filter=Draft`, { headers: { Authorization: `Bearer ${token}` } }).then(r => draftDprs.value = r.data).catch(() => {}),
+    axios.get(`${API}/handover/?status_filter=Approved`, { headers: { Authorization: `Bearer ${token}` } }).then(r => approvedDprs.value = r.data).catch(() => {}),
+    axios.get(`${API}/handover/?status_filter=Rejected`, { headers: { Authorization: `Bearer ${token}` } }).then(r => rejectedDprs.value = r.data).catch(() => {}),
+    axios.get(`${API}/handover/?status_filter=Internal Review`, { headers: { Authorization: `Bearer ${token}` } }).then(r => pendingDprs.value = r.data).catch(() => {})
   ])
 }
 
@@ -757,7 +758,7 @@ let poll = null
 onMounted(async () => {
   const token = getToken()
   if (token) {
-    try { const res = await axios.get('http://localhost:8000/api/auth/me', { headers: { Authorization: `Bearer ${token}` } }); userProfile.value = res.data } catch (e) {}
+    try { const res = await axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } }); userProfile.value = res.data } catch (e) {}
     await fetchData()
     poll = setInterval(fetchData, 3000)
   }

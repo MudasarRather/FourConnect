@@ -72,6 +72,7 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { Users, X, Plus, Search, Loader2, Check } from 'lucide-vue-next'
 import axios from 'axios'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
@@ -106,7 +107,7 @@ const fetchUsers = async () => {
   loading.value = true
   try {
     const token = localStorage.getItem('user_token') || localStorage.getItem('admin_token')
-    const res = await axios.get('http://localhost:8000/api/tasks/users/list', {
+    const res = await axios.get(`${API}/tasks/users/list`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     users.value = res.data
@@ -390,4 +391,54 @@ onMounted(fetchUsers)
   opacity: 0;
   transform: translateY(-5px);
 }
+
+/* ═════════ LIGHT THEME — preserves yellow accent palette ═════════ */
+[data-theme="light"] .header-main { color: var(--text-secondary); }
+[data-theme="light"] .header-main .icon { color: #b45309; }
+[data-theme="light"] .participant-count {
+  background: rgba(250, 204, 21, 0.18);
+  color: #92400e;
+}
+[data-theme="light"] .selection-grid {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .participant-chip {
+  background: rgba(40, 25, 10, 0.05);
+  border-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .chip-avatar,
+[data-theme="light"] .chip-placeholder { background: #facc15; color: #1a0f00; }
+[data-theme="light"] .chip-name { color: var(--text-primary); }
+[data-theme="light"] .remove-btn { color: rgba(60, 45, 30, 0.50); }
+[data-theme="light"] .remove-btn:hover { color: #b91c1c; }
+
+[data-theme="light"] .add-participant-btn {
+  background: rgba(250, 204, 21, 0.12);
+  border: 1px dashed rgba(217, 119, 6, 0.40);
+  color: #b45309;
+}
+[data-theme="light"] .add-participant-btn:hover {
+  background: rgba(250, 204, 21, 0.22);
+}
+
+/* Dropdown — was solid #1c1c1e, now cream glass */
+[data-theme="light"] .dropdown-menu {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.95), rgba(252, 240, 220, 0.85));
+  border: 1px solid rgba(217, 119, 6, 0.24);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow: 0 20px 50px rgba(40, 25, 10, 0.25);
+}
+[data-theme="light"] .search-box { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .search-box input { color: var(--text-primary); }
+[data-theme="light"] .search-box input::placeholder { color: rgba(26, 20, 16, 0.40); }
+[data-theme="light"] .user-row:hover { background: rgba(217, 119, 6, 0.08); }
+[data-theme="light"] .user-row.is-selected { background: rgba(250, 204, 21, 0.14); }
+[data-theme="light"] .row-avatar,
+[data-theme="light"] .row-placeholder { background: rgba(40, 25, 10, 0.10); color: #b45309; }
+[data-theme="light"] .row-name { color: var(--text-primary); }
+[data-theme="light"] .row-email { color: var(--text-tertiary); }
+[data-theme="light"] .row-check { color: #b45309; }
+[data-theme="light"] .list-status { color: var(--text-secondary); }
 </style>

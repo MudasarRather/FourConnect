@@ -3,8 +3,9 @@
 // CRUD actions. Pagination follows the standard { items, total, page, limit, total_pages }.
 import { ref, computed } from 'vue'
 import axios from 'axios'
+import { API } from '@/utils/api'
 
-const API_BASE = 'http://localhost:8000/api/hr/recruitment'
+const API_BASE = `${API}/hr/recruitment`
 
 const authHeader = () => {
   const token = localStorage.getItem('admin_token') || localStorage.getItem('user_token')

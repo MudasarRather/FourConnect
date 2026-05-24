@@ -177,7 +177,7 @@
                     <span>{{ alloc.percentage }}% ({{ formatCurrency(alloc.amount, expense.currency) }})</span>
                  </div>
               </div>
-              <div class="empty-state" v-else style="font-size:13px; color:rgba(255,255,255,0.4); font-style:italic;">
+              <div class="empty-state empty-state-italic" v-else>
                  100% allocated to primary category
               </div>
             </div>
@@ -199,19 +199,19 @@
             <div class="detail-section warning-section" v-if="(expense.is_reversal || expense.expense_status?.toLowerCase() === 'reversed')">
                <h3>Reversal Details</h3>
                <div class="notes-box warning-box">
-                  <div class="detail-grid" style="margin-top:0;">
+                  <div class="detail-grid reversal-grid">
                     <div class="field">
                       <label>Reversal Type</label>
-                      <div class="val" style="color:#f59e0b; font-weight:700;">{{ expense.reversal_type || 'FULL' }}</div>
+                      <div class="val val-amber">{{ expense.reversal_type || 'FULL' }}</div>
                     </div>
                     <div class="field">
                       <label>Reversed Amount</label>
-                      <div class="val font-mono" style="color:#ef4444;">-{{ formatCurrency(expense.reversed_amount || expense.amount, expense.currency) }}</div>
+                      <div class="val val-danger font-mono">-{{ formatCurrency(expense.reversed_amount || expense.amount, expense.currency) }}</div>
                     </div>
                   </div>
-                  <div v-if="expense.reversal_reason || expense.notes" style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(245,158,11,0.1);">
-                    <strong style="font-size:11px; color:rgba(255,180,0,0.8); text-transform:uppercase;">Reason:</strong>
-                    <p style="margin-top:4px; font-size:13px; color:rgba(255,255,255,0.8);">{{ expense.reversal_reason || expense.notes }}</p>
+                  <div v-if="expense.reversal_reason || expense.notes" class="reversal-reason-block">
+                    <strong class="reversal-reason-label">Reason:</strong>
+                    <p class="reversal-reason-text">{{ expense.reversal_reason || expense.notes }}</p>
                   </div>
                </div>
             </div>
@@ -406,7 +406,7 @@ const handleSubmitDraft = async () => {
         delete payload.updated_by
         delete payload.project
         
-        await axios.put(`http://localhost:8000/api/expenses/${props.expense.id}`, payload, {
+        await axios.put(`${API}/expenses/${props.expense.id}`, payload, {
              headers: { Authorization: `Bearer ${token}` }
         })
         
@@ -437,7 +437,7 @@ const handleApproveClick = async () => {
     isApproving.value = true
     try {
         const token = isAdmin.value ? (localStorage.getItem('admin_token') || localStorage.getItem('user_token')) : (localStorage.getItem('user_token') || localStorage.getItem('admin_token'))
-        await axios.post(`http://localhost:8000/api/expenses/${props.expense.id}/approve`, {}, {
+        await axios.post(`${API}/expenses/${props.expense.id}/approve`, {}, {
              headers: { Authorization: `Bearer ${token}` }
         })
         
@@ -462,7 +462,7 @@ const handleRejectConfirm = async (reason) => {
     isRejecting.value = true
     try {
         const token = isAdmin.value ? (localStorage.getItem('admin_token') || localStorage.getItem('user_token')) : (localStorage.getItem('user_token') || localStorage.getItem('admin_token'))
-        await axios.post(`http://localhost:8000/api/expenses/${props.expense.id}/reject`, 
+        await axios.post(`${API}/expenses/${props.expense.id}/reject`, 
           { reason: reason }, 
           { headers: { Authorization: `Bearer ${token}` } }
         )
@@ -489,7 +489,7 @@ const reversalPreview = ref(null)
 const openReverseModal = async () => {
     try {
         const token = isAdmin.value ? (localStorage.getItem('admin_token') || localStorage.getItem('user_token')) : (localStorage.getItem('user_token') || localStorage.getItem('admin_token'))
-        const { data } = await axios.get(`http://localhost:8000/api/expenses/${props.expense.id}/reversal-preview`, {
+        const { data } = await axios.get(`${API}/expenses/${props.expense.id}/reversal-preview`, {
             headers: { Authorization: `Bearer ${token}` }
         })
         reversalPreview.value = data
@@ -504,7 +504,7 @@ const handleReverseConfirm = async (formData) => {
     isReversing.value = true
     try {
         const token = isAdmin.value ? (localStorage.getItem('admin_token') || localStorage.getItem('user_token')) : (localStorage.getItem('user_token') || localStorage.getItem('admin_token'))
-        await axios.post(`http://localhost:8000/api/expenses/${props.expense.id}/reverse`, formData, {
+        await axios.post(`${API}/expenses/${props.expense.id}/reverse`, formData, {
             headers: { Authorization: `Bearer ${token}` }
         })
         toastSuccess('Expense reversed successfully')
@@ -545,7 +545,7 @@ const handleDeleteClick = async () => {
 
     try {
         const token = isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
-        await axios.delete(`http://localhost:8000/api/expenses/${props.expense.id}`, {
+        await axios.delete(`${API}/expenses/${props.expense.id}`, {
              headers: { Authorization: `Bearer ${token}` }
         })
         
@@ -602,9 +602,9 @@ const resolveFileUrl = (url) => {
   // Already a full URL
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('blob:')) return url
   // Root-relative path (e.g., /storage/expenses/xxx.pdf)
-  if (url.startsWith('/')) return `http://localhost:8000${url}`
+  if (url.startsWith('/')) return `${API_BASE}${url}`
   // Relative path (e.g., storage/expenses/xxx.pdf)
-  return `http://localhost:8000/${url}`
+  return `${API_BASE}/${url}`
 }
 
 const openAttachment = (file) => {
@@ -622,6 +622,7 @@ const getStatusIcon = (status) => {
 }
 
 import { generateExpenseReceipt } from '../../utils/expenseReceiptGenerator'
+import { API, API_BASE } from '@/utils/api'
 
 const getCurrentUserFromToken = () => {
     try {
@@ -761,7 +762,31 @@ const handleDownloadReceipt = () => {
 .status-bar.submitted, .status-bar.pending { background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.2); color: #fbbf24; }
 .status-bar.approved { background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.2); color: #4ade80; }
 .status-bar.rejected { background: rgba(248, 113, 113, 0.1); border-color: rgba(248, 113, 113, 0.2); color: #f87171; }
+.status-bar.reversed { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.22); color: #f59e0b; }
 .status-bar .date { margin-left: auto; font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.4); text-transform: none; }
+
+/* Reversal section — themed .val variants (replace inline styles) */
+.reversal-grid { margin-top: 0; }
+.val-amber { color: #f59e0b; font-weight: 700; }
+.val-danger { color: #ef4444; }
+.reversal-reason-block {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(245, 158, 11, 0.10);
+}
+.reversal-reason-label {
+  font-size: 11px;
+  color: rgba(255, 180, 0, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+.reversal-reason-text {
+  margin-top: 4px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.80);
+  line-height: 1.5;
+}
 
 /* Content */
 .drawer-content {
@@ -998,7 +1023,22 @@ const handleDownloadReceipt = () => {
   border-color: rgba(220, 38, 38, 0.28);
   color: #b91c1c;
 }
+/* Reversed — subtle transparency just like dark, but warm amber on cream */
+[data-theme="light"] .status-bar.reversed {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: #b45309;
+}
 [data-theme="light"] .status-bar .date { color: #6b5840; }
+
+/* Reversal section .val variants — deeper amber/red on cream for readability */
+[data-theme="light"] .val-amber { color: #b45309; }
+[data-theme="light"] .val-danger { color: #b91c1c; }
+[data-theme="light"] .reversal-reason-block {
+  border-top-color: rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .reversal-reason-label { color: #b45309; }
+[data-theme="light"] .reversal-reason-text { color: var(--text-primary); }
 
 /* Section labels */
 [data-theme="light"] .detail-section h3 {
@@ -1154,4 +1194,12 @@ const handleDownloadReceipt = () => {
   background: rgba(217, 119, 6, 0.20);
   border-color: #d97706;
 }
+
+/* Empty-state inline-style refactor — themed both modes */
+.empty-state-italic {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  font-style: italic;
+}
+[data-theme="light"] .empty-state-italic { color: var(--text-secondary); }
 </style>

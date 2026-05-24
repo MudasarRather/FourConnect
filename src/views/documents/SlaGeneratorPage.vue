@@ -361,7 +361,7 @@ const updateForm = (key, value) => {
 
 const fetchProjects = async () => {
   try {
-    const response = await axios.get('http://localhost:8000/api/projects/', {
+    const response = await axios.get(`${API}/projects/`, {
       headers: { Authorization: `Bearer ${token.value}` },
       params: { limit: 100 } // fetch many to ensure we have options
     })
@@ -385,7 +385,7 @@ const saveDraft = async (silent = false, statusOverwrite = null) => {
     if(payload.end_date === '') payload.end_date = null;
 
     // if (!silent) info("Saving draft...") // Removed as per request
-    const res = await axios.post('http://localhost:8000/api/sla/', payload, {
+    const res = await axios.post(`${API}/sla/`, payload, {
       headers: { Authorization: `Bearer ${token.value}` }
     })
     if (!silent) {
@@ -433,6 +433,7 @@ onMounted(() => {
 
 // Auto-save to local storage on any change
 import { watch } from 'vue'
+import { API } from '@/utils/api'
 watch(form, (newVal) => {
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newVal))
 }, { deep: true })

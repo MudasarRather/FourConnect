@@ -42,6 +42,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { UploadCloud, FileText, RefreshCw, X } from 'lucide-vue-next'
+import { API_BASE } from '@/utils/api'
 
 const props = defineProps({
   value:     { type: String, default: '' },
@@ -94,7 +95,7 @@ const absoluteUrl = computed(() => {
   if (!v) return ''
   if (/^https?:\/\//i.test(v)) return v
   // Relative paths returned by /api/uploads → resolve against backend
-  return `http://localhost:8000${v.startsWith('/') ? '' : '/'}${v}`
+  return `${API_BASE}${v.startsWith('/') ? '' : '/'}${v}`
 })
 </script>
 

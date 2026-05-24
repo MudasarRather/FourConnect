@@ -157,6 +157,7 @@ import { ref, computed, onMounted, reactive } from 'vue'
 import axios from 'axios'
 import { Save, RotateCcw, Loader2, Upload, Trash2 } from 'lucide-vue-next'
 import { useToast } from '../../composables/useToast'
+import { API, API_BASE } from '@/utils/api'
 
 const { success, error } = useToast()
 
@@ -214,7 +215,7 @@ const fetchProfile = async () => {
   errorMsg.value = ''
   try {
     const token = localStorage.getItem('user_token')
-    const res = await axios.get('http://localhost:8000/api/auth/me', {
+    const res = await axios.get(`${API}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     Object.keys(form).forEach(k => {
@@ -240,7 +241,7 @@ const save = async () => {
   errorMsg.value = ''
   try {
     const token = localStorage.getItem('user_token')
-    const res = await axios.patch('http://localhost:8000/api/auth/me', payload, {
+    const res = await axios.patch(`${API}/auth/me`, payload, {
       headers: { Authorization: `Bearer ${token}` }
     })
     Object.keys(form).forEach(k => {
@@ -272,12 +273,12 @@ const onFileChange = async (e) => {
     const token = localStorage.getItem('user_token')
     const fd = new FormData()
     fd.append('file', file)
-    const res = await axios.post('http://localhost:8000/api/uploads/', fd, {
+    const res = await axios.post(`${API}/uploads/`, fd, {
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
     })
     const url = res.data.url || res.data.file_url || res.data.path
     if (!url) throw new Error('Upload response missing URL')
-    form.avatar_url = url.startsWith('http') ? url : `http://localhost:8000${url}`
+    form.avatar_url = url.startsWith('http') ? url : `${API_BASE}${url}`
   } catch (err) {
     error('Image upload failed')
   } finally {

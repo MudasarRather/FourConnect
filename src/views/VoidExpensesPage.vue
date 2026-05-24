@@ -140,10 +140,10 @@ import { useRoute } from 'vue-router'
 import axios from 'axios'
 import { RotateCcw, Search, Loader2, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import ExpenseDetailsDrawer from '../components/expenses/ExpenseDetailsDrawer.vue'
+import { API } from '@/utils/api'
 
 const route = useRoute()
 const isAdmin = computed(() => route.path.startsWith('/admin'))
-const API = 'http://localhost:8000/api'
 
 const getHeaders = () => {
   const token = isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
@@ -495,22 +495,185 @@ onUnmounted(() => {
   .feed-reason { display: none; }
 }
 
-/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════
+   Warm cream surfaces, amber/gold/orange accents preserved. Red/teal stay
+   as semantic accents (rejection / partial / pending). The brand palette
+   — yellow, orange, golden, teal — is unchanged; only neutral surfaces
+   and text colors invert for cream readability. */
 [data-theme="light"] .void-page-root { color: var(--text-primary); }
-[data-theme="light"] .header-text label { color: var(--text-tertiary); }
-[data-theme="light"] .header-text h1 { color: var(--text-primary); }
-[data-theme="light"] .overview-glass-card,
-[data-theme="light"] .glass-row {
-  background: rgba(255, 250, 240, 0.85);
-  border-color: rgba(40, 25, 10, 0.10);
-  color: var(--text-primary);
+
+/* ── Overview panel (left sticky card) ── */
+[data-theme="light"] .overview-glass-card {
+  background: rgba(255, 250, 240, 0.78);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  box-shadow:
+    0 20px 50px -18px rgba(120, 75, 20, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55);
 }
-[data-theme="light"] .stat-label-text { color: #6b5840; }
-[data-theme="light"] .stat-number { color: var(--text-primary); }
-[data-theme="light"] .feed-amount { color: var(--text-primary); }
-[data-theme="light"] .feed-date { color: var(--text-secondary); }
-[data-theme="light"] .feed-reason { color: var(--text-tertiary); }
-[data-theme="light"] .void-stripe {
-  background: rgba(220, 38, 38, 0.45);
+
+[data-theme="light"] .header-icon-box {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.28), rgba(220, 38, 38, 0.14));
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #b45309;
+  box-shadow: 0 8px 22px rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .header-titles label { color: #6b5840; }
+[data-theme="light"] .header-titles h1 {
+  background: linear-gradient(135deg, #1a1410 30%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .overview-desc { color: #4a3a28; }
+
+/* Stat showcase */
+[data-theme="light"] .stat-value {
+  background: linear-gradient(135deg, #92400e 20%, #d97706 80%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .stat-label { color: #6b5840; }
+
+/* Bar info + tracks */
+[data-theme="light"] .bar-info { color: var(--text-primary); font-weight: 600; }
+[data-theme="light"] .bar-info span:last-child { color: #b45309; }
+[data-theme="light"] .bar-track {
+  background: rgba(40, 25, 10, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.14);
+}
+/* bar fills (full=red, partial=amber) already warm — leave as-is */
+
+/* Filters divider */
+[data-theme="light"] .filters-section { border-top-color: rgba(217, 119, 6, 0.18); }
+
+/* Search box — transparent on cream, warm border, gold focus glow.
+   `!important` defeats theme-light-rescue.css which paints .search-box input cream. */
+[data-theme="light"] .search-box {
+  background: transparent !important;
+  border: 1px solid rgba(217, 119, 6, 0.32);
+  box-shadow: none;
+}
+[data-theme="light"] .search-box:focus-within {
+  background: transparent !important;
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .search-box input {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .search-box input::placeholder { color: rgba(26, 20, 16, 0.42); }
+[data-theme="light"] .search-box :deep(svg) { color: #b45309; }
+
+/* Pill group — warm border, readable text on cream; active states keep brand palette */
+[data-theme="light"] .pill {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  color: #6b4f24;
+}
+[data-theme="light"] .pill:hover {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .pill.active {
+  background: linear-gradient(135deg, #92400e, #b45309);
+  color: #fff8e7;
+  border-color: #92400e;
+  box-shadow: 0 6px 16px rgba(180, 83, 9, 0.32);
+}
+[data-theme="light"] .pill.full.active {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: #fff;
+  border-color: #b91c1c;
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.32);
+}
+[data-theme="light"] .pill.partial.active {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  border-color: #b45309;
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.32);
+}
+
+/* ── Feed (right pane) ── */
+[data-theme="light"] .feed-state { color: var(--text-secondary); }
+[data-theme="light"] .empty-icon { color: rgba(217, 119, 6, 0.40); }
+
+[data-theme="light"] .glass-row {
+  background: rgba(255, 250, 240, 0.72);
+  border: 1px solid rgba(217, 119, 6, 0.20);
+  box-shadow:
+    0 12px 28px -16px rgba(120, 75, 20, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+[data-theme="light"] .glass-row:hover {
+  background: rgba(255, 250, 240, 0.92);
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow:
+    0 18px 36px -16px rgba(120, 75, 20, 0.32),
+    -8px 0 20px rgba(217, 119, 6, 0.08);
+}
+
+/* Feed indicator — preserve EXACT dark-theme colors in light mode so the
+   amber/red brand accents stay vivid against cream. The base (no .full/.partial)
+   override has equal specificity to .full/.partial and appears later in the
+   cascade, which would wash them out — so we re-state each variant explicitly. */
+[data-theme="light"] .feed-item-indicator {
+  background: rgba(217, 119, 6, 0.20);
+}
+[data-theme="light"] .feed-item-indicator.full {
+  background: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+}
+[data-theme="light"] .feed-item-indicator.partial {
+  background: #f59e0b;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+}
+
+[data-theme="light"] .feed-title { color: var(--text-primary); }
+[data-theme="light"] .feed-meta { color: #6b5840; }
+[data-theme="light"] .meta-tag {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+
+[data-theme="light"] .reason-text { color: var(--text-secondary); }
+[data-theme="light"] .reason-date { color: #92400e; }
+
+[data-theme="light"] .feed-amount { color: #b91c1c; }
+/* feed-badge.full / .partial already warm — leave */
+
+/* End-of-feed marker */
+[data-theme="light"] .end-of-feed { color: #92400e; }
+[data-theme="light"] .end-dot { background: rgba(217, 119, 6, 0.30); }
+
+/* ── Pagination ── */
+[data-theme="light"] .page-nav {
+  background: rgba(255, 250, 240, 0.65);
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  color: #6b4f24;
+}
+[data-theme="light"] .page-nav:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: #d97706;
+  color: #92400e;
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .page-nav:disabled { opacity: 0.35; }
+
+[data-theme="light"] .page-pills {
+  background: rgba(255, 250, 240, 0.65);
+  border: 1px solid rgba(217, 119, 6, 0.24);
+}
+[data-theme="light"] .page-pill { color: #8a6f4a; }
+[data-theme="light"] .page-pill:hover:not(.active) {
+  color: #92400e;
+  background: rgba(217, 119, 6, 0.10);
+}
+[data-theme="light"] .page-pill.active {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.40);
 }
 </style>

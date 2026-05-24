@@ -209,6 +209,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
+import { API } from '@/utils/api'
 import { 
   Archive, Lock, ArrowLeft, Search, Library, ChevronLeft, ChevronRight,
   X, CheckCircle2, Info, Clock, CheckCircle
@@ -225,7 +226,6 @@ const totalPages = ref(1)
 const drawerOpen = ref(false)
 const selectedTask = ref({})
 
-const API = 'http://localhost:8000/api'
 const getHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem('user_token') || localStorage.getItem('admin_token')}`
 })
@@ -245,7 +245,7 @@ const fetchArchived = async () => {
     tasks.value = res.data.items || []
     totalTasks.value = res.data.total || 0
     totalPages.value = res.data.pages || 1
-    
+
     // Sum hours as a fun stat
     totalHours.value = tasks.value.reduce((acc, t) => acc + (parseFloat(t.actual_hours) || 0), 0)
   } catch (err) {
@@ -307,17 +307,47 @@ onMounted(() => {
 
 /* Header UI - Standard Nano DNA */
 .archive-vault-header {
-  height: 64px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 40px;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(20px);
+  background: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
+  overflow: hidden;
+  animation: vhFadeDown 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes vhFadeDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+/* Animated golden hairline that sweeps across the header bottom */
+.archive-vault-header::after {
+  content: '';
+  position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.55), transparent);
+  animation: vhSweep 5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes vhSweep {
+  0%, 100% { opacity: 0.35; transform: translateX(-12%); }
+  50%      { opacity: 1;    transform: translateX(12%); }
+}
+/* Soft radial spotlight following the top edge */
+.archive-vault-header::before {
+  content: '';
+  position: absolute; top: -50%; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 200px;
+  background: radial-gradient(ellipse, rgba(250, 204, 21, 0.06), transparent 60%);
+  pointer-events: none;
+  animation: vhGlow 6s ease-in-out infinite;
+}
+@keyframes vhGlow {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
 }
 
 .nav-left {
@@ -552,8 +582,8 @@ onMounted(() => {
 .vault-card:hover {
   transform: translateY(-8px) scale(1.02);
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(250, 204, 21, 0.3);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  border-color: rgba(250, 204, 21, 0.40);
+  box-shadow: none;
 }
 
 .vc-top {
@@ -648,13 +678,100 @@ onMounted(() => {
 .vd-panel.glass-panel {
   width: 500px;
   height: 100%;
-  background: rgba(15, 15, 18, 0.8);
-  backdrop-filter: blur(40px);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(20, 20, 24, 0.78) 0%, rgba(15, 15, 18, 0.88) 100%);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-left: 1px solid rgba(250, 204, 21, 0.14);
   display: flex;
   flex-direction: column;
-  box-shadow: -20px 0 50px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    -22px 0 60px rgba(0, 0, 0, 0.55),
+    inset 1px 0 0 rgba(255, 255, 255, 0.06),
+    0 0 80px -20px rgba(250, 204, 21, 0.18);
+  position: relative;
+  overflow: hidden;
+  animation: vdPanelSlide 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
+@keyframes vdPanelSlide {
+  from { opacity: 0; transform: translateX(40px); filter: blur(8px); }
+  to   { opacity: 1; transform: translateX(0); filter: blur(0); }
+}
+/* Soft golden hairline that breathes along the left edge */
+.vd-panel.glass-panel::before {
+  content: ''; position: absolute; left: 0; top: 10%; bottom: 10%; width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(250, 204, 21, 0.55), transparent);
+  animation: vdEdgePulse 4.5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes vdEdgePulse {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+
+/* Stagger entrance for the major sections inside the drawer */
+.vd-title-box,
+.vd-stats-grid,
+.vd-section,
+.vd-archive-meta {
+  animation: vdSectionFade 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.vd-title-box     { animation-delay: 0.10s; }
+.vd-stats-grid    { animation-delay: 0.18s; }
+.vd-section:nth-of-type(1) { animation-delay: 0.26s; }
+.vd-section:nth-of-type(2) { animation-delay: 0.32s; }
+.vd-archive-meta  { animation-delay: 0.40s; }
+@keyframes vdSectionFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Status pill — gentle glow pulse */
+.vd-status-pill {
+  position: relative;
+  box-shadow: 0 0 14px rgba(74, 222, 128, 0.18);
+  animation: vdStatusPulse 2.6s ease-in-out infinite;
+}
+@keyframes vdStatusPulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(74, 222, 128, 0.18); }
+  50%      { box-shadow: 0 0 22px rgba(74, 222, 128, 0.40); }
+}
+
+/* Each stat cell becomes a subtle card with a hover lift */
+.vd-stat {
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  transition: background 0.25s, border-color 0.25s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vd-stat:hover {
+  background: rgba(250, 204, 21, 0.05);
+  border-color: rgba(250, 204, 21, 0.22);
+  transform: translateY(-2px);
+}
+
+/* Section eyebrow gets a leading accent bar */
+.vd-section label {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+}
+.vd-section label::before {
+  content: '';
+  width: 3px; height: 11px;
+  background: linear-gradient(180deg, #facc15, #d97706);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Close button — rotate on hover */
+.vd-close {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 10px;
+  transition: opacity 0.25s, background 0.25s, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vd-close:hover { transform: rotate(90deg); }
 
 .vd-header {
   padding: 32px;
@@ -860,9 +977,178 @@ onMounted(() => {
 /* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
 [data-theme="light"] .vault-archive { color: var(--text-primary); }
 [data-theme="light"] .archive-vault-header {
-  background: rgba(26, 20, 16, 0.05);
-  border-bottom-color: rgba(26, 20, 16, 0.10);
+  background: transparent;
+  border-bottom-color: rgba(40, 25, 10, 0.12);
 }
+[data-theme="light"] .archive-vault-header::after {
+  background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.65), transparent);
+}
+[data-theme="light"] .archive-vault-header::before {
+  background: radial-gradient(ellipse, rgba(217, 119, 6, 0.10), transparent 60%);
+}
+[data-theme="light"] .nano-tabs-dock {
+  background: rgba(40, 25, 10, 0.05);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .tab-separator { background: rgba(40, 25, 10, 0.18); }
+
+/* Stat cards — border now visible on cream */
+[data-theme="light"] .stat-card {
+  background: rgba(255, 250, 240, 0.65);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  box-shadow: 0 1px 2px rgba(40, 25, 10, 0.04);
+}
+
+/* Search wrapper + icon */
+[data-theme="light"] .v-search-icon {
+  color: rgba(60, 45, 30, 0.60);
+}
+[data-theme="light"] .v-search-wrapper input {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .v-search-wrapper input::placeholder { color: rgba(26, 20, 16, 0.40); }
+[data-theme="light"] .v-search-wrapper input:focus {
+  background: rgba(255, 246, 226, 0.92);
+  border-color: #d97706;
+  box-shadow: 0 0 20px rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .v-search-wrapper:focus-within .v-search-icon { color: #b45309; }
+
+/* Empty glass — border + text */
+[data-theme="light"] .empty-glass {
+  background: rgba(40, 25, 10, 0.04);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .empty-glass h3 { color: var(--text-primary); }
+[data-theme="light"] .empty-glass p { color: var(--text-secondary); }
+
+/* Vault card surface in light theme + ultra-modern hover */
+[data-theme="light"] .vault-card {
+  background: rgba(255, 250, 240, 0.65);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .vault-card:hover {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(217, 119, 6, 0.45);
+  box-shadow: none;
+}
+[data-theme="light"] .vault-card .vc-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.08), transparent);
+}
+
+/* Card text — date + hours visible on cream */
+[data-theme="light"] .vc-date { color: var(--text-secondary); }
+[data-theme="light"] .vc-desc { color: var(--text-secondary); }
+[data-theme="light"] .vc-hours { color: var(--text-tertiary); }
+[data-theme="light"] .vc-footer { border-top-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .vc-code {
+  color: #b45309;
+  background: rgba(250, 204, 21, 0.18);
+}
+[data-theme="light"] .v-av { border-color: rgba(40, 25, 10, 0.15); }
+
+/* ── DRAWER (vd-panel) ── warm cream glass with golden accents ── */
+[data-theme="light"] .vd-overlay {
+  background: rgba(26, 20, 16, 0.42);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+[data-theme="light"] .vd-panel.glass-panel {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.82) 0%, rgba(252, 240, 220, 0.92) 100%);
+  border-left: 1px solid rgba(217, 119, 6, 0.22);
+  box-shadow:
+    -22px 0 60px rgba(40, 25, 10, 0.24),
+    inset 1px 0 0 rgba(255, 255, 255, 0.55),
+    0 0 80px -20px rgba(217, 119, 6, 0.20);
+  color: var(--text-primary);
+}
+[data-theme="light"] .vd-panel.glass-panel::before {
+  background: linear-gradient(180deg, transparent, rgba(217, 119, 6, 0.65), transparent);
+}
+
+/* Drawer header */
+[data-theme="light"] .vd-header { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .vd-h-type { color: var(--text-tertiary); }
+[data-theme="light"] .vd-close {
+  color: var(--text-secondary);
+}
+[data-theme="light"] .vd-close:hover {
+  background: rgba(40, 25, 10, 0.08);
+  color: var(--text-primary);
+}
+
+/* Title block */
+[data-theme="light"] .vd-proj-chip {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .vd-status-pill {
+  background: rgba(34, 197, 94, 0.14);
+  color: #166534;
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.18);
+}
+
+/* Stat cells in light theme */
+[data-theme="light"] .vd-stat {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .vd-stat:hover {
+  background: rgba(217, 119, 6, 0.06);
+  border-color: rgba(217, 119, 6, 0.30);
+}
+
+/* Section labels + paragraphs */
+[data-theme="light"] .vd-section label { color: var(--text-tertiary); }
+[data-theme="light"] .vd-section label::before {
+  background: linear-gradient(180deg, #d97706, #b45309);
+}
+[data-theme="light"] .vd-section p { color: var(--text-primary); }
+
+/* Checklist items */
+[data-theme="light"] .vd-cl-item {
+  background: rgba(40, 25, 10, 0.04);
+  color: var(--text-primary);
+}
+[data-theme="light"] .done-icon { color: #16a34a; }
+
+/* Archive meta callout */
+[data-theme="light"] .vd-archive-meta {
+  background: rgba(250, 204, 21, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.24);
+  color: var(--text-secondary);
+}
+
+/* Footer + close button */
+[data-theme="light"] .vd-footer { border-top-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .btn-vault-back {
+  background: rgba(40, 25, 10, 0.05);
+  border: 1px solid rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .btn-vault-back:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: #d97706;
+}
+
+/* Priority value colors — keep semantic palette, deepen for cream */
+[data-theme="light"] .priority-val.high { color: #b91c1c; }
+[data-theme="light"] .priority-val.medium { color: #b45309; }
+[data-theme="light"] .priority-val.low { color: #166534; }
+
+/* Pagination buttons */
+[data-theme="light"] .v-page-btn {
+  background: rgba(40, 25, 10, 0.05);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .v-page-btn:hover:not(:disabled) {
+  background: rgba(250, 204, 21, 0.14);
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .vault-pagination { border-top-color: rgba(40, 25, 10, 0.10); }
 [data-theme="light"] .n-tab { color: var(--text-secondary); }
 [data-theme="light"] .n-tab.active {
   background: rgba(217, 119, 6, 0.10);

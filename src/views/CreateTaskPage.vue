@@ -365,6 +365,7 @@ import { useToast } from '../composables/useToast'
 import axios from 'axios'
 import CustomSelect from '../components/ui/CustomSelect.vue'
 import CompactDatePicker from '../components/ui/CompactDatePicker.vue'
+import { API } from '@/utils/api'
 import {
   ArrowLeft, ArrowRight, Check, X, Circle,
   AlertTriangle, Send, FileText, UploadCloud, Plus,
@@ -373,7 +374,6 @@ import {
 
 const router = useRouter()
 const { success: toastSuccess, error: toastError } = useToast()
-const API = 'http://localhost:8000/api'
 const isAdmin = computed(() => window.location.pathname.startsWith('/admin'))
 const getHeaders = () => {
   const token = isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
@@ -934,4 +934,354 @@ input:checked + .slider:before { transform: translateX(20px); }
   border-color: rgba(220, 38, 38, 0.32);
 }
 [data-theme="light"] .error-text { color: #dc2626; }
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║ ULTRA-MODERN ENHANCEMENTS — apply to BOTH themes                      ║
+   ║ Refined borders, animated glows, advanced micro-interactions          ║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+
+/* Settings card — entrance + subtle animated border */
+.settings-card {
+  position: relative;
+  animation: cardRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+@keyframes cardRise {
+  from { opacity: 0; transform: translateY(20px) scale(0.985); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.settings-card::after {
+  content: ''; position: absolute; top: 0; left: 8%; right: 8%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.45), transparent);
+  opacity: 0;
+  animation: cardTopLine 0.9s 0.3s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes cardTopLine {
+  to { opacity: 1; }
+}
+
+/* Sidebar nav — smoother indicator + connecting line glow on active */
+.sidebar-nav::before { background: rgba(255, 255, 255, 0.06); }
+.nav-tab {
+  position: relative;
+}
+.nav-tab.active::before {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.08) 0%, transparent 100%);
+  opacity: 1;
+}
+.nav-tab.active::after {
+  content: '';
+  position: absolute; left: -3px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 24px; border-radius: 4px;
+  background: linear-gradient(180deg, #FBBF24, #F59E0B);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.55);
+  animation: navIndicator 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes navIndicator {
+  from { height: 0; opacity: 0; }
+  to   { height: 24px; opacity: 1; }
+}
+.nav-tab.active .tab-icon {
+  animation: tabIconPulse 2.6s ease-in-out infinite;
+}
+@keyframes tabIconPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.18); }
+  50%      { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+}
+
+/* Inputs — gold focus halo (already there, but make consistent) */
+.minimal-input:focus,
+.minimal-textarea:focus {
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.14), 0 4px 14px -4px rgba(245, 158, 11, 0.20);
+}
+
+/* Chip — gentle elastic press */
+.chip { transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.chip.active { box-shadow: 0 6px 18px rgba(245, 158, 11, 0.30); }
+.chip.active.low { box-shadow: 0 6px 18px rgba(228, 228, 231, 0.18); }
+.chip.active.high { box-shadow: 0 6px 18px rgba(251, 146, 60, 0.30); }
+.chip.active.critical { box-shadow: 0 6px 18px rgba(239, 68, 68, 0.30); }
+
+/* Checklist row — refined hover with glow line on left */
+.cl-row { position: relative; overflow: hidden; }
+.cl-row::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, #FBBF24, #F59E0B);
+  transform: scaleY(0); transform-origin: center;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cl-row:hover::before, .cl-row:focus-within::before { transform: scaleY(1); }
+.cl-checkbox { transition: background 0.25s, border-color 0.25s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.cl-checkbox.active { transform: scale(1.05); box-shadow: 0 0 10px rgba(245, 158, 11, 0.40); }
+.cl-checkbox svg { animation: checkPopCT 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes checkPopCT {
+  from { transform: scale(0) rotate(-90deg); }
+  to   { transform: scale(1) rotate(0); }
+}
+
+/* Primary button — refined lift */
+.btn-primary {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.30);
+}
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #FBBF24, #F59E0B);
+  box-shadow: 0 14px 32px rgba(245, 158, 11, 0.45);
+}
+
+/* Review section — animated entry with stagger via nth-child */
+.review-section {
+  animation: reviewSectionFade 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.review-section:nth-child(1) { animation-delay: 0.10s; }
+.review-section:nth-child(2) { animation-delay: 0.18s; }
+.review-section:nth-child(3) { animation-delay: 0.26s; }
+.review-section:nth-child(4) { animation-delay: 0.34s; }
+@keyframes reviewSectionFade {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.review-icon-wrap {
+  position: relative;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.10)) !important;
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.review-icon-wrap::after {
+  content: ''; position: absolute; inset: -2px; border-radius: 14px;
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  opacity: 0; animation: iconRingCT 2.4s ease-in-out infinite;
+}
+@keyframes iconRingCT {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.08); }
+}
+
+/* ╔═══════════════════════════════════════════════════════════════════════╗
+   ║ LIGHT THEME — full pass for every widget that was missed              ║
+   ║ Preserves orange / yellow / golden brand palette in both themes       ║
+   ╚═══════════════════════════════════════════════════════════════════════╝ */
+
+/* Settings card shell */
+[data-theme="light"] .settings-card {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.78) 0%, rgba(252, 240, 220, 0.62) 100%);
+  border: 1px solid rgba(217, 119, 6, 0.16);
+  box-shadow:
+    0 30px 60px rgba(40, 25, 10, 0.18),
+    0 8px 24px rgba(40, 25, 10, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+[data-theme="light"] .settings-card::after {
+  background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.55), transparent);
+}
+
+/* Sidebar nav */
+[data-theme="light"] .sidebar-nav::before { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .nav-tab {
+  color: rgba(60, 45, 30, 0.55);
+}
+[data-theme="light"] .nav-tab:hover:not(.locked) {
+  color: var(--text-primary);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .nav-tab.completed { color: var(--text-primary); }
+[data-theme="light"] .nav-tab.active {
+  background: rgba(217, 119, 6, 0.10);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.28);
+}
+[data-theme="light"] .nav-tab.active::after {
+  background: linear-gradient(180deg, #f59e0b, #d97706);
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .tab-icon {
+  background: rgba(40, 25, 10, 0.06);
+  color: rgba(60, 45, 30, 0.7);
+}
+[data-theme="light"] .nav-tab.active .tab-icon,
+[data-theme="light"] .nav-tab.completed .tab-icon { color: #b45309; }
+[data-theme="light"] .nav-tab.active .tab-icon { background: rgba(217, 119, 6, 0.16); }
+[data-theme="light"] .check-icon { color: #15803d; }
+
+/* Card footer / footers / buttons */
+[data-theme="light"] .card-footer { border-top-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .btn-cancel,
+[data-theme="light"] .btn-back,
+[data-theme="light"] .btn-ghost {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-primary);
+  border: 1px solid rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .btn-cancel:hover,
+[data-theme="light"] .btn-ghost:hover {
+  background: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+  border-color: rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .btn-back {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-primary);
+}
+[data-theme="light"] .btn-back:hover {
+  background: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+  border-color: rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .btn-cancel {
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.28);
+  background: rgba(220, 38, 38, 0.06);
+}
+[data-theme="light"] .btn-cancel:hover {
+  background: rgba(220, 38, 38, 0.14);
+  color: #991b1b;
+  border-color: rgba(220, 38, 38, 0.45);
+}
+[data-theme="light"] .btn-primary {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 14px 32px rgba(217, 119, 6, 0.45);
+}
+
+/* Chips — preserve dark-theme palette */
+[data-theme="light"] .chip {
+  background: rgba(40, 25, 10, 0.05);
+  color: rgba(60, 45, 30, 0.70);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .chip:hover {
+  background: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+  border-color: rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .chip.active {
+  background: #fbbf24;
+  color: #1a0f00;
+  border-color: #fbbf24;
+}
+[data-theme="light"] .chip.active.low { background: #e4e4e7; color: #18181b; border-color: #d4d4d8; }
+[data-theme="light"] .chip.active.medium { background: #fbbf24; color: #1a0f00; border-color: #fbbf24; }
+[data-theme="light"] .chip.active.high { background: #fb923c; color: #1a0f00; border-color: #fb923c; }
+[data-theme="light"] .chip.active.critical { background: #ef4444; color: #fff; border-color: #ef4444; }
+[data-theme="light"] .chip-remove:hover { color: #b91c1c; }
+
+/* Checklist builder */
+[data-theme="light"] .cl-row {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .cl-row:hover {
+  background: rgba(40, 25, 10, 0.08);
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .cl-checkbox {
+  background: rgba(255, 250, 240, 0.95);
+  border-color: rgba(40, 25, 10, 0.30);
+}
+[data-theme="light"] .cl-checkbox.active {
+  background: #d97706;
+  border-color: #f59e0b;
+  color: #fff;
+}
+[data-theme="light"] .cl-input {
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .cl-input::placeholder { color: rgba(26, 20, 16, 0.40); }
+[data-theme="light"] .icon-btn-danger {
+  color: rgba(220, 38, 38, 0.6);
+  background: rgba(220, 38, 38, 0.06);
+}
+[data-theme="light"] .icon-btn-danger:hover {
+  color: #991b1b;
+  background: rgba(220, 38, 38, 0.14);
+}
+[data-theme="light"] .btn-add-item {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.18);
+  color: rgba(60, 45, 30, 0.65);
+}
+[data-theme="light"] .btn-add-item:hover {
+  background: rgba(217, 119, 6, 0.08);
+  color: var(--text-primary);
+  border-color: rgba(217, 119, 6, 0.45);
+}
+
+/* Drop zone + file row */
+[data-theme="light"] .drop-zone {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.20);
+}
+[data-theme="light"] .drop-zone.active {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: #d97706;
+}
+[data-theme="light"] .drop-icon,
+[data-theme="light"] .drop-or,
+[data-theme="light"] .drop-hint { color: rgba(60, 45, 30, 0.50); }
+[data-theme="light"] .drop-title { color: var(--text-primary); }
+[data-theme="light"] .browse-btn { color: #d97706; }
+[data-theme="light"] .file-row {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .file-meta { color: var(--text-primary); }
+[data-theme="light"] .file-meta svg { color: #b45309; }
+
+/* Dependency dropdown */
+[data-theme="light"] .dep-results-dropdown {
+  background: rgba(255, 250, 240, 0.95);
+  border-color: rgba(40, 25, 10, 0.14);
+  box-shadow: 0 10px 30px rgba(40, 25, 10, 0.20);
+}
+[data-theme="light"] .dep-result-item { border-bottom-color: rgba(40, 25, 10, 0.06); }
+[data-theme="light"] .dep-result-item:hover { background: rgba(217, 119, 6, 0.08); }
+[data-theme="light"] .dep-code { color: #b45309; }
+[data-theme="light"] .dep-title { color: var(--text-primary); }
+
+/* Toggles (Step 6) */
+[data-theme="light"] .toggle-item {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .toggle-item:hover {
+  background: rgba(40, 25, 10, 0.08);
+  border-color: rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .toggle-item h5 { color: var(--text-primary); }
+[data-theme="light"] .toggle-item p { color: var(--text-secondary); }
+[data-theme="light"] .toggle-icon { color: rgba(60, 45, 30, 0.65); }
+[data-theme="light"] .slider { background-color: rgba(40, 25, 10, 0.14); }
+[data-theme="light"] input:checked + .slider { background-color: #d97706; }
+
+/* Review grid + sections */
+[data-theme="light"] .review-section {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .review-header h4 { color: var(--text-primary); }
+[data-theme="light"] .review-icon-wrap {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(180, 83, 9, 0.10)) !important;
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #b45309;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+[data-theme="light"] .review-icon-wrap::after { border-color: rgba(217, 119, 6, 0.45); }
+[data-theme="light"] .summary-row { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .summary-row span:first-child { color: var(--text-secondary); }
+[data-theme="light"] .summary-row .value { color: var(--text-primary); }
+
+/* Priority chip in review */
+[data-theme="light"] .priority-chip.low { background: rgba(113, 113, 122, 0.12); color: #44403c; }
+[data-theme="light"] .priority-chip.medium { background: rgba(217, 119, 6, 0.14); color: #92400e; }
+[data-theme="light"] .priority-chip.high { background: rgba(234, 88, 12, 0.14); color: #c2410c; }
+[data-theme="light"] .priority-chip.critical { background: rgba(220, 38, 38, 0.14); color: #991b1b; }
+
+/* Section dividers / dashed separators */
+[data-theme="light"] .section-divider span { color: rgba(60, 45, 30, 0.55); }
+[data-theme="light"] .section-divider::after { background: rgba(40, 25, 10, 0.10); }
 </style>

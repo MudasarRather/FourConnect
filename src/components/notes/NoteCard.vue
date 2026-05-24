@@ -46,6 +46,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import NoteCardView from './NoteCardView.vue'
 import NoteCardEdit from './NoteCardEdit.vue'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   note: { type: Object, required: true },
@@ -81,7 +82,7 @@ const onSave = (updatedNote) => {
 const togglePin = async () => {
   try {
     await axios.patch(
-      `http://localhost:8000/api/project-notes/${props.note.project_id}/notes/${props.note.id}/pin`,
+      `${API}/project-notes/${props.note.project_id}/notes/${props.note.id}/pin`,
       null,
       { params: { token: props.token } }
     )

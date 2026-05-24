@@ -45,7 +45,7 @@
               
               <div class="amount-display">
                 <span class="currency">Est. Hours</span>
-                <span class="amount">{{ task.estimated_hours || 0 }}<span style="font-size: 16px; font-weight: 500; color: rgba(255,255,255,0.4); margin-left: 4px;">h</span></span>
+                <span class="amount">{{ task.estimated_hours || 0 }}<span class="amount-unit">h</span></span>
               </div>
             </div>
 
@@ -132,7 +132,7 @@
                         <span v-for="w in (task.watchers || [])" :key="w" class="value-pill" style="font-size: 11px;">
                             <Users :size="12" /> {{ task.watcher_names && task.watcher_names[w] ? task.watcher_names[w] : getUserName(w) }}
                         </span>
-                        <span v-if="!task.watchers?.length" class="val" style="font-size:12px; color: rgba(255,255,255,0.4);">No watchers assigned</span>
+                        <span v-if="!task.watchers?.length" class="val empty-hint">No watchers assigned</span>
                     </div>
                  </div>
                  <div class="field">
@@ -141,7 +141,7 @@
                         <span v-for="d in (task.dependencies || [])" :key="d.id" class="value-pill" style="font-size: 11px;">
                             <Link2 :size="12" /> Task {{ d.depends_on_code || (typeof d === 'string' ? getTaskCode(d) : '???') }}
                         </span>
-                        <span v-if="!task.dependencies?.length" class="val" style="font-size:12px; color: rgba(255,255,255,0.4);">No dependencies</span>
+                        <span v-if="!task.dependencies?.length" class="val empty-hint">No dependencies</span>
                     </div>
                  </div>
               </div>
@@ -205,7 +205,7 @@
                   <ExternalLink :size="14" class="link-icon" />
                 </div>
               </div>
-              <div v-else class="detail-card" style="text-align: center; color: rgba(255,255,255,0.3); font-size: 12px; padding: 24px;">
+              <div v-else class="detail-card empty-attachment">
                 No attachments uploaded yet
               </div>
             </div>
@@ -247,10 +247,10 @@
                <Check :size="16" /> Mark Task
              </button>
           </div>
-          <div class="drawer-footer" v-else-if="viewOnly" style="justify-content: center; padding: 16px;">
-             <span style="font-size: 12px; color: rgba(255,255,255,0.4);">
-                <Check v-if="task.status === 'completed'" :size="12" style="display:inline; margin-bottom:-2px; margin-right:4px;" />
-                <Clock v-else :size="12" style="display:inline; margin-bottom:-2px; margin-right:4px;" />
+          <div class="drawer-footer view-only-footer" v-else-if="viewOnly">
+             <span class="view-only-note">
+                <Check v-if="task.status === 'completed'" :size="12" />
+                <Clock v-else :size="12" />
                 {{ task.status === 'completed' ? 'Task is finished and is now View Only' : (task.status === 'cancelled' ? 'Task is cancelled and is now View Only' : 'Task is past due and is now View Only') }}
              </span>
           </div>
@@ -308,6 +308,7 @@ import {
   Trash2, Play, Paperclip, FileText, ExternalLink, Edit2, ListChecks, Link2, AlertCircle
 } from 'lucide-vue-next'
 import TaskAssignmentHistory from './TaskAssignmentHistory.vue'
+import { API_BASE } from '@/utils/api'
 
 const { addToast } = useToast()
 
@@ -401,7 +402,7 @@ const openAttachment = (f) => {
    
    if (typeof url === 'string') {
        if (url.startsWith('storage/')) {
-           url = `http://localhost:8000/${url}`;
+           url = `${API_BASE}/${url}`;
        }
        window.open(url, '_blank')
    }
@@ -698,24 +699,44 @@ const formatTime = (dateString) => {
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 .fade-enter-from, .fade-leave-to { opacity: 0; backdrop-filter: blur(0px); }
 
+/* Subtask modal — fixed to viewport (NOT absolute-inside-drawer) so the
+   backdrop-filter samples the page behind the drawer instead of the cream
+   drawer interior (which produced the yellowish blur). */
 .subtask-modal-overlay {
-  position: absolute; inset: 0;
-  background: rgba(0,0,0,0.6); backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  z-index: 100; display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+  z-index: 2000;
+  display: flex; align-items: center; justify-content: center;
   padding: 24px;
 }
 
 .subtask-panel.glass-panel {
-  background: rgba(15, 15, 17, 0.65);
-  backdrop-filter: blur(28px);
-  -webkit-backdrop-filter: blur(28px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-  padding: 28px; border-radius: 20px;
-  width: 100%; max-width: 420px;
-  transform: translateY(0) scale(1);
-  animation: modalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  background: linear-gradient(135deg, rgba(30, 30, 34, 0.55) 0%, rgba(22, 22, 26, 0.78) 100%);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.6),
+    0 12px 24px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 0 60px -10px rgba(245, 158, 11, 0.20);
+  padding: 28px; border-radius: 22px;
+  width: 100%; max-width: 440px;
+  position: relative;
+  overflow: hidden;
+  animation: subtaskPanelRise 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Soft top-edge accent line on the panel */
+.subtask-panel.glass-panel::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.55), transparent);
+}
+@keyframes subtaskPanelRise {
+  from { opacity: 0; transform: translateY(20px) scale(0.94); filter: blur(8px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
 }
 
 /* Progress Bar Styles */
@@ -751,74 +772,559 @@ const formatTime = (dateString) => {
 .audit-time { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 2px; }
 
 .subtask-header {
-  display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 14px; margin-bottom: 22px;
+  animation: subtaskHeaderFade 0.5s 0.1s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes subtaskHeaderFade {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .subtask-icon-wrap {
-  width: 44px; height: 44px; border-radius: 12px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.08);
+  width: 48px; height: 48px; border-radius: 14px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.20), rgba(217, 119, 6, 0.12));
+  border: 1px solid rgba(245, 158, 11, 0.32);
   display: flex; align-items: center; justify-content: center;
-  color: #fff;
+  color: #f59e0b;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.20), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  position: relative;
 }
-.subtask-titles h3 { margin: 0 0 4px 0; font-size: 18px; font-weight: 600; color: #fff; letter-spacing: -0.01em; }
-.subtask-titles p { margin: 0; font-size: 13px; color: rgba(255,255,255,0.5); }
+.subtask-icon-wrap::after {
+  content: ''; position: absolute; inset: -2px; border-radius: 14px;
+  border: 1px solid rgba(245, 158, 11, 0.30);
+  opacity: 0; animation: iconRing 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes iconRing {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.08); }
+}
+.subtask-titles h3 {
+  margin: 0 0 4px 0; font-size: 19px; font-weight: 700;
+  background: linear-gradient(135deg, #fff 30%, #fcd34d 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  letter-spacing: -0.015em;
+}
+.subtask-titles p { margin: 0; font-size: 13px; color: rgba(255, 255, 255, 0.55); }
 
 .checklist-items-modern {
-  display: flex; flex-direction: column; gap: 8px;
+  display: flex; flex-direction: column; gap: 10px;
   max-height: 320px; overflow-y: auto; padding-right: 4px;
 }
 .checklist-items-modern::-webkit-scrollbar { width: 4px; }
-.checklist-items-modern::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+.checklist-items-modern::-webkit-scrollbar-thumb {
+  background: rgba(245, 158, 11, 0.25); border-radius: 4px;
+}
 
 .chk-item-modern {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px 16px; 
-  background: rgba(255,255,255,0.03); 
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 12px; cursor: pointer; transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.25s, border-color 0.25s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: chkFade 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  position: relative;
+  overflow: hidden;
+}
+.chk-item-modern:nth-child(1) { animation-delay: 0.15s; }
+.chk-item-modern:nth-child(2) { animation-delay: 0.20s; }
+.chk-item-modern:nth-child(3) { animation-delay: 0.25s; }
+.chk-item-modern:nth-child(4) { animation-delay: 0.30s; }
+.chk-item-modern:nth-child(5) { animation-delay: 0.35s; }
+.chk-item-modern:nth-child(6) { animation-delay: 0.40s; }
+@keyframes chkFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .chk-item-modern:hover {
-  background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1);
-  transform: translateY(-1px);
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.25);
+  transform: translateY(-2px);
 }
 .chk-item-modern.is-done {
-  background: rgba(74, 222, 128, 0.05);
-  border-color: rgba(74, 222, 128, 0.15);
+  background: linear-gradient(90deg, rgba(74, 222, 128, 0.08), rgba(74, 222, 128, 0.03));
+  border-color: rgba(74, 222, 128, 0.25);
 }
 
 .chk-box {
-  width: 20px; height: 20px; border-radius: 6px;
-  border: 1px solid rgba(255,255,255,0.2);
+  width: 22px; height: 22px; border-radius: 7px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
   display: flex; align-items: center; justify-content: center;
-  transition: all 0.2s; color: #151515;
+  transition: background 0.25s, border-color 0.25s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: #fff;
+  flex-shrink: 0;
+}
+.chk-item-modern:hover .chk-box {
+  border-color: rgba(245, 158, 11, 0.55);
 }
 .chk-item-modern.is-done .chk-box {
-  background: #4ade80; border-color: #4ade80;
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  border-color: #4ade80;
+  transform: scale(1.06);
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.40);
+}
+.chk-item-modern.is-done .chk-box svg {
+  animation: checkPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes checkPop {
+  from { transform: scale(0) rotate(-90deg); }
+  to   { transform: scale(1) rotate(0); }
 }
 .chk-text {
-  font-size: 14px; color: rgba(255,255,255,0.9); transition: all 0.2s;
+  font-size: 14px; color: rgba(255, 255, 255, 0.92);
+  transition: color 0.25s;
+  letter-spacing: -0.005em;
+  flex: 1;
 }
 .chk-item-modern.is-done .chk-text {
-  color: #4ade80; text-decoration: line-through; opacity: 0.8;
+  color: #6ee7b7; text-decoration: line-through; opacity: 0.85;
 }
 
 .modal-footer-modern {
-  display: flex; gap: 12px; margin-top: 32px;
+  display: flex; gap: 12px; margin-top: 26px;
+  animation: footerFade 0.5s 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+@keyframes footerFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 .btn-blur {
   flex: 1; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px;
-  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white;
-  cursor: pointer; transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.btn-blur:hover { background: rgba(255,255,255,0.1); }
+.btn-blur:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  transform: translateY(-1px);
+}
 
 .btn-glow {
-  flex: 1; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 14px;
-  background: #F59E0B; border: none; color: #111;
-  cursor: pointer; transition: all 0.2s;
+  flex: 1; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 14px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none; color: #1a0f00;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.32);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s, filter 0.2s;
+  position: relative; overflow: hidden;
 }
-.btn-glow:hover { 
-  background: #fcd34d;
-  transform: translateY(-1px);
+.btn-glow::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.4) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
+}
+.btn-glow:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(245, 158, 11, 0.45);
+}
+.btn-glow:hover::before { transform: translateX(100%); }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   LIGHT THEME — preserve dark-theme transparency + accent palette
+   (warm cream glass instead of dark glass; same orange/amber/green/red/purple
+   accents, just darkened text variants for cream readability)
+   ═════════════════════════════════════════════════════════════════════════ */
+[data-theme="light"] .drawer-overlay { background: rgba(40, 25, 10, 0.45); }
+[data-theme="light"] .drawer-panel {
+  background: rgba(255, 250, 240, 0.72);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  border-left: 1px solid rgba(40, 25, 10, 0.12);
+  box-shadow: -20px 0 50px rgba(40, 25, 10, 0.18);
+  color: var(--text-primary);
+}
+
+/* Header */
+[data-theme="light"] .drawer-header {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.45), rgba(255, 250, 240, 0));
+  border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .id-badge .label { color: var(--text-tertiary); }
+[data-theme="light"] .id-badge .value { color: var(--text-secondary); }
+[data-theme="light"] .close-btn {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .close-btn:hover {
+  background: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
+
+/* Vendor block (task title + project line) */
+[data-theme="light"] .vendor-info h2 { color: var(--text-primary); }
+[data-theme="light"] .vendor-info .category { color: var(--text-secondary); }
+[data-theme="light"] .amount-display .currency { color: var(--text-tertiary); }
+[data-theme="light"] .amount-display .amount { color: var(--text-primary); }
+
+/* Status bars — preserve palette, deepen text for cream */
+[data-theme="light"] .status-bar.expired {
+  background: rgba(220, 38, 38, 0.12); color: #991b1b;
+}
+[data-theme="light"] .status-bar.extended {
+  background: rgba(135, 88, 255, 0.14); color: #5b21b6;
+}
+[data-theme="light"] .status-bar.completed {
+  background: rgba(34, 197, 94, 0.14); color: #166534;
+}
+[data-theme="light"] .status-bar.open,
+[data-theme="light"] .status-bar.in_progress,
+[data-theme="light"] .status-bar.pending {
+  background: rgba(217, 119, 6, 0.14); color: #92400e;
+}
+[data-theme="light"] .status-bar.blocked,
+[data-theme="light"] .status-bar.failed {
+  background: rgba(220, 38, 38, 0.12); color: #991b1b;
+}
+
+/* Section headings + field labels */
+[data-theme="light"] .detail-section h3 { color: var(--text-tertiary); }
+[data-theme="light"] .field label { color: var(--text-tertiary); }
+[data-theme="light"] .field .value { color: var(--text-primary); }
+
+/* Pills */
+[data-theme="light"] .value-pill {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--text-primary);
+}
+[data-theme="light"] .value-pill.high,
+[data-theme="light"] .value-pill.critical {
+  background: rgba(220, 38, 38, 0.12); color: #991b1b;
+}
+[data-theme="light"] .value-pill.low { color: #166534; }
+
+/* Detail card surfaces — keep glassy with cream glass */
+[data-theme="light"] .detail-card {
+  background: rgba(40, 25, 10, 0.04);
+  border: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .desc-text { color: var(--text-primary); }
+[data-theme="light"] .field-mini label { color: var(--text-tertiary); }
+[data-theme="light"] .field-mini .val { color: var(--text-primary); }
+[data-theme="light"] .field-mini .val.text-green { color: #166534; }
+
+/* Checklist (compact + modern) */
+[data-theme="light"] .chk-item { color: var(--text-primary); }
+[data-theme="light"] .icon-done { color: #b45309; }
+[data-theme="light"] .icon-open { color: rgba(40, 25, 10, 0.30); }
+[data-theme="light"] .done-text { color: var(--text-tertiary); }
+[data-theme="light"] .chk-item-modern {
+  background: rgba(40, 25, 10, 0.04);
+  border: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .chk-item-modern:hover {
+  background: rgba(40, 25, 10, 0.08);
+  border-color: rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .chk-item-modern.is-done {
+  background: rgba(34, 197, 94, 0.07);
+  border-color: rgba(34, 197, 94, 0.20);
+}
+[data-theme="light"] .chk-box { border-color: rgba(40, 25, 10, 0.30); color: #fff; }
+[data-theme="light"] .chk-item-modern.is-done .chk-box {
+  background: #16a34a; border-color: #16a34a;
+}
+[data-theme="light"] .chk-text { color: var(--text-primary); }
+[data-theme="light"] .chk-item-modern.is-done .chk-text {
+  color: #166534;
+}
+[data-theme="light"] .checklist-items-modern::-webkit-scrollbar-thumb {
+  background: rgba(40, 25, 10, 0.18);
+}
+
+/* Footer + buttons */
+[data-theme="light"] .drawer-footer { border-top: 1px solid rgba(40, 25, 10, 0.08); }
+[data-theme="light"] .btn-custom.secondary {
+  background: rgba(40, 25, 10, 0.05);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
+[data-theme="light"] .btn-custom.secondary:hover {
+  background: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
+/* primary stays #F59E0B / black text — same as dark theme */
+
+/* Btn-blur / btn-glow inside subtask modal */
+[data-theme="light"] .btn-blur {
+  background: rgba(40, 25, 10, 0.05);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
+[data-theme="light"] .btn-blur:hover { background: rgba(40, 25, 10, 0.10); }
+
+/* Subtask modal panel */
+[data-theme="light"] .subtask-modal-overlay {
+  background: rgba(40, 25, 10, 0.55);
+}
+[data-theme="light"] .subtask-panel.glass-panel {
+  background: rgba(255, 250, 240, 0.78);
+  border: 1px solid rgba(40, 25, 10, 0.12);
+  box-shadow: 0 20px 50px rgba(40, 25, 10, 0.20);
+}
+[data-theme="light"] .subtask-titles h3 { color: var(--text-primary); }
+[data-theme="light"] .subtask-titles p { color: var(--text-secondary); }
+[data-theme="light"] .subtask-icon-wrap {
+  background: rgba(40, 25, 10, 0.05);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
+
+/* Progress bar */
+[data-theme="light"] .progress-header .label { color: var(--text-tertiary); }
+/* percent stays #f59e0b (brand amber) */
+[data-theme="light"] .progress-bar-wrap { background: rgba(40, 25, 10, 0.08); }
+
+/* Attachments / file cards */
+[data-theme="light"] .file-card {
+  background: rgba(40, 25, 10, 0.04);
+  border: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .file-card:hover {
+  background: rgba(40, 25, 10, 0.08);
+  border-color: rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .file-info .name { color: var(--text-primary); }
+[data-theme="light"] .link-icon { color: var(--text-tertiary); }
+/* file-icon stays #F59E0B */
+
+/* Audit trail rows */
+[data-theme="light"] .audit-card {
+  background: rgba(40, 25, 10, 0.04);
+  border: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .audit-avatar {
+  background: rgba(245, 158, 11, 0.14);
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  color: #b45309;
+}
+[data-theme="light"] .audit-action { color: var(--text-tertiary); }
+[data-theme="light"] .audit-user { color: var(--text-primary); }
+[data-theme="light"] .audit-time { color: var(--text-tertiary); }
+
+/* Start / delete pill buttons — deepen text on cream, keep semantic hue */
+[data-theme="light"] .start-btn {
+  background: rgba(34, 197, 94, 0.12); color: #166534; border-color: rgba(34, 197, 94, 0.30);
+}
+[data-theme="light"] .start-btn:hover { background: rgba(34, 197, 94, 0.20); border-color: #16a34a; }
+[data-theme="light"] .delete-btn {
+  background: rgba(220, 38, 38, 0.10); color: #991b1b; border-color: rgba(220, 38, 38, 0.28);
+}
+[data-theme="light"] .delete-btn:hover { background: rgba(220, 38, 38, 0.18); border-color: #b91c1c; }
+[data-theme="light"] .delete-btn.confirm { background: #dc2626; color: #fff; border-color: #dc2626; }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   DRAWER STRUCTURE ENHANCEMENTS — tighter rhythm, visible sections,
+   no white text leakage. Applies in BOTH themes.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* Tighter, more rhythmic content spacing */
+.drawer-content {
+  gap: 22px;  /* was 32 — felt loose */
+  padding: 22px 24px;
+}
+
+/* Every detail-section gets a soft tinted card shell so it's a visible
+   "section" rather than free-floating content. Transparency preserved. */
+.detail-section {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 16px 18px;
+  position: relative;
+}
+.detail-section h3 {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  margin: 0 0 14px 0;
+  display: flex; align-items: center; gap: 8px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.detail-section h3::before {
+  content: '';
+  width: 3px; height: 12px;
+  background: linear-gradient(180deg, #F59E0B, #d97706);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* Inner detail-card already exists — remove its border-bg duplication
+   when nested inside a detail-section to avoid double-cards */
+.detail-section .detail-card {
+  background: rgba(0, 0, 0, 0.12);
+  border-color: rgba(255, 255, 255, 0.04);
+}
+
+/* Field label/value rhythm */
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+/* Light-theme parallel for the new section shell */
+[data-theme="light"] .detail-section {
+  background: rgba(40, 25, 10, 0.04);
+  border: 1px solid rgba(40, 25, 10, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+[data-theme="light"] .detail-section h3 { color: rgba(60, 45, 30, 0.65); }
+[data-theme="light"] .detail-section .detail-card {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(40, 25, 10, 0.08);
+}
+
+/* Last-line safety net — any remaining defaulted-white text inside the
+   drawer in light mode falls through to text-primary instead of staying
+   white-on-cream. Brand-colored spans (amber/green/etc with their own
+   color decl) are unaffected because they win on specificity. */
+[data-theme="light"] .drawer-panel,
+[data-theme="light"] .drawer-content,
+[data-theme="light"] .drawer-header,
+[data-theme="light"] .drawer-footer,
+[data-theme="light"] .detail-section,
+[data-theme="light"] .detail-card { color: var(--text-primary); }
+[data-theme="light"] .drawer-panel h1,
+[data-theme="light"] .drawer-panel h2,
+[data-theme="light"] .drawer-panel h3,
+[data-theme="light"] .drawer-panel h4,
+[data-theme="light"] .drawer-panel p,
+[data-theme="light"] .drawer-panel span:not([class*="badge"]):not([class*="pill"]):not(.amount):not(.percent) {
+  color: inherit;
+}
+
+/* Inline-style refactors — these replace three `style="color:rgba(255,255,255,X)"`
+   spots that couldn't be themed before (No dependencies, No attachments, View Only footer). */
+.empty-hint {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+[data-theme="light"] .empty-hint { color: var(--text-tertiary); }
+
+.amount-unit {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
+  margin-left: 4px;
+}
+[data-theme="light"] .amount-unit { color: var(--text-tertiary); }
+
+.empty-attachment {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 12px;
+  padding: 24px;
+}
+[data-theme="light"] .empty-attachment { color: var(--text-tertiary); }
+
+.view-only-footer {
+  justify-content: center;
+  padding: 16px;
+}
+.view-only-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+.view-only-note svg { flex-shrink: 0; }
+[data-theme="light"] .view-only-note { color: var(--text-secondary); }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   Subtask modal — light theme (warm cream glass, golden palette preserved)
+   ═════════════════════════════════════════════════════════════════════════ */
+[data-theme="light"] .subtask-modal-overlay {
+  background: rgba(26, 20, 16, 0.40);
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+[data-theme="light"] .subtask-panel.glass-panel {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.68) 0%, rgba(252, 240, 220, 0.82) 100%);
+  border: 1px solid rgba(217, 119, 6, 0.30);
+  backdrop-filter: blur(32px) saturate(160%);
+  -webkit-backdrop-filter: blur(32px) saturate(160%);
+  box-shadow:
+    0 40px 80px rgba(40, 25, 10, 0.28),
+    0 12px 24px rgba(40, 25, 10, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    0 0 60px -10px rgba(217, 119, 6, 0.22);
+  color: var(--text-primary);
+}
+[data-theme="light"] .subtask-panel.glass-panel::before {
+  background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.65), transparent);
+}
+
+[data-theme="light"] .subtask-icon-wrap {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.20), rgba(217, 119, 6, 0.12));
+  border: 1px solid rgba(217, 119, 6, 0.45);
+  color: #b45309;
+  box-shadow: 0 4px 16px rgba(217, 119, 6, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+[data-theme="light"] .subtask-icon-wrap::after {
+  border-color: rgba(217, 119, 6, 0.40);
+}
+
+[data-theme="light"] .subtask-titles h3 {
+  background: linear-gradient(120deg, #92400e 0%, #d97706 60%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+[data-theme="light"] .subtask-titles p { color: #6b5840; }
+
+[data-theme="light"] .checklist-items-modern::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.30);
+}
+
+[data-theme="light"] .chk-item-modern {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .chk-item-modern:hover {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .chk-item-modern.is-done {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.10), rgba(34, 197, 94, 0.04));
+  border-color: rgba(34, 197, 94, 0.32);
+}
+[data-theme="light"] .chk-box {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(40, 25, 10, 0.28);
+  color: transparent;
+}
+[data-theme="light"] .chk-item-modern:hover .chk-box {
+  border-color: rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .chk-item-modern.is-done .chk-box {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border-color: #16a34a;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
+}
+[data-theme="light"] .chk-text { color: var(--text-primary); }
+[data-theme="light"] .chk-item-modern.is-done .chk-text { color: #166534; }
+
+[data-theme="light"] .btn-blur {
+  background: rgba(40, 25, 10, 0.05);
+  border-color: rgba(40, 25, 10, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="light"] .btn-blur:hover {
+  background: rgba(40, 25, 10, 0.10);
+  border-color: rgba(40, 25, 10, 0.20);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .btn-glow {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .btn-glow:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 12px 28px rgba(217, 119, 6, 0.42);
 }
 </style>

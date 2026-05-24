@@ -347,6 +347,7 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
+import { API } from '@/utils/api'
 import {
   Clock, X, Pencil, Trash2, FileText, Download, CheckCircle, XCircle, ChevronRight, Check, XSquare, AlertCircle,
   FolderDot, CheckSquare, Settings, Activity, Server, Users, HardDrive, KeyRound, Cpu, Package, ClipboardList, Building2, Calendar, BookOpen
@@ -396,7 +397,7 @@ const handleDeleteClick = async () => {
     
     try {
         const token = localStorage.getItem('admin_token') || localStorage.getItem('user_token')
-        await axios.delete(`http://localhost:8000/api/handover/${props.dpr.id}`, {
+        await axios.delete(`${API}/handover/${props.dpr.id}`, {
             headers: { Authorization: `Bearer ${token}` }
         })
         emit('deleted')

@@ -359,6 +359,7 @@ import { useToast } from 'vue-toastification'
 import { generateSlaPdf } from '../../utils/slaPdfGenerator'
 import { generateHandoverPdf } from '../../utils/handoverPdfGenerator'
 import { generateDprPdf } from '../../utils/dprPdfGenerator'
+import { API_BASE } from '@/utils/api'
 
 const route = useRoute()
 const toast = useToast()
@@ -367,7 +368,6 @@ const getToken = () => isAdminRoute.value
   ? (localStorage.getItem('admin_token') || localStorage.getItem('user_token'))
   : (localStorage.getItem('user_token') || localStorage.getItem('admin_token'))
 
-const API_BASE = 'http://localhost:8000'
 
 // State
 const stats = ref({ total: 0, sla: 0, handover: 0, dpr: 0, oldest_year: null, by_year: [] })

@@ -33,6 +33,7 @@ import axios from 'axios'
 import ForecastKpis from './forecast/ForecastKpis.vue'
 import ForecastInputPanel from './forecast/ForecastInputPanel.vue'
 import SpendTrendChart from './overview/SpendTrendChart.vue' // Reuse for now
+import { API } from '@/utils/api'
 
 const props = defineProps({ projectId: String, token: String })
 const forecastData = ref({})
@@ -43,8 +44,8 @@ const fetchForecast = async () => {
    try {
       const headers = { Authorization: `Bearer ${props.token}` }
       const [forecastRes, paymentsRes] = await Promise.all([
-         axios.get(`http://localhost:8000/api/project-financials/${props.projectId}/financials/forecast`, { headers }),
-         axios.get(`http://localhost:8000/api/project-financials/${props.projectId}/payments`, { headers })
+         axios.get(`${API}/project-financials/${props.projectId}/financials/forecast`, { headers }),
+         axios.get(`${API}/project-financials/${props.projectId}/payments`, { headers })
       ])
       forecastData.value = forecastRes.data
       manualEAC.value = forecastRes.data.forecast_total_cost
@@ -54,7 +55,7 @@ const fetchForecast = async () => {
 
 const handleUpdateForecast = async () => {
    try {
-      await axios.put(`http://localhost:8000/api/project-financials/${props.projectId}/financials/forecast`, {
+      await axios.put(`${API}/project-financials/${props.projectId}/financials/forecast`, {
          forecast_total_cost: manualEAC.value
       }, {
          headers: { Authorization: `Bearer ${props.token}` }

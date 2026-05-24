@@ -705,8 +705,8 @@ const onProjectSelect = async () => {
     try {
       const headers = { Authorization: `Bearer ${getToken()}` }
       const [sumRes, payRes] = await Promise.all([
-        axios.get(`http://localhost:8000/api/project-financials/${proj.id}/financials/summary`, { headers }).catch(() => ({ data: null })),
-        axios.get(`http://localhost:8000/api/project-financials/${proj.id}/payments`, { headers }).catch(() => ({ data: [] }))
+        axios.get(`${API}/project-financials/${proj.id}/financials/summary`, { headers }).catch(() => ({ data: null })),
+        axios.get(`${API}/project-financials/${proj.id}/payments`, { headers }).catch(() => ({ data: [] }))
       ])
 
       if (sumRes.data) {
@@ -730,7 +730,7 @@ const onProjectSelect = async () => {
     // CHECK FOR DUPLICATES (Existing Pending/Approved Handovers)
     try {
       const headers = { Authorization: `Bearer ${getToken()}` }
-      const res = await axios.get(`http://localhost:8000/api/handover/?limit=100`, { headers })
+      const res = await axios.get(`${API}/handover/?limit=100`, { headers })
       const allDprs = Array.isArray(res.data) ? res.data : (res.data.items || [])
       const match = allDprs.find(d => d.project_id === proj.id && (d.status === 'Approved' || d.status === 'Internal Review'))
       if (match) {
@@ -746,7 +746,7 @@ const onProjectSelect = async () => {
 const onSlaSelect = async () => {
   if (!form.value.sla_id) return
   try {
-    const res = await axios.get(`http://localhost:8000/api/sla/${form.value.sla_id}`, {
+    const res = await axios.get(`${API}/sla/${form.value.sla_id}`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
     const sla = res.data
@@ -814,10 +814,10 @@ const saveDraft = async () => {
 
     if (handoverId.value) {
       // Update existing
-      await axios.put(`http://localhost:8000/api/handover/${handoverId.value}`, payload, { headers })
+      await axios.put(`${API}/handover/${handoverId.value}`, payload, { headers })
     } else {
       // Create new
-      const res = await axios.post('http://localhost:8000/api/handover/', payload, { headers })
+      const res = await axios.post(`${API}/handover/`, payload, { headers })
       handoverId.value = res.data.id
     }
     localStorage.removeItem(LOCAL_STORAGE_KEY)
@@ -850,9 +850,9 @@ const submitHandover = async () => {
     const headers = { Authorization: `Bearer ${getToken()}` }
 
     if (handoverId.value) {
-      await axios.put(`http://localhost:8000/api/handover/${handoverId.value}`, payload, { headers })
+      await axios.put(`${API}/handover/${handoverId.value}`, payload, { headers })
     } else {
-      const res = await axios.post('http://localhost:8000/api/handover/', payload, { headers })
+      const res = await axios.post(`${API}/handover/`, payload, { headers })
       handoverId.value = res.data.id
     }
     localStorage.removeItem(LOCAL_STORAGE_KEY)
@@ -872,21 +872,21 @@ const submitHandover = async () => {
 
 const fetchProjects = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/api/projects/?limit=100', { headers: { Authorization: `Bearer ${getToken()}` } })
+    const res = await axios.get(`${API}/projects/?limit=100`, { headers: { Authorization: `Bearer ${getToken()}` } })
     projects.value = Array.isArray(res.data) ? res.data : (res.data.items || [])
   } catch (e) { console.error(e) }
 }
 
 const fetchSlaList = async () => {
   try {
-    const res = await axios.get('http://localhost:8000/api/sla/?status=Approved&limit=100', { headers: { Authorization: `Bearer ${getToken()}` } })
+    const res = await axios.get(`${API}/sla/?status=Approved&limit=100`, { headers: { Authorization: `Bearer ${getToken()}` } })
     slaList.value = Array.isArray(res.data) ? res.data : (res.data.items || [])
   } catch (e) { console.error(e) }
 }
 
 const loadExistingDpr = async (id) => {
   try {
-    const res = await axios.get(`http://localhost:8000/api/handover/${id}`, {
+    const res = await axios.get(`${API}/handover/${id}`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
     const data = res.data
@@ -941,6 +941,7 @@ onMounted(() => {
 
 // Auto-save to local storage on any change
 import { watch } from 'vue'
+import { API } from '@/utils/api'
 watch(form, (newVal) => {
   if (!route.query.edit) { // Don't auto-save to local storage if editing existing DB record
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newVal))

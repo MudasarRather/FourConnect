@@ -86,7 +86,7 @@
              <div class="nti-progress">
                <div class="n-prog-bg">
                    <div class="n-prog-fill" :class="{ 'is-zero': !dashboardSelectedTask.progress }" :style="{ width: dashboardSelectedTask.progress ? `calc(${dashboardSelectedTask.progress}% - 8px)` : '24px' }"></div>
-                   <span class="n-prog-text" :style="{ color: !dashboardSelectedTask.progress ? 'rgba(255,255,255,0.4)' : '#1c1c1e' }"><b>{{ dashboardSelectedTask.progress }}%</b> in progress</span>
+                   <span class="n-prog-text" :class="{ 'is-zero': !dashboardSelectedTask.progress }"><b>{{ dashboardSelectedTask.progress }}%</b> in progress</span>
                    <div class="n-prog-check" style="cursor:pointer;" @click="selectedTaskId = dashboardSelectedTask.id"><Check :size="12"/></div>
                </div>
              </div>
@@ -120,7 +120,7 @@
           <!-- Task Item 2: Attachments -->
           <div class="n-task-item compact" v-if="dashboardSelectedTask">
             <div class="nti-header compact-h">
-               <div class="nti-av" style="background:#1c1c1e; display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.7);">
+               <div class="nti-av nti-av-doc">
                  <Paperclip :size="14" />
                </div>
                <span class="nti-title">Documents & sorting</span>
@@ -391,7 +391,7 @@
                <span class="v-name" style="color:rgba(255,255,255,0.85); font-weight:500;">{{ task.assignee_name || 'Unassigned' }}</span>
              </div>
              <div class="col prior">
-               <span class="pill" :style="{ background: task.priority === 'high' ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.05)', color: task.priority === 'high' ? '#f87171' : 'rgba(255,255,255,0.7)', padding:'4px 8px', fontSize:'11px', borderRadius:'4px', letterSpacing:'0.02em', textTransform:'capitalize' }">{{ capitalize(task.priority || 'Medium') }}</span>
+               <span class="priority-chip" :class="`p-${(task.priority || 'medium').toLowerCase()}`">{{ capitalize(task.priority || 'Medium') }}</span>
              </div>
              <div class="col date" style="color:rgba(255,255,255,0.5); font-size:12px;">
                {{ formatDate(task.due_date) }}
@@ -441,6 +441,7 @@ import { useToast } from '../composables/useToast'
 import TaskDetailsDrawer from '../components/tasks/TaskDetailsDrawer.vue'
 import EditTaskModal from '../components/tasks/EditTaskModal.vue'
 import CompactDatePicker from '../components/ui/CompactDatePicker.vue'
+import { API } from '@/utils/api'
 import {
   Search, Plus, Bell, Folder, LayoutGrid, Clock, CalendarDays, Video,
   CheckSquare, Check, Heart, MessageSquare, Send, MoreHorizontal,
@@ -495,11 +496,43 @@ const filteredTasks = computed(() => {
   return list
 })
 
+// Derive the *effective* status from dates so the table reflects reality
+// when the backend cron hasn't transitioned a task yet.
+//   completed / cancelled → keep
+//   due_date in the past → expired
+//   start_date in the future → upcoming
+//   otherwise → keep original (open / in_progress / etc.)
+const getEffectiveStatus = (task) => {
+  const raw = (task?.status || '').toLowerCase()
+  if (['completed', 'cancelled', 'extended'].includes(raw)) return raw
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  if (task?.due_date) {
+    const due = new Date(task.due_date)
+    if (!isNaN(due.getTime())) {
+      due.setHours(0, 0, 0, 0)
+      if (due.getTime() < today.getTime()) return 'expired'
+    }
+  }
+  if (task?.start_date) {
+    const start = new Date(task.start_date)
+    if (!isNaN(start.getTime())) {
+      start.setHours(0, 0, 0, 0)
+      // start today or later counts as upcoming (unless work has begun)
+      if (start.getTime() >= today.getTime() && raw !== 'in_progress') return 'upcoming'
+    }
+  }
+  return raw || 'open'
+}
+
 const dashboardRecentTasks = computed(() => {
   if (!dashboardStats.value?.recent_tasks) return []
-  let tasks = dashboardStats.value.recent_tasks
+  // Normalize each task with its effective status so the filter + display agree
+  let tasks = dashboardStats.value.recent_tasks.map(t => ({
+    ...t,
+    status: getEffectiveStatus(t)
+  }))
   if (rtcStatusTab.value !== 'all') {
-    tasks = tasks.filter(t => t.status?.toLowerCase() === rtcStatusTab.value.toLowerCase())
+    tasks = tasks.filter(t => t.status === rtcStatusTab.value.toLowerCase())
   }
   return tasks.slice(0, 5)
 })
@@ -521,10 +554,24 @@ const prevDashboardTask = () => {
 }
 
 const upcomingTasks = computed(() => {
-  // Only tasks with 'upcoming' status, assigned to me (or all if admin), sorted by start date
+  // Upcoming = explicitly marked 'upcoming' OR not-yet-done tasks whose
+  // start_date is today or later (date-only — strip time so a task starting
+  // "today" still counts as upcoming even after midnight has passed).
   const sourceTasks = isAdmin.value ? allTasks.value : myTasks.value;
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
   return sourceTasks
-    .filter(t => t.status === 'upcoming')
+    .filter(t => {
+      const status = (t.status || '').toLowerCase()
+      if (['completed', 'expired', 'cancelled'].includes(status)) return false
+      if (status === 'upcoming') return true
+      if (!t.start_date) return false
+      const start = new Date(t.start_date)
+      if (isNaN(start.getTime())) return false
+      // Compare by date only — start of `start` >= start of today
+      start.setHours(0, 0, 0, 0)
+      return start.getTime() >= startOfToday.getTime()
+    })
     .sort((a, b) => new Date(a.start_date) - new Date(b.start_date))
 })
 
@@ -804,7 +851,6 @@ watch(selectedTaskId, async (newVal) => {
   }
 })
 
-const API = 'http://localhost:8000/api'
 const getHeaders = () => {
   const token = localStorage.getItem(isAdmin.value ? 'admin_token' : 'user_token')
   return { Authorization: `Bearer ${token}` }
@@ -1839,5 +1885,525 @@ watch(dashboardPeriod, () => {
 [data-theme="light"] .nav-arrow-btn:hover {
   background: rgba(40, 25, 10, 0.10);
   color: var(--text-primary);
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   Light-theme rescue for the actual card classes used in TasksPage.
+   Earlier overrides above target `.recent-tasks-card` / `.performance-card`
+   but the template uses `.recent-table-card` / `.perf-card` — so the cards
+   stayed dark on cream. Block below also covers `.n-card`, `.tasks-card`,
+   `.upcoming-card`, `.hero-card`, `.pm-table-modern`, `.glass-card`, and
+   the All Tasks row text which is set via inline styles (need !important).
+   ═════════════════════════════════════════════════════════════════════════ */
+[data-theme="light"] .nano-page { color: var(--text-primary); }
+[data-theme="light"] .nano-header { color: var(--text-primary); }
+[data-theme="light"] .n-card,
+[data-theme="light"] .tasks-card,
+[data-theme="light"] .upcoming-card,
+[data-theme="light"] .hero-card,
+[data-theme="light"] .recent-table-card,
+[data-theme="light"] .perf-card,
+[data-theme="light"] .pm-table-modern,
+[data-theme="light"] .glass-card {
+  background: rgba(255, 250, 240, 0.78);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(40, 25, 10, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+/* pm-table rows (All Tasks page) */
+[data-theme="light"] .pm-row-modern { border-bottom-color: rgba(40, 25, 10, 0.08); }
+[data-theme="light"] .pm-row-modern.header {
+  border-bottom-color: rgba(40, 25, 10, 0.14);
+  color: #6b5840;
+}
+[data-theme="light"] .pm-row-modern.item:hover { background: rgba(217, 119, 6, 0.07); }
+[data-theme="light"] .v-name,
+[data-theme="light"] .pm-row-modern .col .v-name { color: var(--text-primary) !important; }
+[data-theme="light"] .pm-row-modern .col,
+[data-theme="light"] .pm-row-modern .col span,
+[data-theme="light"] .pm-row-modern .col div {
+  color: var(--text-primary) !important;
+}
+/* Re-mute the "task_type" subline and ID column on light */
+[data-theme="light"] .pm-row-modern .col.sn,
+[data-theme="light"] .pm-row-modern .col.date,
+[data-theme="light"] .pm-row-modern .col.category .v-ref {
+  color: var(--text-secondary) !important;
+}
+[data-theme="light"] .fallback-av {
+  background: rgba(40, 25, 10, 0.10) !important;
+  color: var(--text-primary) !important;
+}
+/* Priority pill — inline-styled. Force readable variants on cream */
+[data-theme="light"] .pm-row-modern .pill {
+  background: rgba(40, 25, 10, 0.06) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .pm-row-modern .pill[style*="rgb(239, 68, 68)"],
+[data-theme="light"] .pm-row-modern .pill[style*="f87171"],
+[data-theme="light"] .pm-row-modern .pill[style*="rgba(239,68,68"] {
+  background: rgba(220, 38, 38, 0.12) !important;
+  color: #991b1b !important;
+}
+
+/* All Tasks header eyebrows + search */
+[data-theme="light"] .h1,
+[data-theme="light"] h1 { color: var(--text-primary); }
+[data-theme="light"] .search-box {
+  background: transparent !important;
+  border-color: rgba(40, 25, 10, 0.18) !important;
+}
+/* Override theme-light-rescue.css which paints `.search-box input` with a cream bg */
+[data-theme="light"] .search-box input {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .search-box input::placeholder { color: var(--text-placeholder) !important; }
+[data-theme="light"] .search-box svg { color: var(--text-secondary); }
+
+/* Empty state inside tables */
+[data-theme="light"] .empty-state { color: var(--text-secondary); }
+[data-theme="light"] .empty-state h4 { color: var(--text-primary) !important; }
+[data-theme="light"] .empty-state .empty-icon,
+[data-theme="light"] .empty-state svg { color: rgba(40, 25, 10, 0.30) !important; }
+
+/* Status badges in the table — keep the colour palette, deepen text for cream */
+[data-theme="light"] .status-badge.completed {
+  background: rgba(34, 197, 94, 0.14); color: #166534; border-color: rgba(34, 197, 94, 0.30);
+}
+[data-theme="light"] .status-badge.expired {
+  background: rgba(220, 38, 38, 0.12); color: #991b1b; border-color: rgba(220, 38, 38, 0.30);
+}
+[data-theme="light"] .status-badge.open,
+[data-theme="light"] .status-badge.upcoming {
+  background: rgba(217, 119, 6, 0.14); color: #92400e; border-color: rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .status-badge.pending,
+[data-theme="light"] .status-badge.in_progress {
+  background: rgba(234, 179, 8, 0.16); color: #854d0e; border-color: rgba(234, 179, 8, 0.30);
+}
+[data-theme="light"] .status-badge.blocked {
+  background: rgba(220, 38, 38, 0.12); color: #991b1b; border-color: rgba(220, 38, 38, 0.30);
+}
+[data-theme="light"] .status-badge.extended {
+  background: rgba(135, 88, 255, 0.14); color: #5b21b6; border-color: rgba(135, 88, 255, 0.30);
+}
+
+/* Dashboard inner sub-elements that the existing block missed */
+[data-theme="light"] .tasks-card h2,
+[data-theme="light"] .upcoming-card h2,
+[data-theme="light"] .recent-table-card h2,
+[data-theme="light"] .perf-card h2 { color: var(--text-primary); }
+
+/* "All caught up!" calendar bubble */
+[data-theme="light"] .all-caught-icon-wrap,
+[data-theme="light"] .upcoming-empty-icon {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.24);
+  color: #b45309;
+}
+
+/* Chevron carousel buttons (purple + yellow accents) — keep palette, just lighten text */
+[data-theme="light"] .icon-tab-btn { color: var(--text-primary); }
+
+/* ═════════════════════════════════════════════════════════════════════════
+   Second pass — every inner widget that still bleeds dark on cream.
+   All `#1c1c1e` solids and `rgba(0,0,0,X)` panels become cream surfaces;
+   every `rgba(255,255,255,X)` text/bg gets a dark counterpart.
+   Brand accents (#facc15 yellow, #8758FF purple, #f59e0b orange, #4ade80
+   green, #ef4444 red, #fbbf24 amber) are preserved exactly.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tasks card (left) ── */
+[data-theme="light"] .tasks-card,
+[data-theme="light"] .tasks-card * { color: var(--text-primary); }
+[data-theme="light"] .tc-header h2 { color: var(--text-primary); }
+[data-theme="light"] .check-text { color: var(--text-secondary); }
+[data-theme="light"] .tc-av {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-primary);
+}
+[data-theme="light"] .tc-av-circle {
+  border-color: rgba(255, 250, 240, 0.95);
+  color: #1a1410;
+}
+
+/* Task list rows */
+[data-theme="light"] .n-task-item {
+  background: rgba(40, 25, 10, 0.05);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
+[data-theme="light"] .n-task-item.compact { background: rgba(40, 25, 10, 0.04); }
+[data-theme="light"] .nti-title { color: var(--text-primary); }
+[data-theme="light"] .nti-count {
+  background: rgba(40, 25, 10, 0.08);
+  color: var(--text-primary);
+}
+[data-theme="light"] .nti-count.blue { background: #8758FF; color: #fff; }  /* preserve purple */
+
+/* Tooltip stays dark (it's intentionally a popover overlay) */
+
+/* Progress bar inside n-task-item */
+[data-theme="light"] .n-prog-bg {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .n-prog-fill.is-zero { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .n-prog-text { color: #1c1c1e; }
+[data-theme="light"] .n-prog-check {
+  background: rgba(40, 25, 10, 0.10);
+  color: #1c1c1e;
+}
+
+/* Comment block inside n-task-item */
+[data-theme="light"] .nti-comment { background: rgba(40, 25, 10, 0.04); }
+[data-theme="light"] .ntic-name { color: var(--text-primary); }
+[data-theme="light"] .ntic-msg { color: var(--text-secondary); }
+[data-theme="light"] .ntic-actions { color: var(--text-tertiary); }
+[data-theme="light"] .ntic-more { color: var(--text-tertiary); }
+
+/* ── Upcoming card ── */
+[data-theme="light"] .upcoming-card,
+[data-theme="light"] .upcoming-card * { color: var(--text-primary); }
+[data-theme="light"] .uc-header h2 { color: var(--text-primary); }
+[data-theme="light"] .uc-actions { color: var(--text-tertiary); }
+[data-theme="light"] .uc-tabs .u-tab {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .uc-tabs .u-tab.active {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+}
+[data-theme="light"] .u-icon-tab {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-secondary);
+}
+/* Meeting box (was solid #1c1c1e) */
+[data-theme="light"] .uc-meeting-box {
+  background: rgba(40, 25, 10, 0.04);
+  border: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .umb-title { color: var(--text-primary); }
+[data-theme="light"] .circle-blue { color: #8758FF; }
+[data-theme="light"] .umb-field label { color: var(--text-tertiary); }
+[data-theme="light"] .u-tag.dark {
+  background: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
+/* u-tag green/yellow keep their bright fills — already on-brand on cream */
+
+/* ── Hero card (New task panel) ── */
+[data-theme="light"] .hero-card {
+  background: linear-gradient(145deg, rgba(255, 250, 240, 0.85), rgba(252, 240, 220, 0.55));
+}
+[data-theme="light"] .hero-card:hover {
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow: 0 25px 50px -12px rgba(40, 25, 10, 0.18), 0 0 20px rgba(250, 204, 21, 0.18);
+}
+[data-theme="light"] .hero-illustration {
+  background: rgba(40, 25, 10, 0.05);
+  box-shadow: inset 0 0 40px rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .w-box {
+  background: rgba(40, 25, 10, 0.05);
+  border-color: rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .hero-card:hover .w-box {
+  background: rgba(40, 25, 10, 0.10);
+  border-color: rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .w-line { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .badd { color: var(--text-tertiary); }
+[data-theme="light"] .hero-card:hover .badd svg { color: #d97706; }  /* keep amber, slightly deeper */
+[data-theme="light"] .hero-content h3 { color: var(--text-primary); }
+[data-theme="light"] .hero-content p { color: var(--text-secondary); }
+
+/* n-btn outline (Learn more) */
+[data-theme="light"] .n-btn.outline {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-primary);
+  border-color: rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .n-btn.outline:hover {
+  background: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+  border-color: rgba(40, 25, 10, 0.22);
+}
+/* n-btn.primary keeps yellow #facc15 fill */
+
+/* ── Recent table card ── */
+[data-theme="light"] .recent-table-card,
+[data-theme="light"] .recent-table-card * { color: var(--text-primary); }
+[data-theme="light"] .rtc-title h2 { color: var(--text-primary); }
+[data-theme="light"] .up-text { color: var(--text-tertiary); }
+[data-theme="light"] .up-badge { background: #4ade80; color: #1c1c1e; }  /* keep green */
+[data-theme="light"] .rtc-search { color: var(--text-secondary); }
+[data-theme="light"] .rtc-toggle {
+  background: rgba(40, 25, 10, 0.05);
+}
+[data-theme="light"] .t-btn { color: var(--text-secondary); }
+[data-theme="light"] .t-btn.active {
+  background: rgba(255, 250, 240, 0.95);
+  color: var(--text-primary);
+  box-shadow: 0 2px 4px rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .r-tab {
+  background: transparent;
+  border: 1px solid rgba(40, 25, 10, 0.14);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .r-tab.active {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #92400e;
+}
+[data-theme="light"] .r-export { background: #8758FF; color: #fff; }  /* keep purple */
+
+/* rtc-table was solid dark #1c1c1e */
+[data-theme="light"] .rtc-table {
+  background: rgba(40, 25, 10, 0.04);
+  border: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .rt-row:not(:last-child) { border-bottom-color: rgba(40, 25, 10, 0.06); }
+[data-theme="light"] .rt-row.header {
+  color: var(--text-secondary);
+  border-bottom-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .project-name { color: var(--text-primary); }
+[data-theme="light"] .assign-col { color: var(--text-primary); }
+[data-theme="light"] .muted { color: var(--text-secondary); }
+[data-theme="light"] .date-highlight {
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.45);
+  background: rgba(250, 204, 21, 0.12);
+}
+[data-theme="light"] .highlighted { color: #5b21b6; }  /* deepen purple for cream */
+
+/* status-pill — keep colour palette (yellow/green/red/purple), darken text where bg is solid */
+/* These are already solid-colored backgrounds, text stays as-is */
+
+/* ── Performance card ── */
+[data-theme="light"] .perf-card,
+[data-theme="light"] .perf-card * { color: var(--text-primary); }
+[data-theme="light"] .pc-header h2 { color: var(--text-primary); }
+[data-theme="light"] .pc-actions { color: var(--text-tertiary); }
+[data-theme="light"] .pc-actions svg:last-child {
+  background: rgba(40, 25, 10, 0.05);
+}
+[data-theme="light"] .pcs-av-img,
+[data-theme="light"] .pcs-av-badge {
+  border-color: rgba(255, 250, 240, 0.95);
+}
+[data-theme="light"] .flag-btn {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-secondary);
+}
+
+/* chart-area was solid dark #1c1c1e — now an ultra-modern glass card */
+[data-theme="light"] .chart-area {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(217, 119, 6, 0.08), transparent 60%),
+    linear-gradient(180deg, rgba(255, 250, 240, 0.85), rgba(252, 240, 220, 0.50));
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 4px 14px rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] .y-axis { color: var(--text-tertiary); }
+[data-theme="light"] .chart-tasks-badge {
+  background: rgba(34, 197, 94, 0.14);
+  color: #166534;
+  border-color: rgba(34, 197, 94, 0.32);
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   Final pass — issues called out specifically:
+   • nano-tabs-dock tab-icon + tab-separator
+   • inline-styled n-prog-text + nti-av on dashboard task carousel
+   • status-pill: keep dark-theme palette exactly in light theme
+   • status-badge in pm-table: same palette as dark theme (not deepened)
+   • chart-area: ultra-modern redesign + visible grid lines + soft glow
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* Tab icons + separator inside the top tabs strip */
+[data-theme="light"] .tab-separator { background: rgba(40, 25, 10, 0.18); }
+[data-theme="light"] .tab-icon { color: rgba(60, 45, 30, 0.60); }
+[data-theme="light"] .n-tab.active .tab-icon { color: #8758FF; }  /* keep purple accent */
+
+/* n-prog-text: in-place class replaces the old inline color binding */
+.n-prog-text { color: #1c1c1e; }
+.n-prog-text.is-zero { color: rgba(255, 255, 255, 0.4); }
+[data-theme="light"] .n-prog-text { color: #1c1c1e; }
+[data-theme="light"] .n-prog-text.is-zero { color: rgba(40, 25, 10, 0.45); }
+
+/* nti-av-doc: replaces the old hardcoded inline style on the Paperclip avatar */
+.nti-av-doc {
+  background: #1c1c1e;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex; align-items: center; justify-content: center;
+}
+[data-theme="light"] .nti-av-doc {
+  background: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
+
+/* status-pill — preserve dark-theme palette exactly in light theme
+   (overrides the earlier amber-on-cream override that the user rejected) */
+[data-theme="light"] .status-pill.pending,
+[data-theme="light"] .status-pill.open,
+[data-theme="light"] .status-pill.in_progress,
+[data-theme="light"] .status-pill.upcoming {
+  background: #facc15; color: #1c1c1e;
+}
+[data-theme="light"] .status-pill.completed { background: #4ade80; color: #1c1c1e; }
+[data-theme="light"] .status-pill.expired { background: #ef4444; color: #fff; }
+[data-theme="light"] .status-pill.extended { background: #8758FF; color: #fff; }
+[data-theme="light"] .status-pill.paused,
+[data-theme="light"] .status-pill.blocked { background: #f59e0b; color: #1c1c1e; opacity: 0.8; }
+
+/* status-badge (compact, used in pm-table) — also keep dark palette
+   (override earlier deepened-text variants the user rejected) */
+[data-theme="light"] .status-badge.completed {
+  background: rgba(74, 222, 128, 0.12); color: #16a34a; border-color: rgba(74, 222, 128, 0.30);
+}
+[data-theme="light"] .status-badge.expired {
+  background: rgba(239, 68, 68, 0.10); color: #dc2626; border-color: rgba(239, 68, 68, 0.28);
+}
+[data-theme="light"] .status-badge.open,
+[data-theme="light"] .status-badge.upcoming {
+  background: rgba(251, 191, 36, 0.14); color: #b45309; border-color: rgba(251, 191, 36, 0.32);
+}
+[data-theme="light"] .status-badge.pending,
+[data-theme="light"] .status-badge.in_progress {
+  background: rgba(250, 204, 21, 0.16); color: #854d0e; border-color: rgba(250, 204, 21, 0.32);
+}
+[data-theme="light"] .status-badge.blocked {
+  background: rgba(239, 68, 68, 0.10); color: #dc2626; border-color: rgba(239, 68, 68, 0.28);
+}
+[data-theme="light"] .status-badge.extended {
+  background: rgba(135, 88, 255, 0.14); color: #6d28d9; border-color: rgba(135, 88, 255, 0.30);
+}
+
+/* Priority pill in pm-table-modern — keep palette parallel to dark */
+[data-theme="light"] .pm-row-modern .pill[style*="rgb(239, 68, 68)"],
+[data-theme="light"] .pm-row-modern .pill[style*="f87171"],
+[data-theme="light"] .pm-row-modern .pill[style*="rgba(239,68,68"] {
+  background: rgba(239, 68, 68, 0.10) !important;
+  color: #dc2626 !important;
+}
+/* Non-high priority pills (medium/low) — inline white-on-white; force readable on cream */
+[data-theme="light"] .pm-row-modern .pill:not([style*="239, 68, 68"]):not([style*="f87171"]) {
+  background: rgba(40, 25, 10, 0.06) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ═══ Chart-area — ultra modern (dark + light) ═══════════════════════════ */
+.chart-area {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.07), transparent 65%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0.005));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px rgba(0, 0, 0, 0.20);
+  overflow: hidden;
+  position: relative;
+}
+/* Subtle scan-line shimmer for premium feel */
+.chart-area::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 0%, rgba(250, 204, 21, 0.025) 50%, transparent 100%);
+  pointer-events: none;
+  animation: chartScan 6s ease-in-out infinite;
+  opacity: 0.6;
+}
+@keyframes chartScan {
+  0%, 100% { transform: translateY(-15%); }
+  50%      { transform: translateY(15%); }
+}
+
+/* SVG — grid lines themed via CSS (overrides inline stroke attribute);
+   path lines get a soft glow + smoother joins. */
+.perf-svg { overflow: visible; }
+.perf-svg line {
+  stroke: rgba(255, 255, 255, 0.08) !important;
+  stroke-dasharray: 3 4;
+}
+.perf-svg path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+.perf-svg circle {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+
+[data-theme="light"] .perf-svg line { stroke: rgba(40, 25, 10, 0.10) !important; }
+[data-theme="light"] .perf-svg circle { stroke: rgba(255, 250, 240, 0.95) !important; }
+[data-theme="light"] .perf-svg path { filter: drop-shadow(0 0 5px currentColor) drop-shadow(0 1px 2px rgba(40, 25, 10, 0.12)); }
+[data-theme="light"] .perf-svg circle { filter: drop-shadow(0 2px 4px rgba(40, 25, 10, 0.20)); }
+
+/* Y-axis tick labels need a touch more contrast in dark mode too */
+.y-axis { color: rgba(255, 255, 255, 0.45); font-weight: 600; }
+
+/* Legend dots already have brand colors — just space them better */
+.pc-legend { gap: 16px; }
+.l-dot {
+  box-shadow: 0 0 6px currentColor;
+  filter: brightness(1.1);
+}
+
+/* ═════════════════════════════════════════════════════════════════════════
+   Priority chip — All Tasks table column (low / medium / high / critical)
+   ═════════════════════════════════════════════════════════════════════════ */
+.priority-chip {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+  text-transform: capitalize;
+  border: 1px solid transparent;
+}
+.priority-chip.p-low {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.30);
+}
+.priority-chip.p-medium {
+  background: rgba(250, 204, 21, 0.12);
+  color: #facc15;
+  border-color: rgba(250, 204, 21, 0.30);
+}
+.priority-chip.p-high {
+  background: rgba(249, 115, 22, 0.14);
+  color: #fb923c;
+  border-color: rgba(249, 115, 22, 0.32);
+}
+.priority-chip.p-critical {
+  background: rgba(239, 68, 68, 0.14);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.32);
+}
+
+/* Light theme — same hue family, deeper text for cream readability */
+[data-theme="light"] .priority-chip.p-low {
+  background: rgba(34, 197, 94, 0.14);
+  color: #166534;
+  border-color: rgba(34, 197, 94, 0.34);
+}
+[data-theme="light"] .priority-chip.p-medium {
+  background: rgba(234, 179, 8, 0.18);
+  color: #854d0e;
+  border-color: rgba(234, 179, 8, 0.36);
+}
+[data-theme="light"] .priority-chip.p-high {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+  border-color: rgba(234, 88, 12, 0.36);
+}
+[data-theme="light"] .priority-chip.p-critical {
+  background: rgba(220, 38, 38, 0.12);
+  color: #991b1b;
+  border-color: rgba(220, 38, 38, 0.36);
 }
 </style>

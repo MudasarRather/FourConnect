@@ -670,6 +670,7 @@ import {
 import { useToast } from '../../composables/useToast'
 import SlaSelect from '../../components/ui/SlaSelect.vue'
 import CompactDatePicker from '../../components/ui/CompactDatePicker.vue'
+import { API } from '@/utils/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -894,7 +895,7 @@ const handleFileUpload = async (event, i) => {
   formData.append('file', file)
   
   try {
-    const res = await axios.post('http://localhost:8000/api/uploads/dpr-attachment', formData, {
+    const res = await axios.post(`${API}/uploads/dpr-attachment`, formData, {
       headers: { 
         'Authorization': `Bearer ${getToken()}`,
         'Content-Type': 'multipart/form-data'
@@ -947,9 +948,9 @@ const saveDraft = async () => {
     const payload = { ...form, milestones: sanitizedMilestones }
 
     if (dprId.value) {
-      await axios.put(`http://localhost:8000/api/dpr/${dprId.value}`, payload, config)
+      await axios.put(`${API}/dpr/${dprId.value}`, payload, config)
     } else {
-      const res = await axios.post('http://localhost:8000/api/dpr/', payload, config)
+      const res = await axios.post(`${API}/dpr/`, payload, config)
       dprId.value = res.data.id
     }
     
@@ -981,7 +982,7 @@ const submitProposal = async () => {
 
 const loadDpr = async (id) => {
   try {
-    const res = await axios.get(`http://localhost:8000/api/dpr/${id}`, {
+    const res = await axios.get(`${API}/dpr/${id}`, {
       headers: { Authorization: `Bearer ${getToken()}` }
     })
     Object.assign(form, res.data)

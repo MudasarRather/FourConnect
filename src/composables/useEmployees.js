@@ -3,8 +3,9 @@
 // they change rarely; refetches the employee list on mutations.
 import { reactive, ref, computed } from 'vue'
 import axios from 'axios'
+import { API } from '@/utils/api'
 
-const API_BASE = 'http://localhost:8000/api'
+const API_BASE = `${API}`
 
 const authHeader = () => {
   const token = localStorage.getItem('admin_token') || localStorage.getItem('user_token')

@@ -17,4 +17,9 @@ import AuditLogTable from './audit/AuditLogTable.vue'
 .header-row { margin-bottom: 24px; }
 h2 { font-size: 20px; font-weight: 600; color: white; margin: 0; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] h2 { color: #1a1410; }
 </style>

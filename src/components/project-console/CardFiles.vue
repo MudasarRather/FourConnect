@@ -165,8 +165,84 @@ h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin:
 .dl-icon { opacity: 0; transform: translateX(-5px); transition: all 0.2s; color: rgba(255,255,255,0.6); }
 .file-item:hover .dl-icon { opacity: 1; transform: translateX(0); }
 
-.empty-state { 
-  flex: 1; display: flex; align-items: center; justify-content: center; 
+.empty-state {
+  flex: 1; display: flex; align-items: center; justify-content: center;
   opacity: 0.3; font-size: 12px; font-style: italic; min-height: 100px;
+}
+
+/* ═════════════════ LIGHT THEME OVERRIDES — CardFiles ═════════════════ */
+[data-theme="light"] .glass-card {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 4px 20px rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] .card-header {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+  padding-bottom: 16px;
+}
+[data-theme="light"] .icon-box {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+}
+[data-theme="light"] h3 {
+  color: var(--text-primary);
+}
+[data-theme="light"] .counter {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  font-weight: 700;
+}
+[data-theme="light"] .files-content-scroll::-webkit-scrollbar-thumb {
+  background: rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .files-content-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(40, 25, 10, 0.30);
+}
+[data-theme="light"] .file-item {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.06);
+  border-radius: 10px;
+}
+[data-theme="light"] .file-item:hover {
+  background: rgba(40, 25, 10, 0.06);
+  border-color: rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .f-icon {
+  background: rgba(217, 119, 6, 0.12);
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  color: #92400e;
+}
+[data-theme="light"] .milestone-icon {
+  color: #b45309;
+}
+[data-theme="light"] .file-item:hover .f-icon {
+  background: rgba(217, 119, 6, 0.20);
+}
+[data-theme="light"] .f-name {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+[data-theme="light"] .f-size {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+  font-weight: 600;
+}
+[data-theme="light"] .f-bottom {
+  color: #6b5840;
+}
+[data-theme="light"] .dot {
+  color: #92400e;
+  opacity: 0.6;
+}
+[data-theme="light"] .dl-icon {
+  color: #92400e;
+}
+[data-theme="light"] .empty-state {
+  color: #92400e;
+  opacity: 1;
+}
+[data-theme="light"] .empty-text {
+  color: #92400e;
 }
 </style>

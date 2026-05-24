@@ -877,4 +877,107 @@ const handleMilestoneDelete = (deletedId) => {
 
 /* Orange/amber utility classes (replacing prior rose/emerald/blue usages) */
 .text-amber-warning { color: #f97316; }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .project-details-page { color: var(--text-primary); }
+[data-theme="light"] .page-loading { color: var(--text-tertiary); }
+[data-theme="light"] .access-card {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(26, 20, 16, 0.10);
+  box-shadow: 0 10px 30px rgba(26, 20, 16, 0.06);
+}
+[data-theme="light"] .access-card h2 { color: var(--text-primary); }
+[data-theme="light"] .access-card p { color: var(--text-secondary); }
+[data-theme="light"] .btn-secondary {
+  background: rgba(26, 20, 16, 0.08);
+  color: var(--text-primary);
+  border-color: rgba(26, 20, 16, 0.12);
+}
+[data-theme="light"] .btn-secondary:hover { background: rgba(26, 20, 16, 0.15); }
+[data-theme="light"] .page-title { color: var(--text-primary); }
+[data-theme="light"] .meta-row { color: var(--text-secondary); }
+[data-theme="light"] .code { color: var(--text-tertiary); }
+[data-theme="light"] .card-header h3 { color: var(--text-primary); }
+[data-theme="light"] .metric-item .label { color: var(--text-tertiary); }
+[data-theme="light"] .metric-item .value { color: var(--text-primary); }
+[data-theme="light"] .name { color: var(--text-primary); }
+[data-theme="light"] .role { color: var(--text-secondary); }
+[data-theme="light"] .info-row .label { color: var(--text-secondary); }
+[data-theme="light"] .info-row .value { color: var(--text-primary); }
+
+/* Content cards — cream surface + visible separators (header border-bottom + row borders) */
+[data-theme="light"] .content-card {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .card-header {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .card-header .icon { color: #b45309; }
+
+/* Metric labels — deep amber for the eyebrow style */
+[data-theme="light"] .metric-item .label { color: #6b5840; }
+[data-theme="light"] .metric-item .icon-label svg { color: #b45309; }
+[data-theme="light"] .metric-item .value.text-sm { color: #6b5840; }
+
+/* Team rows — cream tile with warm border, separator preserved on hover */
+[data-theme="light"] .team-member-row {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .team-member-row:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .role { color: #92400e; }
+
+[data-theme="light"] .team-list::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.30);
+}
+
+/* Info rows — visible separator between each row */
+[data-theme="light"] .info-row {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .info-row .label { color: #6b5840; }
+[data-theme="light"] .info-row .icon-label svg { color: #b45309; }
+[data-theme="light"] .info-row .value.mono { color: #b45309; }
+[data-theme="light"] .mono { color: #b45309; }
+
+[data-theme="light"] .text-amber-warning { color: #c2410c; }
+
+/* Header — back link, project icon, status badge */
+[data-theme="light"] .btn-text { color: #6b5840; }
+[data-theme="light"] .btn-text:hover { color: #92400e; }
+[data-theme="light"] .project-icon {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #b45309;
+}
+[data-theme="light"] .meta-row { color: #6b5840; }
+[data-theme="light"] .code { color: #92400e; opacity: 1; }
+[data-theme="light"] .dot { color: #b45309; opacity: 0.6; }
+[data-theme="light"] .status-badge.approved {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .status-badge.pending-approval {
+  background: rgba(249, 115, 22, 0.12);
+  color: #c2410c;
+  border-color: rgba(249, 115, 22, 0.32);
+}
+[data-theme="light"] .status-badge.rejected {
+  background: rgba(220, 38, 38, 0.10);
+  color: #991b1b;
+  border-color: rgba(220, 38, 38, 0.28);
+}
+
+/* Completed watermark — keep gold-on-cream */
+[data-theme="light"] .completed-watermark {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.20) 0%, rgba(249, 115, 22, 0.08) 100%);
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #92400e;
+  box-shadow: 0 0 20px rgba(217, 119, 6, 0.18);
+}
 </style>

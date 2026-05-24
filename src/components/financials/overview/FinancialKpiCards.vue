@@ -192,4 +192,66 @@ const cards = computed(() => [
 .delay-1 { animation-delay: 0.2s; }
 .delay-2 { animation-delay: 0.3s; }
 .delay-3 { animation-delay: 0.4s; }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] .content-card {
+  background: rgba(255, 250, 240, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  box-shadow: 0 2px 8px rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] .content-card:hover {
+  border-color: rgba(217, 119, 6, 0.30);
+  box-shadow: 0 12px 28px rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .icon-box {
+  background: rgba(217, 119, 6, 0.10);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .label {
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .currency { color: #92400e; }
+[data-theme="light"] .value { color: #1a1410; }
+[data-theme="light"] .trend-indicator.neutral {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+}
+[data-theme="light"] .trend-indicator.success {
+  background: rgba(5, 150, 105, 0.12);
+  color: #047857;
+}
+[data-theme="light"] .trend-indicator.danger {
+  background: rgba(220, 38, 38, 0.10);
+  color: #b91c1c;
+}
+[data-theme="light"] .theme-orange { color: #c2410c; }
+[data-theme="light"] .theme-orange .icon-box {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(249, 115, 22, 0.06));
+  border-color: rgba(249, 115, 22, 0.32);
+}
+[data-theme="light"] .theme-yellow { color: #b45309; }
+[data-theme="light"] .theme-yellow .icon-box {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.18), rgba(234, 179, 8, 0.06));
+  border-color: rgba(234, 179, 8, 0.32);
+}
+[data-theme="light"] .theme-amber { color: #b45309; }
+[data-theme="light"] .theme-amber .icon-box {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0.06));
+  border-color: rgba(245, 158, 11, 0.32);
+}
+[data-theme="light"] .theme-red { color: #047857; }
+[data-theme="light"] .theme-red .icon-box {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.16), rgba(5, 150, 105, 0.06));
+  border-color: rgba(5, 150, 105, 0.32);
+}
+[data-theme="light"] .theme-teal { color: #0d9488; }
+[data-theme="light"] .theme-teal .icon-box {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.16), rgba(20, 184, 166, 0.06));
+  border-color: rgba(20, 184, 166, 0.32);
+}
+[data-theme="light"] .geo-shape { opacity: 0.10; }
 </style>

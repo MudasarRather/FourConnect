@@ -398,4 +398,23 @@ onMounted(fetchData)
   .glass-header, .main-canvas { padding-left: 20px; padding-right: 20px; }
   .archive-banner { flex-direction: column; align-items: flex-start; }
 }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .expenses-page { color: var(--text-primary); }
+[data-theme="light"] .header-text label { color: var(--text-tertiary); }
+[data-theme="light"] .header-text h1 { color: var(--text-primary); }
+[data-theme="light"] .banner-title { color: #b91c1c; }
+[data-theme="light"] .banner-desc { color: var(--text-secondary); }
+[data-theme="light"] .stat-number { color: var(--text-primary); }
+[data-theme="light"] .stat-label-text { color: #6b5840; }
+[data-theme="light"] .header-icon-box.danger {
+  background: rgba(220, 38, 38, 0.10);
+  border-color: rgba(220, 38, 38, 0.28);
+}
+[data-theme="light"] .title-group h3 { color: var(--text-primary); }
+[data-theme="light"] .title-group p { color: var(--text-secondary); }
+[data-theme="light"] .v-name { color: var(--text-primary); }
+[data-theme="light"] .v-ref { color: var(--text-tertiary); }
+[data-theme="light"] .col.amount { color: var(--text-primary); }
+[data-theme="light"] .col.date { color: var(--text-secondary); }
 </style>

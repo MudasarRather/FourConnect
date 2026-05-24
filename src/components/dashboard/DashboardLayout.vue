@@ -37,13 +37,13 @@ const layoutClass = computed(() => {
 }
 
 .user-layout {
-  background: #000000;
-  color: #f5f5f7;
+  background: var(--bg-color, #000000);
+  color: var(--text-primary, #f5f5f7);
 }
 
 .admin-layout {
-  background: #000000;
-  color: #f8fafc;
+  background: var(--bg-color, #000000);
+  color: var(--text-primary, #f8fafc);
 }
 
 /* Main Content */

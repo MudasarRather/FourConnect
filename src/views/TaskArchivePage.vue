@@ -856,4 +856,35 @@ onMounted(() => {
   .vault-stats { flex-direction: column; align-items: center; }
   .vd-panel.glass-panel { width: 100%; }
 }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .vault-archive { color: var(--text-primary); }
+[data-theme="light"] .archive-vault-header {
+  background: rgba(26, 20, 16, 0.05);
+  border-bottom-color: rgba(26, 20, 16, 0.10);
+}
+[data-theme="light"] .n-tab { color: var(--text-secondary); }
+[data-theme="light"] .n-tab.active {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+}
+[data-theme="light"] .vault-status {
+  color: #92400e;
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.20);
+}
+[data-theme="light"] .vault-title {
+  background: none;
+  -webkit-text-fill-color: unset;
+  color: var(--text-primary);
+}
+[data-theme="light"] .vault-subtitle { color: var(--text-secondary); }
+[data-theme="light"] .stat-val { color: var(--text-primary); }
+[data-theme="light"] .stat-label { color: #6b5840; }
+[data-theme="light"] .vc-title { color: var(--text-primary); }
+[data-theme="light"] .vc-desc { color: var(--text-secondary); }
+[data-theme="light"] .v-name { color: var(--text-primary); }
+[data-theme="light"] .vd-title-box h2 { color: var(--text-primary); }
+[data-theme="light"] .vd-stat label { color: var(--text-tertiary); }
+[data-theme="light"] .vd-stat span { color: var(--text-primary); }
 </style>

@@ -142,4 +142,40 @@ const textColors = ['#ffffff', '#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5
   width: 14px; height: 14px; border-radius: 3px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1);
 }
 .color-palette div:hover { transform: scale(1.1); }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .toolbar-group {
+  border-right-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .fmt-btn {
+  color: #6b5840;
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .fmt-btn:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .fmt-btn.active {
+  background: rgba(217, 119, 6, 0.18);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .fmt-btn.ai-suggest {
+  background: rgba(217, 119, 6, 0.16);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .color-swatch {
+  border-color: rgba(40, 25, 10, 0.20);
+}
+[data-theme="light"] .color-palette {
+  background: #faf7f0;
+  border-color: rgba(217, 119, 6, 0.22);
+  box-shadow: 0 10px 20px rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .color-palette div {
+  border-color: rgba(40, 25, 10, 0.18);
+}
 </style>

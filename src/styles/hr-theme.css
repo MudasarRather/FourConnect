@@ -207,3 +207,69 @@
   transition: transform 220ms var(--hr-spring), box-shadow 220ms var(--hr-spring);
   will-change: transform;
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   LIGHT THEME OVERRIDES — warm cream + persistent gold
+   Only neutrals invert. Gold/amber/orange ramp stays vivid (brand continuity).
+   Glass blur values drop because blur reads weaker on a light surface.
+   ─────────────────────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  /* Surfaces — warm cream variants */
+  --hr-canvas: #faf7f0;
+  --hr-surface: rgba(255, 250, 240, 0.72);
+  --hr-surface-elevated: rgba(255, 250, 240, 0.92);
+  --hr-surface-glass: rgba(252, 245, 232, 0.66);
+  --hr-surface-deep: rgba(252, 245, 232, 0.96);
+  --hr-border: rgba(40, 25, 10, 0.08);
+  --hr-border-strong: rgba(40, 25, 10, 0.16);
+  --hr-border-warm: rgba(217, 119, 6, 0.32);
+
+  /* Text — warm near-black ramp */
+  --hr-text: #1a1410;
+  --hr-text-secondary: #44362a;
+  --hr-text-muted: #6b5840;
+  --hr-text-dim: #8d7b62;
+
+  /* Form controls — soft cream wells */
+  --hr-input-bg: rgba(40, 25, 10, 0.03);
+  --hr-input-bg-hover: rgba(40, 25, 10, 0.06);
+  --hr-input-bg-focus: rgba(255, 246, 226, 0.95);
+  --hr-input-border: rgba(40, 25, 10, 0.12);
+  --hr-input-border-hover: rgba(40, 25, 10, 0.22);
+  --hr-input-border-focus: var(--hr-accent-gold-border);
+
+  /* Soft tinted accent backgrounds — pump opacity so they read on cream */
+  --hr-accent-gold-soft: rgba(251, 191, 36, 0.20);
+  --hr-accent-gold-border: rgba(217, 119, 6, 0.36);
+  --hr-orange-soft: rgba(251, 146, 60, 0.20);
+  --hr-orange-border: rgba(217, 119, 6, 0.36);
+  --hr-active-soft: rgba(5, 150, 105, 0.18);
+  --hr-probation-soft: rgba(251, 191, 36, 0.20);
+  --hr-notice-soft: rgba(251, 146, 60, 0.20);
+  --hr-suspended-soft: rgba(220, 38, 38, 0.16);
+  --hr-inactive-soft: rgba(75, 65, 55, 0.10);
+  --hr-exited-soft: rgba(147, 51, 234, 0.16);
+
+  /* Lifecycle text colors — darken for AA on cream */
+  --hr-active: #059669;
+  --hr-suspended: #dc2626;
+  --hr-inactive: #6b5840;
+  --hr-exited: #9333ea;
+
+  /* Input error red on cream */
+  --hr-input-error: #dc2626;
+  --hr-input-error-soft: rgba(220, 38, 38, 0.10);
+
+  /* Warm ambient glow becomes deeper-saturated on cream */
+  --hr-glow-warm: 0 0 32px rgba(217, 119, 6, 0.22);
+  --hr-accent-gold-glow: 0 0 24px rgba(217, 119, 6, 0.28);
+}
+
+/* Spotlight hover layer — recolor for cream surface */
+[data-theme="light"] .hr-spotlight::before {
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(217, 119, 6, 0.14),
+    transparent 60%
+  );
+}

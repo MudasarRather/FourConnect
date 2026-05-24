@@ -345,4 +345,31 @@ onMounted(() => {
   opacity: 0;
   transform: translateY(-10px);
 }
+
+/* ─── Light theme overrides ─────────────────────────────────────────────── */
+[data-theme="light"] .filter-trigger {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .filter-trigger:hover {
+  background: rgba(40, 25, 10, 0.08);
+  border-color: rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .options-menu {
+  background: rgba(255, 250, 240, 0.96);
+  border-color: rgba(40, 25, 10, 0.12);
+  box-shadow: 0 20px 50px rgba(40, 25, 10, 0.28);
+}
+[data-theme="light"] .search-input {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-primary);
+}
+[data-theme="light"] .option-item { color: var(--text-primary); }
+[data-theme="light"] .option-item:hover {
+  background: rgba(217, 119, 6, 0.10);
+}
+[data-theme="light"] .selected-text { color: var(--text-primary); }
+[data-theme="light"] .placeholder { color: var(--text-placeholder); }
+[data-theme="light"] .user-icon { color: var(--text-secondary); }
 </style>

@@ -474,6 +474,115 @@
 .v-leave-to {
   opacity: 0;
 }
+
+/* ═════════ LIGHT THEME OVERRIDES — preserves frosted glass ═════════════════ */
+[data-theme="light"] .modal-overlay,
+[data-theme="light"] .pem-overlay,
+[data-theme="light"] .overlay {
+  background: rgba(26, 20, 16, 0.38);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+}
+[data-theme="light"] .modal-container,
+[data-theme="light"] .pem-container,
+[data-theme="light"] .modal-content,
+[data-theme="light"] .modal-shell {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.12);
+  color: var(--text-primary);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow:
+    0 30px 80px rgba(40, 25, 10, 0.28),
+    0 0 0 1px rgba(217, 119, 6, 0.12);
+}
+[data-theme="light"] .modal-header,
+[data-theme="light"] .pem-header { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .modal-footer,
+[data-theme="light"] .pem-footer { border-top-color: rgba(40, 25, 10, 0.10); background: rgba(40, 25, 10, 0.03); }
+[data-theme="light"] h1, [data-theme="light"] h2, [data-theme="light"] h3 { color: var(--text-primary); }
+[data-theme="light"] .modal-title,
+[data-theme="light"] .pem-title { color: var(--text-primary); }
+[data-theme="light"] .modal-subtitle,
+[data-theme="light"] .pem-subtitle { color: var(--text-secondary); }
+[data-theme="light"] label { color: var(--text-secondary); }
+[data-theme="light"] .form-label,
+[data-theme="light"] .field-label { color: var(--text-secondary); }
+[data-theme="light"] .required { color: #dc2626; }
+[data-theme="light"] input,
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder { color: var(--text-placeholder); }
+[data-theme="light"] input:focus,
+[data-theme="light"] textarea:focus {
+  background: rgba(255, 246, 226, 0.95);
+  border-color: rgba(217, 119, 6, 0.50);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.10);
+}
+[data-theme="light"] .close-btn,
+[data-theme="light"] .pem-close {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .close-btn:hover,
+[data-theme="light"] .pem-close:hover {
+  background: rgba(40, 25, 10, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="light"] .tab-bar,
+[data-theme="light"] .pem-tabs { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .tab,
+[data-theme="light"] .pem-tab { color: var(--text-tertiary); }
+[data-theme="light"] .tab.active,
+[data-theme="light"] .pem-tab.active { color: #92400e; }
+[data-theme="light"] .tab.active::after,
+[data-theme="light"] .pem-tab.active::after {
+  background: linear-gradient(90deg, #d97706, #c2410c);
+}
+[data-theme="light"] .section-title,
+[data-theme="light"] .field-section h3 { color: var(--text-primary); }
+[data-theme="light"] .empty-state,
+[data-theme="light"] .no-milestones {
+  color: var(--text-secondary);
+}
+[data-theme="light"] .total-card {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: #92400e;
+}
+[data-theme="light"] .auto-calc-badge {
+  background: rgba(217, 119, 6, 0.18);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .btn-cancel,
+[data-theme="light"] .btn-secondary {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--text-secondary);
+  border-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .btn-cancel:hover,
+[data-theme="light"] .btn-secondary:hover {
+  background: rgba(40, 25, 10, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="light"] .btn-continue,
+[data-theme="light"] .btn-primary {
+  background: linear-gradient(135deg, #d97706, #c2410c);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .icon-pill,
+[data-theme="light"] .icon-tile {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.28);
+  color: #92400e;
+}
 </style>
 
 <script setup>
@@ -1754,5 +1863,508 @@ input[type=number] {
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     min-width: 60px;
     justify-content: center;
+}
+
+/* ═════════ LIGHT THEME OVERRIDES — frosted cream, transparency preserved ═════ */
+[data-theme="light"] .modal-overlay {
+  background: rgba(26, 20, 16, 0.32);
+  backdrop-filter: blur(10px);
+}
+
+/* Modal panel — same 62% transparency as dark, frosted cream */
+[data-theme="light"] .glass-panel {
+  background: rgba(255, 250, 240, 0.62);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow:
+    0 40px 80px rgba(40, 25, 10, 0.26),
+    0 12px 24px rgba(40, 25, 10, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+  color: var(--text-primary);
+}
+
+/* Header */
+[data-theme="light"] .modal-header {
+  background: rgba(217, 119, 6, 0.04);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .header-text h2 {
+  background: linear-gradient(120deg, #92400e 0%, #d97706 60%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+[data-theme="light"] .payment-id { color: #92400e; }
+[data-theme="light"] .close-btn {
+  background: rgba(255, 250, 240, 0.55);
+  color: #6b5840;
+}
+[data-theme="light"] .close-btn:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+}
+
+/* Progress steps */
+[data-theme="light"] .progress-track { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .progress-fill {
+  background: linear-gradient(90deg, #d97706, #b45309);
+  box-shadow: 0 0 10px rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .step-dot {
+  color: #92400e;
+}
+[data-theme="light"] .step-dot.active,
+[data-theme="light"] .step-dot.completed { color: #b45309; }
+[data-theme="light"] .step-label { color: #6b5840; }
+[data-theme="light"] .step-dot.active .step-label,
+[data-theme="light"] .step-dot.completed .step-label { color: #92400e; }
+
+/* Step content + step header */
+[data-theme="light"] .step-header { color: #b45309; }
+[data-theme="light"] .step-header svg { color: #b45309; }
+
+/* Form labels + required asterisk */
+[data-theme="light"] .form-group label,
+[data-theme="light"] .form-group > label {
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .req { color: #dc2626; }
+[data-theme="light"] .optional { color: #92400e; font-weight: 400; }
+[data-theme="light"] .error-text { color: #dc2626; }
+[data-theme="light"] .input-error-wrapper .text-input,
+[data-theme="light"] .input-error-wrapper input { border-color: #dc2626; }
+
+/* Inputs — explicit visible amber border */
+[data-theme="light"] .text-input,
+[data-theme="light"] input[type="text"],
+[data-theme="light"] input[type="number"],
+[data-theme="light"] input[type="email"],
+[data-theme="light"] input[type="date"],
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.30);
+  color: var(--text-primary);
+}
+[data-theme="light"] .text-input::placeholder,
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: rgba(26, 20, 16, 0.40);
+}
+[data-theme="light"] .text-input:focus,
+[data-theme="light"] input:focus,
+[data-theme="light"] textarea:focus,
+[data-theme="light"] select:focus {
+  background: rgba(255, 246, 226, 0.92);
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.18);
+  outline: none;
+}
+[data-theme="light"] .text-input:disabled,
+[data-theme="light"] .disabled-input {
+  background: rgba(40, 25, 10, 0.05);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: rgba(26, 20, 16, 0.50);
+}
+
+/* Budget premium card */
+[data-theme="light"] .budget-card-premium {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.14), rgba(217, 119, 6, 0.04));
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .bc-label { color: #6b5840; }
+[data-theme="light"] .bc-value { color: #92400e; }
+[data-theme="light"] .bc-pill {
+  background: rgba(217, 119, 6, 0.18);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.40);
+}
+
+/* Budget summary card (alt) */
+[data-theme="light"] .budget-summary-card {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .bs-label { color: #6b5840; }
+[data-theme="light"] .bs-value { color: #b45309; }
+
+/* Section dividers */
+[data-theme="light"] .section-divider {
+  color: #b45309;
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+
+/* Radio pills (payment-method group) */
+[data-theme="light"] .radio-pills .radio-pill,
+[data-theme="light"] .radio-pill {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: #6b5840;
+}
+[data-theme="light"] .radio-pill:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #92400e;
+}
+[data-theme="light"] .radio-pill.active {
+  background: rgba(217, 119, 6, 0.18);
+  border-color: #d97706;
+  color: #92400e;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .radio-pill.active svg { color: #b45309; }
+
+/* Mode card (Bank Transfer / Cheque / Credit Card / Cash) */
+[data-theme="light"] .mode-card {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: #6b5840;
+}
+[data-theme="light"] .mode-card:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #92400e;
+  box-shadow: 0 6px 18px rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .mode-card.active {
+  background: rgba(217, 119, 6, 0.18);
+  border-color: #d97706;
+  color: #92400e;
+}
+[data-theme="light"] .mode-icon {
+  background: rgba(255, 250, 240, 0.60);
+  color: #6b5840;
+}
+[data-theme="light"] .mode-card.active .mode-icon {
+  background: rgba(217, 119, 6, 0.22);
+  color: #b45309;
+}
+
+/* Footer */
+[data-theme="light"] .modal-footer {
+  background: rgba(255, 250, 240, 0.35);
+  border-top-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .btn-text {
+  color: #6b5840;
+}
+[data-theme="light"] .btn-text:hover { color: #92400e; }
+
+/* Continue / Submit primary button */
+[data-theme="light"] .btn-continue,
+[data-theme="light"] .btn-primary {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .btn-continue:hover,
+[data-theme="light"] .btn-primary:hover {
+  background: linear-gradient(135deg, #c2410c, #92400e);
+  box-shadow: 0 10px 24px rgba(217, 119, 6, 0.40);
+}
+
+/* Document upload tiles (Tax Invoice, W-9, Contract/SLA, Approval Email) */
+[data-theme="light"] .doc-tile,
+[data-theme="light"] .upload-tile,
+[data-theme="light"] .document-card {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px dashed rgba(217, 119, 6, 0.32);
+  color: #6b5840;
+}
+[data-theme="light"] .doc-tile:hover,
+[data-theme="light"] .upload-tile:hover,
+[data-theme="light"] .document-card:hover {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.50);
+}
+[data-theme="light"] .doc-tile .required-pill,
+[data-theme="light"] .required-pill {
+  background: rgba(217, 119, 6, 0.18);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.36);
+}
+[data-theme="light"] .doc-tile .optional-pill,
+[data-theme="light"] .optional-pill {
+  background: rgba(40, 25, 10, 0.06);
+  color: #6b5840;
+  border-color: rgba(40, 25, 10, 0.14);
+}
+
+/* Tax inclusive toggle / GST / TDS area */
+[data-theme="light"] .net-receivable {
+  color: #047857;
+}
+[data-theme="light"] .net-receivable-label {
+  color: #6b5840;
+}
+[data-theme="light"] .retention-pill {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+
+/* Currency prefix on amount inputs (the "₹" / "INR" pill on the left) */
+[data-theme="light"] .currency-prefix,
+[data-theme="light"] .input-prefix {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+  border-right-color: rgba(217, 119, 6, 0.32);
+}
+
+/* ═════════ EXPLICIT LIGHT THEME FIXES — beat dark !important rules ═════════ */
+
+/* Inputs — visible amber border + explicit dark text; OVERRIDE the dark !important block */
+[data-theme="light"] .text-input,
+[data-theme="light"] input[type="number"],
+[data-theme="light"] input[type="text"],
+[data-theme="light"] input[type="email"],
+[data-theme="light"] input[type="date"] {
+  background: rgba(255, 250, 240, 0.55) !important;
+  border: 1px solid rgba(217, 119, 6, 0.30) !important;
+  color: var(--text-primary) !important;
+  backdrop-filter: none;
+}
+[data-theme="light"] .text-input::placeholder,
+[data-theme="light"] input::placeholder { color: rgba(26, 20, 16, 0.40) !important; }
+
+/* Focus state — KEEP CREAM, not dark */
+[data-theme="light"] .text-input:focus,
+[data-theme="light"] input:focus,
+[data-theme="light"] textarea:focus,
+[data-theme="light"] select:focus {
+  background: rgba(255, 246, 226, 0.95) !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.18) !important;
+  color: var(--text-primary) !important;
+  outline: none;
+}
+
+/* Project Name disabled input — visible dark text, NOT 50% opacity grey */
+[data-theme="light"] .text-input:disabled,
+[data-theme="light"] .disabled-input {
+  background: rgba(40, 25, 10, 0.04) !important;
+  color: #6b5840 !important;
+  border-color: rgba(217, 119, 6, 0.18) !important;
+  cursor: not-allowed;
+}
+
+/* Currency wrapper (Step 3 — Invoice Amount + GST + TDS) — was missing border */
+[data-theme="light"] .currency-wrapper {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  border-radius: 10px;
+}
+[data-theme="light"] .amount-input-wrapper {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.30);
+  border-radius: 10px;
+}
+[data-theme="light"] .amount-field {
+  color: var(--text-primary) !important;
+  background: transparent !important;
+}
+[data-theme="light"] .amount-field:focus {
+  background: rgba(255, 246, 226, 0.95) !important;
+}
+
+/* Number controls (+/- buttons) — borders not visible */
+[data-theme="light"] .number-controls {
+  border-left: 1px solid rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .num-btn {
+  background: rgba(255, 250, 240, 0.45);
+  color: #92400e;
+}
+[data-theme="light"] .num-btn:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+[data-theme="light"] .num-btn:first-child {
+  border-bottom: 1px solid rgba(217, 119, 6, 0.22);
+}
+
+/* Custom Num Input (TDS / Other Deductions) */
+[data-theme="light"] .custom-num-input {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .custom-num-input input {
+  color: var(--text-primary) !important;
+  background: transparent !important;
+}
+[data-theme="light"] .num-spinners {
+  border-left: 1px solid rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .num-spinners button {
+  color: #92400e;
+}
+[data-theme="light"] .num-spinners button:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+
+/* Net calculation bar (NET RECEIVABLE / Retention area on Invoice step) */
+[data-theme="light"] .net-calculation-bar {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .net-item label,
+[data-theme="light"] .net-item-small label { color: #6b5840; }
+[data-theme="light"] .net-value { color: #047857; }
+
+/* Currency-display-fixed (INR pill fixed at left of amount input) */
+[data-theme="light"] .currency-display-fixed {
+  background: rgba(217, 119, 6, 0.16) !important;
+  color: #92400e !important;
+  border-right: 1px solid rgba(217, 119, 6, 0.32) !important;
+}
+
+/* Toggle switch (Tax Inclusive) */
+[data-theme="light"] .toggle-switch {
+  background: rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .toggle-switch.active {
+  background: #047857;
+}
+[data-theme="light"] .toggle-label { color: var(--text-primary); }
+
+/* Fields container (slide-in bank details) — input borders */
+[data-theme="light"] .fields-container input,
+[data-theme="light"] .fields-container .text-input {
+  background: rgba(255, 250, 240, 0.55) !important;
+  border: 1px solid rgba(217, 119, 6, 0.30) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Attachments grid premium (Tax Invoice / W-9 / Contract / Approval Email tiles) */
+[data-theme="light"] .attachment-card {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .attachment-card:hover {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.45);
+  box-shadow: 0 8px 24px rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .attachment-card.filled {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .attachment-card .card-header {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .card-title { color: var(--text-primary); }
+[data-theme="light"] .type-icon { color: #b45309; }
+[data-theme="light"] .badge-required {
+  background: rgba(217, 119, 6, 0.18);
+  color: #92400e;
+}
+[data-theme="light"] .badge-optional {
+  background: rgba(40, 25, 10, 0.08);
+  color: #6b5840;
+}
+[data-theme="light"] .upload-zone-premium .icon-circle {
+  background: rgba(40, 25, 10, 0.06);
+  color: #6b5840;
+}
+[data-theme="light"] .upload-zone-premium:hover .icon-circle {
+  background: rgba(217, 119, 6, 0.20);
+  color: #b45309;
+}
+[data-theme="light"] .upload-cta { color: #b45309; }
+[data-theme="light"] .upload-hint { color: #92400e; }
+[data-theme="light"] .file-name { color: var(--text-primary); }
+[data-theme="light"] .file-meta { color: #047857; }
+[data-theme="light"] .file-icon-large { color: #b45309; }
+[data-theme="light"] .action-btn.remove {
+  background: rgba(220, 38, 38, 0.10);
+  color: #b91c1c;
+}
+[data-theme="light"] .action-btn.remove:hover { background: #dc2626; color: white; }
+
+/* Step header (Payment Mode / Documents step) */
+[data-theme="light"] .step-header .header-icon-wrapper {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.35);
+  color: #b45309;
+}
+[data-theme="light"] .step-header h3 { color: var(--text-primary); }
+[data-theme="light"] .sub-text { color: #6b5840; }
+
+/* ═════════ ULTRA MODERN ANIMATIONS — apply to BOTH themes ═════════ */
+
+/* Modal pop entrance + ambient orb */
+.glass-panel {
+  position: relative;
+  animation: pem-modal-pop 0.50s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.glass-panel::before {
+  content: "";
+  position: absolute;
+  top: -80px; right: -60px;
+  width: 280px; height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.16), transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+  animation: pem-orb-drift 14s ease-in-out infinite;
+}
+.glass-panel > * { position: relative; z-index: 1; }
+
+[data-theme="light"] .glass-panel::before {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.22), transparent 70%);
+}
+
+@keyframes pem-modal-pop {
+  from { opacity: 0; transform: scale(0.94) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes pem-orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-25px, 30px) scale(1.10); }
+}
+
+/* Step dot pulse on active */
+.step-dot.active {
+  position: relative;
+  animation: pem-step-pulse 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pem-step-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+}
+[data-theme="light"] .step-dot.active {
+  animation-name: pem-step-pulse-light;
+}
+@keyframes pem-step-pulse-light {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.50); }
+  50% { box-shadow: 0 0 0 8px rgba(217, 119, 6, 0); }
+}
+
+/* Continue button hover lift + glow sweep */
+.btn-pill.primary,
+.btn-continue {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.30s ease, background 0.20s ease;
+}
+.btn-pill.primary:hover:not(:disabled),
+.btn-continue:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(245, 158, 11, 0.40);
+}
+.btn-pill.primary::after,
+.btn-continue::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.btn-pill.primary:hover:not(:disabled)::after,
+.btn-continue:hover:not(:disabled)::after {
+  transform: translateX(100%);
 }
 </style>

@@ -67,7 +67,7 @@
              <!-- STEP 1: Task Checklist -->
              <!-- Only show if canEditTracker OR it's just view mode? But modal implies edit. -->
              <!-- We just hide content if blocked, overlay is absolute or takes flow. -->
-             <div v-if="!canEditTracker && !isPendingAssignee && !isDeclinedAssignee && !currentUser.is_superuser && milestone.created_by_id !== currentUser.id" class="block-overlay">
+             <div v-if="!canEditTracker && !isPendingAssignee && !isDeclinedAssignee && !currentUser?.is_superuser && !isCreator" class="block-overlay">
                  <!-- Fallback for non-assignees trying to edit? -->
                  <div class="block-content">
                     <p>You do not have permission to update this tracker.</p>
@@ -221,7 +221,8 @@ const showPendingBlock = ref(false)
 
 const myAssignment = computed(() => {
     if (!props.currentUser || !props.milestone?.assignments) return null
-    return props.milestone.assignments.find(a => a.user_id === props.currentUser.id)
+    const myId = String(props.currentUser.id)
+    return props.milestone.assignments.find(a => String(a.user_id) === myId)
 })
 
 const isExpired = computed(() => {
@@ -239,17 +240,24 @@ const canEditTracker = computed(() => {
     // If Admin/Creator -> True
     if (!props.currentUser) return false
     if (props.currentUser.is_superuser) return true
-    
+
     // Strict Expiry check (Admins can override in backend, but let's block UI for consistency unless superuser)
     if (isExpired.value && !props.currentUser.is_superuser) return false
 
-    if (props.milestone.created_by_id === props.currentUser.id) return true
-    
+    // Stringify both sides — created_by_id and currentUser.id can be UUID/string mix
+    if (String(props.milestone?.created_by_id) === String(props.currentUser.id)) return true
+
     // If Assignee -> Check status
     if (myAssignment.value) {
         return ['in_progress', 'completed'].includes(myAssignment.value.status)
     }
     return false
+})
+
+// Stringified comparison helper for template — also fixes the "no permission" overlay
+const isCreator = computed(() => {
+    if (!props.currentUser || !props.milestone) return false
+    return String(props.milestone.created_by_id) === String(props.currentUser.id)
 })
 
 const isPendingAssignee = computed(() => myAssignment.value?.status === 'pending')
@@ -690,4 +698,155 @@ const save = async () => {
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* ═════════ LIGHT THEME OVERRIDES — frosted-glass cream, golden palette ═════ */
+[data-theme="light"] .modal-overlay {
+  background: rgba(26, 20, 16, 0.32);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+[data-theme="light"] .glass-panel {
+  background: rgba(255, 250, 240, 0.62);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow:
+    0 40px 80px rgba(40, 25, 10, 0.26),
+    0 12px 24px rgba(40, 25, 10, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+  color: var(--text-primary);
+}
+[data-theme="light"] .modal-header { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .header-text h2 {
+  background: linear-gradient(120deg, #92400e 0%, #d97706 60%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+[data-theme="light"] .header-text p { color: #6b5840; }
+[data-theme="light"] .close-btn {
+  background: rgba(255, 250, 240, 0.50);
+  color: #6b5840;
+}
+[data-theme="light"] .close-btn:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+}
+
+[data-theme="light"] .progress-track { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .progress-fill {
+  background: linear-gradient(90deg, #d97706, #b45309);
+}
+[data-theme="light"] .step-meta { color: #92400e; }
+[data-theme="light"] .step-label { color: #b45309; }
+
+[data-theme="light"] .form-group label { color: #b45309; }
+[data-theme="light"] .text-warning { color: #c2410c !important; }
+
+[data-theme="light"] .text-area,
+[data-theme="light"] .input-compact {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: var(--text-primary);
+}
+[data-theme="light"] .text-area::placeholder,
+[data-theme="light"] .input-compact::placeholder { color: rgba(26, 20, 16, 0.40); }
+[data-theme="light"] .text-area:focus,
+[data-theme="light"] .input-compact:focus {
+  background: rgba(255, 246, 226, 0.92);
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .hint { color: #6b5840; }
+
+/* Task list — translucent cream cards with amber borders */
+[data-theme="light"] .task-item {
+  background: rgba(255, 250, 240, 0.45);
+  border-color: rgba(217, 119, 6, 0.16);
+}
+[data-theme="light"] .task-item:hover {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .task-item.completed {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .task-item.disabled {
+  background: rgba(40, 25, 10, 0.03);
+  border-color: rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .checkbox {
+  border-color: rgba(40, 25, 10, 0.30);
+  background: rgba(255, 250, 240, 0.55);
+}
+[data-theme="light"] .task-item:hover .checkbox {
+  border-color: rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .task-item.completed .checkbox {
+  background: #d97706;
+  border-color: #d97706;
+  color: #fff;
+}
+[data-theme="light"] .task-name { color: var(--text-primary); }
+[data-theme="light"] .text-muted { color: #92400e; }
+[data-theme="light"] .task-metric-col {
+  border-left-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .metric-label { color: #6b5840; }
+[data-theme="light"] .metric-val { color: var(--text-primary); }
+[data-theme="light"] .contrib-bar-track { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .contrib-bar-fill { background: #d97706; }
+[data-theme="light"] .completion-info { color: #047857; }
+
+[data-theme="light"] .empty-state { color: #6b5840; }
+[data-theme="light"] .empty-state p { color: #92400e; }
+
+/* Footer */
+[data-theme="light"] .modal-footer {
+  background: rgba(255, 250, 240, 0.35);
+  border-top-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .btn-text.secondary { color: #6b5840; }
+[data-theme="light"] .btn-text.secondary:hover { color: #92400e; }
+
+[data-theme="light"] .btn-pill.primary {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .btn-pill.primary:hover:not(:disabled) {
+  box-shadow: 0 10px 24px rgba(217, 119, 6, 0.40);
+  background: linear-gradient(135deg, #c2410c, #92400e);
+}
+[data-theme="light"] .btn-pill.primary:disabled {
+  background: rgba(40, 25, 10, 0.14);
+  color: rgba(26, 20, 16, 0.40);
+  box-shadow: none;
+}
+
+/* Blocking overlay (e.g. "no permission") — cream frosted glass */
+[data-theme="light"] .block-overlay {
+  background: rgba(255, 250, 240, 0.85);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+[data-theme="light"] .block-content h3 { color: var(--text-primary); }
+[data-theme="light"] .block-content p { color: #6b5840; }
+[data-theme="light"] .icon-circle.warning {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.36);
+}
+[data-theme="light"] .icon-circle.error {
+  background: rgba(220, 38, 38, 0.10);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.30);
+}
+[data-theme="light"] .pulse-ring { border-color: #d97706; }
+
+/* Scrollbar */
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(217, 119, 6, 0.30); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(217, 119, 6, 0.50); }
+[data-theme="light"] .close-btn:hover { color: var(--text-primary); }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(40, 25, 10, 0.20); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(40, 25, 10, 0.35); }
 </style>

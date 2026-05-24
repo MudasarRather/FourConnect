@@ -890,6 +890,48 @@ input:checked + .slider:before { transform: translateX(20px); }
 .list-anim-enter-active, .list-anim-leave-active { transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
 .list-anim-enter-from, .list-anim-leave-to { opacity: 0; transform: translateY(-20px) scale(0.95); filter: blur(2px); }
 
-/* Constants */
-:root { --accent-primary: #0a84ff; --text-primary: #ffffff; --text-secondary: #8e8e93; --text-tertiary: #636366; }
+/* Local accent token — global text tokens are owned by theme.css; do NOT override
+   --text-primary etc. here or the light theme breaks on this page. */
+.settings-page { --accent-primary: #0a84ff; }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .settings-page { color: var(--text-primary); }
+[data-theme="light"] .page-title {
+  background: none;
+  -webkit-text-fill-color: unset;
+  color: var(--text-primary);
+}
+[data-theme="light"] .floating-label { color: var(--text-secondary); }
+[data-theme="light"] .floating-label .required { color: #dc2626; }
+[data-theme="light"] .minimal-input,
+[data-theme="light"] .minimal-textarea {
+  background: rgba(26, 20, 16, 0.04);
+  border-color: rgba(26, 20, 16, 0.10);
+  color: var(--text-primary);
+}
+[data-theme="light"] .minimal-input::placeholder,
+[data-theme="light"] .minimal-textarea::placeholder { color: var(--text-placeholder); }
+[data-theme="light"] .card-title { color: var(--text-primary); }
+[data-theme="light"] .card-desc { color: var(--text-secondary); }
+[data-theme="light"] .chip {
+  background: rgba(26, 20, 16, 0.05);
+  color: var(--text-secondary);
+  border-color: rgba(26, 20, 16, 0.10);
+}
+[data-theme="light"] .chip.active.low {
+  background: rgba(34, 197, 94, 0.12);
+  color: #166534;
+  border-color: rgba(34, 197, 94, 0.30);
+}
+[data-theme="light"] .chip.active.medium {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .chip.active.high {
+  background: rgba(220, 38, 38, 0.10);
+  color: #991b1b;
+  border-color: rgba(220, 38, 38, 0.32);
+}
+[data-theme="light"] .error-text { color: #dc2626; }
 </style>

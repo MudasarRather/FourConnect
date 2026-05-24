@@ -518,4 +518,130 @@ onMounted(() => {
 .g-chip.prio.prio-medium .g-prio-dot { background: #fbbf24; }
 .g-chip.prio.prio-low { background: rgba(245, 158, 11, 0.10); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.28); }
 .g-chip.prio.prio-low .g-prio-dot { background: #facc15; }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .completed-projects-page { color: var(--text-primary); }
+[data-theme="light"] .header-left h1 {
+  background: linear-gradient(135deg, #1a1410 0%, #92400e 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .subtitle { color: var(--text-secondary); }
+[data-theme="light"] .search-box input {
+  background: rgba(26, 20, 16, 0.05);
+  border-color: rgba(26, 20, 16, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="light"] .search-box input:focus {
+  border-color: rgba(217, 119, 6, 0.30);
+  background: rgba(217, 119, 6, 0.05);
+}
+[data-theme="light"] .stats-pill {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.20);
+  color: #92400e;
+}
+/* Card surface — match dark mode's translucency (50% + heavy blur) */
+[data-theme="light"] .project-card-glass {
+  background: rgba(255, 250, 240, 0.50);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  box-shadow:
+    0 8px 32px rgba(40, 25, 10, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+}
+[data-theme="light"] .project-card-glass:hover {
+  background: rgba(255, 246, 226, 0.65);
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow:
+    0 20px 50px rgba(40, 25, 10, 0.18),
+    0 0 0 1px rgba(217, 119, 6, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.60);
+}
+
+/* Gold gleam sweep — keep visible on cream */
+[data-theme="light"] .project-card-glass::after {
+  background: linear-gradient(120deg, transparent 35%, rgba(217, 119, 6, 0.18) 50%, transparent 65%);
+}
+
+/* Glass blob decoration */
+[data-theme="light"] .glass-blob {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.10) 0%, transparent 60%);
+}
+
+/* Header: icon box + status pill */
+[data-theme="light"] .icon-box-glass {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.32);
+  box-shadow: inset 0 0 12px rgba(217, 119, 6, 0.10);
+}
+[data-theme="light"] .initials { color: #92400e; }
+
+[data-theme="light"] .success-glass {
+  background: rgba(217, 119, 6, 0.16);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow: 0 0 10px rgba(217, 119, 6, 0.18);
+}
+
+/* Identity */
+[data-theme="light"] .title { color: var(--text-primary); }
+[data-theme="light"] .project-code-glass {
+  color: #92400e;
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.28);
+}
+[data-theme="light"] .desc { color: #6b5840; }
+
+/* Metrics + dates */
+[data-theme="light"] .label { color: #b45309; font-weight: 700; }
+[data-theme="light"] .value,
+[data-theme="light"] .date-value { color: var(--text-primary); }
+
+/* Separator */
+[data-theme="light"] .separator-glass {
+  background: linear-gradient(90deg, transparent, rgba(40, 25, 10, 0.18), transparent);
+}
+
+/* Footer: avatar + owner + view-action */
+[data-theme="light"] .avatar-glass {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.22), rgba(217, 119, 6, 0.10));
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #92400e;
+}
+[data-theme="light"] .owner-name { color: #6b5840; }
+[data-theme="light"] .view-action { color: #92400e; }
+[data-theme="light"] .project-card-glass:hover .view-action { color: #b45309; }
+
+/* Empty / loading states */
+[data-theme="light"] .empty-state { color: #92400e; }
+[data-theme="light"] .empty-state h3 { color: var(--text-primary); }
+[data-theme="light"] .empty-state p { color: #6b5840; }
+[data-theme="light"] .empty-icon-wrapper {
+  background: rgba(217, 119, 6, 0.10);
+}
+[data-theme="light"] .loading-state { color: #92400e; }
+
+/* Government chip — category was BLUE (off-palette); recolor to amber */
+[data-theme="light"] .g-chip.cat {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+
+/* Status & priority pills get cream-readable variants — gold accent stays */
+[data-theme="light"] .g-chip.prio.prio-high {
+  background: rgba(220, 38, 38, 0.10); color: #991b1b;
+  border-color: rgba(220, 38, 38, 0.32);
+}
+[data-theme="light"] .g-chip.prio.prio-medium {
+  background: rgba(217, 119, 6, 0.14); color: #92400e;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .g-chip.prio.prio-low {
+  background: rgba(217, 119, 6, 0.10); color: #92400e;
+  border-color: rgba(217, 119, 6, 0.28);
+}
 </style>

@@ -151,4 +151,48 @@ const vClickOutside = {
 
 .rotate-fade-enter-active, .rotate-fade-leave-active { transition: all 0.2s; }
 .rotate-fade-enter-from, .rotate-fade-leave-to { opacity: 0; transform: rotate(90deg); }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] .fab-trigger {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  color: #1a1410;
+  border: 1px solid rgba(217, 119, 6, 0.40);
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .fab-trigger:hover {
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+  color: #1a1410;
+}
+[data-theme="light"] .fixed-actions-widget.open .fab-trigger {
+  background: #fff;
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .actions-menu {
+  background: rgba(255, 250, 240, 0.72);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  box-shadow: 0 20px 40px rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .menu-header {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+  background: rgba(217, 119, 6, 0.10);
+}
+[data-theme="light"] .bot-name {
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .menu-action {
+  color: #1a1410;
+}
+[data-theme="light"] .menu-action:hover {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+[data-theme="light"] .icon-box {
+  color: #b45309;
+}
 </style>

@@ -368,4 +368,155 @@ const formatKey = (k) => k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCas
 }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ═════════════════ LIGHT THEME OVERRIDES — CardActivity ═════════════════ */
+[data-theme="light"] .glass-card {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 8px 32px rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .card-header {
+  background: rgba(40, 25, 10, 0.04);
+  border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .header-left h3 {
+  color: var(--text-primary);
+}
+[data-theme="light"] .icon-box {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.30);
+}
+[data-theme="light"] .live-dot {
+  background: #d97706;
+  box-shadow: 0 0 10px rgba(217, 119, 6, 0.55);
+}
+
+/* Feed column (left split pane) */
+[data-theme="light"] .feed-column {
+  border-right: 1px solid rgba(40, 25, 10, 0.08);
+  background: rgba(40, 25, 10, 0.02);
+}
+[data-theme="light"] .feed-item:hover {
+  background: rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .feed-item.active {
+  background: rgba(217, 119, 6, 0.08);
+}
+[data-theme="light"] .feed-item.active::after {
+  background: linear-gradient(180deg, #d97706, #c2410c);
+  box-shadow: -2px 0 10px rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .dot-casing {
+  border: 2px solid rgba(255, 250, 240, 1);
+}
+[data-theme="light"] .dot-casing.success {
+  background: #d97706;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(217, 119, 6, 0.35);
+}
+[data-theme="light"] .dot-casing.info {
+  background: #ea580c;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(234, 88, 12, 0.35);
+}
+[data-theme="light"] .dot-casing.alert {
+  background: #b45309;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(180, 83, 9, 0.35);
+}
+[data-theme="light"] .dot-casing.neutral {
+  background: #92400e;
+  color: #fff;
+}
+[data-theme="light"] .line {
+  background: rgba(40, 25, 10, 0.15);
+}
+[data-theme="light"] .user-name {
+  color: var(--text-primary);
+}
+[data-theme="light"] .time-ago {
+  color: #6b5840;
+}
+[data-theme="light"] .description {
+  color: #6b5840;
+}
+
+/* Empty state */
+[data-theme="light"] .empty-icon-circle {
+  background: rgba(217, 119, 6, 0.10);
+  border: 1px solid rgba(217, 119, 6, 0.20);
+  color: #92400e;
+}
+[data-theme="light"] .icon-muted {
+  color: #92400e;
+}
+[data-theme="light"] .empty-feed h4 {
+  color: var(--text-primary);
+}
+[data-theme="light"] .empty-feed p {
+  color: #92400e;
+}
+
+/* Inspector (right split pane) */
+[data-theme="light"] .inspector-column {
+  background: rgba(40, 25, 10, 0.02);
+}
+[data-theme="light"] .inspector-hero {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .bg-gradient-success {
+  background: radial-gradient(circle at top, rgba(217, 119, 6, 0.18), transparent 70%);
+}
+[data-theme="light"] .bg-gradient-info {
+  background: radial-gradient(circle at top, rgba(234, 88, 12, 0.18), transparent 70%);
+}
+[data-theme="light"] .bg-gradient-alert {
+  background: radial-gradient(circle at top, rgba(180, 83, 9, 0.20), transparent 70%);
+}
+[data-theme="light"] .bg-gradient-warning {
+  background: radial-gradient(circle at top, rgba(217, 119, 6, 0.15), transparent 70%);
+}
+[data-theme="light"] .bg-gradient-neutral {
+  background: radial-gradient(circle at top, rgba(146, 64, 14, 0.12), transparent 70%);
+}
+[data-theme="light"] .hero-icon {
+  color: #92400e;
+  filter: drop-shadow(0 4px 12px rgba(40, 25, 10, 0.20));
+}
+[data-theme="light"] .hero-type {
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .hero-time {
+  color: var(--text-primary);
+}
+[data-theme="light"] .full-desc {
+  color: var(--text-primary);
+}
+[data-theme="light"] .u-bold {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+[data-theme="light"] .d-label {
+  color: #6b5840;
+  font-weight: 600;
+}
+[data-theme="light"] .d-dash {
+  border-bottom: 1px dashed rgba(40, 25, 10, 0.20);
+}
+[data-theme="light"] .d-value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Placeholder */
+[data-theme="light"] .inspector-placeholder {
+  color: #92400e;
+}
+[data-theme="light"] .ph-line {
+  background: rgba(40, 25, 10, 0.15);
+}
 </style>

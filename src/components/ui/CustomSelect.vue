@@ -335,4 +335,54 @@ const handleClickOutside = (e) => {
   opacity: 0;
   transform: scale(0.95);
 }
+
+/* ─── Light theme overrides ─────────────────────────────────────────────
+   <style> is non-scoped so these selectors are global. The popover is
+   teleported to body but [data-theme] sits on <html> so the cascade reaches it.
+   ─────────────────────────────────────────────────────────────────────── */
+[data-theme="light"] .cs-trigger {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .cs-trigger:hover {
+  background: rgba(40, 25, 10, 0.08);
+  border-color: rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .cs-trigger.is-open {
+  background: rgba(255, 246, 226, 0.95);
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .cs-selected-text { color: var(--text-primary); }
+[data-theme="light"] .cs-chevron { color: #92400e; }
+[data-theme="light"] .cs-placeholder { color: rgba(26, 20, 16, 0.65); }
+[data-theme="light"] .cs-options-menu,
+[data-theme="light"] .cs-options-list {
+  background: rgba(255, 250, 240, 0.96);
+  border-color: rgba(40, 25, 10, 0.12);
+  box-shadow: 0 22px 56px rgba(40, 25, 10, 0.28);
+  color: var(--text-primary);
+}
+[data-theme="light"] .cs-search-box {
+  background: rgba(40, 25, 10, 0.04);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .cs-search-input {
+  background: transparent;
+  color: var(--text-primary);
+}
+[data-theme="light"] .cs-search-input::placeholder { color: var(--text-placeholder); }
+[data-theme="light"] .cs-option-item {
+  color: var(--text-secondary);
+}
+[data-theme="light"] .cs-option-item:hover {
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="light"] .cs-option-item.selected,
+[data-theme="light"] .cs-option-item.is-selected {
+  background: rgba(217, 119, 6, 0.18);
+  color: #92400e;
+}
+[data-theme="light"] .cs-empty { color: var(--text-secondary); }
 </style>

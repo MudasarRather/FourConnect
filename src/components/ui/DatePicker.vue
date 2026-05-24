@@ -445,4 +445,66 @@ onMounted(() => {
 .has-error .date-input {
   border-color: #ef4444;
 }
+
+/* ─── Light theme overrides ───────────────────────────────────────────── */
+[data-theme="light"] .date-input {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .date-input:focus {
+  background: rgba(255, 246, 226, 0.95);
+  border-color: var(--input-focus);
+}
+[data-theme="light"] .date-input.is-open {
+  background: rgba(255, 246, 226, 0.95);
+  border-color: var(--input-focus);
+}
+[data-theme="light"] .date-input:hover:not(.is-disabled) {
+  background: rgba(40, 25, 10, 0.08);
+  border-color: rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .date-display { color: var(--text-primary); }
+[data-theme="light"] .date-display.placeholder { color: rgba(26, 20, 16, 0.55); }
+[data-theme="light"] .date-display:empty::before { color: rgba(26, 20, 16, 0.55); }
+[data-theme="light"] .date-icon { color: #92400e; }
+[data-theme="light"] .date-icon.active { color: #b45309; }
+[data-theme="light"] .chevron { color: #92400e; }
+[data-theme="light"] .chevron.open { color: #b45309; }
+[data-theme="light"] .month-year { color: var(--text-primary); }
+[data-theme="light"] .calendar-dropdown {
+  background: rgba(255, 250, 240, 0.96);
+  border-color: rgba(40, 25, 10, 0.12);
+  box-shadow: 0 20px 50px rgba(40, 25, 10, 0.28);
+}
+[data-theme="light"] .calendar-header { color: var(--text-primary); }
+[data-theme="light"] .nav-btn {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .nav-btn:hover {
+  background: rgba(40, 25, 10, 0.08);
+  color: var(--text-primary);
+}
+[data-theme="light"] .weekdays span { color: var(--text-tertiary); }
+[data-theme="light"] .day-btn { color: var(--text-primary); }
+[data-theme="light"] .day-btn:hover:not(:disabled):not(.selected) {
+  background: rgba(217, 119, 6, 0.12);
+}
+[data-theme="light"] .day-btn.today {
+  background: rgba(217, 119, 6, 0.16);
+  color: #92400e;
+}
+[data-theme="light"] .day-btn.selected {
+  background: #d97706;
+  color: #fff;
+}
+[data-theme="light"] .day-btn.disabled,
+[data-theme="light"] .day-btn:disabled {
+  color: rgba(26, 20, 16, 0.20);
+}
+[data-theme="light"] .day-btn.other-month {
+  color: rgba(26, 20, 16, 0.30);
+}
 </style>

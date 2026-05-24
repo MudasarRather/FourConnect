@@ -847,4 +847,97 @@ onMounted(() => {
   .hero-title { font-size: 30px; }
   .stat-strip { grid-template-columns: 1fr; }
 }
+
+/* ─── Light theme overrides ───────────────────────────────────────────────
+   Re-cast the white-on-black hero, command rail, stat icons, and tabs for
+   cream surface. Gold/orange accents stay vivid; neutrals invert.
+   ────────────────────────────────────────────────────────────────────── */
+[data-theme="light"] .hero-section,
+[data-theme="light"] .hero-title { color: var(--text-primary); }
+[data-theme="light"] .hero-eyebrow { color: var(--accent-gold); }
+[data-theme="light"] .hero-sub { color: var(--text-secondary); }
+
+[data-theme="light"] .stat-icon.stat-priority {
+  background: rgba(220, 38, 38, 0.10); color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.30);
+}
+[data-theme="light"] .stat-icon.stat-progress {
+  background: rgba(234, 88, 12, 0.12); color: #c2410c;
+  border-color: rgba(234, 88, 12, 0.30);
+}
+[data-theme="light"] .stat-icon.stat-sanctioned {
+  background: rgba(217, 119, 6, 0.16); color: #92400e;
+  border-color: rgba(217, 119, 6, 0.35);
+}
+[data-theme="light"] .stat-eyebrow { color: #6b5840; font-weight: 700; }
+[data-theme="light"] .stat-value { color: var(--text-primary); }
+[data-theme="light"] .stat-num { color: var(--text-primary); }
+
+/* Filter panel labels (CATEGORY / PRIORITY / DATE RANGE / OWNER) — deep amber so they pop on cream */
+[data-theme="light"] .cmd-field label { color: #b45309; font-weight: 800; }
+[data-theme="light"] .cmd-panel-meta { color: #6b5840; }
+[data-theme="light"] .cmd-apply {
+  background: linear-gradient(135deg, #d97706, #c2410c);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .cmd-clear-all {
+  background: rgba(220, 38, 38, 0.08);
+  color: #991b1b;
+  border-color: rgba(220, 38, 38, 0.28);
+}
+[data-theme="light"] .cmd-clear-all:hover {
+  background: rgba(220, 38, 38, 0.14);
+}
+[data-theme="light"] .cmd-search input { color: var(--text-primary); }
+[data-theme="light"] .cmd-search input::placeholder { color: var(--text-placeholder); }
+[data-theme="light"] .cmd-search svg { color: var(--text-secondary); }
+[data-theme="light"] .cmd-chip { color: #92400e; }
+
+[data-theme="light"] .cmd-search {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .cmd-search input { color: var(--text-primary); }
+[data-theme="light"] .cmd-search input::placeholder { color: var(--text-placeholder); }
+[data-theme="light"] .cmd-clear {
+  background: rgba(40, 25, 10, 0.06); color: var(--text-secondary);
+}
+[data-theme="light"] .cmd-clear:hover {
+  background: rgba(217, 119, 6, 0.18); color: var(--text-primary);
+}
+[data-theme="light"] .cmd-chip { color: #92400e; }
+[data-theme="light"] .cmd-chip svg { color: #b45309; }
+
+[data-theme="light"] .cmd-filters-btn {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-primary);
+}
+[data-theme="light"] .cmd-filters-btn span { color: var(--text-secondary); }
+[data-theme="light"] .cmd-filters-chev { color: var(--text-secondary); }
+
+[data-theme="light"] .cmd-date-sep { color: var(--text-tertiary); }
+[data-theme="light"] .cmd-panel { color: var(--text-secondary); }
+[data-theme="light"] .cmd-panel-meta { color: var(--text-tertiary); }
+
+/* cmd-tabs rail: cream pill track + warm border */
+[data-theme="light"] .cmd-tabs {
+  background: rgba(40, 25, 10, 0.06);
+  border-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .cmd-tab { color: var(--text-secondary); }
+[data-theme="light"] .cmd-tab:hover { color: var(--text-primary); }
+[data-theme="light"] .cmd-tab.active { color: #1a1208; }
+[data-theme="light"] .cmd-tab-count {
+  background: rgba(40, 25, 10, 0.10);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .cmd-tab.active .cmd-tab-count {
+  background: rgba(26, 18, 8, 0.18);
+  color: #1a1208;
+}
+
+[data-theme="light"] .atlas-empty { color: var(--text-secondary); }
+[data-theme="light"] .atlas-empty h3 { color: var(--text-primary); }
+[data-theme="light"] .atlas-empty p { color: var(--text-secondary); }
 </style>

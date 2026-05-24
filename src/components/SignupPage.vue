@@ -1,5 +1,8 @@
 <template>
   <main class="page-container">
+    <div class="auth-theme-toggle">
+      <ThemeToggle />
+    </div>
     <div class="auth-container fade-in">
       
       <!-- Header -->
@@ -255,6 +258,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import Logo from './icons/Logo.vue'
+import ThemeToggle from './common/ThemeToggle.vue'
 import CustomSelect from './ui/CustomSelect.vue'
 import PhoneInput from './ui/PhoneInput.vue'
 import { Country, State, City } from 'country-state-city'
@@ -451,25 +455,35 @@ const handleSignup = async () => {
 
 <style scoped>
 .page-container {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #000000;
+  background: var(--bg-color);
   padding: 20px;
+  transition: background-color 240ms var(--ease);
+}
+
+.auth-theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 5;
 }
 
 .auth-container {
   width: 100%;
   max-width: 580px;
-  background: #121214;
+  background: var(--auth-card-bg);
   border-radius: 16px;
   padding: 40px 32px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--auth-card-shadow);
+  border: 1px solid var(--card-border);
   display: flex;
   flex-direction: column;
   gap: 24px;
+  transition: background-color 240ms var(--ease), border-color 240ms var(--ease);
 }
 
 .auth-header {
@@ -538,7 +552,7 @@ const handleSignup = async () => {
 }
 
 .floating-label .required {
-  color: #ff453a;
+  color: var(--accent-danger);
 }
 
 .input-icon {
@@ -565,8 +579,9 @@ const handleSignup = async () => {
 }
 
 .minimal-input:focus {
-  background: #232325;
+  background: var(--input-bg-focus);
   border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.10);
 }
 .minimal-input::placeholder { color: var(--text-placeholder); }
 
@@ -574,18 +589,23 @@ const handleSignup = async () => {
 .input-wrapper.has-error .minimal-input,
 .input-wrapper.has-error :deep(.select-trigger),
 .input-wrapper.has-error :deep(.phone-input-group) {
-  border-color: #ff453a;
+  border-color: var(--accent-danger);
   background: rgba(255, 69, 58, 0.08); /* Slightly more visible bg */
 }
+[data-theme="light"] .input-wrapper.has-error .minimal-input,
+[data-theme="light"] .input-wrapper.has-error :deep(.select-trigger),
+[data-theme="light"] .input-wrapper.has-error :deep(.phone-input-group) {
+  background: rgba(220, 38, 38, 0.06);
+}
 .input-wrapper.has-error .floating-label {
-  color: #ff453a;
+  color: var(--accent-danger);
 }
 .input-wrapper.has-error .input-icon {
-  color: #ff453a;
+  color: var(--accent-danger);
 }
 .error-text {
   font-size: 11px;
-  color: #ff453a;
+  color: var(--accent-danger);
   margin-left: 4px;
   font-weight: 500;
   animation: slideDown 0.2s ease;
@@ -633,10 +653,12 @@ const handleSignup = async () => {
   border-radius: 2px;
   transition: all 0.3s;
 }
-.bar.active.weak { background: #ff453a; }
+.bar.active.weak { background: var(--accent-danger); }
 .bar.active.medium { background: #ff9f0a; }
 .bar.active.strong { background: #32d74b; }
-.bar.active.secure { background: #30d158; }
+.bar.active.secure { background: var(--accent-emerald); }
+[data-theme="light"] .bar.active.medium { background: #d97706; }
+[data-theme="light"] .bar.active.strong { background: #059669; }
 .strength-text {
   font-size: 11px;
   color: var(--text-secondary);
@@ -703,7 +725,7 @@ const handleSignup = async () => {
   font-size: 13px;
   font-weight: 500;
 }
-.social-btn:hover { background: #2c2c2e; border-color: var(--text-secondary); }
+.social-btn:hover { background: var(--card-bg); border-color: var(--text-secondary); }
 
 .auth-footer {
   text-align: center;
@@ -745,7 +767,7 @@ const handleSignup = async () => {
 }
 
 .password-requirements.horizontal li.met {
-  color: #10b981;
+  color: var(--accent-emerald);
 }
 .password-requirements.horizontal li.met::before {
   color: #10b981;

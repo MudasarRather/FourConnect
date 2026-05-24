@@ -79,4 +79,15 @@ h2 { font-size: 20px; font-weight: 600; color: white; margin: 0; }
 .placeholder-chart { flex: 1; }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] h2 { color: #1a1410; }
+[data-theme="light"] .chart-box {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  border-radius: 16px;
+}
+[data-theme="light"] .chart-box h3 { color: #b45309; font-weight: 700; }
 </style>

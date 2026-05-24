@@ -147,4 +147,70 @@ h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin:
 }
 .ft-label { font-size: 11px; color: rgba(255,255,255,0.4); text-transform: uppercase; }
 .ft-val { font-size: 12px; font-weight: 600; color: white; }
+
+/* ═════════════════ LIGHT THEME OVERRIDES — CardTeam ═════════════════ */
+[data-theme="light"] .glass-card {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 4px 20px rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] .card-header {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .icon-box {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+}
+[data-theme="light"] h3 {
+  color: var(--text-primary);
+}
+[data-theme="light"] .counter {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  font-weight: 700;
+}
+[data-theme="light"] .team-list-scroll::-webkit-scrollbar-thumb {
+  background: rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .team-list-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(40, 25, 10, 0.30);
+}
+[data-theme="light"] .team-member-row {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .av-placeholder {
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.30);
+  color: #fff;
+}
+[data-theme="light"] .member-name {
+  color: var(--text-primary);
+}
+[data-theme="light"] .role-badge {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+  font-weight: 700;
+}
+[data-theme="light"] .contact-item {
+  color: #6b5840;
+}
+[data-theme="light"] .c-icon {
+  opacity: 0.8;
+  color: #b45309;
+}
+[data-theme="light"] .empty-state {
+  color: #92400e;
+}
+[data-theme="light"] .owner-footer {
+  background: rgba(40, 25, 10, 0.04);
+  border-top: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .ft-label {
+  color: #6b5840;
+  font-weight: 700;
+}
+[data-theme="light"] .ft-val {
+  color: var(--text-primary);
+}
 </style>

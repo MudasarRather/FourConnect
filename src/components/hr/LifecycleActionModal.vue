@@ -117,7 +117,7 @@ import axios from 'axios'
 import {
   X, Loader2,
   CheckCircle, ArrowUp, ArrowRight, Pause, Play, Briefcase, LogOut, Archive,
-  Undo2,
+  Undo2, Gauge,
 } from 'lucide-vue-next'
 
 import HrFieldLabel from './forms/HrFieldLabel.vue'
@@ -157,6 +157,19 @@ const TEMPLATES = {
     fields: [
       { key: 'effective_date', label: 'Confirmation Date', type: 'date', helper: 'Defaults to today', required: false, full: true },
       { key: 'reason', label: 'Notes', type: 'textarea', placeholder: 'Optional — recorded in history', full: true },
+    ],
+  },
+  'put-on-probation': {
+    title: 'Place on Probation',
+    desc: 'Move this ACTIVE employee onto a probation window for a performance review. Their lifecycle state becomes ON_PROBATION and a confirmation review date is set.',
+    icon: Gauge,
+    tone: 'orange',
+    confirmLabel: 'Place on Probation',
+    fields: [
+      { key: 'probation_months', label: 'Probation length (months)', type: 'number', step: 1, helper: 'Defaults to 6 months', required: true },
+      { key: 'effective_date', label: 'Start date', type: 'date', helper: 'Defaults to today' },
+      { key: 'confirmation_date', label: 'Review / Confirmation date', type: 'date', helper: 'Optional — auto-calculated from start + months', full: true },
+      { key: 'reason', label: 'Reason / Notes', type: 'textarea', placeholder: 'e.g. Performance review window, role transition…', full: true },
     ],
   },
   suspend: {

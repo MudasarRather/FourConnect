@@ -867,4 +867,49 @@ onMounted(() => {
 .fade-slide-leave-active { transition: all 0.2s cubic-bezier(0.4,0,0.2,1); }
 .fade-slide-enter-from { opacity: 0; transform: translateY(12px); }
 .fade-slide-leave-to { opacity: 0; transform: translateY(-8px); }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .settings-page { color: var(--text-primary); }
+[data-theme="light"] .page-title { color: var(--text-primary); }
+[data-theme="light"] .page-subtitle { color: var(--text-secondary); }
+[data-theme="light"] .nav-tab { color: var(--text-secondary); }
+[data-theme="light"] .nav-tab:hover {
+  background: rgba(26, 20, 16, 0.05);
+  color: var(--text-primary);
+}
+[data-theme="light"] .nav-tab.active {
+  background: rgba(217, 119, 6, 0.10);
+  color: var(--text-primary);
+  border-color: rgba(217, 119, 6, 0.20);
+}
+[data-theme="light"] .settings-card {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(26, 20, 16, 0.10);
+}
+[data-theme="light"] .welcome-banner {
+  background: rgba(217, 119, 6, 0.05);
+  border-color: rgba(217, 119, 6, 0.15);
+}
+[data-theme="light"] .welcome-banner h2 { color: var(--text-primary); }
+[data-theme="light"] .welcome-banner p { color: var(--text-secondary); }
+[data-theme="light"] .card-title { color: var(--text-primary); }
+[data-theme="light"] .card-desc { color: var(--text-secondary); }
+[data-theme="light"] .floating-label { color: var(--text-secondary); }
+[data-theme="light"] .minimal-input {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(26, 20, 16, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="light"] .minimal-input:focus {
+  background: #fff;
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .toggle-item {
+  background: rgba(26, 20, 16, 0.03);
+  border-color: rgba(26, 20, 16, 0.08);
+}
+[data-theme="light"] .toggle-info h4 { color: var(--text-primary); }
+[data-theme="light"] .toggle-info p { color: var(--text-secondary); }
+[data-theme="light"] .info-label { color: var(--text-secondary); }
+[data-theme="light"] .info-value { color: var(--text-primary); }
 </style>

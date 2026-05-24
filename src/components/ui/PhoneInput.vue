@@ -196,7 +196,7 @@ const vClickOutside = {
 
 .phone-input-group:focus-within {
   border-color: var(--input-focus);
-  background: #232325;
+  background: var(--input-bg-focus);
 }
 
 .phone-input-group.has-error {
@@ -293,5 +293,31 @@ const vClickOutside = {
 .dropdown-enter-from, .dropdown-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+}
+
+/* ─── Light theme overrides ────────────────────────────────────────────── */
+[data-theme="light"] .phone-input-group.has-error {
+  background: rgba(220, 38, 38, 0.06);
+}
+[data-theme="light"] .code-dropdown {
+  background: rgba(255, 250, 240, 0.96);
+  border-color: rgba(40, 25, 10, 0.12);
+  box-shadow: 0 20px 50px rgba(40, 25, 10, 0.28);
+}
+[data-theme="light"] .search-box {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .search-input {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-primary);
+}
+[data-theme="light"] .search-input::placeholder {
+  color: var(--text-placeholder);
+}
+[data-theme="light"] .country-list::-webkit-scrollbar-thumb {
+  background: rgba(40, 25, 10, 0.20);
+}
+[data-theme="light"] .country-item:hover {
+  background: rgba(217, 119, 6, 0.10);
 }
 </style>

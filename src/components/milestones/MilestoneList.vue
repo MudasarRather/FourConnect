@@ -325,4 +325,92 @@ const isLight = (color) => {
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .header-content h3 { color: var(--text-primary); }
+[data-theme="light"] .header-content p { color: #6b5840; }
+
+[data-theme="light"] .btn-create {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.28);
+  color: #92400e;
+}
+[data-theme="light"] .btn-create:hover {
+  background: rgba(217, 119, 6, 0.18);
+  border-color: rgba(217, 119, 6, 0.45);
+}
+
+[data-theme="light"] .loading-state,
+[data-theme="light"] .empty-state { color: #6b5840; }
+[data-theme="light"] .empty-state h4 { color: var(--text-primary); }
+[data-theme="light"] .empty-state p { color: #6b5840; }
+
+/* Table — separators preserved with warm-dark borders */
+[data-theme="light"] .ms-row { border-bottom-color: rgba(40, 25, 10, 0.08); }
+[data-theme="light"] .ms-row.header {
+  border-bottom-color: rgba(40, 25, 10, 0.16);
+  color: #b45309;
+}
+[data-theme="light"] .ms-row.item:hover { background: rgba(217, 119, 6, 0.06); }
+
+[data-theme="light"] .status-indicator {
+  border-color: rgba(40, 25, 10, 0.20);
+}
+[data-theme="light"] .status-indicator.completed {
+  background: #d97706;
+  border-color: #d97706;
+  color: #fff;
+}
+[data-theme="light"] .status-indicator.pending { border-color: #d97706; }
+[data-theme="light"] .status-indicator.pending .pulse-dot { background: #d97706; }
+
+[data-theme="light"] .ms-title { color: var(--text-primary); }
+[data-theme="light"] .ms-title.strikethrough { color: #dc2626; }
+[data-theme="light"] .ms-desc { color: #6b5840; }
+
+[data-theme="light"] .col-due { color: var(--text-primary); }
+[data-theme="light"] .col-due .expired { color: #dc2626; }
+[data-theme="light"] .col-due .near-due { color: #b45309; }
+
+[data-theme="light"] .col-est { color: #6b5840; }
+
+[data-theme="light"] .tiny-avatar {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #fff;
+}
+[data-theme="light"] .u-name { color: var(--text-primary); }
+[data-theme="light"] .u-date { color: #92400e; }
+
+[data-theme="light"] .ms-badge.completed {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .ms-badge.pending {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.32);
+}
+[data-theme="light"] .ms-badge.expired {
+  background: rgba(220, 38, 38, 0.10);
+  color: #991b1b;
+  border-color: rgba(220, 38, 38, 0.30);
+}
+
+[data-theme="light"] .prio-badge { color: #6b5840; }
+[data-theme="light"] .prio-badge.urgent { color: #dc2626; }
+[data-theme="light"] .prio-badge.high { color: #c2410c; }
+
+[data-theme="light"] .user-pill {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.20);
+}
+
+/* Avatar stack — border matches cream bg */
+[data-theme="light"] .stack-avatar { border-color: #faf7f0; }
+[data-theme="light"] .stack-more {
+  background: rgba(217, 119, 6, 0.85);
+  color: #fff;
+  border-color: #faf7f0;
+}
 </style>

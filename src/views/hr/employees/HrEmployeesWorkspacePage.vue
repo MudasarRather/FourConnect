@@ -468,6 +468,7 @@ const submitLifecycle = async (action, employee, body, onDone) => {
 
 const humanAction = (a) => ({
   confirm: 'Confirmation',
+  'put-on-probation': 'Probation',
   suspend: 'Suspension',
   reinstate: 'Reinstatement',
   'give-notice': 'Notice',

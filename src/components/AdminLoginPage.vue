@@ -1,5 +1,8 @@
 <template>
   <div class="page-container">
+    <div class="auth-theme-toggle">
+      <ThemeToggle />
+    </div>
     <div class="auth-container fade-in">
       
       <!-- Header -->
@@ -67,6 +70,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import Logo from './icons/Logo.vue'
+import ThemeToggle from './common/ThemeToggle.vue'
 import { Mail, Lock, Eye, EyeOff, Loader2, Shield } from 'lucide-vue-next'
 import { useToast } from '../composables/useToast'
 
@@ -137,22 +141,32 @@ const handleLogin = async () => {
 
 <style scoped>
 .page-container {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #0c0c0c;
+  background: var(--bg-color);
   padding: 20px;
+  transition: background-color 240ms var(--ease);
+}
+
+.auth-theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 5;
 }
 
 .auth-container {
   width: 100%;
   max-width: 400px;
-  background: #121214;
+  background: var(--auth-card-bg);
   border-radius: 16px;
   padding: 40px 32px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--auth-card-shadow);
+  border: 1px solid var(--card-border);
+  transition: background-color 240ms var(--ease), border-color 240ms var(--ease);
 }
 
 .auth-header {
@@ -169,7 +183,7 @@ const handleLogin = async () => {
 .brand-name {
   font-size: 24px;
   font-weight: 700;
-  color: #f5f5f5;
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -188,9 +202,14 @@ const handleLogin = async () => {
   letter-spacing: 0.5px;
   margin-bottom: 12px;
 }
+[data-theme="light"] .admin-badge {
+  background: rgba(220, 38, 38, 0.10);
+  border-color: rgba(220, 38, 38, 0.40);
+  color: #b91c1c;
+}
 
 .auth-subtitle {
-  color: #8e8e93;
+  color: var(--text-secondary);
   font-size: 14px;
 }
 
@@ -210,7 +229,7 @@ const handleLogin = async () => {
 .floating-label {
   font-size: 11px;
   font-weight: 600;
-  color: #8e8e93;
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -219,24 +238,24 @@ const handleLogin = async () => {
   position: absolute;
   left: 12px;
   top: 36px;
-  color: #6e6e73;
+  color: var(--text-placeholder);
 }
 
 .minimal-input {
   width: 100%;
   height: 44px;
-  background: #1c1c1e;
-  border: 1px solid #3a3a3c;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 8px;
   padding: 0 12px 0 40px;
   font-size: 14px;
-  color: #f5f5f5;
+  color: var(--text-primary);
   transition: all 0.2s;
 }
 
-.minimal-input::placeholder { color: #6e6e73; }
-.minimal-input:focus { border-color: #ef4444; background: #000; outline: none; }
-.has-error .minimal-input { border-color: #ff453a; }
+.minimal-input::placeholder { color: var(--text-placeholder); }
+.minimal-input:focus { border-color: #ef4444; background: var(--input-bg-focus); outline: none; }
+.has-error .minimal-input { border-color: var(--accent-danger); }
 
 .eye-btn {
   position: absolute;
@@ -244,13 +263,13 @@ const handleLogin = async () => {
   top: 36px;
   background: none;
   border: none;
-  color: #6e6e73;
+  color: var(--text-placeholder);
   cursor: pointer;
 }
 
 .error-text {
   font-size: 11px;
-  color: #ff453a;
+  color: var(--accent-danger);
 }
 
 .btn-primary {
@@ -279,12 +298,12 @@ const handleLogin = async () => {
 .auth-footer {
   text-align: center;
   margin-top: 24px;
-  color: #8e8e93;
+  color: var(--text-secondary);
   font-size: 13px;
 }
 
 .auth-footer a {
-  color: #3b82f6;
+  color: var(--accent-noir);
   text-decoration: none;
 }
 

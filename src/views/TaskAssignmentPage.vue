@@ -1203,4 +1203,40 @@ watch(() => route.query.taskId, (newId) => {
 
 .p-pill.low { border: 1px solid rgba(74, 222, 128, 0.2); color: #4ade80; }
 .p-pill.medium { border: 1px solid rgba(59, 130, 246, 0.2); color: #60a5fa; }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .assignment-page-wrapper { color: var(--text-primary); }
+[data-theme="light"] .header-titles h1 { color: var(--text-primary); }
+[data-theme="light"] .header-titles p { color: var(--text-secondary); }
+[data-theme="light"] .page-header { border-bottom-color: rgba(26, 20, 16, 0.10); }
+[data-theme="light"] .status-indicator-box {
+  background: rgba(26, 20, 16, 0.05);
+  border-color: rgba(26, 20, 16, 0.10);
+}
+[data-theme="light"] .indicator-item .label { color: var(--text-tertiary); }
+[data-theme="light"] .indicator-value .text { color: var(--text-primary); }
+[data-theme="light"] .task-title { color: var(--text-primary); }
+[data-theme="light"] .task-code {
+  background: rgba(26, 20, 16, 0.08);
+  color: var(--text-tertiary);
+}
+[data-theme="light"] .meta-item { color: var(--text-secondary); }
+[data-theme="light"] .verification-card {
+  background: rgba(26, 20, 16, 0.05);
+  border-color: rgba(26, 20, 16, 0.10);
+}
+[data-theme="light"] .v-row label { color: var(--text-tertiary); }
+[data-theme="light"] .v-row span { color: var(--text-primary); }
+[data-theme="light"] .step-content-box h2 { color: var(--text-primary); }
+[data-theme="light"] .subtitle { color: var(--text-secondary); }
+[data-theme="light"] .field-group label { color: var(--text-secondary); }
+[data-theme="light"] .empty-results { color: var(--text-tertiary); }
+[data-theme="light"] .p-pill.low {
+  border-color: rgba(34, 197, 94, 0.30);
+  color: #166534;
+}
+[data-theme="light"] .p-pill.medium {
+  border-color: rgba(29, 78, 216, 0.30);
+  color: #1d4ed8;
+}
 </style>

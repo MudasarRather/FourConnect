@@ -817,4 +817,58 @@ onUnmounted(() => {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ─── Light theme overrides ───────────────────────────────────────────────
+   Cream notification panel + warm decline modal. Decline modal is teleported
+   to <body>, but [data-theme] sits on <html> so this still cascades.
+   Note: this is a scoped <style> block; selectors get the scope attribute.
+   The teleported decline modal still gets the scope attribute because Vue
+   propagates it to teleported children, so [data-theme="light"] works.
+   ────────────────────────────────────────────────────────────────────── */
+[data-theme="light"] .notification-panel {
+  background: rgba(255, 250, 240, 0.96);
+  border-color: rgba(40, 25, 10, 0.10);
+  box-shadow: 0 20px 50px rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .header-title { color: var(--text-primary); }
+[data-theme="light"] .panel-header { border-bottom-color: var(--divider-color); }
+[data-theme="light"] .mark-all-btn { color: var(--accent-noir); }
+[data-theme="light"] .notification-item { border-bottom-color: var(--divider-color); }
+[data-theme="light"] .notification-item:hover { background: rgba(40, 25, 10, 0.04); }
+[data-theme="light"] .notification-item.unread { background: rgba(29, 78, 216, 0.06); }
+[data-theme="light"] .notification-item.unread::before { background: var(--accent-noir); }
+[data-theme="light"] .notif-title { color: var(--text-primary); }
+[data-theme="light"] .notif-message { color: var(--text-secondary); }
+[data-theme="light"] .notif-time { color: var(--text-tertiary); }
+[data-theme="light"] .notif-icon { color: var(--text-secondary); }
+[data-theme="light"] .dismiss-btn { color: var(--text-tertiary); }
+[data-theme="light"] .dismiss-btn:hover {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--text-primary);
+}
+[data-theme="light"] .empty-state { color: var(--text-secondary); }
+
+[data-theme="light"] .decline-modal-backdrop { background: rgba(26, 20, 16, 0.45); }
+[data-theme="light"] .decline-modal {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.98) 0%, rgba(252, 245, 232, 0.98) 100%);
+  border-color: rgba(40, 25, 10, 0.12);
+  box-shadow: 0 30px 80px rgba(40, 25, 10, 0.28);
+}
+[data-theme="light"] .decline-modal-header { border-bottom-color: var(--divider-color); }
+[data-theme="light"] .decline-label { color: var(--text-secondary); }
+[data-theme="light"] .decline-textarea {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--text-primary);
+}
+[data-theme="light"] .decline-modal-footer { border-top-color: var(--divider-color); }
+[data-theme="light"] .btn-cancel {
+  border-color: var(--input-border);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .btn-cancel:hover {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--text-primary);
+}
+[data-theme="light"] .btn-decline { color: #fff; background: var(--accent-danger); }
 </style>

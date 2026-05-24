@@ -73,4 +73,13 @@ defineProps({
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .project-description { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .header { opacity: 1; }
+[data-theme="light"] .icon { color: #b45309; }
+[data-theme="light"] .label { color: #b45309; font-weight: 700; }
+[data-theme="light"] .description-text { color: var(--text-primary); }
+[data-theme="light"] .empty-state { color: #92400e; }
+[data-theme="light"] .text-muted { color: #6b5840; }
 </style>

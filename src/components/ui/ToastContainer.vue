@@ -94,4 +94,26 @@ const { toasts, removeToast } = useToast()
   opacity: 0;
   transform: translateY(-20px);
 }
+
+/* ─── Light theme overrides ─────────────────────────────────────────────── */
+[data-theme="light"] .toast-item {
+  background: rgba(255, 250, 240, 0.96);
+  border-color: rgba(40, 25, 10, 0.12);
+  box-shadow: 0 10px 30px rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .toast-item.success {
+  background: rgba(5, 150, 105, 0.10);
+  border-color: rgba(5, 150, 105, 0.40);
+}
+[data-theme="light"] .toast-item.error {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.40);
+}
+[data-theme="light"] .toast-item.info {
+  background: rgba(29, 78, 216, 0.08);
+  border-color: rgba(29, 78, 216, 0.40);
+}
+[data-theme="light"] .message { color: var(--text-primary); }
+[data-theme="light"] .close-btn { color: var(--text-secondary); }
+[data-theme="light"] .close-btn:hover { color: var(--text-primary); }
 </style>

@@ -117,4 +117,35 @@ const totalFormatted = computed(() => {
     font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 500;
 }
 .total-val { color: #f5f5f7; font-weight: 600; font-family: 'SF Mono', monospace; }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .task-preview-container {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .preview-header {
+  background: rgba(217, 119, 6, 0.08);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .col-idx,
+[data-theme="light"] .col-name,
+[data-theme="light"] .col-time,
+[data-theme="light"] .col-weight { color: #b45309; font-weight: 700; }
+
+[data-theme="light"] .task-row-preview { border-bottom-color: rgba(40, 25, 10, 0.06); }
+[data-theme="light"] .task-row-preview:hover { background: rgba(217, 119, 6, 0.06); }
+[data-theme="light"] .task-idx { color: #92400e; }
+[data-theme="light"] .task-name { color: var(--text-primary); }
+[data-theme="light"] .time-pill { color: #6b5840; }
+[data-theme="light"] .weight-pill {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .empty-state { color: #92400e; }
+[data-theme="light"] .footer-total {
+  background: rgba(217, 119, 6, 0.08);
+  border-top-color: rgba(40, 25, 10, 0.10);
+  color: #6b5840;
+}
+[data-theme="light"] .total-val { color: var(--text-primary); }
 </style>

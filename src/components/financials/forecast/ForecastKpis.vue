@@ -49,4 +49,27 @@ const format = (n) => n ? Number(n).toLocaleString() : '0'
 .value { font-size: 20px; font-weight: 700; color: white; font-family: 'SF Mono', monospace; }
 .lg { font-size: 28px; }
 .mono { color: #f59e0b; }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] .kpi-block {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  box-shadow: 0 2px 8px rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] .risk-banner {
+  background: rgba(220, 38, 38, 0.10);
+  color: #b91c1c;
+  border-bottom: 1px solid rgba(220, 38, 38, 0.30);
+  font-weight: 700;
+}
+[data-theme="light"] .label {
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .value { color: #1a1410; }
+[data-theme="light"] .value.text-rose-400 { color: #b91c1c !important; }
+[data-theme="light"] .value.text-emerald-400 { color: #047857 !important; }
+[data-theme="light"] .mono { color: #b45309; }
 </style>

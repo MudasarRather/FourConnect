@@ -64,4 +64,17 @@ h2 { font-size: 20px; font-weight: 600; color: white; margin: 0; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] h2 { color: #1a1410; }
+[data-theme="light"] .btn-primary {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .btn-primary:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
 </style>

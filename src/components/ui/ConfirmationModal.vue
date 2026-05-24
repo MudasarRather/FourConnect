@@ -192,4 +192,21 @@ const handleConfirm = () => emit('confirm')
   opacity: 0;
   transform: scale(0.95) translateY(10px);
 }
+
+/* ─── Light theme overrides ─────────────────────────────────────────────── */
+[data-theme="light"] .modal-backdrop { background: rgba(26, 20, 16, 0.45); }
+[data-theme="light"] .modal-container {
+  background: rgba(255, 250, 240, 0.98);
+  border-color: rgba(40, 25, 10, 0.12);
+  color: var(--text-primary);
+  box-shadow: 0 30px 80px rgba(40, 25, 10, 0.28);
+}
+[data-theme="light"] .modal-title { color: var(--text-primary); }
+[data-theme="light"] .modal-message { color: var(--text-secondary); }
+[data-theme="light"] .btn.cancel {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--text-primary);
+  border-color: rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .btn.cancel:hover { background: rgba(40, 25, 10, 0.12); }
 </style>

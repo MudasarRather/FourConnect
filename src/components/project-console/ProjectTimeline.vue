@@ -397,4 +397,89 @@ h3 { font-size: 16px; font-weight: 600; color: white; margin: 0; }
 
 .pop-fade-enter-active, .pop-fade-leave-active { transition: opacity 0.2s, transform 0.2s; }
 .pop-fade-enter-from, .pop-fade-leave-to { opacity: 0; transform: scale(0.96); }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .glass-card {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] h3 { color: var(--text-primary); }
+[data-theme="light"] .icon-box {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #b45309;
+}
+[data-theme="light"] .legend .l-item { color: #6b5840; }
+
+/* Gantt container — preserve separators */
+[data-theme="light"] .gantt-container {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .gantt-sidebar {
+  background: rgba(255, 250, 240, 0.55);
+  border-right-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .sidebar-header {
+  background: rgba(217, 119, 6, 0.08);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+  color: #b45309;
+}
+[data-theme="light"] .sidebar-row { border-bottom-color: rgba(40, 25, 10, 0.08); }
+[data-theme="light"] .m-name { color: var(--text-primary); }
+[data-theme="light"] .m-meta { color: #6b5840; }
+
+[data-theme="light"] .chart-header {
+  background: rgba(217, 119, 6, 0.08);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .month-block { border-left-color: rgba(40, 25, 10, 0.08); }
+[data-theme="light"] .month-label { color: #92400e; }
+
+[data-theme="light"] .chart-row { border-bottom-color: rgba(40, 25, 10, 0.08); }
+[data-theme="light"] .chart-row:hover { background: rgba(217, 119, 6, 0.05); }
+[data-theme="light"] .grid-line { border-left-color: rgba(40, 25, 10, 0.06); }
+[data-theme="light"] .grid-line.current-time { border-left-color: #dc2626; }
+
+/* Gantt bars — keep the same warm palette */
+[data-theme="light"] .gantt-bar-inner.pending {
+  background: rgba(234, 179, 8, 0.25);
+  border-color: rgba(234, 179, 8, 0.50);
+}
+[data-theme="light"] .gantt-bar-inner.in_progress {
+  background: rgba(249, 115, 22, 0.25);
+  border-color: rgba(249, 115, 22, 0.50);
+}
+[data-theme="light"] .gantt-bar-inner.completed {
+  background: rgba(217, 119, 6, 0.22);
+  border-color: rgba(217, 119, 6, 0.50);
+}
+
+[data-theme="light"] .b-av { border-color: rgba(40, 25, 10, 0.20); background: #faf7f0; }
+[data-theme="light"] .b-av-ph { color: var(--text-primary); }
+[data-theme="light"] .b-av-more {
+  color: #fff;
+  background: rgba(217, 119, 6, 0.85);
+}
+
+/* Popover — frosted cream */
+[data-theme="light"] .popover-card {
+  background: rgba(255, 250, 240, 0.95);
+  border-color: rgba(40, 25, 10, 0.12);
+  box-shadow: 0 12px 40px rgba(40, 25, 10, 0.30);
+  backdrop-filter: blur(20px);
+}
+[data-theme="light"] .pop-header {
+  background: rgba(217, 119, 6, 0.06);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .ph-top h4 { color: var(--text-primary); }
+[data-theme="light"] .ph-meta { color: #6b5840; }
+[data-theme="light"] .ph-bar-track { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .pt-check { border-color: rgba(40, 25, 10, 0.30); }
+[data-theme="light"] .pt-check.checked { background: #d97706; border-color: #d97706; color: #fff; }
+[data-theme="light"] .pt-name { color: #6b5840; }
+[data-theme="light"] .pop-footer { border-top-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .lbl { color: #92400e; }
+[data-theme="light"] .val { color: var(--text-primary); }
 </style>

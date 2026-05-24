@@ -229,14 +229,99 @@ const updatedAgoText = computed(() => {
   align-items: center;
   background: rgba(59, 130, 246, 0.15); /* Blue-500 alpha */
   color: #60a5fa; /* Blue-400 */
-  padding: 0 6px; 
-  border-radius: 6px; 
-  font-weight: 600; 
+  padding: 0 6px;
+  border-radius: 6px;
+  font-weight: 600;
   font-family: 'Inter', sans-serif;
   font-size: 0.9em; /* Match view scale */
   border: 1px solid rgba(59, 130, 246, 0.3);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   margin: 0 1px;
   white-space: nowrap;
+}
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .author-name { color: var(--text-primary); }
+[data-theme="light"] .timestamp { color: #92400e; }
+
+/* Type badges — preserve gold/amber/orange family on cream */
+[data-theme="light"] .type-badge.general {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.36);
+}
+[data-theme="light"] .type-badge.financial {
+  background: rgba(234, 179, 8, 0.18);
+  color: #854d0e;
+  border-color: rgba(234, 179, 8, 0.36);
+}
+[data-theme="light"] .type-badge.private {
+  background: rgba(249, 115, 22, 0.16);
+  color: #c2410c;
+  border-color: rgba(249, 115, 22, 0.36);
+}
+[data-theme="light"] .type-badge.other {
+  background: rgba(251, 146, 60, 0.16);
+  color: #c2410c;
+  border-color: rgba(251, 146, 60, 0.36);
+}
+[data-theme="light"] .type-badge.audit {
+  background: rgba(40, 25, 10, 0.06);
+  color: #6b5840;
+  border-color: rgba(40, 25, 10, 0.18);
+}
+
+/* Title + preview */
+[data-theme="light"] .card-title { color: var(--text-primary); }
+[data-theme="light"] .card-preview { color: #6b5840; }
+[data-theme="light"] .card-preview :deep(table) { border-color: rgba(40, 25, 10, 0.12); }
+[data-theme="light"] .card-preview :deep(table td) { border-color: rgba(40, 25, 10, 0.10); }
+
+/* Bottom border separator */
+[data-theme="light"] .card-bottom { border-top-color: rgba(40, 25, 10, 0.10); }
+
+/* Attachment pills */
+[data-theme="light"] .att-pill-mini {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+}
+[data-theme="light"] .att-pill-mini:hover {
+  background: rgba(217, 119, 6, 0.20);
+  color: #b45309;
+}
+[data-theme="light"] .att-more-btn { color: #92400e; }
+[data-theme="light"] .att-collapse-btn { color: #b45309; }
+
+/* Status icons + updated time */
+[data-theme="light"] .updated-text-mini { color: #92400e; }
+
+/* Action buttons (pin / lock / delete) — visible amber on cream */
+[data-theme="light"] .action-icon {
+  color: #6b5840;
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .action-icon:hover {
+  background: rgba(217, 119, 6, 0.16);
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #b45309;
+}
+[data-theme="light"] .action-icon.active {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.18);
+  border-color: rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .action-icon.danger:hover {
+  background: rgba(220, 38, 38, 0.10);
+  border-color: rgba(220, 38, 38, 0.32);
+  color: #b91c1c;
+}
+
+/* Mention pill — recolor from blue to amber to stay on palette */
+[data-theme="light"] :deep(.mention-pill) {
+  background: rgba(217, 119, 6, 0.16);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.36);
+  box-shadow: 0 1px 2px rgba(40, 25, 10, 0.10);
 }
 </style>

@@ -485,4 +485,28 @@ onBeforeUnmount(() => {
   padding-left: 4px;
   font-weight: 500;
 }
+
+/* ─── Light theme overrides ───────────────────────────────────────────── */
+[data-theme="light"] .hr-dp-popover {
+  background: rgba(255, 250, 240, 0.96);
+  border-color: rgba(40, 25, 10, 0.12);
+  box-shadow: 0 24px 60px -24px rgba(40, 25, 10, 0.28);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+[data-theme="light"] .nav-btn {
+  background: rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] .dp-day:hover:not(:disabled):not(.selected) {
+  background: rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .foot-btn { color: var(--hr-text-secondary); }
+[data-theme="light"] .foot-btn:hover {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--hr-text);
+}
+[data-theme="light"] .trig-clear:hover {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
 </style>

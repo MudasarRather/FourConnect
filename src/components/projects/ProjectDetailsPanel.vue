@@ -482,4 +482,112 @@ const getAvatarColor = (member) => {
   border-radius: 4px;
   border-left: 2px solid rgba(168, 85, 247, 0.4);
 }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════
+   Drawer panel uses frosted-glass cream; keep inner cards translucent so the
+   transparency cascade is preserved. Palette stays in the orange/amber/gold
+   family — gold accents on cream, deep amber for labels.
+   ════════════════════════════════════════════════════════════════════════ */
+[data-theme="light"] .project-title { color: var(--text-primary); }
+[data-theme="light"] .project-code { color: #6b5840; }
+[data-theme="light"] .status-badge {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .status-badge.approved {
+  background: rgba(217, 119, 6, 0.16);
+  color: #92400e;
+}
+[data-theme="light"] .status-badge.approved .status-dot { background: #d97706; }
+[data-theme="light"] .status-badge.pending {
+  background: rgba(245, 158, 11, 0.16);
+  color: #92400e;
+}
+[data-theme="light"] .status-badge.pending .status-dot { background: #f59e0b; }
+[data-theme="light"] .status-badge.rejected {
+  background: rgba(220, 38, 38, 0.12);
+  color: #991b1b;
+}
+[data-theme="light"] .status-badge.rejected .status-dot { background: #dc2626; }
+[data-theme="light"] .status-badge.completed {
+  background: rgba(5, 150, 105, 0.14);
+  color: #047857;
+}
+[data-theme="light"] .status-badge.completed .status-dot { background: #059669; }
+[data-theme="light"] .status-dot { background: #92400e; }
+
+[data-theme="light"] .owner-info .label { color: #6b5840; }
+[data-theme="light"] .owner-info .value { color: var(--text-primary); }
+
+[data-theme="light"] .divider { background: rgba(40, 25, 10, 0.10); }
+
+[data-theme="light"] .section-label { color: #b45309; font-weight: 700; }
+
+[data-theme="light"] .description { color: var(--text-secondary); }
+
+[data-theme="light"] .metric-card {
+  background: rgba(255, 250, 240, 0.40);
+  border-color: rgba(217, 119, 6, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+[data-theme="light"] .metric-label { color: #6b5840; }
+[data-theme="light"] .currency { color: #6b5840; }
+[data-theme="light"] .amount { color: var(--text-primary); }
+[data-theme="light"] .metric-sub,
+[data-theme="light"] .date-range { color: #92400e; }
+
+[data-theme="light"] .info-item label { color: #6b5840; }
+[data-theme="light"] .info-item p { color: var(--text-primary); }
+[data-theme="light"] .info-item p.mono { color: #b45309; }
+
+[data-theme="light"] .count-badge {
+  color: #92400e;
+  background: rgba(217, 119, 6, 0.14);
+}
+
+[data-theme="light"] .team-row {
+  background: rgba(255, 250, 240, 0.35);
+  border: 1px solid rgba(217, 119, 6, 0.12);
+}
+[data-theme="light"] .team-row:hover {
+  border-color: rgba(217, 119, 6, 0.30);
+  background: rgba(255, 250, 240, 0.55);
+}
+[data-theme="light"] .member-name { color: var(--text-primary); }
+[data-theme="light"] .member-email { color: #6b5840; }
+[data-theme="light"] .member-role.pending {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+}
+[data-theme="light"] .member-role.accepted {
+  background: rgba(217, 119, 6, 0.16);
+  color: #92400e;
+}
+[data-theme="light"] .member-role.declined {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+[data-theme="light"] .member-role.removed {
+  background: rgba(146, 64, 14, 0.18);
+  color: #78350f;
+}
+
+[data-theme="light"] .empty-team { color: #92400e; }
+
+[data-theme="light"] .override-btn {
+  background: rgba(249, 115, 22, 0.14);
+  border-color: rgba(249, 115, 22, 0.36);
+  color: #c2410c;
+}
+[data-theme="light"] .override-btn:hover:not(:disabled) {
+  background: rgba(249, 115, 22, 0.22);
+  border-color: #c2410c;
+}
+
+[data-theme="light"] .decline-reason {
+  color: #92400e;
+  background: rgba(217, 119, 6, 0.10);
+  border-left-color: rgba(217, 119, 6, 0.45);
+}
 </style>

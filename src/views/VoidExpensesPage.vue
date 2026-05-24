@@ -492,6 +492,25 @@ onUnmounted(() => {
   .void-container { flex-direction: column; padding: 20px; }
   .overview-panel { flex: none; width: 100%; position: static; }
   .glass-row { grid-template-columns: 4px 1.5fr minmax(100px, auto); padding-right: 16px; gap: 16px; }
-  .feed-reason { display: none; } /* Hide reason string on mobile to save space */
+  .feed-reason { display: none; }
+}
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .void-page-root { color: var(--text-primary); }
+[data-theme="light"] .header-text label { color: var(--text-tertiary); }
+[data-theme="light"] .header-text h1 { color: var(--text-primary); }
+[data-theme="light"] .overview-glass-card,
+[data-theme="light"] .glass-row {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
+[data-theme="light"] .stat-label-text { color: #6b5840; }
+[data-theme="light"] .stat-number { color: var(--text-primary); }
+[data-theme="light"] .feed-amount { color: var(--text-primary); }
+[data-theme="light"] .feed-date { color: var(--text-secondary); }
+[data-theme="light"] .feed-reason { color: var(--text-tertiary); }
+[data-theme="light"] .void-stripe {
+  background: rgba(220, 38, 38, 0.45);
 }
 </style>

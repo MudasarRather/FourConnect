@@ -423,4 +423,33 @@ defineExpose({ open: openIt, close })
   padding-left: 4px;
   font-weight: 500;
 }
+
+/* ─── Light theme overrides ───────────────────────────────────────────── */
+[data-theme="light"] .hr-select.open .hr-select-trigger,
+[data-theme="light"] .hr-select.focused .hr-select-trigger {
+  box-shadow:
+    0 0 0 3px rgba(217, 119, 6, 0.18),
+    0 0 24px -8px rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .hr-select-popover {
+  background: rgba(255, 250, 240, 0.96);
+  border-color: rgba(40, 25, 10, 0.12);
+  box-shadow:
+    0 22px 56px -22px rgba(40, 25, 10, 0.28),
+    0 0 0 1px rgba(217, 119, 6, 0.12);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+[data-theme="light"] .pop-search {
+  background: rgba(40, 25, 10, 0.03);
+  border-bottom-color: rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .pop-item:hover,
+[data-theme="light"] .pop-item.active {
+  background: rgba(217, 119, 6, 0.12);
+}
+[data-theme="light"] .pop-item.selected {
+  background: rgba(217, 119, 6, 0.20);
+  color: #92400e;
+}
 </style>

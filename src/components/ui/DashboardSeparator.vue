@@ -43,4 +43,13 @@ defineProps({
 .sep-label {
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600;
 }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .line { background: rgba(40, 25, 10, 0.12); }
+[data-theme="light"] .sep-pill {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: #92400e;
+}
+[data-theme="light"] .sep-icon { color: #b45309; }
 </style>

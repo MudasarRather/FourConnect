@@ -176,4 +176,51 @@ const format = (n) => {
 
 .value.pending { color: #fbbf24; }
 .value.date { font-size: 16px; font-weight: 500; }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] .kpi-card {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  box-shadow: 0 2px 8px rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] .kpi-card:hover {
+  background: rgba(255, 250, 240, 0.95);
+  border-color: rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .kpi-icon.total {
+  background: rgba(5, 150, 105, 0.12);
+  color: #047857;
+}
+[data-theme="light"] .kpi-icon.pending {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+[data-theme="light"] .kpi-icon.avg {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+}
+[data-theme="light"] .kpi-icon.last {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+[data-theme="light"] .kpi-icon.tds {
+  background: rgba(220, 38, 38, 0.10);
+  color: #b91c1c;
+}
+[data-theme="light"] .kpi-icon.other {
+  background: rgba(249, 115, 22, 0.14);
+  color: #c2410c;
+}
+[data-theme="light"] .label {
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .value {
+  color: #1a1410;
+}
+[data-theme="light"] .value.pending {
+  color: #b45309;
+}
 </style>

@@ -45,4 +45,37 @@ input {
    background: #3b82f6; color: white; font-weight: 600; cursor: pointer; transition: background 0.2s;
 }
 .btn-save:hover { background: #2563eb; }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] .glass-panel {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  box-shadow: 0 2px 8px rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] h3 { color: #1a1410; }
+[data-theme="light"] .desc { color: #6b5840; }
+[data-theme="light"] label {
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .input-wrap {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .input-wrap:focus-within {
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .input-wrap span { color: #b45309; }
+[data-theme="light"] input { color: #1a1410; }
+[data-theme="light"] .btn-save {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .btn-save:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
 </style>

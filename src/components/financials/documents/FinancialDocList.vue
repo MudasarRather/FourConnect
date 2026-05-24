@@ -484,4 +484,153 @@ const openDoc = (url) => {
    padding: 80px 0; color: rgba(255,255,255,0.3);
 }
 .empty-icon { opacity: 0.2; margin-bottom: 16px; }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] .doc-header {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .tab-btn {
+  color: #6b5840;
+}
+[data-theme="light"] .tab-btn:hover {
+  color: #1a1410;
+}
+[data-theme="light"] .tab-btn.active {
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .active-line {
+  background: linear-gradient(90deg, #d97706, #b45309);
+  box-shadow: 0 -2px 8px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .action-btn-ghost {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.30);
+  color: #92400e;
+}
+[data-theme="light"] .action-btn-ghost:hover {
+  background: rgba(217, 119, 6, 0.12);
+  color: #1a1410;
+}
+[data-theme="light"] .action-btn-primary {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .action-btn-primary:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a1410;
+}
+[data-theme="light"] .search-input {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  color: #92400e;
+}
+[data-theme="light"] .search-input:focus-within {
+  border-color: #d97706;
+  color: #1a1410;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .search-input input {
+  color: #1a1410;
+}
+[data-theme="light"] .search-input input::placeholder { color: #92400e; }
+[data-theme="light"] .tool-btn {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  color: #92400e;
+}
+[data-theme="light"] .tool-btn:hover {
+  background: rgba(217, 119, 6, 0.12);
+  color: #1a1410;
+}
+[data-theme="light"] .tool-btn.active {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .dropdown-menu {
+  background: rgba(255, 250, 240, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  box-shadow: 0 8px 24px rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .menu-item {
+  color: #1a1410;
+}
+[data-theme="light"] .menu-item:hover {
+  background: rgba(217, 119, 6, 0.10);
+  color: #b45309;
+}
+[data-theme="light"] .menu-item.active {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  font-weight: 600;
+}
+[data-theme="light"] .pm-row-modern {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .pm-row-modern.header {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.16);
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .pm-row-modern.item:hover {
+  background: rgba(217, 119, 6, 0.06);
+}
+[data-theme="light"] .col.name {
+  color: #1a1410;
+}
+[data-theme="light"] .file-icon {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+[data-theme="light"] .file-icon.pdf {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
+[data-theme="light"] .file-icon.xls {
+  background: rgba(5, 150, 105, 0.12);
+  color: #047857;
+}
+[data-theme="light"] .file-icon.doc {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+}
+[data-theme="light"] .author-name {
+  color: #1a1410;
+}
+[data-theme="light"] .col.doc-id .mono-text {
+  color: #6b5840;
+}
+[data-theme="light"] .col.access .access-pill {
+  background: rgba(5, 150, 105, 0.12);
+  color: #047857;
+}
+[data-theme="light"] .col.created {
+  color: #6b5840;
+}
+[data-theme="light"] .col.size {
+  color: #92400e;
+}
+[data-theme="light"] .view-btn {
+  background: rgba(217, 119, 6, 0.10);
+  border: 1px solid rgba(217, 119, 6, 0.30);
+  color: #b45309;
+  font-weight: 600;
+}
+[data-theme="light"] .view-btn:hover {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  border-color: #d97706;
+}
+[data-theme="light"] .empty-state {
+  color: #92400e;
+}
+[data-theme="light"] .empty-icon {
+  color: #b45309;
+  opacity: 0.4;
+}
 </style>

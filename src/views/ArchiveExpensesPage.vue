@@ -463,4 +463,24 @@ onMounted(fetchData)
   .archive-banner { flex-direction: column; align-items: flex-start; }
   .summary-chips { gap: 8px; }
 }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .expenses-page { color: var(--text-primary); }
+[data-theme="light"] .header-text label { color: var(--text-tertiary); }
+[data-theme="light"] .header-text h1 { color: var(--text-primary); }
+[data-theme="light"] .banner-title { color: #6b21a8; }
+[data-theme="light"] .banner-desc { color: var(--text-secondary); }
+[data-theme="light"] .stat-number { color: var(--text-primary); }
+[data-theme="light"] .stat-label-text { color: #6b5840; }
+[data-theme="light"] .title-group h3 { color: var(--text-primary); }
+[data-theme="light"] .title-group p { color: var(--text-secondary); }
+[data-theme="light"] .v-name { color: var(--text-primary); }
+[data-theme="light"] .v-ref { color: var(--text-tertiary); }
+[data-theme="light"] .col.amount { color: var(--text-primary); }
+[data-theme="light"] .col.date { color: var(--text-secondary); }
+[data-theme="light"] .chip {
+  background: rgba(26, 20, 16, 0.06);
+  color: var(--text-secondary);
+  border-color: rgba(26, 20, 16, 0.10);
+}
 </style>

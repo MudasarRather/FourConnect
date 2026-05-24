@@ -11,6 +11,25 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Theme bootstrap: runs before main.js so the first paint matches the user's preference.
+         Keep in sync with src/composables/useTheme.js (STORAGE_KEY + VALID values). -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme_preference');
+          var valid = stored === 'dark' || stored === 'light' || stored === 'system';
+          var pref = valid ? stored : 'dark';
+          var resolved = pref === 'system'
+            ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : pref;
+          document.documentElement.dataset.theme = resolved;
+          document.documentElement.style.colorScheme = resolved;
+        } catch (_) {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

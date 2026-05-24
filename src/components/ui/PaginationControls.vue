@@ -116,5 +116,24 @@ const limitOptions = [
   cursor: not-allowed;
   border-color: #27272a;
 }
+
+/* ─── Light theme overrides ─────────────────────────────────────────────── */
+[data-theme="light"] .pagination-controls {
+  border-top-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .nav-btn {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .nav-btn:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .nav-btn:disabled {
+  border-color: rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .label,
+[data-theme="light"] .page-info { color: var(--text-secondary); }
 </style>
 

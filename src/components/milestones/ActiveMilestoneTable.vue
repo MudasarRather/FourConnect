@@ -113,7 +113,7 @@
               <div class="contrib-bar-wrap">
                   <div class="contrib-bar" :style="{ width: `${Math.min(m.contribution_percentage || 0, 100)}%` }"></div>
               </div>
-              <span class="contrib-val">{{ m.contribution_percentage }}%</span>
+              <span class="contrib-val">{{ formatContribution(m.contribution_percentage) }}%</span>
           </div>
        </div>
     </div>
@@ -138,6 +138,10 @@ const formatHours = (h) => {
   return `${Math.round(h)}h`
 }
 const formatStatus = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1).replace('_', ' ') : 'Pending')
+const formatContribution = (v) => {
+  const n = Number(v) || 0
+  return parseFloat(n.toFixed(2)).toString()
+}
 
 // Avatar Color Logic — orange/amber family across the board
 const getAvatarColor = (status) => {
@@ -282,4 +286,139 @@ const getActiveAssignments = (milestone) => {
 
 .text-muted { color: rgba(255,255,255,0.2); font-size: 12px; }
 .empty-row { padding: 40px; text-align: center; color: rgba(255,255,255,0.3); font-size: 13px; }
+
+/* ═════════════════ LIGHT THEME OVERRIDES — ActiveMilestoneTable ═════════════════ */
+[data-theme="light"] .header-content h3 {
+  color: var(--text-primary);
+}
+[data-theme="light"] .header-content p {
+  color: #6b5840;
+}
+
+/* Table separators */
+[data-theme="light"] .ms-row {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .ms-row.header {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.12);
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .ms-row.item {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .ms-row.item:hover {
+  background: rgba(40, 25, 10, 0.04);
+}
+
+/* Name */
+[data-theme="light"] .ms-title {
+  color: var(--text-primary);
+}
+[data-theme="light"] .ms-title.strikethrough {
+  color: #b91c1c;
+}
+
+/* Type column */
+[data-theme="light"] .col-type {
+  color: #6b5840;
+}
+
+/* Owner avatar */
+[data-theme="light"] .owner-avatar {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  font-weight: 700;
+}
+
+/* Priority */
+[data-theme="light"] .prio-badge {
+  color: #6b5840;
+  font-weight: 600;
+}
+[data-theme="light"] .prio-badge.urgent {
+  color: #b91c1c;
+}
+[data-theme="light"] .prio-badge.high {
+  color: #b45309;
+}
+
+/* Assigned avatar stack — avatars use inline styles so override borders + fallback */
+[data-theme="light"] .assign-avatar {
+  border: 2px solid rgba(255, 250, 240, 1) !important;
+  box-shadow: 0 1px 3px rgba(40, 25, 10, 0.20);
+}
+[data-theme="light"] .assign-more {
+  background: rgba(217, 119, 6, 0.16);
+  color: #92400e;
+  border: 2px solid rgba(255, 250, 240, 1);
+  font-weight: 700;
+}
+
+/* Dates */
+[data-theme="light"] .col-start,
+[data-theme="light"] .col-due {
+  color: #6b5840;
+}
+[data-theme="light"] .col-due {
+  color: var(--text-primary);
+}
+[data-theme="light"] .col-due .expired {
+  color: #b91c1c;
+  font-weight: 600;
+}
+[data-theme="light"] .col-due .near-due {
+  color: #b45309;
+  font-weight: 600;
+}
+
+/* Est / Budget */
+[data-theme="light"] .col-est,
+[data-theme="light"] .col-budget {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Status badges */
+[data-theme="light"] .ms-badge.completed {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .ms-badge.in_progress {
+  background: rgba(234, 88, 12, 0.14);
+  color: #b45309;
+  border-color: rgba(234, 88, 12, 0.32);
+}
+[data-theme="light"] .ms-badge.pending {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.28);
+}
+[data-theme="light"] .ms-badge.expired {
+  background: rgba(239, 68, 68, 0.10);
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.28);
+}
+
+/* Contribution bar */
+[data-theme="light"] .contrib-bar-wrap {
+  background: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .contrib-bar {
+  background: linear-gradient(90deg, #d97706, #c2410c);
+}
+[data-theme="light"] .contrib-val {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Misc */
+[data-theme="light"] .text-muted {
+  color: #92400e;
+}
+[data-theme="light"] .empty-row {
+  color: #92400e;
+}
 </style>

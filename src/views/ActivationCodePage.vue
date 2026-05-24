@@ -1,5 +1,8 @@
 <template>
   <div class="page-container">
+    <div class="auth-theme-toggle">
+      <ThemeToggle />
+    </div>
     <div class="auth-container fade-in">
       
       <!-- Header -->
@@ -56,6 +59,7 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import Logo from '../components/icons/Logo.vue'
+import ThemeToggle from '../components/common/ThemeToggle.vue'
 import { ShieldCheck, Loader2 } from 'lucide-vue-next'
 import { useToast } from '../composables/useToast'
 
@@ -137,23 +141,27 @@ const handleLogout = () => {
 </script>
 
 <style scoped>
-:root {
-  --bg-color: #0d0d0d;
-  --card-bg: #1a1a1c;
-  --text-primary: #f5f5f5;
-  --text-secondary: #8e8e93;
-  --accent-color: #3b82f6;
-  --error-color: #ef4444;
-  --success-color: #34d399;
-  --radius-md: 12px;
-}
-
+/* Local accent tokens — the page inherits surface/text tokens from theme.css.
+   Activation uses a blue accent (not gold) to differentiate from the auth flow. */
 .page-container {
+  --accent-color: var(--accent-noir);
+  --error-color: var(--accent-danger);
+  --success-color: var(--accent-emerald);
+
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  background: var(--bg-color);
   padding: 20px;
+  transition: background-color 240ms var(--ease);
+}
+
+.auth-theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 5;
 }
 
 .auth-container {
@@ -187,6 +195,11 @@ const handleLogout = () => {
   font-size: 13px;
   line-height: 1.5;
 }
+[data-theme="light"] .info-box {
+  background: rgba(29, 78, 216, 0.08);
+  border-color: rgba(29, 78, 216, 0.28);
+  color: #1d4ed8;
+}
 
 .info-box svg {
   flex-shrink: 0;
@@ -209,7 +222,7 @@ const handleLogout = () => {
   width: 44px;
   height: 56px;
   background: var(--card-bg);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid var(--input-border);
   border-radius: 10px;
   text-align: center;
   font-size: 24px;
@@ -223,9 +236,12 @@ const handleLogout = () => {
   border-color: var(--accent-color);
   background: rgba(59, 130, 246, 0.05);
 }
+[data-theme="light"] .code-box:focus {
+  background: rgba(29, 78, 216, 0.05);
+}
 
 .code-box.has-value {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: var(--input-border);
 }
 
 .code-box.error {

@@ -175,4 +175,23 @@ const decrement = () => {
 .step-btn:active {
   background: rgba(59, 130, 246, 0.2);
 }
+
+/* ─── Light theme overrides ─────────────────────────────────────────────── */
+[data-theme="light"] .currency-input {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .currency-symbol {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .amount-input { color: var(--text-primary); }
+[data-theme="light"] .step-btn { color: var(--text-secondary); }
+[data-theme="light"] .step-btn:hover {
+  background: rgba(40, 25, 10, 0.08);
+  color: var(--text-primary);
+}
+[data-theme="light"] .step-btn:active {
+  background: rgba(29, 78, 216, 0.15);
+}
 </style>

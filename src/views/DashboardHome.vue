@@ -296,7 +296,7 @@ onMounted(() => {
 .metric-value {
   font-size: 24px;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
 }
 
 /* Section Styling */
@@ -324,7 +324,7 @@ onMounted(() => {
   transition: color 0.2s;
 }
 
-.view-all-link:hover { color: #fff; text-decoration: none; }
+.view-all-link:hover { color: var(--text-primary); text-decoration: none; }
 
 /* Grid Layouts */
 .project-grid {
@@ -346,8 +346,14 @@ onMounted(() => {
 
 .project-noir-card:hover {
   transform: translateY(-4px);
-  border-color: rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.02);
+  border-color: var(--card-border);
+  background: var(--card-bg);
+  filter: brightness(1.05);
+}
+[data-theme="light"] .project-noir-card:hover {
+  border-color: rgba(40, 25, 10, 0.20);
+  background: rgba(255, 250, 240, 0.95);
+  filter: none;
 }
 
 .project-noir-card::after {
@@ -356,6 +362,9 @@ onMounted(() => {
   top: 0; left: 0; width: 100%; height: 100%;
   background: radial-gradient(circle at top right, rgba(255,255,255,0.03), transparent);
   pointer-events: none;
+}
+[data-theme="light"] .project-noir-card::after {
+  background: radial-gradient(circle at top right, rgba(217, 119, 6, 0.08), transparent);
 }
 
 .status-indicator {
@@ -397,19 +406,20 @@ onMounted(() => {
 
 .health-bar-bg {
   width: 100%; height: 4px;
-  background: rgba(255,255,255,0.05);
+  background: var(--input-bg);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .health-bar {
   height: 100%;
-  background: #fff;
+  background: var(--text-primary);
   border-radius: 4px;
 }
+[data-theme="light"] .health-bar { background: var(--accent-gold); }
 
 .add-project-ghost-card {
-  border: 2px dashed rgba(255,255,255,0.05);
+  border: 2px dashed var(--card-border);
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
@@ -422,9 +432,9 @@ onMounted(() => {
 }
 
 .add-project-ghost-card:hover {
-  border-color: rgba(255,255,255,0.15);
+  border-color: var(--input-border);
   color: var(--text-secondary);
-  background: rgba(255,255,255,0.01);
+  background: var(--input-bg);
 }
 
 .add-project-ghost-card span {
@@ -490,7 +500,7 @@ onMounted(() => {
   top: 8px; left: -2px;
   width: 5px; height: 5px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--text-primary);
 }
 
 .event-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
@@ -522,4 +532,33 @@ onMounted(() => {
   from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .dashboard-home { color: var(--text-primary); }
+[data-theme="light"] .hero-greeting { color: var(--text-primary); }
+[data-theme="light"] .text-highlight { color: #d97706; }
+[data-theme="light"] .hero-subtitle { color: var(--text-secondary); }
+
+[data-theme="light"] .metric-label { color: #6b5840; }
+[data-theme="light"] .metric-value { color: var(--text-primary); }
+
+[data-theme="light"] .section-title { color: var(--text-primary); }
+[data-theme="light"] .section-desc { color: var(--text-secondary); }
+[data-theme="light"] .view-all-link { color: var(--text-secondary); }
+[data-theme="light"] .view-all-link:hover { color: var(--text-primary); }
+
+[data-theme="light"] .analytics-card {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .card-title { color: #6b5840; }
+[data-theme="light"] .event-title { color: var(--text-primary); }
+[data-theme="light"] .event-desc { color: var(--text-secondary); }
+[data-theme="light"] .legend-label { color: var(--text-secondary); }
+[data-theme="light"] .legend-value { color: var(--text-primary); }
+
+[data-theme="light"] .project-name { color: var(--text-primary); }
+[data-theme="light"] .project-meta { color: var(--text-secondary); }
+[data-theme="light"] .project-code { color: var(--text-tertiary); }
+[data-theme="light"] .time-month { color: var(--text-tertiary); }
 </style>

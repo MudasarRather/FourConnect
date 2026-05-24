@@ -868,10 +868,113 @@ const saveNote = async () => {
 .btn-mini-cancel:hover { color: white; background: rgba(255,255,255,0.08); }
 
 .btn-mini-save {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); 
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: white; border: none; font-size: 12px; font-weight: 600;
   padding: 6px 16px; border-radius: 6px; cursor: pointer;
   box-shadow: 0 2px 10px rgba(245, 158, 11, 0.2); transition: all 0.2s;
 }
 .btn-mini-save:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .edit-title { color: var(--text-primary); }
+[data-theme="light"] .edit-title::placeholder { color: rgba(26, 20, 16, 0.30); }
+
+/* Type selector dots (header right) */
+[data-theme="light"] .type-dot {
+  background: rgba(255, 250, 240, 0.55);
+  color: #6b5840;
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .type-dot:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .type-dot.active {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  border-color: #b45309;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.30);
+}
+
+/* Toolbar wrapper */
+[data-theme="light"] .toolbar-wrapper {
+  background: rgba(255, 250, 240, 0.45);
+  border-color: rgba(217, 119, 6, 0.22);
+}
+
+/* Edit attachments row */
+[data-theme="light"] .edit-attachments {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .edit-att-item {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+}
+[data-theme="light"] .att-del-btn { color: #92400e; }
+[data-theme="light"] .att-del-btn:hover { color: #b91c1c; }
+
+/* Rich editor body */
+[data-theme="light"] .rich-editor { color: var(--text-primary); }
+[data-theme="light"] .rich-editor:empty:before { color: rgba(26, 20, 16, 0.30); }
+[data-theme="light"] :deep(.editor-table),
+[data-theme="light"] .rich-editor table { border-color: rgba(40, 25, 10, 0.18); }
+[data-theme="light"] :deep(.editor-table) td,
+[data-theme="light"] .rich-editor table td { border-color: rgba(40, 25, 10, 0.14); }
+[data-theme="light"] :deep(.editor-table) td:focus,
+[data-theme="light"] .rich-editor table td:focus {
+  outline-color: rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .rich-editor::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.28);
+}
+
+/* Mention pill — recolor blue → amber to stay on palette */
+[data-theme="light"] :deep(.mention-pill) {
+  background: rgba(217, 119, 6, 0.16);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.36);
+  box-shadow: 0 1px 2px rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] :deep(.mention-pill:hover) {
+  background: rgba(217, 119, 6, 0.26);
+  border-color: rgba(217, 119, 6, 0.55);
+}
+
+/* Grammar check underline */
+[data-theme="light"] :deep(.lt-mistake) {
+  border-bottom-color: #d97706;
+  background: rgba(217, 119, 6, 0.12);
+}
+
+/* Footer */
+[data-theme="light"] .edit-footer { border-top-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .edit-meta { color: #92400e; }
+[data-theme="light"] .last-updated { color: #92400e; }
+[data-theme="light"] .toggle-pin { color: #6b5840; }
+[data-theme="light"] .toggle-pin:hover { color: #92400e; }
+[data-theme="light"] .toggle-pin.active { color: #b45309; }
+
+/* Cancel button — was invisible in light */
+[data-theme="light"] .btn-mini-cancel {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.30);
+  color: #6b5840;
+}
+[data-theme="light"] .btn-mini-cancel:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.50);
+}
+
+/* Save button — keep golden gradient */
+[data-theme="light"] .btn-mini-save {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .btn-mini-save:hover {
+  background: linear-gradient(135deg, #c2410c 0%, #92400e 100%);
+  box-shadow: 0 8px 22px rgba(217, 119, 6, 0.42);
+}
 </style>

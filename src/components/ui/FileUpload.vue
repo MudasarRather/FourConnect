@@ -419,4 +419,54 @@ const removeFile = () => {
   font-size: 12px;
   color: #ef4444;
 }
+
+/* ═════ LIGHT THEME OVERRIDES ════════════════════════════════════════════ */
+[data-theme="light"] .file-upload-container {
+  background-color: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.35);
+}
+[data-theme="light"] .file-upload-container:hover:not(.is-disabled) {
+  background-color: rgba(255, 246, 226, 0.80);
+  border-color: #d97706;
+}
+[data-theme="light"] .file-upload-container.is-dragging {
+  background-color: rgba(217, 119, 6, 0.10);
+  border-color: #d97706;
+}
+[data-theme="light"] .file-upload-container.has-error {
+  background-color: rgba(254, 226, 226, 0.55);
+  border-color: #ef4444;
+}
+
+[data-theme="light"] .icon-circle {
+  background-color: rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .file-upload-container:hover .icon-circle {
+  background-color: rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .upload-icon { color: #92400e; }
+[data-theme="light"] .file-upload-container:hover .upload-icon { color: #b45309; }
+
+[data-theme="light"] .primary-text { color: var(--text-primary); }
+[data-theme="light"] .highlight { color: #b45309; }
+[data-theme="light"] .secondary-text { color: #6b5840; }
+
+[data-theme="light"] .text-accent { color: #b45309; }
+[data-theme="light"] .file-icon-wrapper { color: #b45309; }
+
+/* Success state */
+[data-theme="light"] .success .file-info {
+  background-color: rgba(255, 246, 226, 0.80);
+  border-color: rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .file-name { color: var(--text-primary); }
+[data-theme="light"] .file-size { color: #6b5840; }
+
+[data-theme="light"] .remove-btn { color: #6b5840; }
+[data-theme="light"] .remove-btn:hover {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+[data-theme="light"] .error-message { color: #dc2626; }
 </style>

@@ -158,4 +158,57 @@ const getColor = (name) => {
 
 .empty-text { padding: 20px; text-align: center; color: rgba(255,255,255,0.4); font-size: 12px; font-style: italic; }
 
+/* ═════ LIGHT THEME OVERRIDES ════════════════════════════════════════════ */
+[data-theme="light"] .compact-selection-list {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
+}
+
+[data-theme="light"] .list-header {
+  background: rgba(255, 246, 226, 0.70);
+  border-bottom-color: rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .list-title { color: #92400e; }
+[data-theme="light"] .count-badge {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.12);
+}
+
+[data-theme="light"] .scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(217, 119, 6, 0.45);
+}
+
+[data-theme="light"] .list-item {
+  background: rgba(255, 250, 240, 0.40);
+  border-color: transparent;
+}
+[data-theme="light"] .list-item:hover {
+  background: rgba(217, 119, 6, 0.08);
+}
+[data-theme="light"] .list-item.selected {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.35);
+}
+
+[data-theme="light"] .name { color: var(--text-primary); }
+[data-theme="light"] .role { color: #6b5840; }
+
+[data-theme="light"] .checkbox-box {
+  background: rgba(255, 250, 240, 0.70);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: #fff;
+}
+[data-theme="light"] .list-item:hover .checkbox-box {
+  border-color: rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .list-item.selected .checkbox-box {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  border-color: #b45309;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.30);
+}
+
+[data-theme="light"] .empty-text { color: #6b5840; }
 </style>

@@ -168,4 +168,28 @@ onUnmounted(() => {
 }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .note-card {
+  background: rgba(255, 250, 240, 0.75);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+  box-shadow:
+    0 4px 24px rgba(40, 25, 10, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+}
+[data-theme="light"] .note-card:hover {
+  background: rgba(255, 246, 226, 0.92);
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow:
+    0 20px 50px rgba(40, 25, 10, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.60);
+}
+[data-theme="light"] .note-card::before {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.18) 0%, rgba(217, 119, 6, 0.06) 35%, transparent 65%);
+}
+[data-theme="light"] .note-card.editing {
+  background: rgba(255, 250, 240, 0.98);
+  border-color: rgba(217, 119, 6, 0.55);
+  box-shadow: 0 40px 80px rgba(40, 25, 10, 0.28);
+}
 </style>

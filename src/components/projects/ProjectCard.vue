@@ -247,4 +247,97 @@ const formatBudget = (n) => {
 .foot-date { margin-left: auto; font-family: 'SF Mono', monospace; font-size: 10px; color: rgba(255, 255, 255, 0.40); }
 .arrow-icon { color: rgba(255, 255, 255, 0.20); transition: all 0.25s ease; }
 .project-card:hover .arrow-icon { color: #f97316; transform: translate(3px, -3px); }
+
+/* ─── Light theme overrides ────────────────────────────────────────────── */
+[data-theme="light"] .project-card {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.85) 0%, rgba(252, 245, 232, 0.80) 100%);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .project-card:hover {
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow:
+    0 18px 40px rgba(40, 25, 10, 0.18),
+    0 0 0 1px rgba(217, 119, 6, 0.10) inset;
+}
+[data-theme="light"] .project-card::after {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.08), transparent 60%);
+}
+
+/* Priority ribbon — only the bare default (no priority modifier) gets cream
+   tint. The vibrant gradients for prio-high/medium/low stay the same on both
+   themes for brand continuity. */
+[data-theme="light"] .priority-ribbon:not(.prio-high):not(.prio-medium):not(.prio-low) {
+  background: rgba(40, 25, 10, 0.10);
+}
+
+[data-theme="light"] .cat-chip {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.28);
+}
+[data-theme="light"] .cat-chip svg { color: #c2410c; }
+
+[data-theme="light"] .status-pill.draft    { background: rgba(75, 65, 55, 0.10); color: #44362a; border-color: rgba(75, 65, 55, 0.25); }
+[data-theme="light"] .status-pill.pending  { background: rgba(217, 119, 6, 0.14); color: #92400e; border-color: rgba(217, 119, 6, 0.32); }
+[data-theme="light"] .status-pill.approved { background: rgba(217, 119, 6, 0.16); color: #92400e; border-color: rgba(217, 119, 6, 0.36); }
+[data-theme="light"] .status-pill.rejected { background: rgba(220, 38, 38, 0.10); color: #991b1b; border-color: rgba(220, 38, 38, 0.32); }
+
+[data-theme="light"] .action-btn {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .action-btn:hover { background: rgba(40, 25, 10, 0.08); color: var(--text-primary); }
+[data-theme="light"] .action-btn.view:hover {
+  background: rgba(217, 119, 6, 0.18); color: #92400e; border-color: rgba(217, 119, 6, 0.36);
+}
+[data-theme="light"] .action-btn.delete:hover {
+  background: rgba(220, 38, 38, 0.14); color: #991b1b; border-color: rgba(220, 38, 38, 0.36);
+}
+
+[data-theme="light"] .proj-name { color: var(--text-primary); }
+[data-theme="light"] .proj-meta { color: var(--text-secondary); }
+[data-theme="light"] .icon-subtle { color: var(--text-tertiary); }
+
+[data-theme="light"] .amount-row .amt-cur { color: var(--text-tertiary); }
+[data-theme="light"] .amount-row .amt-val { color: var(--text-primary); }
+
+[data-theme="light"] .life-pill,
+[data-theme="light"] .prio-dot-pill {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .prio-dot-pill.prio-high {
+  background: rgba(220, 38, 38, 0.10); border-color: rgba(220, 38, 38, 0.32); color: #991b1b;
+}
+[data-theme="light"] .prio-dot-pill.prio-medium {
+  background: rgba(217, 119, 6, 0.14); border-color: rgba(217, 119, 6, 0.32); color: #92400e;
+}
+[data-theme="light"] .prio-dot-pill.prio-low {
+  background: rgba(217, 119, 6, 0.10); border-color: rgba(217, 119, 6, 0.28); color: #92400e;
+}
+
+[data-theme="light"] .foot-date { color: var(--text-tertiary); }
+[data-theme="light"] .arrow-icon { color: rgba(40, 25, 10, 0.32); }
+
+/* Additional text-contrast fixes — missed in initial light pass */
+[data-theme="light"] .project-title { color: var(--text-primary); }
+[data-theme="light"] .project-sub { color: var(--text-secondary); }
+[data-theme="light"] .amt-cur { color: var(--text-tertiary); }
+/* Gradient text — recolor for cream: deep amber → near-black instead of white → cream */
+[data-theme="light"] .amt-num {
+  background: linear-gradient(180deg, #92400e, #1a1410);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .amt-tag { color: #c2410c; }
+[data-theme="light"] .life-pill {
+  color: #44362a;
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+/* Top-border dashed divider */
+[data-theme="light"] .amount-row { border-top-color: rgba(40, 25, 10, 0.10); }
 </style>

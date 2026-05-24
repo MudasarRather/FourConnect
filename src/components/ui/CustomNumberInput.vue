@@ -96,4 +96,27 @@ const updateValue = (e) => {
   opacity: 0.5;
   pointer-events: none;
 }
+
+/* ═════ LIGHT THEME OVERRIDES ════════════════════════════════════════════ */
+[data-theme="light"] .number-input-field {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: var(--text-primary);
+}
+[data-theme="light"] .number-input-field::placeholder {
+  color: rgba(26, 20, 16, 0.45);
+}
+[data-theme="light"] .number-input-field:hover {
+  border-color: rgba(217, 119, 6, 0.40);
+  background: rgba(255, 246, 226, 0.75);
+}
+[data-theme="light"] .number-input-field:focus {
+  background: rgba(255, 246, 226, 0.95);
+  border-color: #d97706;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+}
+[data-theme="light"] .has-error .number-input-field {
+  border-color: #ef4444;
+  background: rgba(254, 226, 226, 0.55);
+}
 </style>

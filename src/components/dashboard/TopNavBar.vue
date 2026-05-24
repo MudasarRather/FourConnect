@@ -65,6 +65,7 @@
 
       <!-- Right: User Profile -->
       <div class="nav-right">
+        <ThemeToggle />
         <!-- Notification Bell -->
         <NotificationBell />
         
@@ -99,6 +100,7 @@ import axios from 'axios'
 import { useToast } from '../../composables/useToast'
 import Logo from '../icons/Logo.vue'
 import NotificationBell from '../ui/NotificationBell.vue'
+import ThemeToggle from '../common/ThemeToggle.vue'
 import {
   ChevronDown, LayoutDashboard, User, AlertCircle, History, Bookmark,
   Briefcase, Plus, Edit, Users, BarChart3, FileText, StickyNote, Archive, RotateCcw,
@@ -608,15 +610,20 @@ const rawMenuItems = [
   left: 0;
   width: 100%;
   height: 52px;
-  background: rgba(10, 10, 12, 0.8); /* Deeper Noir */
+  background: var(--nav-bg, rgba(10, 10, 12, 0.8)); /* Deeper Noir */
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid var(--nav-border, rgba(255, 255, 255, 0.08));
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-theme="light"] .top-nav {
+  --nav-bg: rgba(255, 250, 240, 0.78);
+  --nav-border: rgba(40, 25, 10, 0.10);
 }
 
 /* Noir Grain Effect */
@@ -917,5 +924,58 @@ const rawMenuItems = [
 .dropdown-fade-leave-to {
   opacity: 0;
   transform: translateY(10px) scale(0.99);
+}
+
+/* ─── Light theme overrides ───────────────────────────────────────────────
+   Cream-tinted nav chrome with warm-near-black text. Dropdowns get a
+   cream surface, light borders, soft warm shadow, and warm hover overlays.
+   ────────────────────────────────────────────────────────────────────── */
+[data-theme="light"] .brand-link { color: var(--text-primary); }
+[data-theme="light"] .brand-icon { filter: drop-shadow(0 0 8px rgba(217, 119, 6, 0.25)); }
+
+[data-theme="light"] .profile-btn {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
+[data-theme="light"] .profile-btn:hover {
+  background: rgba(40, 25, 10, 0.08);
+  border-color: rgba(40, 25, 10, 0.18);
+  box-shadow: 0 4px 12px rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .avatar {
+  background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+  color: #fff8ec;
+  border-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .avatar-img { border-color: rgba(40, 25, 10, 0.12); }
+
+[data-theme="light"] .menu-btn { color: rgba(26, 20, 16, 0.55); }
+[data-theme="light"] .menu-btn:hover,
+[data-theme="light"] .menu-btn.active {
+  color: var(--text-primary);
+  background: rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .menu-btn.active::after { background: var(--accent-gold); }
+
+[data-theme="light"] .dropdown-menu {
+  background: rgba(255, 250, 240, 0.96);
+  border-color: rgba(40, 25, 10, 0.10);
+  box-shadow: 0 30px 60px rgba(40, 25, 10, 0.18);
+  scrollbar-color: rgba(40, 25, 10, 0.25) transparent;
+}
+[data-theme="light"] .dropdown-menu::-webkit-scrollbar-thumb {
+  background: rgba(40, 25, 10, 0.25);
+}
+[data-theme="light"] .group-title { color: rgba(26, 20, 16, 0.45); }
+[data-theme="light"] .dropdown-link { color: rgba(26, 20, 16, 0.72); }
+[data-theme="light"] .dropdown-link:hover {
+  background: rgba(217, 119, 6, 0.10);
+  color: var(--text-primary);
+}
+[data-theme="light"] .dropdown-link.danger { color: #b91c1c; }
+[data-theme="light"] .dropdown-link.danger:hover {
+  background: rgba(220, 38, 38, 0.10);
+  color: #991b1b;
 }
 </style>

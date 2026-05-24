@@ -158,10 +158,29 @@ import { Activity } from 'lucide-vue-next'
 const route = useRoute()
 const isAdmin = computed(() => route.path.startsWith('/admin'))
 const token = computed(() => isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token'))
-const currentUser = computed(() => {
-   const u = localStorage.getItem('user')
-   return u ? JSON.parse(u) : null
-})
+const currentUser = ref(null)
+
+// Hydrate from localStorage first (fast path), then verify against /api/auth/me
+// so the user id is always available even if older sessions never wrote `user` to localStorage.
+const hydrateCurrentUser = async () => {
+  try {
+    const cached = localStorage.getItem('user')
+    if (cached) currentUser.value = JSON.parse(cached)
+  } catch (e) { /* ignore parse errors */ }
+
+  if (!token.value) return
+  try {
+    const res = await axios.get('http://localhost:8000/api/auth/me', {
+      headers: { Authorization: `Bearer ${token.value}` }
+    })
+    if (res.data) {
+      currentUser.value = res.data
+      try { localStorage.setItem('user', JSON.stringify(res.data)) } catch (e) {}
+    }
+  } catch (e) {
+    // Token invalid — leave whatever cached value we had
+  }
+}
 
 const projects = ref([])
 const selectedProject = ref(null)
@@ -321,6 +340,7 @@ const pollData = () => {
 }
 
 onMounted(() => {
+   hydrateCurrentUser()
    fetchProjects()
    fetchGlobalActiveMilestones()
    // Poll every 10 seconds for real-time updates
@@ -456,4 +476,76 @@ const vClickOutside = {
   display: flex; flex-direction: column; align-items: center; gap: 16px;
 }
 .empty-box p { margin-top: 0; font-size: 14px; }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .project-landing-page { color: var(--text-primary); }
+[data-theme="light"] .section-label { color: rgba(26, 20, 16, 0.5); }
+[data-theme="light"] .switcher-btn { color: var(--text-primary); }
+[data-theme="light"] .current-project-name { color: var(--text-primary); }
+[data-theme="light"] .chevron { color: var(--text-primary); }
+[data-theme="light"] .switcher-dropdown {
+  background: #faf7f0;
+  border-color: rgba(26, 20, 16, 0.12);
+  box-shadow: 0 20px 40px rgba(26, 20, 16, 0.08);
+}
+[data-theme="light"] .search-wrap {
+  background: rgba(26, 20, 16, 0.05);
+  border-color: rgba(26, 20, 16, 0.12);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .search-wrap input { color: var(--text-primary); }
+[data-theme="light"] .project-option { color: var(--text-secondary); }
+[data-theme="light"] .project-option:hover {
+  background: rgba(26, 20, 16, 0.08);
+  color: var(--text-primary);
+}
+[data-theme="light"] .project-option.active {
+  background: rgba(217, 119, 6, 0.1);
+  color: var(--text-primary);
+}
+[data-theme="light"] .opt-name { color: var(--text-primary); }
+[data-theme="light"] .opt-code { color: rgba(26, 20, 16, 0.5); }
+[data-theme="light"] .action-btn.primary {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .action-btn.primary:hover {
+  background: linear-gradient(135deg, #c2410c, #92400e);
+  box-shadow: 0 10px 24px rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .action-btn.primary.disabled {
+  background: rgba(40, 25, 10, 0.14);
+  color: rgba(26, 20, 16, 0.40);
+  box-shadow: none;
+}
+[data-theme="light"] .empty-box { color: var(--text-secondary); }
+[data-theme="light"] .empty-box p { color: var(--text-tertiary); }
+
+/* Project switcher dropdown — frosted cream */
+[data-theme="light"] .opt-icon {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+}
+[data-theme="light"] .project-option.active .opt-icon {
+  background: #d97706;
+  color: #fff;
+}
+[data-theme="light"] .project-option.active {
+  background: rgba(217, 119, 6, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="light"] .check { color: #d97706; }
+[data-theme="light"] .project-option.active .check { color: #fff; }
+[data-theme="light"] .no-results { color: var(--text-tertiary); }
+[data-theme="light"] .separator-line {
+  background: rgba(40, 25, 10, 0.12);
+  box-shadow: 0 1px 0 rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] .project-list-scroll::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .project-list-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(217, 119, 6, 0.50);
+}
 </style>

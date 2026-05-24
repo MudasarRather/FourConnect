@@ -85,7 +85,7 @@
 import { ref, computed } from 'vue'
 import {
   CheckCircle, ArrowUp, ArrowRight, Pause, Play, Briefcase, LogOut, Archive,
-  MoreVertical, Loader2, Undo2,
+  MoreVertical, Loader2, Undo2, Gauge,
 } from 'lucide-vue-next'
 
 import EmployeeAvatar from '../../../../components/hr/EmployeeAvatar.vue'
@@ -134,6 +134,7 @@ function actionsFor(e) {
   const s = e.lifecycle_state
   const list = []
   if (s === 'ON_PROBATION') list.push({ key: 'confirm', label: 'Confirm', icon: CheckCircle, tone: 'green' })
+  if (s === 'ACTIVE') list.push({ key: 'put-on-probation', label: 'Put on Probation', icon: Gauge, tone: 'orange' })
   if (['ACTIVE', 'ON_PROBATION'].includes(s)) {
     list.push({ key: 'promote', label: 'Promote', icon: ArrowUp, tone: 'gold' })
     list.push({ key: 'transfer', label: 'Transfer', icon: ArrowRight, tone: 'neutral' })

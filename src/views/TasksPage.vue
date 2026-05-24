@@ -1654,4 +1654,190 @@ watch(dashboardPeriod, () => {
 .status-badge.blocked { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.2); color: #f87171; }
 
 @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .nano-page { color: var(--text-primary); }
+[data-theme="light"] .nano-header { border-bottom-color: rgba(26, 20, 16, 0.10); }
+[data-theme="light"] .n-tab { color: var(--text-tertiary); }
+[data-theme="light"] .n-tab.active {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+}
+[data-theme="light"] .tc-av-circle { color: #1a1410; }
+[data-theme="light"] .nti-title { color: var(--text-primary); }
+[data-theme="light"] .nti-count { color: var(--text-secondary); }
+[data-theme="light"] .n-prog-text { color: var(--text-primary); }
+[data-theme="light"] .nti-name { color: var(--text-primary); }
+[data-theme="light"] .nti-msg { color: var(--text-secondary); }
+[data-theme="light"] .empty-state-enhanced { color: var(--text-secondary); }
+[data-theme="light"] .h2, [data-theme="light"] h2 { color: var(--text-primary); }
+[data-theme="light"] .h4, [data-theme="light"] h4 { color: var(--text-primary); }
+[data-theme="light"] .pm-row-modern.header { color: var(--text-tertiary); }
+[data-theme="light"] .v-name { color: var(--text-primary); }
+[data-theme="light"] .rt-col.muted { color: var(--text-secondary); }
+[data-theme="light"] .chart-tasks-badge { color: var(--text-primary); }
+[data-theme="light"] .status-pill {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+}
+
+/* Extra coverage — Task cards, upcoming panel, new-task panel, performance widget, recent tasks table */
+[data-theme="light"] .nano-search input {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .nano-search input::placeholder { color: var(--text-placeholder); }
+[data-theme="light"] .nano-tabs-dock {
+  background: rgba(40, 25, 10, 0.05);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .nano-dashboard {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.10);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+[data-theme="light"] .tc-header h2 { color: var(--text-primary); }
+[data-theme="light"] .tc-sub { color: var(--text-secondary); }
+[data-theme="light"] .tc-av {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-primary);
+}
+[data-theme="light"] .tile {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .nti-header { color: var(--text-primary); }
+[data-theme="light"] .nti-count { background: rgba(217, 119, 6, 0.14); color: #92400e; }
+[data-theme="light"] .n-prog-bg {
+  background: rgba(40, 25, 10, 0.06);
+  border-color: rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .n-prog-fill.is-zero { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .tc-av-circle { background: rgba(40, 25, 10, 0.08); border-color: rgba(40, 25, 10, 0.10); }
+
+/* Upcoming panel + "All caught up!" empty state */
+[data-theme="light"] .upcoming-section {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .upcoming-title { color: var(--text-primary); }
+[data-theme="light"] .upcoming-empty,
+[data-theme="light"] .all-caught-up { color: var(--text-primary); }
+[data-theme="light"] .upcoming-empty-msg,
+[data-theme="light"] .all-caught-sub { color: var(--text-secondary); }
+[data-theme="light"] .upcoming-tab-btn {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .upcoming-tab-btn.active {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: #92400e;
+}
+
+/* New-task right panel */
+[data-theme="light"] .new-task-panel,
+[data-theme="light"] .add-task-card {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.10);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+[data-theme="light"] .new-task-title,
+[data-theme="light"] .add-task-title { color: var(--text-primary); }
+[data-theme="light"] .new-task-desc,
+[data-theme="light"] .add-task-desc { color: var(--text-secondary); }
+[data-theme="light"] .add-new-task-btn,
+[data-theme="light"] .new-task-cta {
+  background: linear-gradient(135deg, #d97706, #c2410c);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .learn-more-btn {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-primary);
+  border-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .learn-more-btn:hover { background: rgba(40, 25, 10, 0.10); }
+
+/* Recent tasks + performance widget */
+[data-theme="light"] .recent-tasks-card,
+[data-theme="light"] .performance-card {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .recent-tasks-title,
+[data-theme="light"] .performance-title { color: var(--text-primary); }
+[data-theme="light"] .perf-pill {
+  background: rgba(34, 197, 94, 0.10);
+  color: #166534;
+  border-color: rgba(34, 197, 94, 0.30);
+}
+[data-theme="light"] .perf-tab,
+[data-theme="light"] .perf-period-tab { color: var(--text-tertiary); }
+[data-theme="light"] .perf-tab.active,
+[data-theme="light"] .perf-period-tab.active {
+  background: rgba(34, 197, 94, 0.10);
+  color: #166534;
+}
+[data-theme="light"] .recent-filter,
+[data-theme="light"] .rt-filter {
+  background: rgba(40, 25, 10, 0.04);
+  color: var(--text-secondary);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .recent-filter.active,
+[data-theme="light"] .rt-filter.active {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .export-btn {
+  background: linear-gradient(135deg, #d97706, #c2410c);
+  color: #fff;
+}
+[data-theme="light"] .recent-tasks-table thead,
+[data-theme="light"] .rt-table thead,
+[data-theme="light"] .pm-row-modern.header,
+[data-theme="light"] th.rt-col,
+[data-theme="light"] .rt-th { color: #6b5840; font-weight: 800; }
+[data-theme="light"] .rt-row,
+[data-theme="light"] .pm-row-modern { border-bottom-color: rgba(40, 25, 10, 0.06); }
+[data-theme="light"] .rt-row:hover,
+[data-theme="light"] .pm-row-modern:hover { background: rgba(217, 119, 6, 0.06); }
+[data-theme="light"] .empty-state-enhanced .empty-title { color: var(--text-primary); }
+[data-theme="light"] .empty-state-enhanced .empty-sub { color: var(--text-secondary); }
+[data-theme="light"] .tile-icon-tile,
+[data-theme="light"] .add-task-illustration {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.28);
+}
+
+/* "0 tasks" badge */
+[data-theme="light"] .zero-tasks-badge,
+[data-theme="light"] .task-count-badge {
+  background: rgba(34, 197, 94, 0.12);
+  color: #166534;
+  border-color: rgba(34, 197, 94, 0.30);
+}
+
+/* Bookmark icon on Upcoming */
+[data-theme="light"] .bookmark-btn { color: var(--text-secondary); }
+[data-theme="light"] .bookmark-btn:hover { color: var(--text-primary); }
+
+/* Tab arrow buttons (left/right) */
+[data-theme="light"] .tab-arrow-btn,
+[data-theme="light"] .nav-arrow-btn {
+  background: rgba(40, 25, 10, 0.05);
+  color: var(--text-secondary);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .tab-arrow-btn:hover,
+[data-theme="light"] .nav-arrow-btn:hover {
+  background: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary);
+}
 </style>

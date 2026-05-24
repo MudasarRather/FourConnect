@@ -1,0 +1,663 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   THEME-LIGHT-RESCUE.CSS
+
+   Aggressive light-mode overrides for class-name patterns that recur across
+   the entire app. Most surfaces were designed dark-first with hardcoded
+   rgba(255, 255, 255, X) backgrounds, #fff text, and rgba(0, 0, 0, 0.X) overlays.
+   This file inverts those patterns for `[data-theme="light"]` so pages that
+   weren't individually tokenized still become readable on the cream surface.
+
+   SPECIFICITY STRATEGY
+     We prefix every rule with `:root[data-theme="light"]` (specificity 0,2,0).
+     Combined with the target class, total specificity is 0,3,0 — which beats
+     scoped Vue CSS (which uses `.foo[data-v-hash]` = 0,2,0). This ensures we
+     win the cascade without needing !important.
+
+   SCOPE
+     Patterns audited from real component files:
+       .glass-card / .glass-panel / .glass-row    (frosted dark cards)
+       .content-card / .info-card                 (project detail surfaces)
+       .stat-card / .header-icon-box              (page stats)
+       .modal-* / .drawer-*                       (overlays)
+       .empty-state                               (empty surfaces)
+       .text-input / .minimal-input               (form fields)
+       .table-* / row backgrounds                 (data tables)
+       .spinner                                   (loaders)
+       Vue-Toastification__*                      (toast portal)
+
+   IMPORT ORDER
+     Loaded last in main.js so it wins over earlier sheets when specificity ties.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+
+/* ═════════ Glass surfaces — the most common pattern app-wide ═════════ */
+:root[data-theme="light"] .glass-card,
+:root[data-theme="light"] .glass-panel,
+:root[data-theme="light"] .glass-row,
+:root[data-theme="light"] .n-card,
+:root[data-theme="light"] .content-card,
+:root[data-theme="light"] .info-card,
+:root[data-theme="light"] .surface-card,
+:root[data-theme="light"] .vault-card,
+:root[data-theme="light"] .overview-glass-card,
+:root[data-theme="light"] .settings-card,
+:root[data-theme="light"] .form-card,
+:root[data-theme="light"] .summary-mini,
+:root[data-theme="light"] .info-box,
+:root[data-theme="light"] .preview-value {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary, #1a1410);
+}
+
+/* Page-level dark wrappers — cream washes over them */
+:root[data-theme="light"] .expense-page,
+:root[data-theme="light"] .void-page-root,
+:root[data-theme="light"] .expenses-page,
+:root[data-theme="light"] .project-details-page,
+:root[data-theme="light"] .settings-page,
+:root[data-theme="light"] .vault-archive,
+:root[data-theme="light"] .documents-hub-page,
+:root[data-theme="light"] .documents-page,
+:root[data-theme="light"] .archive-documents-page,
+:root[data-theme="light"] .archive-projects-page,
+:root[data-theme="light"] .completed-projects-page,
+:root[data-theme="light"] .tasks-page,
+:root[data-theme="light"] .task-archive-page {
+  color: var(--text-primary, #1a1410);
+  background: var(--bg-color, #faf7f0);
+}
+
+/* Direct background of pages that hardcode pure black */
+:root[data-theme="light"] .overview-glass-card,
+:root[data-theme="light"] .glass-row[style*="#0a0a0a"],
+:root[data-theme="light"] .void-overview {
+  background: rgba(255, 250, 240, 0.92) !important;
+}
+
+
+/* ═════════ Page headers & titles ═════════ */
+:root[data-theme="light"] .page-header,
+:root[data-theme="light"] .page-header h1,
+:root[data-theme="light"] .page-header h2,
+:root[data-theme="light"] .page-header h3,
+:root[data-theme="light"] .header-left,
+:root[data-theme="light"] .header-titles h1,
+:root[data-theme="light"] .header-titles h2,
+:root[data-theme="light"] .header-title,
+:root[data-theme="light"] .section-title,
+:root[data-theme="light"] .hero-title,
+:root[data-theme="light"] .project-title {
+  color: var(--text-primary, #1a1410);
+}
+
+:root[data-theme="light"] .page-subtitle,
+:root[data-theme="light"] .header-subtitle,
+:root[data-theme="light"] .section-subtitle,
+:root[data-theme="light"] .hero-sub,
+:root[data-theme="light"] .project-sub,
+:root[data-theme="light"] .muted,
+:root[data-theme="light"] .meta-text {
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+
+
+/* ═════════ Generic chip / badge / pill backgrounds ═════════ */
+:root[data-theme="light"] .chip,
+:root[data-theme="light"] .badge,
+:root[data-theme="light"] .pill,
+:root[data-theme="light"] .status-badge,
+:root[data-theme="light"] .status-pill,
+:root[data-theme="light"] .status-name {
+  color: var(--text-primary, #1a1410);
+}
+:root[data-theme="light"] .chip[class*="active"],
+:root[data-theme="light"] .badge[class*="active"],
+:root[data-theme="light"] .pill[class*="active"] {
+  color: #1a1208;
+}
+
+
+/* ═════════ Form fields — generic patterns ═════════ */
+:root[data-theme="light"] .text-input,
+:root[data-theme="light"] .minimal-input,
+:root[data-theme="light"] .form-input,
+:root[data-theme="light"] .input-sm,
+:root[data-theme="light"] .textarea-sm,
+:root[data-theme="light"] .number-input,
+:root[data-theme="light"] .amount-input,
+:root[data-theme="light"] .currency-input,
+:root[data-theme="light"] .date-input,
+:root[data-theme="light"] .search-input,
+:root[data-theme="light"] .search-box input {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--text-primary, #1a1410);
+}
+:root[data-theme="light"] .text-input::placeholder,
+:root[data-theme="light"] .minimal-input::placeholder,
+:root[data-theme="light"] .form-input::placeholder,
+:root[data-theme="light"] .number-input::placeholder,
+:root[data-theme="light"] .amount-input::placeholder,
+:root[data-theme="light"] .search-input::placeholder {
+  color: var(--text-placeholder, rgba(26, 20, 16, 0.40));
+}
+
+
+/* ═════════ Empty states ═════════ */
+:root[data-theme="light"] .empty-state,
+:root[data-theme="light"] .empty-card,
+:root[data-theme="light"] .empty-message,
+:root[data-theme="light"] .empty-text {
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+:root[data-theme="light"] .empty-state svg,
+:root[data-theme="light"] .empty-card svg {
+  color: var(--text-tertiary, rgba(26, 20, 16, 0.44));
+  opacity: 0.85;
+}
+
+
+/* ═════════ Tables ═════════ */
+:root[data-theme="light"] .table-container-modern,
+:root[data-theme="light"] .table-container,
+:root[data-theme="light"] .data-table,
+:root[data-theme="light"] table.modern,
+:root[data-theme="light"] table.data {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary, #1a1410);
+}
+:root[data-theme="light"] .pm-row-modern,
+:root[data-theme="light"] .row-modern,
+:root[data-theme="light"] tr.data-row {
+  background: transparent;
+  border-bottom-color: rgba(40, 25, 10, 0.08);
+}
+:root[data-theme="light"] .pm-row-modern:hover,
+:root[data-theme="light"] tr.data-row:hover {
+  background: rgba(217, 119, 6, 0.06);
+}
+:root[data-theme="light"] th.data-head,
+:root[data-theme="light"] .table-header,
+:root[data-theme="light"] thead th {
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+  background: rgba(40, 25, 10, 0.04);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+
+
+/* ═════════ Spinners ═════════ */
+:root[data-theme="light"] .spinner,
+:root[data-theme="light"] .loader,
+:root[data-theme="light"] .loading-circle {
+  border-color: rgba(40, 25, 10, 0.14);
+  border-top-color: var(--accent-gold, #d97706);
+}
+
+
+/* ═════════ vue-toastification global toasts ═════════
+   These render in a portal at <body> — global rules are the only way to
+   theme them without forking the package. */
+:root[data-theme="light"] .Vue-Toastification__toast {
+  background: rgba(255, 250, 240, 0.96) !important;
+  color: var(--text-primary, #1a1410) !important;
+  box-shadow:
+    0 10px 30px rgba(40, 25, 10, 0.18),
+    0 0 0 1px rgba(40, 25, 10, 0.08) !important;
+}
+:root[data-theme="light"] .Vue-Toastification__toast--success {
+  border-left: 4px solid var(--accent-emerald, #059669);
+}
+:root[data-theme="light"] .Vue-Toastification__toast--error {
+  border-left: 4px solid var(--accent-danger, #dc2626);
+}
+:root[data-theme="light"] .Vue-Toastification__toast--info {
+  border-left: 4px solid var(--accent-noir, #1d4ed8);
+}
+:root[data-theme="light"] .Vue-Toastification__toast--warning {
+  border-left: 4px solid var(--accent-gold, #d97706);
+}
+:root[data-theme="light"] .Vue-Toastification__toast-body {
+  color: var(--text-primary, #1a1410) !important;
+}
+:root[data-theme="light"] .Vue-Toastification__close-button {
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66)) !important;
+  opacity: 0.7;
+}
+:root[data-theme="light"] .Vue-Toastification__close-button:hover {
+  color: var(--text-primary, #1a1410) !important;
+  opacity: 1;
+}
+:root[data-theme="light"] .Vue-Toastification__progress-bar {
+  background: linear-gradient(90deg, #d97706, #ea580c) !important;
+}
+
+
+/* ═════════ Generic modal/dialog patterns — FROSTED GLASS preserved ═════════
+   The dark theme uses translucent surfaces with backdrop-filter blur. We keep
+   that frosted-glass feel in light mode by using a cream tint at lower alpha
+   + matching blur. Modals end up looking like "polished brass on velvet" on
+   the cream page instead of looking like opaque white cards. */
+:root[data-theme="light"] .modal-backdrop,
+:root[data-theme="light"] .modal-overlay,
+:root[data-theme="light"] .dialog-backdrop,
+:root[data-theme="light"] .overlay {
+  background: rgba(26, 20, 16, 0.38);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+}
+:root[data-theme="light"] .modal-container,
+:root[data-theme="light"] .modal-content,
+:root[data-theme="light"] .modal-panel,
+:root[data-theme="light"] .dialog-content,
+:root[data-theme="light"] .modal {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.12);
+  color: var(--text-primary, #1a1410);
+  box-shadow:
+    0 30px 80px rgba(40, 25, 10, 0.28),
+    0 0 0 1px rgba(217, 119, 6, 0.10);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+}
+:root[data-theme="light"] .modal-header,
+:root[data-theme="light"] .modal-footer,
+:root[data-theme="light"] .dialog-header,
+:root[data-theme="light"] .dialog-footer {
+  border-color: var(--divider-color, rgba(40, 25, 10, 0.10));
+}
+:root[data-theme="light"] .modal-title,
+:root[data-theme="light"] .dialog-title {
+  color: var(--text-primary, #1a1410);
+}
+:root[data-theme="light"] .modal-message,
+:root[data-theme="light"] .modal-subtitle,
+:root[data-theme="light"] .dialog-message {
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+/* Universal: any element inside a modal that has hardcoded white text */
+:root[data-theme="light"] .modal-container *[style*="color: #fff"],
+:root[data-theme="light"] .modal-content *[style*="color: #fff"],
+:root[data-theme="light"] .modal *[style*="color: #fff"] {
+  color: var(--text-primary, #1a1410) !important;
+}
+
+
+/* ═════════ Drawers / side panels — FROSTED GLASS preserved ═════════ */
+:root[data-theme="light"] .spd-overlay,
+:root[data-theme="light"] .drawer-overlay,
+:root[data-theme="light"] .panel-overlay {
+  background: rgba(26, 20, 16, 0.32);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+}
+:root[data-theme="light"] .spd-panel,
+:root[data-theme="light"] .drawer-panel,
+:root[data-theme="light"] .side-panel {
+  background: rgba(255, 250, 240, 0.76);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: var(--text-primary, #1a1410);
+  box-shadow:
+    -20px 0 60px rgba(40, 25, 10, 0.18),
+    0 0 0 1px rgba(217, 119, 6, 0.08);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+}
+:root[data-theme="light"] .spd-title,
+:root[data-theme="light"] .drawer-title { color: var(--text-primary, #1a1410); }
+:root[data-theme="light"] .spd-meta,
+:root[data-theme="light"] .drawer-meta { color: var(--text-secondary, rgba(26, 20, 16, 0.66)); }
+:root[data-theme="light"] .spd-close,
+:root[data-theme="light"] .drawer-close {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+
+
+/* ═════════ Action buttons that hardcode dark backgrounds ═════════ */
+:root[data-theme="light"] .btn-ghost,
+:root[data-theme="light"] .button-ghost,
+:root[data-theme="light"] .secondary-btn {
+  background: rgba(40, 25, 10, 0.04);
+  border-color: rgba(40, 25, 10, 0.12);
+  color: var(--text-primary, #1a1410);
+}
+:root[data-theme="light"] .btn-ghost:hover,
+:root[data-theme="light"] .button-ghost:hover,
+:root[data-theme="light"] .secondary-btn:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.30);
+}
+
+
+/* ═════════ Hardcoded "white text" rescue ═════════
+   Many pages have a top-level `color: white` or `color: #f5f5f7` on the page
+   wrapper. We can't catch every variant, but these are the recurring patterns. */
+:root[data-theme="light"] [class*="page-root"] { color: var(--text-primary, #1a1410); }
+
+
+/* ═════════ Page-level stat strip labels (`.stat-eyebrow`, `.stat-label`) ═════════
+   The "TOTAL PROJECTS / TOTAL ORDER VALUE / IN PROGRESS / HIGH PRIORITY" labels
+   above hero stats. Deeper amber than `--text-secondary` so they pop on cream. */
+:root[data-theme="light"] .stat-eyebrow,
+:root[data-theme="light"] .stat-label,
+:root[data-theme="light"] .stat-label-text,
+:root[data-theme="light"] .metric-label {
+  color: #6b5840;
+  font-weight: 700;
+}
+:root[data-theme="light"] .stat-value,
+:root[data-theme="light"] .stat-number,
+:root[data-theme="light"] .metric-value {
+  color: var(--text-primary, #1a1410);
+}
+
+
+/* ═════════ Tab counts inside tab bars (the small badge next to each tab) ═════════ */
+:root[data-theme="light"] .tab-count,
+:root[data-theme="light"] .cmd-tab .count,
+:root[data-theme="light"] .n-tab .count,
+:root[data-theme="light"] .filter-tab .count {
+  background: rgba(40, 25, 10, 0.08);
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+
+
+/* ═════════ File upload drop zones ═════════
+   Pages like CreateProject have a dark drop zone (image 3) that needs to flip
+   to cream with a dashed warm border. */
+:root[data-theme="light"] .drop-zone,
+:root[data-theme="light"] .upload-zone,
+:root[data-theme="light"] .file-drop,
+:root[data-theme="light"] .file-upload,
+:root[data-theme="light"] .upload-area,
+:root[data-theme="light"] .pdf-drop {
+  background: rgba(255, 250, 240, 0.65);
+  border: 2px dashed rgba(217, 119, 6, 0.30);
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+:root[data-theme="light"] .drop-zone:hover,
+:root[data-theme="light"] .upload-zone:hover,
+:root[data-theme="light"] .file-drop:hover {
+  background: rgba(217, 119, 6, 0.06);
+  border-color: rgba(217, 119, 6, 0.50);
+}
+
+
+/* ═════════ Section number badges (the "01", "02" circle badges) ═════════ */
+:root[data-theme="light"] .section-num,
+:root[data-theme="light"] .section-num-badge,
+:root[data-theme="light"] .step-num,
+:root[data-theme="light"] .sc-num,
+:root[data-theme="light"] .sec-num {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(249, 115, 22, 0.10));
+  color: #92400e;
+  border: 1px solid rgba(153, 76, 0, 0.25);
+}
+
+
+/* ═════════ Date picker trigger placeholder (the "From" / "To" labels) ═════════ */
+:root[data-theme="light"] .date-display,
+:root[data-theme="light"] .date-trigger-text,
+:root[data-theme="light"] .dp-display,
+:root[data-theme="light"] .date-trigger {
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+:root[data-theme="light"] .date-display.is-placeholder,
+:root[data-theme="light"] .date-display:empty,
+:root[data-theme="light"] .date-trigger-text.placeholder {
+  color: var(--text-placeholder, rgba(26, 20, 16, 0.40));
+}
+
+
+/* ═════════ CustomSelect trigger placeholder + value text ═════════
+   The "Select..." in image 1 — needs darker color than the default opacity. */
+:root[data-theme="light"] .cs-trigger { color: var(--text-primary, #1a1410); }
+:root[data-theme="light"] .cs-trigger .cs-value,
+:root[data-theme="light"] .cs-trigger .cs-selected-value { color: var(--text-primary, #1a1410); }
+:root[data-theme="light"] .cs-trigger .cs-placeholder,
+:root[data-theme="light"] .cs-placeholder { color: var(--text-placeholder, rgba(26, 20, 16, 0.40)); }
+
+
+/* ═════════ Generic field labels app-wide ═════════
+   Most pages use `<label>` for form labels. The dark default is `#a1a1aa` /
+   `rgba(255,255,255,0.X)`. Force cream-readable. */
+:root[data-theme="light"] .field-label,
+:root[data-theme="light"] .form-label,
+:root[data-theme="light"] .input-label,
+:root[data-theme="light"] .floating-label,
+:root[data-theme="light"] label.required-label {
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+
+
+/* ═════════ Generic "header-eyebrow" / page eyebrow text ═════════ */
+:root[data-theme="light"] .page-eyebrow,
+:root[data-theme="light"] .hero-eyebrow,
+:root[data-theme="light"] .section-eyebrow {
+  color: #c2410c;
+}
+
+
+/* ═════════ Cmd-tabs (the filter tabs row on ProjectsPage) ═════════
+   The tabs "All | Drafts | Pending | Approved | Rejected" — already partially
+   covered in ProjectsPage.vue, but the tab COUNTS need stronger contrast. */
+:root[data-theme="light"] .cmd-tab {
+  background: rgba(255, 250, 240, 0.82);
+  border: 1px solid rgba(40, 25, 10, 0.08);
+}
+:root[data-theme="light"] .cmd-tab .tab-count,
+:root[data-theme="light"] .cmd-tab[data-count] .count {
+  background: rgba(40, 25, 10, 0.10);
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+
+
+/* ═════════ Form input universal — catches any `<input>` not already styled ═════════
+   Many pages have inline-styled or specific-class inputs we can't enumerate.
+   This catches the rest by targeting native input elements within page wrappers. */
+:root[data-theme="light"] input[type="text"]::placeholder,
+:root[data-theme="light"] input[type="email"]::placeholder,
+:root[data-theme="light"] input[type="number"]::placeholder,
+:root[data-theme="light"] input[type="search"]::placeholder,
+:root[data-theme="light"] input[type="password"]::placeholder,
+:root[data-theme="light"] textarea::placeholder {
+  color: var(--text-placeholder, rgba(26, 20, 16, 0.40));
+}
+
+
+/* ═════════ Universal label rescue ═════════
+   Pages widely use bare `<label>` tags with class `floating-label`, `input-label`,
+   or no class at all. The dark default is white-on-black or `#a1a1aa`. */
+:root[data-theme="light"] .label,
+:root[data-theme="light"] .field-label,
+:root[data-theme="light"] .input-label,
+:root[data-theme="light"] .form-label,
+:root[data-theme="light"] .floating-label,
+:root[data-theme="light"] .group-title,
+:root[data-theme="light"] .panel-label {
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+
+
+/* ═════════ Lifecycle/preview side panels (CreateProject "LIVE PREVIEW") ═════════ */
+:root[data-theme="light"] .lifecycle-header,
+:root[data-theme="light"] .preview-header,
+:root[data-theme="light"] .live-preview,
+:root[data-theme="light"] .live-preview-header {
+  color: #6b5840;
+  font-weight: 700;
+}
+:root[data-theme="light"] .lifecycle-item,
+:root[data-theme="light"] .preview-item {
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+:root[data-theme="light"] .lifecycle-item.active,
+:root[data-theme="light"] .lifecycle-item.is-active,
+:root[data-theme="light"] .preview-item.active {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.30);
+}
+
+
+/* ═════════ Project console headers (project details landing) ═════════ */
+:root[data-theme="light"] .project-console,
+:root[data-theme="light"] .project-console-title,
+:root[data-theme="light"] .console-title {
+  color: var(--text-primary, #1a1410);
+}
+:root[data-theme="light"] .console-subtitle,
+:root[data-theme="light"] .console-section-label {
+  color: #6b5840;
+  font-weight: 700;
+}
+
+
+/* ═════════ Lifecycle progression dots / progress badges ═════════ */
+:root[data-theme="light"] .lifecycle-pill,
+:root[data-theme="light"] .lifecycle-badge,
+:root[data-theme="light"] .stage-pill {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+:root[data-theme="light"] .lifecycle-pill.active,
+:root[data-theme="light"] .lifecycle-badge.active,
+:root[data-theme="light"] .stage-pill.active {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: #92400e;
+}
+
+
+/* ═════════ Calendar/date display cells inside cards ═════════ */
+:root[data-theme="light"] .cal-cell,
+:root[data-theme="light"] .calendar-cell,
+:root[data-theme="light"] .calendar-day {
+  color: var(--text-primary, #1a1410);
+}
+:root[data-theme="light"] .cal-cell.today,
+:root[data-theme="light"] .calendar-day.today {
+  background: rgba(217, 119, 6, 0.18);
+  color: #92400e;
+}
+:root[data-theme="light"] .cal-cell.disabled,
+:root[data-theme="light"] .calendar-day.disabled {
+  color: rgba(26, 20, 16, 0.30);
+}
+
+
+/* ═════════ Banner / notice surfaces (GOVERNMENT ORDER NOTICE) ═════════ */
+:root[data-theme="light"] .banner,
+:root[data-theme="light"] .notice,
+:root[data-theme="light"] .info-banner,
+:root[data-theme="light"] .order-notice,
+:root[data-theme="light"] .alert-banner {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.10), rgba(249, 115, 22, 0.06));
+  border-color: rgba(217, 119, 6, 0.30);
+  color: var(--text-primary, #1a1410);
+}
+:root[data-theme="light"] .banner-text,
+:root[data-theme="light"] .notice-text,
+:root[data-theme="light"] .banner h2,
+:root[data-theme="light"] .banner h3,
+:root[data-theme="light"] .banner p,
+:root[data-theme="light"] .notice h2,
+:root[data-theme="light"] .notice h3,
+:root[data-theme="light"] .notice p {
+  color: var(--text-primary, #1a1410);
+}
+:root[data-theme="light"] .banner-eyebrow,
+:root[data-theme="light"] .notice-eyebrow {
+  color: #b45309;
+}
+:root[data-theme="light"] .banner strong,
+:root[data-theme="light"] .notice strong {
+  color: #92400e;
+}
+
+
+/* ═════════ ALL HEADINGS inside themed wrappers ═════════
+   Catch-all for any h1-h6 inside page wrappers that hardcode white text. */
+:root[data-theme="light"] [class*="page"] h1,
+:root[data-theme="light"] [class*="page"] h2,
+:root[data-theme="light"] [class*="page"] h3,
+:root[data-theme="light"] [class*="page"] h4,
+:root[data-theme="light"] [class*="container"] h1,
+:root[data-theme="light"] [class*="container"] h2,
+:root[data-theme="light"] [class*="container"] h3,
+:root[data-theme="light"] [class*="wrapper"] h1,
+:root[data-theme="light"] [class*="wrapper"] h2,
+:root[data-theme="light"] [class*="wrapper"] h3,
+:root[data-theme="light"] [class*="dashboard"] h1,
+:root[data-theme="light"] [class*="dashboard"] h2,
+:root[data-theme="light"] [class*="dashboard"] h3 {
+  color: var(--text-primary, #1a1410);
+}
+
+
+/* ═════════ Bare `<label>` tags inside page wrappers ═════════ */
+:root[data-theme="light"] [class*="page"] label,
+:root[data-theme="light"] [class*="container"] label,
+:root[data-theme="light"] [class*="wrapper"] label,
+:root[data-theme="light"] [class*="-form"] label,
+:root[data-theme="light"] form label {
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}
+
+
+/* ═════════ Universal `<input>`/`<textarea>` rescue (cream backgrounds + readable text) ═════════
+   Native inputs without dedicated classes — common in dynamically-rendered forms. */
+:root[data-theme="light"] [class*="page"] input[type="text"],
+:root[data-theme="light"] [class*="page"] input[type="email"],
+:root[data-theme="light"] [class*="page"] input[type="number"],
+:root[data-theme="light"] [class*="page"] input[type="search"],
+:root[data-theme="light"] [class*="page"] input[type="password"],
+:root[data-theme="light"] [class*="page"] input[type="date"],
+:root[data-theme="light"] [class*="page"] input[type="datetime-local"],
+:root[data-theme="light"] [class*="page"] input[type="tel"],
+:root[data-theme="light"] [class*="page"] textarea,
+:root[data-theme="light"] [class*="container"] input,
+:root[data-theme="light"] [class*="container"] textarea,
+:root[data-theme="light"] [class*="wrapper"] input,
+:root[data-theme="light"] [class*="wrapper"] textarea {
+  color: var(--text-primary, #1a1410);
+}
+
+
+/* ═════════ Card surfaces that hardcode color: white inline ═════════
+   Many pages set `color: white` or `color: #fff` on the page-root element.
+   The cascade then propagates to ALL descendants. Force cream-readable text
+   on common card class patterns to recover. */
+:root[data-theme="light"] .card,
+:root[data-theme="light"] .ms-card,
+:root[data-theme="light"] .vc-card,
+:root[data-theme="light"] .project-card,
+:root[data-theme="light"] .summary-card,
+:root[data-theme="light"] .info-row,
+:root[data-theme="light"] .detail-row {
+  color: var(--text-primary, #1a1410);
+}
+
+
+/* ═════════ "Tab" / "chip" / "filter" labels generically ═════════ */
+:root[data-theme="light"] .tab-label,
+:root[data-theme="light"] .chip-label,
+:root[data-theme="light"] .filter-label {
+  color: inherit;
+}
+
+
+/* ═════════ Performance / chart widget headers ═════════ */
+:root[data-theme="light"] .widget-title,
+:root[data-theme="light"] .chart-title,
+:root[data-theme="light"] .panel-title {
+  color: var(--text-primary, #1a1410);
+}
+:root[data-theme="light"] .widget-subtitle,
+:root[data-theme="light"] .chart-subtitle,
+:root[data-theme="light"] .panel-subtitle {
+  color: var(--text-secondary, rgba(26, 20, 16, 0.66));
+}

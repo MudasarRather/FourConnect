@@ -124,4 +124,63 @@ h3 { font-size: 14px; font-weight: 600; color: rgba(255, 255, 255, 0.9); margin:
 .dot { width: 6px; height: 6px; border-radius: 50%; }
 .used { background: #ec4899; }
 .rem { background: #3f3f46; }
+
+/* ═════════════════ LIGHT THEME OVERRIDES — CardBudget ═════════════════ */
+[data-theme="light"] .glass-card {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 4px 20px rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] .card-header {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+  padding-bottom: 16px;
+}
+[data-theme="light"] .icon-box {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+}
+[data-theme="light"] h3 {
+  color: var(--text-primary);
+}
+[data-theme="light"] .badge.capex {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.28);
+}
+[data-theme="light"] .badge.opex {
+  background: rgba(249, 115, 22, 0.12);
+  color: #b45309;
+  border: 1px solid rgba(249, 115, 22, 0.28);
+}
+[data-theme="light"] .curr {
+  color: #6b5840;
+  font-weight: 600;
+}
+[data-theme="light"] .amt {
+  color: var(--text-primary);
+}
+[data-theme="light"] .p-track {
+  background: rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .p-fill {
+  background: linear-gradient(90deg, #d97706, #c2410c);
+}
+[data-theme="light"] .l-item {
+  color: #6b5840;
+}
+[data-theme="light"] .l-label {
+  color: #6b5840;
+}
+[data-theme="light"] .l-val {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+[data-theme="light"] .used {
+  background: #d97706;
+}
+[data-theme="light"] .rem {
+  background: rgba(40, 25, 10, 0.30);
+}
 </style>

@@ -1,5 +1,7 @@
 import { createApp } from 'vue'
 import './style.css'
+import './styles/theme.css'
+import './styles/theme-light-rescue.css'
 import App from './App.vue'
 import router from './router'
 
@@ -9,9 +11,13 @@ import "vue-toastification/dist/index.css"
 import { MotionPlugin } from '@vueuse/motion'
 
 import { attachRouterCleanup } from './composables/useGsapAnim'
+import { initTheme } from './composables/useTheme'
 import vReveal from './directives/vReveal'
 import vTilt from './directives/vTilt'
 import vMagnetic from './directives/vMagnetic'
+
+// Apply persisted theme before app mount so the first paint matches preference.
+initTheme()
 
 const app = createApp(App)
 app.use(router)

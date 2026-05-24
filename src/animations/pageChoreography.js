@@ -387,11 +387,7 @@ export function projectNotesEntry(root) {
     } else {
       tl.from(tabs, { y: 12, opacity: 0, duration: 0.5, ease: EASE_PRIMARY }, 0.18)
     }
-    // Active tab breathing pulse
-    if (!reduced) {
-      const active = tabs.querySelector('.dock-item.active')
-      if (active) gsap.to(active, { y: -1, duration: 1.6, ease: EASE_SOFT, yoyo: true, repeat: -1 })
-    }
+    // Active-glow underline animation handled in CSS now (no position-jitter)
   }
 
   const toolbar = qOne(root, '[data-anim="toolbar"]')

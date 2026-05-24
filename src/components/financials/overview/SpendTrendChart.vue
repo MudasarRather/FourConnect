@@ -64,13 +64,25 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler
 } from 'chart.js'
 import { Line } from 'vue-chartjs'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler)
+
+// Theme reactivity — listens to html[data-theme] changes
+const themeRef = ref(document.documentElement.getAttribute('data-theme') || 'dark')
+let themeObserver = null
+onMounted(() => {
+  themeObserver = new MutationObserver(() => {
+    themeRef.value = document.documentElement.getAttribute('data-theme') || 'dark'
+  })
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+})
+onUnmounted(() => { if (themeObserver) themeObserver.disconnect() })
+const isLight = computed(() => themeRef.value === 'light')
 
 const props = defineProps({
   milestones: { type: Array, default: () => [] },
@@ -108,8 +120,8 @@ const utilizedPercent = computed(() => {
    return (props.summary.budget_utilized_percentage || 0).toFixed(1)
 })
 
-// Chart key for re-render on toggle change
-const chartKey = computed(() => `${timeGranularity.value}-${completedMilestones.value.length}`)
+// Chart key for re-render on toggle / theme change
+const chartKey = computed(() => `${timeGranularity.value}-${completedMilestones.value.length}-${themeRef.value}`)
 
 // Currency formatter - ALWAYS use en-US to match KPI cards (K notation)
 const formatCurrency = (val) => {
@@ -229,42 +241,58 @@ const chartData = computed(() => {
    }
 })
 
-// Chart options
-const chartOptions = computed(() => ({
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: { mode: 'index', intersect: false },
-  animation: { duration: 800, easing: 'easeOutQuart' },
-  plugins: {
-    legend: {
-      display: true,
-      position: 'bottom',
-      labels: { color: 'rgba(255,255,255,0.5)', font: { size: 10 }, boxWidth: 12, padding: 12 }
+// Chart options — theme-aware
+const chartOptions = computed(() => {
+  const light = isLight.value
+  const legendColor = light ? '#6b5840' : 'rgba(255,255,255,0.5)'
+  const yTickColor = light ? '#92400e' : 'rgba(255,255,255,0.3)'
+  const xTickColor = light ? '#6b5840' : 'rgba(255,255,255,0.4)'
+  const gridColor = light ? 'rgba(40,25,10,0.06)' : 'rgba(255,255,255,0.03)'
+  const tooltipBg = light ? 'rgba(255,250,240,0.95)' : 'rgba(24, 24, 27, 0.95)'
+  const tooltipTitleColor = light ? '#1a1410' : '#fff'
+  const tooltipBodyColor = light ? '#6b5840' : 'rgba(255,255,255,0.85)'
+  const tooltipBorderColor = light ? 'rgba(217,119,6,0.30)' : 'rgba(255,255,255,0.10)'
+
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    animation: { duration: 800, easing: 'easeOutQuart' },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'bottom',
+        labels: { color: legendColor, font: { size: 10, weight: '600' }, boxWidth: 12, padding: 12 }
+      },
+      tooltip: {
+         backgroundColor: tooltipBg,
+         titleColor: tooltipTitleColor,
+         bodyColor: tooltipBodyColor,
+         borderColor: tooltipBorderColor,
+         borderWidth: 1,
+         padding: 12,
+         cornerRadius: 8,
+         callbacks: {
+            label: (ctx) => ` ${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
+         }
+      }
     },
-    tooltip: {
-       backgroundColor: 'rgba(24, 24, 27, 0.95)',
-       padding: 12,
-       cornerRadius: 8,
-       callbacks: {
-          label: (ctx) => ` ${ctx.dataset.label}: ${formatCurrency(ctx.raw)}`
+    scales: {
+       y: {
+         grid: { color: gridColor, drawBorder: false },
+         ticks: {
+           color: yTickColor,
+           font: { size: 10, weight: '600' },
+           callback: (val) => formatCurrency(val)
+         }
+       },
+       x: {
+         grid: { display: false },
+         ticks: { color: xTickColor, font: { size: 10, weight: '600' } }
        }
     }
-  },
-  scales: {
-     y: {
-       grid: { color: 'rgba(255,255,255,0.03)', drawBorder: false },
-       ticks: {
-         color: 'rgba(255,255,255,0.3)',
-         font: { size: 10 },
-         callback: (val) => formatCurrency(val)
-       }
-     },
-     x: {
-       grid: { display: false },
-       ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10 } }
-     }
   }
-}))
+})
 </script>
 
 <style scoped>
@@ -380,4 +408,57 @@ h3 {
 .stat-dot.completed { background: #22c55e; }
 .stat-dot.pending { background: #f97316; }
 .stat-text { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 500; }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] .content-card {
+  background: rgba(255, 250, 240, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+  box-shadow: 0 2px 8px rgba(40, 25, 10, 0.04);
+}
+[data-theme="light"] h3 {
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .time-toggle {
+  background: rgba(217, 119, 6, 0.10);
+}
+[data-theme="light"] .time-toggle button {
+  color: #92400e;
+}
+[data-theme="light"] .time-toggle button:hover {
+  color: #1a1410;
+}
+[data-theme="light"] .time-toggle button.active {
+  background: rgba(217, 119, 6, 0.22);
+  color: #b45309;
+}
+[data-theme="light"] .kpi-row {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .kpi-divider {
+  background: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .kpi-label {
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .kpi-value { color: #1a1410; }
+[data-theme="light"] .kpi-value.spent { color: #c2410c; }
+[data-theme="light"] .kpi-value.remaining { color: #047857; }
+[data-theme="light"] .empty-state { color: #92400e; }
+[data-theme="light"] .empty-state p { color: #1a1410; }
+[data-theme="light"] .empty-state span { color: #92400e; }
+[data-theme="light"] .bottom-stats {
+  border-top: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .stat-dot {
+  background: rgba(40, 25, 10, 0.20);
+}
+[data-theme="light"] .stat-dot.completed { background: #047857; }
+[data-theme="light"] .stat-dot.pending { background: #d97706; }
+[data-theme="light"] .stat-text { color: #6b5840; }
 </style>

@@ -220,4 +220,59 @@ const formatCurrency = (val, currency) => {
 
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] .milestone-item {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .milestone-item:hover {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .milestone-item.selected {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: #d97706;
+}
+[data-theme="light"] .milestone-item.disabled {
+  background: rgba(255, 250, 240, 0.40);
+  border-color: rgba(40, 25, 10, 0.06);
+  opacity: 0.55;
+}
+[data-theme="light"] .paid-badge {
+  color: #047857;
+  background: rgba(5, 150, 105, 0.12);
+  border: 1px solid rgba(5, 150, 105, 0.30);
+  font-weight: 700;
+}
+[data-theme="light"] .ms-name { color: #1a1410; }
+[data-theme="light"] .main-amount { color: #6b5840; }
+[data-theme="light"] .sub-amount { color: #92400e; }
+[data-theme="light"] .milestone-item.selected .ms-name,
+[data-theme="light"] .milestone-item.selected .main-amount {
+  color: #b45309;
+  font-weight: 600;
+}
+[data-theme="light"] .selection-indicator {
+  border: 1.5px solid rgba(217, 119, 6, 0.32);
+  background: rgba(255, 250, 240, 0.75);
+}
+[data-theme="light"] .milestone-item.selected .selection-indicator {
+  background: #d97706;
+  border-color: #d97706;
+}
+[data-theme="light"] .check-icon { color: #fff; }
+[data-theme="light"] .empty-state {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px dashed rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .empty-icon-wrapper {
+  background: rgba(217, 119, 6, 0.10);
+}
+[data-theme="light"] .empty-icon { color: #b45309; }
+[data-theme="light"] .empty-title { color: #1a1410; }
+[data-theme="light"] .empty-sub { color: #92400e; }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(217, 119, 6, 0.30); }
 </style>

@@ -208,4 +208,71 @@ const getModeIcon = (mode) => {
 .empty-icon { margin-bottom: 16px; opacity: 0.1; }
 .empty-state h4 { font-size: 16px; font-weight: 600; color: #f5f5f7; margin-bottom: 6px; }
 .empty-state p { font-size: 13px; color: rgba(255,255,255,0.5); }
+
+/* ═════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES
+   ═════════════════════════════════════════════════════════ */
+[data-theme="light"] .title-group h3 { color: #1a1410; }
+[data-theme="light"] .title-group p { color: #6b5840; }
+[data-theme="light"] .export-btn-modern {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.30);
+  color: #92400e;
+}
+[data-theme="light"] .export-btn-modern:hover {
+  background: rgba(217, 119, 6, 0.12);
+  color: #1a1410;
+}
+[data-theme="light"] .pm-row-modern {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .pm-row-modern.header {
+  border-bottom: 1px solid rgba(40, 25, 10, 0.16);
+  color: #b45309;
+  font-weight: 700;
+}
+[data-theme="light"] .pm-row-modern.item:hover {
+  background: rgba(217, 119, 6, 0.06);
+}
+[data-theme="light"] .status-badge {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .status-badge.completed,
+[data-theme="light"] .status-badge.received {
+  background: rgba(5, 150, 105, 0.12);
+  border-color: rgba(5, 150, 105, 0.30);
+  color: #047857;
+}
+[data-theme="light"] .status-badge.pending {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: #b45309;
+}
+[data-theme="light"] .status-badge.failed {
+  background: rgba(220, 38, 38, 0.10);
+  border-color: rgba(220, 38, 38, 0.30);
+  color: #b91c1c;
+}
+[data-theme="light"] .v-name { color: #1a1410; }
+[data-theme="light"] .v-ref { color: #92400e; }
+[data-theme="light"] .col.amount { color: #1a1410; }
+[data-theme="light"] .col.date { color: #6b5840; }
+[data-theme="light"] .pill {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+}
+[data-theme="light"] .mono { color: #6b5840; }
+[data-theme="light"] .attach-icon { color: #b45309; }
+[data-theme="light"] .mode-icon { color: #b45309; }
+[data-theme="light"] .arrow { color: #92400e; opacity: 0.6; }
+[data-theme="light"] .pm-row-modern.item:hover .arrow { color: #b45309; opacity: 1; }
+[data-theme="light"] .empty-state {
+  color: #92400e;
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px dashed rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .empty-icon { color: #b45309; opacity: 0.4; }
+[data-theme="light"] .empty-state h4 { color: #1a1410; }
+[data-theme="light"] .empty-state p { color: #92400e; }
 </style>

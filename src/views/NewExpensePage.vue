@@ -1754,4 +1754,40 @@ label {
 }
 .rotate-fade-enter-active, .rotate-fade-leave-active { transition: all 0.2s; }
 .rotate-fade-enter-from, .rotate-fade-leave-to { opacity: 0; transform: rotate(90deg); }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .expense-page { color: var(--text-primary); }
+[data-theme="light"] .header-text h1 { color: var(--text-primary); }
+[data-theme="light"] .header-text label { color: var(--text-tertiary); }
+[data-theme="light"] .card-header h2 { color: var(--text-primary); }
+[data-theme="light"] .card-header p { color: var(--text-secondary); }
+[data-theme="light"] label { color: var(--text-secondary); }
+[data-theme="light"] .text-input,
+[data-theme="light"] textarea {
+  background: rgba(26, 20, 16, 0.04);
+  border-color: rgba(26, 20, 16, 0.10);
+  color: var(--text-primary);
+}
+[data-theme="light"] .text-input::placeholder,
+[data-theme="light"] textarea::placeholder { color: var(--text-placeholder); }
+[data-theme="light"] .chip {
+  background: rgba(26, 20, 16, 0.06);
+  color: var(--text-secondary);
+  border-color: rgba(26, 20, 16, 0.10);
+}
+[data-theme="light"] .chip.active {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .drop-zone {
+  border-color: rgba(26, 20, 16, 0.20);
+  background: rgba(26, 20, 16, 0.02);
+}
+[data-theme="light"] .file-meta,
+[data-theme="light"] .readonly-value { color: var(--text-primary); }
+[data-theme="light"] .step-badge {
+  color: var(--text-tertiary);
+  background: rgba(26, 20, 16, 0.06);
+}
 </style>

@@ -274,4 +274,58 @@ onUnmounted(() => { document.removeEventListener('keydown', onKeyDown); lockScro
 @media (max-width: 720px) {
   .spd-panel { max-width: 100% !important; }
 }
+
+/* ─── Light theme overrides ─────────────────────────────────────────────── */
+[data-theme="light"] .spd-overlay {
+  background: rgba(26, 20, 16, 0.40);
+}
+[data-theme="light"] .spd-panel {
+  background: rgba(255, 250, 240, 0.62);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border-left: 1px solid rgba(217, 119, 6, 0.22);
+  box-shadow: -18px 0 60px rgba(40, 25, 10, 0.22), inset 1px 0 0 rgba(255, 255, 255, 0.5);
+  color: var(--text-primary);
+}
+[data-theme="light"] .spd-panel::before {
+  background: radial-gradient(ellipse at 100% 0%, rgba(217, 119, 6, 0.12), transparent 55%),
+              radial-gradient(ellipse at 0% 100%, rgba(249, 115, 22, 0.08), transparent 55%);
+}
+[data-theme="light"] .spd-title { color: var(--text-primary); }
+[data-theme="light"] .spd-meta { color: var(--text-secondary); }
+[data-theme="light"] .spd-id-badge {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.28);
+}
+[data-theme="light"] .spd-id-badge__label { color: #b45309; }
+[data-theme="light"] .spd-id-badge__value { color: #92400e; }
+[data-theme="light"] .spd-icon {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.22), rgba(249, 115, 22, 0.12));
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #92400e;
+}
+[data-theme="light"] .spd-close {
+  background: rgba(255, 250, 240, 0.50);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: #6b5840;
+}
+[data-theme="light"] .spd-close:hover {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #92400e;
+}
+[data-theme="light"] .spd-header {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+  background: linear-gradient(180deg, rgba(217, 119, 6, 0.06), transparent);
+}
+[data-theme="light"] .spd-footer {
+  border-top-color: rgba(40, 25, 10, 0.10);
+  background: rgba(255, 250, 240, 0.30);
+}
+[data-theme="light"] .spd-body.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .spd-body.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(217, 119, 6, 0.50);
+}
 </style>

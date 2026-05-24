@@ -561,4 +561,24 @@ onMounted(fetchData)
   .charts-row, .info-row { grid-template-columns: 1fr; }
   .glass-header, .main-canvas { padding-left: 20px; padding-right: 20px; }
 }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .expenses-page { color: var(--text-primary); }
+[data-theme="light"] .header-text label { color: var(--text-tertiary); }
+[data-theme="light"] .header-text h1 { color: var(--text-primary); }
+[data-theme="light"] .banner-title { color: #92400e; }
+[data-theme="light"] .banner-desc { color: var(--text-secondary); }
+[data-theme="light"] .stat-number { color: var(--text-primary); }
+[data-theme="light"] .stat-label-text { color: #6b5840; }
+[data-theme="light"] .title-group h3 { color: var(--text-primary); }
+[data-theme="light"] .title-group p { color: var(--text-secondary); }
+[data-theme="light"] .search-box input {
+  background: rgba(26, 20, 16, 0.04);
+  border-color: rgba(26, 20, 16, 0.10);
+  color: var(--text-primary);
+}
+[data-theme="light"] .v-name { color: var(--text-primary); }
+[data-theme="light"] .v-ref { color: var(--text-tertiary); }
+[data-theme="light"] .col.amount { color: var(--text-primary); }
+[data-theme="light"] .col.date { color: var(--text-secondary); }
 </style>

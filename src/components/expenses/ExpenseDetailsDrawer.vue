@@ -883,4 +883,275 @@ const handleDownloadReceipt = () => {
 .slide-fade-enter-active .drawer-panel, .slide-fade-leave-active .drawer-panel { transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 .slide-fade-enter-from, .slide-fade-leave-to { opacity: 0; }
 .slide-fade-enter-from .drawer-panel, .slide-fade-leave-to .drawer-panel { transform: translateX(100%); }
+
+/* ═════════ Enhance structure on BOTH themes — section labels get bottom accent ═════════ */
+.detail-section h3 {
+  position: relative;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.detail-section h3::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: -1px;
+  width: 32px; height: 2px;
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+  border-radius: 2px;
+}
+
+/* Ambient glow in drawer */
+.drawer-panel { position: relative; overflow: hidden; }
+.drawer-panel::before {
+  content: "";
+  position: absolute;
+  top: -80px; right: -60px;
+  width: 280px; height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.10), transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+  animation: edd-orb 16s ease-in-out infinite;
+}
+.drawer-panel > * { position: relative; z-index: 1; }
+
+@keyframes edd-orb {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-25px, 30px); }
+}
+
+/* ═════════ LIGHT THEME OVERRIDES — frosted-cream, transparency preserved ═════════ */
+[data-theme="light"] .drawer-overlay {
+  background: rgba(26, 20, 16, 0.32);
+  backdrop-filter: blur(6px);
+}
+
+[data-theme="light"] .drawer-panel {
+  background: rgba(255, 250, 240, 0.62);
+  border-left: 1px solid rgba(217, 119, 6, 0.22);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  color: var(--text-primary);
+  box-shadow:
+    -20px 0 60px rgba(40, 25, 10, 0.22),
+    inset 1px 0 0 rgba(255, 255, 255, 0.50);
+}
+[data-theme="light"] .drawer-panel::before {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.18), transparent 70%);
+}
+
+/* Header */
+[data-theme="light"] .drawer-header {
+  background: rgba(217, 119, 6, 0.04);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .id-badge {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.28);
+}
+[data-theme="light"] .id-badge .label { color: #6b5840; }
+[data-theme="light"] .id-badge .value { color: #b45309; }
+[data-theme="light"] .close-btn { color: #6b5840; }
+[data-theme="light"] .close-btn:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+}
+
+[data-theme="light"] .vendor-avatar {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.22), rgba(217, 119, 6, 0.10));
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .vendor-info h2 {
+  background: linear-gradient(135deg, #1a1410 30%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .vendor-info .category { color: #6b5840; }
+
+[data-theme="light"] .amount-display .currency { color: #b45309; }
+[data-theme="light"] .amount-display .amount {
+  background: linear-gradient(135deg, #92400e 30%, #d97706 100%);
+  -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+
+/* Status bar — light variants */
+[data-theme="light"] .status-bar.draft {
+  background: rgba(40, 25, 10, 0.08);
+  border-color: rgba(40, 25, 10, 0.18);
+  color: #6b5840;
+}
+[data-theme="light"] .status-bar.submitted,
+[data-theme="light"] .status-bar.pending {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #b45309;
+}
+[data-theme="light"] .status-bar.approved {
+  background: rgba(5, 150, 105, 0.14);
+  border-color: rgba(5, 150, 105, 0.32);
+  color: #047857;
+}
+[data-theme="light"] .status-bar.rejected {
+  background: rgba(220, 38, 38, 0.10);
+  border-color: rgba(220, 38, 38, 0.28);
+  color: #b91c1c;
+}
+[data-theme="light"] .status-bar .date { color: #6b5840; }
+
+/* Section labels */
+[data-theme="light"] .detail-section h3 {
+  color: #b45309;
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .detail-section h3::after {
+  background: linear-gradient(90deg, #d97706, #b45309);
+}
+
+[data-theme="light"] .field label { color: #6b5840; font-weight: 600; }
+[data-theme="light"] .field .value { color: var(--text-primary); }
+
+[data-theme="light"] .value-pill {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  color: var(--text-primary);
+}
+[data-theme="light"] .paid-pill {
+  background: rgba(5, 150, 105, 0.14);
+  color: #047857;
+}
+
+/* Detail card (vendor/tax/bank etc.) */
+[data-theme="light"] .detail-card {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .bank-row .icon { color: #b45309; }
+[data-theme="light"] .bank-name { color: var(--text-primary); }
+[data-theme="light"] .ifsc { color: #6b5840; }
+[data-theme="light"] .account-row { border-top-color: rgba(40, 25, 10, 0.08); }
+[data-theme="light"] .field-mini label { color: #6b5840; }
+[data-theme="light"] .field-mini .val { color: var(--text-primary); }
+
+/* Cost breakdown */
+[data-theme="light"] .break-row { color: var(--text-primary); }
+[data-theme="light"] .break-row.sub { color: #6b5840; }
+[data-theme="light"] .text-amber-400 { color: #b45309; }
+[data-theme="light"] .break-row.total { color: var(--text-primary); }
+[data-theme="light"] .break-row.total .highlight { color: #b45309; }
+
+/* Notes / Danger / Warning */
+[data-theme="light"] .notes-box {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .notes-box strong { color: #b45309; }
+[data-theme="light"] .notes-box p { color: var(--text-primary); }
+[data-theme="light"] .danger-section h3 { color: #b91c1c !important; }
+[data-theme="light"] .danger-section h3::after { background: #b91c1c; }
+[data-theme="light"] .danger-box {
+  background: rgba(220, 38, 38, 0.06);
+  border-color: rgba(220, 38, 38, 0.32);
+}
+[data-theme="light"] .notes-box.danger-box p { color: #991b1b; }
+[data-theme="light"] .notes-box.warning-box {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .detail-section.warning-section h3 { color: #b45309; }
+
+/* Attachments */
+[data-theme="light"] .file-card {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.20);
+}
+[data-theme="light"] .file-card:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.42);
+}
+[data-theme="light"] .file-icon {
+  background: rgba(217, 119, 6, 0.16);
+  color: #b45309;
+}
+[data-theme="light"] .file-info .name { color: var(--text-primary); }
+[data-theme="light"] .file-info .meta { color: #6b5840; }
+[data-theme="light"] .link-icon { color: #92400e; }
+[data-theme="light"] .file-card:hover .link-icon { color: #b45309; }
+[data-theme="light"] .empty-files { color: #92400e; }
+
+/* Audit trail */
+[data-theme="light"] .audit-card {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .audit-avatar {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.22), rgba(217, 119, 6, 0.10));
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .audit-action { color: var(--text-primary); }
+[data-theme="light"] .audit-user { color: #b45309; }
+[data-theme="light"] .audit-time { color: #92400e; }
+
+/* Footer */
+[data-theme="light"] .drawer-footer {
+  background: rgba(255, 250, 240, 0.35);
+  border-top-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .btn-custom.primary {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .btn-custom.primary:hover {
+  background: linear-gradient(135deg, #c2410c, #92400e);
+  box-shadow: 0 10px 24px rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .btn-custom.secondary {
+  background: rgba(255, 250, 240, 0.55);
+  color: var(--text-primary);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .btn-custom.secondary:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .view-only-footer { color: #92400e; }
+
+/* Action buttons (Approve / Reject / Delete / Reverse) light variants */
+[data-theme="light"] .approve-btn {
+  background: rgba(5, 150, 105, 0.10);
+  border-color: rgba(5, 150, 105, 0.30);
+  color: #047857;
+}
+[data-theme="light"] .approve-btn:hover:not(:disabled) {
+  background: rgba(5, 150, 105, 0.20);
+  border-color: #047857;
+}
+[data-theme="light"] .reject-btn,
+[data-theme="light"] .delete-btn {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.32);
+  color: #b91c1c;
+}
+[data-theme="light"] .reject-btn:hover:not(:disabled),
+[data-theme="light"] .delete-btn:hover {
+  background: rgba(220, 38, 38, 0.16);
+  border-color: #dc2626;
+}
+[data-theme="light"] .delete-btn.confirm {
+  background: #dc2626;
+  color: #fff;
+  border-color: #dc2626;
+}
+[data-theme="light"] .reverse-btn {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #b45309;
+}
+[data-theme="light"] .reverse-btn:hover {
+  background: rgba(217, 119, 6, 0.20);
+  border-color: #d97706;
+}
 </style>

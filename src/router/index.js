@@ -203,7 +203,12 @@ const routes = [
                 name: 'HrRecruitmentTab',
                 component: () => import('../views/hr/recruitment/HrRecruitmentWorkspacePage.vue'),
             },
-            { path: 'hr/onboarding', name: 'HrOnboarding', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Onboarding', phase: 'Phase 4 — Hiring' }) },
+            { path: 'hr/onboarding', redirect: '/admin/hr/onboarding/dashboard' },
+            {
+                path: 'hr/onboarding/:tab(dashboard|pending-joining|checklist|approvals|documents|identity|assets|account-provisioning|welcome-kit|training|induction|probation|tasks|reports)',
+                name: 'HrOnboardingTab',
+                component: () => import('../views/hr/onboarding/HrOnboardingWorkspacePage.vue'),
+            },
             { path: 'hr/attendance', name: 'HrAttendance', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Attendance', phase: 'Phase 2 — Time Management' }) },
             { path: 'hr/leave', name: 'HrLeave', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Leave Management', phase: 'Phase 2 — Time Management' }) },
             { path: 'hr/shifts', name: 'HrShifts', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Shifts & Rosters', phase: 'Phase 2 — Time Management' }) },

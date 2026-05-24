@@ -1,7 +1,16 @@
 <template>
   <div class="page-container">
+    <div class="auth-theme-toggle">
+      <ThemeToggle />
+    </div>
     <div class="auth-container fade-in">
-      
+
+      <!-- Session-expired banner -->
+      <div v-if="isExpired" class="auth-banner" role="alert">
+        <ShieldAlert :size="14" class="banner-icon" />
+        <span>Your session expired. Please sign in again to continue.</span>
+      </div>
+
       <!-- Header -->
       <div class="auth-header">
         <Logo class="brand-icon" />
@@ -66,21 +75,25 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import axios from 'axios'
 import Logo from './icons/Logo.vue'
-import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-vue-next'
+import ThemeToggle from './common/ThemeToggle.vue'
+import { Mail, Lock, Eye, EyeOff, Loader2, ShieldAlert } from 'lucide-vue-next'
 
 import { useToast } from '../composables/useToast'
 
 const router = useRouter()
+const route = useRoute()
 const { success, error } = useToast()
 const email = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const isLoading = ref(false)
 const errors = ref({})
+
+const isExpired = computed(() => route.query.expired === '1')
 
 const clearError = (field) => {
   if (errors.value[field]) delete errors.value[field]
@@ -145,26 +158,68 @@ const handleLogin = async () => {
 <style scoped>
 /* Scoped layout - duplicating typical styles for isolation/safety per vue pattern */
 .page-container {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: #000000;
+  background: var(--bg-color);
   padding: 20px;
+  transition: background-color 240ms var(--ease);
+}
+
+/* Theme toggle floats top-right of the page (no nav on auth surfaces) */
+.auth-theme-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 5;
 }
 
 .auth-container {
   width: 100%;
   max-width: 400px;
-  background: #121214;
+  background: var(--auth-card-bg);
   border-radius: 16px;
   padding: 40px 32px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--auth-card-shadow);
+  border: 1px solid var(--card-border);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   opacity: 1;
+  transition: background-color 240ms var(--ease), border-color 240ms var(--ease);
+  /* Light theme on cream: layer a faint warm sheen + soft brass edge */
+  position: relative;
+}
+
+[data-theme="light"] .auth-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(160deg, rgba(251, 191, 36, 0.06), transparent 40%);
+  pointer-events: none;
+}
+
+/* Session-expired banner — warm warning, theme-aware */
+.auth-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: 10px;
+  background: rgba(251, 146, 60, 0.10);
+  border: 1px solid rgba(251, 146, 60, 0.32);
+  color: var(--accent-gold);
+}
+.banner-icon { flex-shrink: 0; }
+[data-theme="light"] .auth-banner {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #92400e;
 }
 
 .auth-header {
@@ -236,8 +291,9 @@ const handleLogin = async () => {
 }
 
 .minimal-input:focus {
-  background: #232325;
+  background: var(--input-bg-focus);
   border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.10);
 }
 
 .minimal-input::placeholder {
@@ -246,15 +302,18 @@ const handleLogin = async () => {
 
 /* Error State */
 .input-wrapper.has-error .minimal-input {
-  border-color: #ff453a;
+  border-color: var(--accent-danger);
   background: rgba(255, 69, 58, 0.05);
 }
+[data-theme="light"] .input-wrapper.has-error .minimal-input {
+  background: rgba(220, 38, 38, 0.05);
+}
 .input-wrapper.has-error .input-icon {
-  color: #ff453a;
+  color: var(--accent-danger);
 }
 .error-text {
   font-size: 11px;
-  color: #ff453a;
+  color: var(--accent-danger);
   margin-left: 4px;
 }
 
@@ -361,7 +420,7 @@ const handleLogin = async () => {
 }
 
 .social-btn:hover {
-  background: #2c2c2e;
+  background: var(--card-bg);
   border-color: var(--text-secondary);
 }
 

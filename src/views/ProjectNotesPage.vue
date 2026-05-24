@@ -616,23 +616,74 @@ onUnmounted(() => {
 
 /* TABS DOCK */
 .tabs-dock {
-  display: flex; gap: 24px; padding-bottom: 0px; margin-top: 4px; border-bottom: 1px solid transparent;
+  display: flex; gap: 6px;
+  padding: 4px 0 0;
+  margin-top: 4px;
+  border-bottom: none;
+  width: fit-content;
 }
 .dock-item {
-  background: transparent; border: none; padding: 12px 4px; color: rgba(255,255,255,0.5);
-  font-size: 13px; font-weight: 500; cursor: pointer; position: relative;
-  display: flex; align-items: center; gap: 8px; transition: color 0.2s;
+  background: transparent; border: none;
+  padding: 10px 16px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; position: relative;
+  display: flex; align-items: center; gap: 8px;
+  border-radius: 10px 10px 0 0;
+  transition: color 0.25s ease, background 0.25s ease;
+  letter-spacing: 0.01em;
 }
-.dock-item:hover { color: rgba(255,255,255,0.8); }
-.dock-item.active { color: white; font-weight: 600; }
+.dock-item svg {
+  transition: transform 0.30s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.25s ease;
+}
+.dock-item:hover {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(245, 158, 11, 0.06);
+}
+.dock-item:hover svg { transform: scale(1.10); color: #fbbf24; }
+.dock-item.active {
+  color: #fff; font-weight: 700;
+  background: rgba(245, 158, 11, 0.10);
+}
+.dock-item.active svg {
+  color: #fbbf24;
+  animation: notes-icon-bounce 0.50s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 .tab-count {
-  font-size: 10px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 8px;
-  font-weight: 600; min-width: 18px; text-align: center;
+  font-size: 10px; background: rgba(255, 255, 255, 0.10);
+  padding: 2px 7px; border-radius: 999px;
+  font-weight: 700; min-width: 18px; text-align: center;
+  transition: background 0.25s ease, color 0.25s ease;
 }
+.dock-item.active .tab-count {
+  background: rgba(245, 158, 11, 0.22);
+  color: #fbbf24;
+}
+
 .active-glow {
-  position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px;
-  background: #f59e0b; box-shadow: 0 -2px 8px rgba(245, 158, 11, 0.5);
-  border-radius: 2px 2px 0 0;
+  position: absolute; bottom: -5px; left: 12px; right: 12px;
+  height: 3px;
+  background: linear-gradient(90deg, #f59e0b, #f97316, #fbbf24);
+  background-size: 200% 100%;
+  box-shadow: 0 -2px 14px rgba(249, 115, 22, 0.70);
+  border-radius: 3px 3px 0 0;
+  animation: notes-glow-flow 3s ease-in-out infinite, notes-glow-enter 0.40s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+}
+
+@keyframes notes-glow-flow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes notes-glow-enter {
+  from { transform: scaleX(0.3); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+@keyframes notes-icon-bounce {
+  0% { transform: scale(0.85); }
+  50% { transform: scale(1.20); }
+  100% { transform: scale(1); }
 }
 
 /* TOOLBAR */
@@ -803,4 +854,72 @@ onUnmounted(() => {
 }
 
 .text-amber-warning { color: #f97316; }
+
+/* ═════════ LIGHT THEME OVERRIDES ═════════════════════════════════════════ */
+[data-theme="light"] .notes-page-container { color: var(--text-primary); }
+[data-theme="light"] .glass-header {
+  background: #faf7f0;
+  border-bottom-color: rgba(26, 20, 16, 0.10);
+}
+[data-theme="light"] .identity-text label { color: var(--text-tertiary); }
+[data-theme="light"] .project-selector h1 { color: var(--text-primary); }
+[data-theme="light"] .project-dropdown {
+  background: #faf7f0;
+  border-color: rgba(26, 20, 16, 0.10);
+  box-shadow: 0 10px 30px rgba(26, 20, 16, 0.08);
+}
+[data-theme="light"] .dropdown-item { color: var(--text-secondary); }
+[data-theme="light"] .dropdown-item:hover { background: rgba(26, 20, 16, 0.08); color: var(--text-primary); }
+[data-theme="light"] .dropdown-item.active { background: rgba(217, 119, 6, 0.1); color: var(--text-primary); }
+[data-theme="light"] .mini-metric { color: var(--text-tertiary); }
+[data-theme="light"] .mini-metric .value { color: #d97706; }
+[data-theme="light"] .add-note-btn { background: #f59e0b; color: #1a1410; }
+[data-theme="light"] .add-note-btn:hover { background: #d97706; color: #fff; }
+/* Tabs dock — match the modernized design */
+[data-theme="light"] .dock-item { color: #6b5840; }
+[data-theme="light"] .dock-item:hover {
+  color: #92400e;
+  background: rgba(217, 119, 6, 0.08);
+}
+[data-theme="light"] .dock-item:hover svg { color: #b45309; }
+[data-theme="light"] .dock-item.active {
+  color: #92400e;
+  background: rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .dock-item.active svg { color: #b45309; }
+[data-theme="light"] .tab-count {
+  background: rgba(40, 25, 10, 0.10);
+  color: #6b5840;
+}
+[data-theme="light"] .dock-item.active .tab-count {
+  background: rgba(217, 119, 6, 0.20);
+  color: #b45309;
+}
+[data-theme="light"] .active-glow {
+  background: linear-gradient(90deg, #d97706, #b45309, #f59e0b);
+  background-size: 200% 100%;
+  box-shadow: 0 -2px 14px rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .search-input {
+  background: rgba(26, 20, 16, 0.05);
+  border-color: rgba(26, 20, 16, 0.10);
+}
+[data-theme="light"] .search-input input { color: var(--text-primary); }
+[data-theme="light"] .select-trigger {
+  background: rgba(26, 20, 16, 0.05);
+  border-color: rgba(26, 20, 16, 0.10);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .filter-chip {
+  background: rgba(26, 20, 16, 0.05);
+  color: var(--text-secondary);
+  border-color: rgba(26, 20, 16, 0.12);
+}
+[data-theme="light"] .filter-chip.active {
+  background: rgba(217, 119, 6, 0.1);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: #92400e;
+}
+[data-theme="light"] .empty-notes h3 { color: var(--text-primary); }
+[data-theme="light"] .empty-notes p { color: var(--text-secondary); }
 </style>

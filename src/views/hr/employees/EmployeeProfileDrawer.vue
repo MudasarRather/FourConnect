@@ -286,7 +286,7 @@ import { computed, h, ref, reactive, watch } from 'vue'
 import {
   X, Edit, Check, Loader2, UserX, Eye, EyeOff, ShieldAlert,
   IdCard, Phone, Briefcase, Banknote, History,
-  Plus, ArrowUp, ArrowRight, CheckCircle, Pause, Play, LogOut, Archive, Undo2,
+  Plus, ArrowUp, ArrowRight, CheckCircle, Pause, Play, LogOut, Archive, Undo2, Gauge,
 } from 'lucide-vue-next'
 
 import ProfileDrawer from '../../../components/hr/ProfileDrawer.vue'
@@ -603,6 +603,7 @@ const availableActions = computed(() => {
   const s = emp.value.lifecycle_state
   const out = []
   if (s === 'ON_PROBATION') out.push({ key: 'confirm', label: 'Confirm', icon: CheckCircle, tone: 'gold' })
+  if (s === 'ACTIVE') out.push({ key: 'put-on-probation', label: 'Put on Probation', icon: Gauge, tone: 'orange' })
   if (['ACTIVE','ON_PROBATION'].includes(s)) {
     out.push({ key: 'promote', label: 'Promote', icon: ArrowUp, tone: 'gold' })
     out.push({ key: 'transfer', label: 'Transfer', icon: ArrowRight, tone: 'neutral' })

@@ -138,4 +138,19 @@ onBeforeUnmount(() => {
               width 360ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform, width;
 }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+[data-theme="light"] .tabbar-track { border-bottom-color: rgba(40, 25, 10, 0.12); }
+[data-theme="light"] .tab { color: #6b5840; }
+[data-theme="light"] .tab:hover { color: #44362a; }
+[data-theme="light"] .tab.is-active { color: #1a1410; }
+[data-theme="light"] .tab.is-active .tab-icon { color: #b45309; }
+[data-theme="light"] .tab-count {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+[data-theme="light"] .tab-underline {
+  background: linear-gradient(90deg, #d97706, #ea580c);
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.45);
+}
 </style>

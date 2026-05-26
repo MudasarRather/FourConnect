@@ -329,4 +329,40 @@ onMounted(async () => {
 
 .iv-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .iv-actions button { font-size: 12px; padding: 6px 12px; }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+[data-theme="light"] .iv-status-scheduled  {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .iv-status-completed  {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.14);
+}
+[data-theme="light"] .iv-status-cancelled  {
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.10);
+}
+[data-theme="light"] .iv-status-no_show    {
+  color: #c2410c;
+  background: rgba(251, 146, 60, 0.16);
+}
+[data-theme="light"] .iv-status-rescheduled {
+  color: #b45309;
+  background: rgba(251, 191, 36, 0.18);
+}
+[data-theme="light"] .iv-status-in_progress {
+  color: #c2410c;
+  background: rgba(251, 146, 60, 0.16);
+}
+[data-theme="light"] .iv-cand { color: #1a1410; }
+[data-theme="light"] .iv-pos { color: #6b5840; }
+[data-theme="light"] .iv-pill {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #44362a;
+}
+[data-theme="light"] .iv-link,
+[data-theme="light"] .iv-link a { color: #b45309; }
+[data-theme="light"] .iv-link a:hover { color: #c2410c; }
 </style>

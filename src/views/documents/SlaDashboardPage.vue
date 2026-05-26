@@ -4,20 +4,20 @@
     <header class="nano-header">
       <div class="nav-left">
         <div class="nano-tabs-dock">
-          <button class="n-tab" :class="{ active: activeTab === 'dashboard' }" @click="activeTab = 'dashboard'">
+          <button class="n-tab" :class="{ active: activeTab === 'dashboard' }" @click="setTab('dashboard')">
             <LayoutGrid :size="14" class="tab-icon"/> Dashboard
           </button>
           <div class="tab-separator"></div>
-          <button class="n-tab" :class="{ active: activeTab === 'draft' }" @click="activeTab = 'draft'">
+          <button class="n-tab" :class="{ active: activeTab === 'draft' }" @click="setTab('draft')">
             <FileText :size="14" class="tab-icon"/> Draft Documents
           </button>
-          <button v-if="isAdmin" class="n-tab" :class="{ active: activeTab === 'pending' }" @click="activeTab = 'pending'">
+          <button v-if="isAdmin" class="n-tab" :class="{ active: activeTab === 'pending' }" @click="setTab('pending')">
             <Clock :size="14" class="tab-icon"/> Pending Approvals
           </button>
-          <button class="n-tab" :class="{ active: activeTab === 'rejected' }" @click="activeTab = 'rejected'">
+          <button class="n-tab" :class="{ active: activeTab === 'rejected' }" @click="setTab('rejected')">
             <XCircle :size="14" class="tab-icon"/> Rejected
           </button>
-          <button class="n-tab" :class="{ active: activeTab === 'approved' }" @click="activeTab = 'approved'">
+          <button class="n-tab" :class="{ active: activeTab === 'approved' }" @click="setTab('approved')">
             <CheckCircle :size="14" class="tab-icon"/> Approved Documents
           </button>
         </div>
@@ -214,11 +214,13 @@
         </div>
 
         <div class="pm-table-modern glass-card" style="padding:0; overflow:hidden;">
-            <div class="pm-row-modern header" style="grid-template-columns: 50px 2fr 1.5fr 1fr 120px;">
+            <div class="pm-row-modern header" style="grid-template-columns: 50px 1.9fr 1.4fr 110px 110px 1fr 130px;">
                 <div class="col sn">S.N</div>
                 <div class="col title">Agreement Title</div>
                 <div class="col client">Client / Target</div>
-                <div class="col date">Creation Date</div>
+                <div class="col value-col">Value</div>
+                <div class="col validity-col">Validity</div>
+                <div class="col date">Last Saved</div>
                 <div class="col status">Status</div>
             </div>
 
@@ -228,11 +230,11 @@
                 <p>You don't have any pending SLA drafts.</p>
             </div>
 
-            <div 
-                v-for="(draft, i) in filteredDrafts" 
-                :key="draft.id" 
+            <div
+                v-for="(draft, i) in filteredDrafts"
+                :key="draft.id"
                 class="pm-row-modern item"
-                :style="{ animationDelay: i * 40 + 'ms', gridTemplateColumns: '50px 2fr 1.5fr 1fr 120px' }"
+                :style="{ animationDelay: i * 40 + 'ms', gridTemplateColumns: '50px 1.9fr 1.4fr 110px 110px 1fr 130px' }"
                 @click="selectedDraftId = draft.id"
             >
                 <div class="col sn">{{ i + 1 }}.</div>
@@ -245,9 +247,19 @@
                 </div>
                 <div class="col client">
                     <span class="v-name" style="color:rgba(255,255,255,0.85); font-weight:500;">{{ draft.client_organization_name || '—' }}</span>
+                    <span class="v-ref">{{ draft.client_contact_person || draft.client_email || '—' }}</span>
                 </div>
-                <div class="col date" style="color:rgba(255,255,255,0.5); font-size:12px;">
-                    {{ formatDate(draft.created_at) }}
+                <div class="col value">
+                    <span class="currency-tag">{{ draft.currency || 'INR' }}</span>
+                    <span>{{ formatValue(draft.agreement_value) }}</span>
+                </div>
+                <div class="col meta">
+                    <span class="meta-primary">{{ draft.end_date ? formatDate(draft.end_date) : '—' }}</span>
+                    <span class="meta-secondary">{{ draft.billing_frequency || 'Monthly' }}</span>
+                </div>
+                <div class="col date" style="font-size:12px;">
+                    <span class="meta-primary" style="display:block;">{{ formatDate(draft.updated_at || draft.created_at) }}</span>
+                    <span class="meta-secondary">{{ formatRelative(draft.updated_at || draft.created_at) }}</span>
                 </div>
                 <div class="col status">
                      <div class="status-badge compact draft">
@@ -340,10 +352,12 @@
         </div>
 
         <div class="pm-table-modern glass-card" style="padding:0; overflow:hidden;">
-            <div class="pm-row-modern header" style="grid-template-columns: 50px 2fr 1.5fr 1fr 120px;">
+            <div class="pm-row-modern header" style="grid-template-columns: 50px 1.9fr 1.4fr 110px 110px 1fr 130px;">
                 <div class="col sn">S.N</div>
                 <div class="col title">Agreement Title</div>
                 <div class="col client">Client / Target</div>
+                <div class="col value-col">Value</div>
+                <div class="col validity-col">Validity</div>
                 <div class="col date">Approval Date</div>
                 <div class="col status">Status</div>
             </div>
@@ -354,11 +368,11 @@
                 <p>Your finalized and executable SLA agreements will appear here.</p>
             </div>
 
-            <div 
-                v-for="(approvedSla, i) in filteredApproved" 
-                :key="approvedSla.id" 
+            <div
+                v-for="(approvedSla, i) in filteredApproved"
+                :key="approvedSla.id"
                 class="pm-row-modern item"
-                :style="{ animationDelay: i * 40 + 'ms', gridTemplateColumns: '50px 2fr 1.5fr 1fr 120px' }"
+                :style="{ animationDelay: i * 40 + 'ms', gridTemplateColumns: '50px 1.9fr 1.4fr 110px 110px 1fr 130px' }"
                 @click="selectedApprovedId = approvedSla.id"
             >
                 <div class="col sn">{{ i + 1 }}.</div>
@@ -371,9 +385,24 @@
                 </div>
                 <div class="col client">
                     <span class="v-name" style="color:rgba(255,255,255,0.85); font-weight:500;">{{ approvedSla.client_organization_name || '—' }}</span>
+                    <span class="v-ref">{{ approvedSla.client_contact_person || approvedSla.client_email || '—' }}</span>
                 </div>
-                <div class="col date" style="color:rgba(255,255,255,0.5); font-size:12px;">
-                    {{ formatDate(approvedSla.updated_at || approvedSla.created_at) }}
+                <div class="col value">
+                    <span class="currency-tag">{{ approvedSla.currency || 'INR' }}</span>
+                    <span>{{ formatValue(approvedSla.agreement_value) }}</span>
+                </div>
+                <div class="col meta">
+                    <span class="meta-primary">{{ approvedSla.end_date ? formatDate(approvedSla.end_date) : '—' }}</span>
+                    <span class="meta-secondary"
+                        :style="validityDays(approvedSla) !== null && validityDays(approvedSla) < 30
+                          ? { color: '#f87171' }
+                          : {}">
+                      {{ validityDays(approvedSla) !== null ? (validityDays(approvedSla) > 0 ? validityDays(approvedSla) + 'd left' : 'expired') : (approvedSla.billing_frequency || 'Monthly') }}
+                    </span>
+                </div>
+                <div class="col date" style="font-size:12px;">
+                    <span class="meta-primary" style="display:block;">{{ formatDate(approvedSla.updated_at || approvedSla.created_at) }}</span>
+                    <span class="meta-secondary">{{ formatRelative(approvedSla.updated_at || approvedSla.created_at) }}</span>
                 </div>
                 <div class="col status">
                      <div class="status-badge compact approved" style="background: rgba(74, 222, 128, 0.15); color: #4ade80; border-color: rgba(74, 222, 128, 0.3);">
@@ -403,10 +432,12 @@
         </div>
 
         <div class="pm-table-modern glass-card" style="padding:0; overflow:hidden;">
-            <div class="pm-row-modern header" style="grid-template-columns: 50px 2fr 1.5fr 1fr 120px;">
+            <div class="pm-row-modern header" style="grid-template-columns: 50px 1.9fr 1.4fr 110px 1.6fr 1fr 130px;">
                 <div class="col sn">S.N</div>
                 <div class="col title">Agreement Title</div>
                 <div class="col client">Client / Target</div>
+                <div class="col value-col">Value</div>
+                <div class="col reason-col">Admin Feedback</div>
                 <div class="col date">Rejection Date</div>
                 <div class="col status">Status</div>
             </div>
@@ -417,11 +448,11 @@
                 <p>Documents rejected by admins will appear here.</p>
             </div>
 
-            <div 
-                v-for="(rejSla, i) in filteredRejected" 
-                :key="rejSla.id" 
+            <div
+                v-for="(rejSla, i) in filteredRejected"
+                :key="rejSla.id"
                 class="pm-row-modern item"
-                :style="{ animationDelay: i * 40 + 'ms', gridTemplateColumns: '50px 2fr 1.5fr 1fr 120px' }"
+                :style="{ animationDelay: i * 40 + 'ms', gridTemplateColumns: '50px 1.9fr 1.4fr 110px 1.6fr 1fr 130px' }"
                 @click="selectedRejectedId = rejSla.id"
             >
                 <div class="col sn">{{ i + 1 }}.</div>
@@ -429,13 +460,26 @@
                     <span class="v-name" style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block;">{{ rejSla.title || 'Untitled Agreement' }}</span>
                     <div style="display:flex; gap:6px; margin-top:4px; align-items:center;">
                         <span class="v-ref" style="text-transform: capitalize; color:rgba(255,255,255,0.4); font-size:11px;">{{ rejSla.contract_reference || 'No Ref' }}</span>
+                        <span class="pill" v-if="rejSla.agreement_type" :style="{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', padding:'2px 6px', fontSize:'9px', borderRadius:'4px', letterSpacing:'0.02em', textTransform:'uppercase' }">{{ rejSla.agreement_type }}</span>
                     </div>
                 </div>
                 <div class="col client">
                     <span class="v-name" style="color:rgba(255,255,255,0.85); font-weight:500;">{{ rejSla.client_organization_name || '—' }}</span>
+                    <span class="v-ref">{{ rejSla.client_contact_person || rejSla.client_email || '—' }}</span>
                 </div>
-                <div class="col date" style="color:rgba(255,255,255,0.5); font-size:12px;">
-                    {{ formatDate(rejSla.updated_at || rejSla.created_at) }}
+                <div class="col value">
+                    <span class="currency-tag">{{ rejSla.currency || 'INR' }}</span>
+                    <span>{{ formatValue(rejSla.agreement_value) }}</span>
+                </div>
+                <div class="col reason-cell">
+                    <div class="reason-pill" :title="rejSla.rejection_reason || 'No feedback provided'">
+                        <AlertCircle :size="11" />
+                        <span>{{ rejSla.rejection_reason || 'No feedback provided' }}</span>
+                    </div>
+                </div>
+                <div class="col date" style="font-size:12px;">
+                    <span class="meta-primary" style="display:block;">{{ formatDate(rejSla.updated_at || rejSla.created_at) }}</span>
+                    <span class="meta-secondary">{{ formatRelative(rejSla.updated_at || rejSla.created_at) }}</span>
                 </div>
                 <div class="col status">
                      <div class="status-badge compact rejected" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
@@ -513,9 +557,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
-import { LayoutGrid, FileText, CheckCircle, Plus, ArrowRight, TrendingUp, PieChart, Clock, Star, Activity, XCircle } from 'lucide-vue-next'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { LayoutGrid, FileText, CheckCircle, Plus, ArrowRight, TrendingUp, PieChart, Clock, Star, Activity, XCircle, AlertCircle } from 'lucide-vue-next'
 import AnimatedNumber from '../../components/ui/AnimatedNumber.vue'
 import SlaDetailsDrawer from '../../components/documents/SlaDetailsDrawer.vue'
 import EditSlaModal from '../../components/documents/EditSlaModal.vue'
@@ -524,9 +568,24 @@ import { generateSlaPdf } from '../../utils/slaPdfGenerator'
 import axios from 'axios'
 import { API } from '@/utils/api'
 const route = useRoute()
+const router = useRouter()
 const isAdmin = computed(() => route.path.startsWith('/admin'))
 
 const activeTab = ref(route.query.tab || (isAdmin.value ? 'pending' : 'dashboard')) // default from query or role
+
+// Tab → URL sync. setTab() updates local state AND pushes ?tab=name into the URL
+// so tabs are linkable / shareable. The watcher reacts to EXTERNAL URL changes
+// (notification bell pushing /user/documents/sla?tab=rejected) — without it, the
+// notification redirect only changes the URL and leaves activeTab on its previous
+// value.
+const setTab = (name) => {
+  activeTab.value = name
+  router.replace({ query: { ...route.query, tab: name } }).catch(() => {})
+}
+watch(() => route.query.tab, (newTab) => {
+  const resolved = newTab || (isAdmin.value ? 'pending' : 'dashboard')
+  if (resolved !== activeTab.value) activeTab.value = resolved
+})
 const userProfile = ref({})
 
 const draftSlahs = ref([])
@@ -585,6 +644,36 @@ const formatDate = (d) => {
   if (!d) return '—'
   const dt = new Date(d)
   return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+
+const formatRelative = (d) => {
+  if (!d) return '—'
+  const ms = Date.now() - new Date(d).getTime()
+  const mins = Math.round(ms / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.round(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.round(hrs / 24)
+  if (days < 30) return `${days}d ago`
+  const months = Math.round(days / 30)
+  if (months < 12) return `${months}mo ago`
+  return `${Math.round(months / 12)}y ago`
+}
+
+const formatValue = (v) => {
+  const n = Number(v || 0)
+  if (n === 0) return '—'
+  if (n >= 10000000) return (n / 10000000).toFixed(2).replace(/\.00$/, '') + ' Cr'
+  if (n >= 100000) return (n / 100000).toFixed(2).replace(/\.00$/, '') + ' L'
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'K'
+  return n.toLocaleString('en-IN')
+}
+
+const validityDays = (sla) => {
+  if (!sla.end_date) return null
+  const ms = new Date(sla.end_date).getTime() - Date.now()
+  return Math.round(ms / 86400000)
 }
 
 // Real Stats computed from fetched data
@@ -853,6 +942,29 @@ onUnmounted(() => {
   color: #fff;
   font-family: 'Inter', -apple-system, sans-serif;
   overflow-y: auto;
+  overflow-x: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Contain all top-level sections so wide tables can't push the page wider */
+.nano-dashboard,
+.table-container-modern,
+.pm-table-modern {
+  max-width: 100%;
+  min-width: 0;
+}
+.pm-table-modern { overflow: hidden; }
+.pm-row-modern .col { min-width: 0; }
+.pm-row-modern .col .v-name,
+.pm-row-modern .col .v-ref,
+.pm-row-modern .col .meta-primary,
+.pm-row-modern .col .meta-secondary {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
 }
 
 /* Header & Tabs */
@@ -1580,5 +1692,521 @@ onUnmounted(() => {
 .glass-card {
   background: rgba(255,255,255,0.02);
   border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES — preserve gold/amber/orange palette + transparency
+   Targets all .nano-page descendants under [data-theme="light"].
+   ════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="light"] .nano-page {
+  color: #1a1410;
+}
+
+/* ── Ultra-modern nav-left tabs dock (light) ─────────────────────────── */
+[data-theme="light"] .nano-tabs-dock {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.55), rgba(254, 243, 199, 0.45));
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 8px 24px -8px rgba(180, 83, 9, 0.18),
+    0 2px 6px rgba(120, 53, 15, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="light"] .nano-tabs-dock::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg,
+      transparent 30%,
+      rgba(253, 224, 71, 0.22) 50%,
+      transparent 70%);
+  background-size: 250% 100%;
+  animation: tabsDockShimmer 6s ease-in-out infinite;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+@keyframes tabsDockShimmer {
+  0%, 100% { background-position: 250% 0; }
+  50% { background-position: -50% 0; }
+}
+
+[data-theme="light"] .n-tab {
+  color: rgba(120, 53, 15, 0.62);
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme="light"] .n-tab:hover {
+  color: #92400e;
+}
+
+[data-theme="light"] .n-tab.active {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fffaf0;
+  box-shadow:
+    0 4px 14px rgba(217, 119, 6, 0.38),
+    0 1px 0 rgba(255, 255, 255, 0.45) inset;
+}
+
+[data-theme="light"] .n-tab.active .tab-icon {
+  filter: drop-shadow(0 1px 2px rgba(120, 53, 15, 0.3));
+}
+
+[data-theme="light"] .tab-separator {
+  background: linear-gradient(180deg, transparent, rgba(180, 83, 9, 0.28), transparent);
+}
+
+/* ── Welcome / heading row ───────────────────────────────────────────── */
+[data-theme="light"] .dash-welcome h1 {
+  color: #1a1410;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="light"] .welcome-subtext {
+  color: #6b5840;
+}
+
+[data-theme="light"] .dash-welcome .highlight-text {
+  color: #b45309;
+}
+
+/* ── Top stats (Drafts / Approved / Active SLAs) ─────────────────────── */
+[data-theme="light"] .dts-val {
+  color: #1a1410;
+}
+
+[data-theme="light"] .dts-val.highlight {
+  color: #b45309;
+}
+
+[data-theme="light"] .dts-label {
+  color: #92400e;
+}
+
+/* ── Generic n-card (frosted cream) ──────────────────────────────────── */
+[data-theme="light"] .n-card {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.78), rgba(254, 243, 199, 0.55));
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid rgba(217, 119, 6, 0.15);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 12px 28px -10px rgba(180, 83, 9, 0.18);
+}
+
+[data-theme="light"] .n-card:hover {
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 20px 40px -8px rgba(180, 83, 9, 0.22);
+}
+
+[data-theme="light"] .n-card h3 {
+  color: #1a1410;
+}
+
+[data-theme="light"] .n-card p.sub-text {
+  color: #8a6d4a;
+}
+
+[data-theme="light"] .icon-btn-sm {
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.18);
+  color: #b45309;
+}
+
+[data-theme="light"] .icon-btn-sm:hover {
+  background: rgba(217, 119, 6, 0.16);
+  color: #92400e;
+}
+
+/* ── Hero profile card ───────────────────────────────────────────────── */
+[data-theme="light"] .hero-profile-card {
+  background: transparent;
+}
+
+[data-theme="light"] .hpc-image-wrapper {
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+}
+
+[data-theme="light"] .hpc-bg-image {
+  background: linear-gradient(135deg, #f59e0b, #b45309);
+  opacity: 0.85;
+}
+
+[data-theme="light"] .hpc-overlay-gradient {
+  background: linear-gradient(to bottom, transparent 30%, rgba(60, 30, 10, 0.78));
+}
+
+[data-theme="light"] .hpc-bottom-info h2,
+[data-theme="light"] .hpc-bottom-info p {
+  color: #fffaf0;
+  text-shadow: 0 1px 4px rgba(60, 30, 10, 0.45);
+}
+
+[data-theme="light"] .hpc-action-area {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.7), rgba(254, 243, 199, 0.6));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+[data-theme="light"] .hpc-action-area p {
+  color: #6b5840;
+}
+
+[data-theme="light"] .n-btn-outline {
+  background: rgba(217, 119, 6, 0.08);
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+[data-theme="light"] .n-btn-outline:hover.glow-hover {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: #d97706;
+  color: #78350f;
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.25);
+}
+
+[data-theme="light"] .n-btn-primary {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a1410;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="light"] .n-btn-primary:hover {
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.45);
+}
+
+/* ── Chart card (Generation Activity) ────────────────────────────────── */
+[data-theme="light"] .vbc-bar-bg {
+  background: rgba(217, 119, 6, 0.12);
+}
+
+[data-theme="light"] .vbc-label {
+  color: #8a6d4a;
+}
+
+[data-theme="light"] .highlight-label {
+  color: #b45309;
+  font-weight: 700;
+}
+
+/* ── Radial card (Approval Rate) ─────────────────────────────────────── */
+[data-theme="light"] .progress-ring .pr-bg {
+  stroke: rgba(217, 119, 6, 0.12);
+}
+
+[data-theme="light"] .pr-val {
+  color: #1a1410;
+}
+
+[data-theme="light"] .pr-lbl {
+  color: #92400e;
+}
+
+/* ── List card (Recent Drafts) ───────────────────────────────────────── */
+[data-theme="light"] .rl-item:hover {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+[data-theme="light"] .rl-info h4 {
+  color: #1a1410;
+}
+
+[data-theme="light"] .rl-info span {
+  color: #8a6d4a;
+}
+
+/* ── Timeline (SLA Timeline) ─────────────────────────────────────────── */
+[data-theme="light"] .timeline-card {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.78), rgba(254, 243, 199, 0.55));
+}
+
+[data-theme="light"] .tl-header {
+  border-bottom: 1px solid rgba(217, 119, 6, 0.15);
+}
+
+[data-theme="light"] .tl-header h3 {
+  color: #1a1410;
+}
+
+[data-theme="light"] .tl-month {
+  color: #8a6d4a;
+}
+
+[data-theme="light"] .tl-month:hover {
+  color: #92400e;
+}
+
+[data-theme="light"] .tl-month.active {
+  color: #b45309;
+}
+
+[data-theme="light"] .tlg-days {
+  border-bottom: 1px solid rgba(217, 119, 6, 0.15);
+}
+
+[data-theme="light"] .tlg-day-col {
+  color: #8a6d4a;
+}
+
+[data-theme="light"] .tlg-time-label {
+  color: rgba(120, 53, 15, 0.55);
+}
+
+[data-theme="light"] .tlg-cell {
+  border-left: 1px dashed rgba(180, 83, 9, 0.12);
+  border-top: 1px dashed rgba(180, 83, 9, 0.08);
+}
+
+[data-theme="light"] .tlg-cell:last-child {
+  border-right: 1px dashed rgba(180, 83, 9, 0.12);
+}
+
+/* Event pills — inline styles set background/border/color from JS.
+   Override them so both "dark" and "light" theme variants stay legible. */
+[data-theme="light"] .tl-event-pill {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.92), rgba(254, 243, 199, 0.85)) !important;
+  border: 1px solid rgba(217, 119, 6, 0.28) !important;
+  color: #1a1410 !important;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 10px 24px -6px rgba(180, 83, 9, 0.22);
+}
+
+[data-theme="light"] .tl-event-pill .tle-title {
+  color: #1a1410 !important;
+}
+
+[data-theme="light"] .tl-event-pill .tle-sub {
+  color: #6b5840 !important;
+}
+
+[data-theme="light"] .tle-av {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fffaf0;
+  border-color: #fffaf0;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.35);
+}
+
+[data-theme="light"] .tle-av.dark {
+  background: #1a1410;
+  color: #fbbf24;
+  border-color: #fbbf24;
+}
+
+/* ── Tables (Draft / Pending / Approved / Rejected lists) ────────────── */
+[data-theme="light"] .title-group h3 {
+  color: #1a1410;
+}
+
+[data-theme="light"] .title-group p {
+  color: #6b5840;
+}
+
+[data-theme="light"] .pm-table-modern.glass-card {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.78), rgba(254, 243, 199, 0.55));
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+  border: 1px solid rgba(217, 119, 6, 0.15);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 12px 28px -10px rgba(180, 83, 9, 0.15);
+}
+
+[data-theme="light"] .pm-row-modern {
+  border-bottom: 1px solid rgba(217, 119, 6, 0.10);
+}
+
+[data-theme="light"] .pm-row-modern.header {
+  color: #92400e;
+  border-bottom: 1px solid rgba(217, 119, 6, 0.22);
+}
+
+[data-theme="light"] .pm-row-modern.item {
+  background: rgba(255, 250, 240, 0.35);
+  color: #1a1410;
+}
+
+[data-theme="light"] .pm-row-modern.item:hover {
+  background: rgba(245, 158, 11, 0.10);
+}
+
+[data-theme="light"] .v-name {
+  color: #1a1410 !important;
+}
+
+[data-theme="light"] .v-ref,
+[data-theme="light"] .col.client .v-name {
+  color: #6b5840 !important;
+}
+
+[data-theme="light"] .col.date {
+  color: #8a6d4a !important;
+}
+
+[data-theme="light"] .col.category .v-ref,
+[data-theme="light"] .pm-row-modern .pill {
+  background: rgba(217, 119, 6, 0.10) !important;
+  color: #92400e !important;
+}
+
+[data-theme="light"] .status-badge.draft {
+  background: rgba(120, 53, 15, 0.10);
+  border-color: rgba(120, 53, 15, 0.22);
+  color: #78350f;
+}
+
+[data-theme="light"] .empty-state {
+  color: #8a6d4a;
+}
+
+[data-theme="light"] .empty-state h4 {
+  color: #1a1410;
+}
+
+[data-theme="light"] .empty-state p {
+  color: #6b5840;
+}
+
+/* ── Search box — fully transparent on cream, only gold outline + text ── */
+[data-theme="light"] .search-box {
+  background: transparent;
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  box-shadow: none;
+}
+
+[data-theme="light"] .search-box svg {
+  color: #b45309;
+}
+
+[data-theme="light"] .search-box input {
+  background: transparent;
+  color: #1a1410;
+}
+
+[data-theme="light"] .search-box input::placeholder {
+  color: rgba(120, 53, 15, 0.5);
+}
+
+[data-theme="light"] .search-box:focus-within {
+  border-color: #d97706;
+  background: transparent;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+
+/* ── Approved status badge — readable emerald on cream ── */
+[data-theme="light"] .status-badge.approved,
+[data-theme="light"] .pm-row-modern .status-badge.compact.approved {
+  background: rgba(34, 134, 58, 0.16) !important;
+  color: #15803d !important;
+  border-color: rgba(34, 134, 58, 0.38) !important;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) inset;
+}
+
+[data-theme="light"] .status-badge.pending,
+[data-theme="light"] .pm-row-modern .status-badge.compact.pending {
+  background: rgba(217, 119, 6, 0.16) !important;
+  color: #b45309 !important;
+  border-color: rgba(217, 119, 6, 0.40) !important;
+}
+
+[data-theme="light"] .status-badge.rejected,
+[data-theme="light"] .pm-row-modern .status-badge.compact.rejected {
+  background: rgba(185, 28, 28, 0.14) !important;
+  color: #b91c1c !important;
+  border-color: rgba(185, 28, 28, 0.36) !important;
+}
+
+/* ── Value cell + meta cell (added columns) ── */
+.col.value {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-family: 'SF Mono', monospace;
+  font-weight: 600;
+  font-size: 13px;
+  color: #fbbf24;
+}
+.col.value .currency-tag {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+.col.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.col.meta .meta-primary {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+.col.meta .meta-secondary {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+[data-theme="light"] .col.value { color: #b45309; }
+[data-theme="light"] .col.value .currency-tag { color: #8a6d4a; }
+[data-theme="light"] .col.meta .meta-primary { color: #1a1410; }
+[data-theme="light"] .col.meta .meta-secondary { color: #92400e; }
+
+/* ── Reason / feedback pill on rejected rows ── */
+.col.reason-cell {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+.reason-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11px;
+  line-height: 1.2;
+  max-width: 100%;
+  min-width: 0;
+}
+.reason-pill svg {
+  flex-shrink: 0;
+  color: #f87171;
+}
+.reason-pill span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  max-width: 100%;
+}
+
+[data-theme="light"] .reason-pill {
+  background: rgba(185, 28, 28, 0.10);
+  border: 1px solid rgba(185, 28, 28, 0.28);
+  color: #7f1d1d;
+}
+[data-theme="light"] .reason-pill svg {
+  color: #b91c1c;
+}
+
+/* Column header alignment for new columns */
+.pm-row-modern.header .col.value-col,
+.pm-row-modern.header .col.validity-col,
+.pm-row-modern.header .col.reason-col {
+  text-align: left;
 }
 </style>

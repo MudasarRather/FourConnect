@@ -155,4 +155,40 @@ const onClose = () => emit('close')
   border-top: 1px solid var(--hr-border);
   background: rgba(14, 14, 16, 0.85);
 }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+[data-theme="light"] .rec-drawer-header { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .aurora-bg {
+  background:
+    radial-gradient(80% 100% at 0% 0%, rgba(251, 191, 36, 0.32), transparent 60%),
+    radial-gradient(60% 80% at 100% 30%, rgba(251, 146, 60, 0.28), transparent 60%);
+}
+[data-theme="light"] .close-btn {
+  background: rgba(255, 250, 240, 0.72);
+  border-color: rgba(40, 25, 10, 0.16);
+  color: #6b5840;
+}
+[data-theme="light"] .close-btn:hover {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+[data-theme="light"] .title-icon {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.42);
+  color: #b45309;
+}
+[data-theme="light"] .title-block h2 { color: #1a1410; }
+[data-theme="light"] .title-block p { color: #6b5840; }
+[data-theme="light"] .step-tag {
+  background: rgba(217, 119, 6, 0.16);
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #b45309;
+}
+[data-theme="light"] .rec-drawer-body::-webkit-scrollbar-thumb {
+  background: rgba(40, 25, 10, 0.16);
+}
+[data-theme="light"] .rec-drawer-footer {
+  background: rgba(255, 244, 220, 0.62);
+  border-top-color: rgba(40, 25, 10, 0.10);
+}
 </style>

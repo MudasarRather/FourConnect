@@ -507,4 +507,24 @@ onMounted(() => {
 [data-theme="light"] .day-btn.other-month {
   color: rgba(26, 20, 16, 0.30);
 }
+
+/* Disabled state — keep cream surface so text + icon stay legible */
+[data-theme="light"] .date-picker-wrapper.is-disabled {
+  opacity: 1;
+}
+[data-theme="light"] .date-picker-wrapper.is-disabled .date-input {
+  background: rgba(40, 25, 10, 0.035);
+  border-color: rgba(40, 25, 10, 0.10);
+  border-style: dashed;
+}
+[data-theme="light"] .date-picker-wrapper.is-disabled .date-display,
+[data-theme="light"] .date-picker-wrapper.is-disabled .date-display.placeholder {
+  color: rgba(26, 20, 16, 0.42);
+}
+[data-theme="light"] .date-picker-wrapper.is-disabled .date-icon {
+  color: rgba(146, 64, 14, 0.55);
+}
+[data-theme="light"] .date-picker-wrapper.is-disabled .chevron {
+  color: rgba(146, 64, 14, 0.40);
+}
 </style>

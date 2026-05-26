@@ -58,6 +58,14 @@
               </div>
             </div>
             <button class="onb-btn-ghost mini" @click="assignTo(p)">Assign</button>
+            <button
+              class="prog-del"
+              type="button"
+              :title="`Delete ${p.name}`"
+              @click="openRemoveProgram(p)"
+            >
+              <Trash2 :size="13" />
+            </button>
           </Motion>
           <li v-if="!programs.length" class="tr-empty">No programs defined.</li>
         </ul>
@@ -117,6 +125,82 @@
       </template>
     </OnbModal>
 
+    <!-- Program in use — must clear assignees before delete -->
+    <OnbModal
+      :open="!!blockedProgram"
+      title="Program is in use"
+      :subtitle="blockedProgram ? `${blockedList.length} assignee${blockedList.length === 1 ? '' : 's'} still attached to ${blockedProgram.name}.` : ''"
+      :icon="AlertTriangle"
+      :width="560"
+      @close="closeBlocked"
+    >
+      <div class="tr-blocked">
+        <div class="tr-blocked-note">
+          <ShieldAlert :size="15" />
+          <span>
+            A program can't be deleted while joiners are assigned to it — that would orphan their
+            training records. Remove the assignees below first; deletion continues automatically once the list is clear.
+          </span>
+        </div>
+        <ul class="tr-blocked-list">
+          <Motion v-for="(a, i) in blockedList" :key="a.id" as="li" class="tr-blocked-row"
+            :initial="{ opacity: 0, x: -6 }" :animate="{ opacity: 1, x: 0 }"
+            :transition="{ duration: 0.3, delay: 0.04 * i, ease: [0.22, 1, 0.36, 1] }"
+          >
+            <span class="tr-blocked-avatar"><User :size="13" /></span>
+            <div class="tr-blocked-main">
+              <div class="tr-blocked-name">{{ a.employee_name || 'Unknown assignee' }}</div>
+              <div class="tr-blocked-meta">
+                <span class="assign-status" :data-status="a.status">{{ a.status }}</span>
+                <span v-if="a.due_date">due {{ formatDate(a.due_date) }}</span>
+              </div>
+            </div>
+            <Motion as="button" type="button" class="tr-blocked-remove"
+              :disabled="removingAssignId === a.id || clearingAll"
+              :whileHover="(removingAssignId === a.id || clearingAll) ? {} : { y: -1 }"
+              :whileTap="(removingAssignId === a.id || clearingAll) ? {} : { scale: 0.96 }"
+              @click="removeOneAssignment(a)"
+            >
+              <Loader2 v-if="removingAssignId === a.id" :size="12" class="tr-spin" />
+              <X v-else :size="12" />
+              Remove
+            </Motion>
+          </Motion>
+        </ul>
+      </div>
+      <template #footer>
+        <button class="onb-btn-ghost" :disabled="clearingAll" @click="closeBlocked">Cancel</button>
+        <Motion as="button" type="button" class="onb-btn-danger tr-clear-all"
+          :disabled="clearingAll || !blockedList.length"
+          :whileHover="(clearingAll || !blockedList.length) ? {} : { y: -1, scale: 1.02 }"
+          :whileTap="(clearingAll || !blockedList.length) ? {} : { scale: 0.97 }"
+          @click="removeAllAssignments"
+        >
+          <Loader2 v-if="clearingAll" :size="13" class="tr-spin" />
+          <Trash2 v-else :size="13" />
+          {{ clearingAll ? 'Removing…' : 'Remove all & continue' }}
+        </Motion>
+      </template>
+    </OnbModal>
+
+    <!-- Delete program modal -->
+    <OnbDeleteModal
+      :open="!!pendingDelete"
+      title="Delete training program?"
+      :subtitle="pendingDelete ? `Permanently remove ${pendingDelete.name} from the catalog.` : ''"
+      :target-label="pendingDelete?.name"
+      :target-meta="pendingDelete ? `${pendingDelete.training_type?.replace('_', ' ') || ''} · ${pendingDelete.duration_hours || 0}h` : ''"
+      :target-tag="pendingDelete?.is_mandatory_for_new_joiners ? 'MANDATORY' : 'OPTIONAL'"
+      :target-icon="GraduationCap"
+      :presets="PROGRAM_PRESETS"
+      warning="No assignees remain. The program will be permanently removed from the catalog."
+      confirm-label="Delete program"
+      submitting-label="Deleting…"
+      :submitting="removingProgram"
+      @close="pendingDelete = null"
+      @confirm="confirmRemoveProgram"
+    />
+
     <!-- Assign modal -->
     <OnbModal :open="!!assignProgram" :title="`Assign ${assignProgram?.name || ''}`" subtitle="Pick a joiner and set a due date" :icon="GraduationCap" :width="520" @close="assignProgram = null">
       <div class="form-stack">
@@ -135,14 +219,16 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Motion } from 'motion-v'
-import { RefreshCw, Plus, GraduationCap, User, Calendar, Clock } from 'lucide-vue-next'
+import { RefreshCw, Plus, GraduationCap, User, Calendar, Clock, Trash2, AlertTriangle, ShieldAlert, Loader2, X } from 'lucide-vue-next'
 import OnbProcessPicker from '../components/OnbProcessPicker.vue'
 import OnbModal from '../components/OnbModal.vue'
+import OnbDeleteModal from '../components/OnbDeleteModal.vue'
 import OnbField from '../components/OnbField.vue'
 import { fetchProcessDetail } from '../composables/useOnboarding'
 import {
-  fetchTrainingPrograms, createTrainingProgram, fetchTrainingAssignments,
-  createTrainingAssignment, patchTrainingAssignment,
+  fetchTrainingPrograms, createTrainingProgram, deleteTrainingProgram,
+  fetchTrainingAssignments, createTrainingAssignment, patchTrainingAssignment,
+  deleteTrainingAssignment,
 } from '../composables/useOnbMisc'
 import { useToast } from 'vue-toastification'
 
@@ -224,6 +310,103 @@ const markComplete = async (a) => {
   } catch (e) { toast.error(e?.response?.data?.detail || 'Update failed') }
 }
 
+// Delete-program modal flow
+const PROGRAM_PRESETS = [
+  'Program retired — superseded by a newer version',
+  'Created by mistake / duplicate entry',
+  'No longer mandatory after policy change',
+  'Vendor or materials are no longer available',
+]
+const pendingDelete = ref(null)
+const removingProgram = ref(false)
+
+// "Program in use" gate — assignees must be cleared before a program can be deleted
+const blockedProgram = ref(null)
+const blockedList = ref([])
+const removingAssignId = ref(null)
+const clearingAll = ref(false)
+
+const programAssignments = (p) =>
+  assignments.value.filter(a => String(a.program_id) === String(p.id))
+
+const openRemoveProgram = (p) => {
+  const linked = programAssignments(p)
+  if (linked.length) {
+    blockedProgram.value = p
+    blockedList.value = linked
+  } else {
+    pendingDelete.value = p
+  }
+}
+
+const closeBlocked = () => {
+  if (clearingAll.value || removingAssignId.value) return
+  blockedProgram.value = null
+  blockedList.value = []
+}
+
+// Once the assignee list is empty, hand off to the delete-reason modal
+const advanceToDelete = () => {
+  const prog = blockedProgram.value
+  blockedProgram.value = null
+  blockedList.value = []
+  pendingDelete.value = prog
+}
+
+const removeOneAssignment = async (a) => {
+  removingAssignId.value = a.id
+  try {
+    await deleteTrainingAssignment(a.id)
+    assignments.value = assignments.value.filter(x => x.id !== a.id)
+    blockedList.value = blockedList.value.filter(x => x.id !== a.id)
+    toast.success(`${a.employee_name || 'Assignee'} removed from ${a.program_name}`)
+    if (!blockedList.value.length) advanceToDelete()
+  } catch (e) {
+    toast.error(e?.response?.data?.detail || 'Could not remove assignment')
+  } finally {
+    removingAssignId.value = null
+  }
+}
+
+const removeAllAssignments = async () => {
+  if (!blockedList.value.length) return
+  clearingAll.value = true
+  const targets = [...blockedList.value]
+  try {
+    for (const a of targets) {
+      await deleteTrainingAssignment(a.id)
+    }
+    const removed = new Set(targets.map(a => a.id))
+    assignments.value = assignments.value.filter(x => !removed.has(x.id))
+    blockedList.value = []
+    toast.success('All assignees removed')
+    advanceToDelete()
+  } catch (e) {
+    toast.error(e?.response?.data?.detail || 'Could not remove assignments')
+    await reload()
+    // Refresh the blocked list from the reloaded assignments in case some succeeded
+    if (blockedProgram.value) blockedList.value = programAssignments(blockedProgram.value)
+  } finally {
+    clearingAll.value = false
+  }
+}
+
+const confirmRemoveProgram = async (reason) => {
+  if (!pendingDelete.value) return
+  removingProgram.value = true
+  try {
+    await deleteTrainingProgram(pendingDelete.value.id)
+    programs.value = programs.value.filter(x => x.id !== pendingDelete.value.id)
+    pendingDelete.value = null
+    await reload()
+    toast.success(reason ? `Program deleted — ${reason.split('\n')[0]}` : 'Program deleted')
+  } catch (e) {
+    toast.error(e?.response?.data?.detail || 'Could not delete program')
+  } finally {
+    removingProgram.value = false
+  }
+}
+
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''
 </script>
 
@@ -257,8 +440,50 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-
 .tr-list { list-style: none; margin: 0; padding: 0; max-height: 520px; overflow-y: auto; }
 .tr-list::-webkit-scrollbar { width: 6px; } .tr-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 4px; }
 
-.prog-row, .assign-row { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-top: 1px solid var(--hr-border); }
+.prog-row, .assign-row { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-top: 1px solid var(--hr-border); }
 .prog-row:first-child, .assign-row:first-child { border-top: 0; }
+.prog-row { transition: background .18s var(--hr-spring); }
+.prog-row:hover { background: rgba(251, 191, 36, 0.04); }
+
+/* Program delete affordance — sits at the trailing edge of the row,
+   reveals on hover. Mirrors .ses-del + .ac-card-del language. */
+.prog-del {
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(248, 113, 113, 0.10);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  border-radius: 8px;
+  color: #fca5a5;
+  cursor: pointer;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity .18s var(--hr-spring),
+              background .18s var(--hr-spring),
+              border-color .18s var(--hr-spring),
+              color .18s var(--hr-spring),
+              transform .15s var(--hr-spring);
+}
+.prog-row:hover .prog-del { opacity: 0.95; }
+.prog-del:hover {
+  opacity: 1;
+  background: rgba(248, 113, 113, 0.22);
+  border-color: rgba(248, 113, 113, 0.60);
+  color: #f87171;
+  transform: rotate(-8deg) scale(1.08);
+}
+.prog-del:active { transform: scale(0.92); }
+[data-theme="light"] .prog-row:hover { background: rgba(217, 119, 6, 0.06); }
+[data-theme="light"] .prog-del {
+  background: rgba(220, 38, 38, 0.10);
+  border-color: rgba(220, 38, 38, 0.30);
+  color: #b91c1c;
+}
+[data-theme="light"] .prog-del:hover {
+  background: rgba(220, 38, 38, 0.22);
+  border-color: rgba(220, 38, 38, 0.55);
+  color: #7f1d1d;
+}
+
 .prog-type-pill {
   font-size: 9.5px; font-weight: 700; letter-spacing: 0.5px;
   padding: 3px 9px; border-radius: 6px;
@@ -283,4 +508,80 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-
 
 .form-stack { display: flex; flex-direction: column; gap: 14px; }
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ── "Program in use" blocking modal ── */
+.tr-blocked { display: flex; flex-direction: column; gap: 16px; }
+.tr-blocked-note {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: 12px;
+  background: rgba(251, 191, 36, 0.06);
+  border: 1px dashed rgba(251, 191, 36, 0.28);
+  font-size: 12px; line-height: 1.55; color: var(--hr-text-secondary);
+}
+.tr-blocked-note svg { color: var(--hr-accent-gold); flex-shrink: 0; margin-top: 1px; }
+
+.tr-blocked-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 8px;
+  max-height: 320px; overflow-y: auto;
+}
+.tr-blocked-list::-webkit-scrollbar { width: 6px; }
+.tr-blocked-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+.tr-blocked-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.tr-blocked-avatar {
+  width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--hr-accent-gold-soft); color: var(--hr-accent-gold);
+}
+.tr-blocked-main { flex: 1; min-width: 0; }
+.tr-blocked-name { font-size: 13px; font-weight: 700; color: var(--hr-text); }
+.tr-blocked-meta {
+  font-size: 10.5px; color: var(--hr-text-muted);
+  display: flex; gap: 8px; align-items: center; margin-top: 3px; flex-wrap: wrap;
+}
+.tr-blocked-remove {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  padding: 6px 12px; font-size: 11.5px; font-weight: 700;
+  border-radius: 9px; cursor: pointer;
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.32);
+  color: #fca5a5;
+  transition: background .18s var(--hr-spring), border-color .18s var(--hr-spring), color .18s var(--hr-spring);
+}
+.tr-blocked-remove:hover:not(:disabled) {
+  background: rgba(248, 113, 113, 0.22);
+  border-color: rgba(248, 113, 113, 0.6);
+  color: #f87171;
+}
+.tr-blocked-remove:disabled { opacity: 0.55; cursor: not-allowed; }
+.tr-clear-all { display: inline-flex; align-items: center; gap: 6px; }
+.tr-spin { animation: tr-spin 0.8s linear infinite; }
+@keyframes tr-spin { to { transform: rotate(360deg); } }
+
+/* ── Light theme overrides ── */
+[data-theme="light"] .tr-blocked-note {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: var(--hr-text-secondary);
+}
+[data-theme="light"] .tr-blocked-note svg { color: #b45309; }
+[data-theme="light"] .tr-blocked-row {
+  background: rgba(255, 250, 240, 0.7);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .tr-blocked-remove {
+  background: rgba(220, 38, 38, 0.10);
+  border-color: rgba(220, 38, 38, 0.30);
+  color: #b91c1c;
+}
+[data-theme="light"] .tr-blocked-remove:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.20);
+  border-color: rgba(220, 38, 38, 0.55);
+  color: #7f1d1d;
+}
 </style>

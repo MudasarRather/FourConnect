@@ -788,3 +788,624 @@
 [data-theme="light"] .onb-cal-tip-list::-webkit-scrollbar-thumb {
   background: rgba(217, 119, 6, 0.30);
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   ONBOARDING — Section-scoped light-theme overrides
+   ─────────────────────────────────────────────────────────────────────
+   These globals re-skin section-specific scoped classes (`.bento-card`,
+   `.hero-pulse`, `.lane`, `.cohort-card`, `.task-row`, `.cal-cell`,
+   `.chk-rail`, `.rail-*`, `.file-card`, `.badge-card-inner`, `.kt-*`,
+   `.rp-*`, …) for cream backgrounds. Uses `:root[data-theme="light"]`
+   (spec 0,2,1) to win against Vue scoped rules `.x[data-v-xxx]` (0,2,0).
+   Preserves the gold/amber/orange palette; only neutrals are re-cast.
+   Semantic status hues (verified, rejected, etc.) get cream-safe shades.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ─────────── DASHBOARD — bento + hero-pulse + lanes + tasks + cal ─────────── */
+:root[data-theme="light"] .hero-pulse[data-tone="gold"] {
+  background:
+    radial-gradient(100% 100% at 100% 0%, rgba(245, 158, 11, 0.20), transparent 65%),
+    radial-gradient(60% 80% at 0% 100%, rgba(147, 51, 234, 0.08), transparent 70%),
+    linear-gradient(180deg, rgba(255, 250, 240, 0.88), rgba(252, 240, 222, 0.92));
+  border-color: rgba(217, 119, 6, 0.30);
+}
+:root[data-theme="light"] .hp-foot-stat {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: var(--hr-text-secondary);
+}
+:root[data-theme="light"] .hp-trend::before {
+  background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.30), transparent);
+}
+
+:root[data-theme="light"] .prob-bar,
+:root[data-theme="light"] .dept-bar,
+:root[data-theme="light"] .cohort-prog-bar {
+  background: rgba(40, 25, 10, 0.08);
+  box-shadow: inset 0 1px 0 rgba(40, 25, 10, 0.04);
+}
+
+:root[data-theme="light"] .today-date {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.28);
+  color: #b45309;
+}
+
+:root[data-theme="light"] .lane {
+  background: rgba(255, 250, 240, 0.72);
+  border-color: rgba(40, 25, 10, 0.08);
+}
+:root[data-theme="light"] .lane-count {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.28);
+}
+:root[data-theme="light"] .lane-empty {
+  color: var(--hr-text-muted);
+  border-color: rgba(217, 119, 6, 0.22);
+}
+
+:root[data-theme="light"] .cohort-card {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.08);
+}
+:root[data-theme="light"] .cohort-card:hover {
+  background: rgba(255, 246, 226, 0.95);
+  border-color: rgba(217, 119, 6, 0.35);
+}
+:root[data-theme="light"] .cohort-stage {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.28);
+}
+
+:root[data-theme="light"] .task-row {
+  background: rgba(255, 250, 240, 0.70);
+  border-color: rgba(40, 25, 10, 0.06);
+}
+:root[data-theme="light"] .task-row:hover {
+  border-color: rgba(217, 119, 6, 0.32);
+}
+:root[data-theme="light"] .task-row.is-breach {
+  background: rgba(220, 38, 38, 0.06);
+  border-color: rgba(220, 38, 38, 0.30);
+}
+:root[data-theme="light"] .task-pri {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--hr-text-secondary);
+}
+:root[data-theme="light"] .task-pri[data-pri="HIGH"] {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+  border: 1px solid rgba(234, 88, 12, 0.32);
+}
+:root[data-theme="light"] .task-pri[data-pri="URGENT"] {
+  background: rgba(220, 38, 38, 0.14);
+  color: #b91c1c;
+  border: 1px solid rgba(220, 38, 38, 0.36);
+}
+:root[data-theme="light"] .task-status {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.30);
+}
+:root[data-theme="light"] .task-status[data-status="DONE"] {
+  background: rgba(4, 120, 87, 0.14);
+  color: #047857;
+  border-color: rgba(4, 120, 87, 0.32);
+}
+:root[data-theme="light"] .task-status[data-status="BLOCKED"] {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.32);
+}
+:root[data-theme="light"] .task-list::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.28);
+}
+
+/* Calendar cells */
+:root[data-theme="light"] .cal-cell {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(40, 25, 10, 0.10);
+  color: var(--hr-text-secondary);
+}
+:root[data-theme="light"] .cal-cell:hover {
+  border-color: rgba(217, 119, 6, 0.40);
+}
+:root[data-theme="light"] .cal-cell.has-joiners {
+  background: rgba(217, 119, 6, 0.16);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #b45309;
+}
+:root[data-theme="light"] .cal-cell.is-other {
+  background: transparent;
+  border-color: transparent;
+  color: rgba(40, 25, 10, 0.30);
+}
+:root[data-theme="light"] .cal-dot {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+}
+
+/* Cohort scrollbar — warm amber on cream */
+:root[data-theme="light"] .lanes-scroll {
+  scrollbar-color: rgba(217, 119, 6, 0.45) transparent;
+}
+:root[data-theme="light"] .lanes-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, rgba(217, 119, 6, 0.55), rgba(234, 88, 12, 0.55));
+}
+:root[data-theme="light"] .lanes-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #d97706, #c2410c);
+}
+
+/* ─────────── CHECKLIST — strip + rails + status pills ─────────── */
+:root[data-theme="light"] .strip-bar {
+  background: rgba(40, 25, 10, 0.08);
+  box-shadow: inset 0 1px 0 rgba(40, 25, 10, 0.06);
+}
+:root[data-theme="light"] .strip-cat {
+  background: rgba(255, 250, 240, 0.72);
+  border-color: rgba(40, 25, 10, 0.08);
+}
+:root[data-theme="light"] .strip-cat:hover {
+  background: rgba(255, 246, 226, 0.92);
+}
+
+:root[data-theme="light"] .rail-side {
+  border-right-color: rgba(40, 25, 10, 0.08);
+}
+:root[data-theme="light"] .side-ring-inner {
+  background: rgba(255, 250, 240, 0.96);
+  color: var(--hr-text);
+}
+:root[data-theme="light"] .rail-item::after {
+  background: linear-gradient(90deg, transparent, rgba(40, 25, 10, 0.10), transparent);
+}
+:root[data-theme="light"] .rail-item:hover {
+  background: rgba(217, 119, 6, 0.06);
+}
+:root[data-theme="light"] .rail-item.is-blocked {
+  background: rgba(220, 38, 38, 0.06);
+}
+:root[data-theme="light"] .rail-check {
+  border-color: rgba(40, 25, 10, 0.22);
+}
+:root[data-theme="light"] .rail-must {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.30);
+}
+:root[data-theme="light"] .rail-status {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--hr-text-secondary);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+:root[data-theme="light"] .rail-status[data-status="COMPLETED"] {
+  background: rgba(4, 120, 87, 0.14);
+  color: #047857;
+  border-color: rgba(4, 120, 87, 0.32);
+}
+:root[data-theme="light"] .rail-status[data-status="BLOCKED"] {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.32);
+}
+:root[data-theme="light"] .rail-status[data-status="IN_PROGRESS"] {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+  border-color: rgba(234, 88, 12, 0.32);
+}
+
+@media (max-width: 1100px) {
+  :root[data-theme="light"] .rail-side {
+    border-right: 0;
+    border-bottom: 1px solid rgba(40, 25, 10, 0.08);
+  }
+}
+
+/* ─────────── DOCUMENTS — file-card + flag-state + drop-zone ─────────── */
+:root[data-theme="light"] .doc-tile {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.08);
+}
+:root[data-theme="light"] .doc-tile[data-status="VERIFIED"] {
+  border-color: rgba(4, 120, 87, 0.40);
+}
+:root[data-theme="light"] .doc-tile[data-status="REJECTED"] {
+  border-color: rgba(220, 38, 38, 0.40);
+}
+:root[data-theme="light"] .tile-edge[data-status="VERIFIED"] {
+  background: linear-gradient(90deg, #047857, #0d9488);
+}
+:root[data-theme="light"] .tile-edge[data-status="REJECTED"] {
+  background: linear-gradient(90deg, #b91c1c, #dc2626);
+}
+:root[data-theme="light"] .tile-edge[data-status="UPLOADED"] {
+  background: linear-gradient(90deg, #ea580c, #c2410c);
+}
+
+:root[data-theme="light"] .flag-state {
+  background: rgba(40, 25, 10, 0.06);
+  color: var(--hr-text-secondary);
+}
+:root[data-theme="light"] .flag-state[data-status="VERIFIED"] {
+  background: rgba(4, 120, 87, 0.14);
+  color: #047857;
+}
+:root[data-theme="light"] .flag-state[data-status="UPLOADED"] {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+}
+:root[data-theme="light"] .flag-state[data-status="REJECTED"] {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
+
+:root[data-theme="light"] .file-card {
+  background: rgba(255, 250, 240, 0.75);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+:root[data-theme="light"] .file-card:hover {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.32);
+}
+
+:root[data-theme="light"] .drop-zone {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.30);
+}
+:root[data-theme="light"] .drop-zone:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.50);
+}
+
+:root[data-theme="light"] .verify-line { color: #047857; }
+:root[data-theme="light"] .reject-line { color: #b91c1c; }
+
+/* Identity badge card — cream variant of the "issued" emerald ring */
+:root[data-theme="light"] .badge-card-inner {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.96), rgba(252, 240, 215, 0.96));
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow:
+    0 36px 70px -28px rgba(217, 119, 6, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 0 0 1px rgba(217, 119, 6, 0.14);
+}
+:root[data-theme="light"] .badge-card-inner.is-issued {
+  background: linear-gradient(180deg, rgba(240, 253, 244, 0.96), rgba(220, 252, 231, 0.92));
+  border-color: rgba(4, 120, 87, 0.40);
+  box-shadow:
+    0 36px 70px -28px rgba(4, 120, 87, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 0 0 1px rgba(4, 120, 87, 0.16);
+}
+:root[data-theme="light"] .badge-card-inner.is-issued::after {
+  background: linear-gradient(120deg, transparent, rgba(4, 120, 87, 0.70), transparent);
+}
+
+/* ─────────── WELCOME KIT — kt-step + kt-card + kt-times + kt-pill ─────────── */
+:root[data-theme="light"] .kt-step-mark {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(40, 25, 10, 0.18);
+  color: var(--hr-text-secondary);
+}
+:root[data-theme="light"] .kt-step.is-active .kt-step-mark {
+  background: linear-gradient(135deg, #d97706, #ea580c);
+  border-color: transparent;
+  color: #fff;
+}
+:root[data-theme="light"] .kt-step-label {
+  color: var(--hr-text-muted);
+}
+:root[data-theme="light"] .kt-step.is-active .kt-step-label {
+  color: var(--hr-text);
+}
+:root[data-theme="light"] .kt-step.is-current .kt-step-label {
+  color: #b45309;
+}
+:root[data-theme="light"] .kt-step-line {
+  background: linear-gradient(90deg, rgba(217, 119, 6, 0.42), rgba(40, 25, 10, 0.10));
+}
+
+:root[data-theme="light"] .kt-card-head {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+
+:root[data-theme="light"] .kt-times li {
+  background: rgba(255, 250, 240, 0.82);
+  border-color: rgba(40, 25, 10, 0.08);
+  color: var(--hr-text-secondary);
+}
+
+:root[data-theme="light"] .kt-item:hover {
+  background: rgba(217, 119, 6, 0.08);
+}
+:root[data-theme="light"] .kt-item-check {
+  background: rgba(255, 250, 240, 0.70);
+  border-color: rgba(40, 25, 10, 0.20);
+  color: #fff;
+}
+:root[data-theme="light"] .kt-item-check:hover {
+  border-color: #d97706;
+}
+:root[data-theme="light"] .kt-item-check.is-on {
+  background: linear-gradient(135deg, #d97706, #ea580c);
+  border-color: transparent;
+  box-shadow: 0 6px 16px -4px rgba(217, 119, 6, 0.55);
+}
+
+:root[data-theme="light"] .kt-pill {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+:root[data-theme="light"] .kt-pill[data-status="DELIVERED"] {
+  background: rgba(4, 120, 87, 0.14);
+  color: #047857;
+  border-color: rgba(4, 120, 87, 0.32);
+}
+
+:root[data-theme="light"] .kt-items::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.28);
+}
+
+/* ─────────── REPORTS — bars + lists + rows ─────────── */
+:root[data-theme="light"] .rp-grid-lines span {
+  background: linear-gradient(90deg, transparent, rgba(40, 25, 10, 0.10), transparent);
+}
+/* .bar-track is a positioning wrapper with no background in dark — keep it
+   transparent on cream too so the trend chart doesn't sprout column rails. */
+:root[data-theme="light"] .bar-track {
+  background: transparent;
+  box-shadow: none;
+}
+:root[data-theme="light"] .rp-bar,
+:root[data-theme="light"] .rp-pg-bar {
+  background: rgba(40, 25, 10, 0.08);
+  box-shadow: inset 0 1px 0 rgba(40, 25, 10, 0.04);
+}
+:root[data-theme="light"] .bar.is-zero .bar-fill {
+  background: rgba(40, 25, 10, 0.06);
+  border: 1px dashed rgba(40, 25, 10, 0.14);
+}
+:root[data-theme="light"] .rp-list li:hover,
+:root[data-theme="light"] .rp-list-2 li:hover {
+  background: rgba(217, 119, 6, 0.08);
+}
+:root[data-theme="light"] .rp-row:not(.rp-row-head):hover {
+  background: rgba(217, 119, 6, 0.08);
+}
+:root[data-theme="light"] .rp-row,
+:root[data-theme="light"] .rp-row-head {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+:root[data-theme="light"] .rp-row-head {
+  color: var(--hr-text-muted);
+}
+
+/* Reports gradient highlights — preserve gold/amber gradient tint on cream */
+:root[data-theme="light"] .rp-stat-value,
+:root[data-theme="light"] .bar-count {
+  /* Already gradient-clipped text; ensure fallback color matches if -webkit fails */
+  color: #b45309;
+}
+
+/* ─────────── CROSS-MODULE STATUS PILLS — semantic light palette ─────────── */
+/* Apply to any element using the common .is-* status pattern */
+:root[data-theme="light"] .is-verified,
+:root[data-theme="light"] .is-completed,
+:root[data-theme="light"] .is-delivered,
+:root[data-theme="light"] .is-issued.is-status,
+:root[data-theme="light"] .is-active.is-status {
+  background: rgba(4, 120, 87, 0.14);
+  color: #047857;
+  border-color: rgba(4, 120, 87, 0.32);
+}
+:root[data-theme="light"] .is-rejected,
+:root[data-theme="light"] .is-blocked.is-status {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.36);
+}
+:root[data-theme="light"] .is-pending.is-status,
+:root[data-theme="light"] .is-in-progress {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+  border-color: rgba(234, 88, 12, 0.32);
+}
+
+/* Generic chk-rail::before accent — already uses var(--accent), no override needed.
+   Generic chk-rail glass — inherits .onb-glass variables, already cream. */
+
+/* Soft drift-avatar reskin for hero canvas duplicate definition catch-all */
+:root[data-theme="light"] .stage-tile {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.12);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   SECTION CARD SEPARATORS — light theme
+   Cards across the onboarding module use `border-bottom/border-top: 1px
+   solid rgba(255,255,255,0.06)` (or 0.04) for internal section dividers.
+   That hairline disappears on the cream surface. Re-cast each one to a
+   warm hairline `rgba(40, 25, 10, 0.10)`.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* TRAINING — .tr-card / .programs-card */
+:root[data-theme="light"] .tr-card .card-head {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+:root[data-theme="light"] .tr-card,
+:root[data-theme="light"] .programs-card {
+  border-color: rgba(40, 25, 10, 0.10);
+}
+/* Default assign-status (no data-status) — was rgba(255,255,255,0.05),
+   invisible on cream. Map to neutral amber-tinted chip. */
+:root[data-theme="light"] .assign-status {
+  background: rgba(217, 119, 6, 0.10);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.22);
+}
+:root[data-theme="light"] .assign-status[data-status="COMPLETED"] {
+  background: rgba(4, 120, 87, 0.14);
+  color: #047857;
+  border-color: rgba(4, 120, 87, 0.32);
+}
+:root[data-theme="light"] .assign-status[data-status="IN_PROGRESS"] {
+  background: rgba(234, 88, 12, 0.14);
+  color: #c2410c;
+  border-color: rgba(234, 88, 12, 0.32);
+}
+
+/* PROBATION — .pr-card foot divider */
+:root[data-theme="light"] .pr-foot {
+  border-top-color: rgba(40, 25, 10, 0.10);
+}
+
+/* TASKS — .kb-col header divider + column border */
+:root[data-theme="light"] .kb-col-head {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+:root[data-theme="light"] .kb-col {
+  border-color: rgba(40, 25, 10, 0.10);
+}
+/* Keep semantic column borders saturated */
+:root[data-theme="light"] .kb-col[data-col="DONE"]    { border-color: rgba(4, 120, 87, 0.35); }
+:root[data-theme="light"] .kb-col[data-col="BLOCKED"] { border-color: rgba(220, 38, 38, 0.35); }
+:root[data-theme="light"] .kb-col[data-col="DONE"] .kb-col-name    { color: #047857; }
+:root[data-theme="light"] .kb-col[data-col="BLOCKED"] .kb-col-name { color: #b91c1c; }
+
+/* REPORTS — .rp-card header divider (matches rp-trend / rp-docs / rp-stat / rp-table) */
+:root[data-theme="light"] .rp-card-head {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+
+/* ────────── Generic catch-all for any onb-glass card that uses the
+   rgba(255,255,255,0.06) hairline as an internal divider. Targets the
+   common modifier classes (`-head`, `-foot`, `-divider`) used module-wide. */
+:root[data-theme="light"] .onb-glass [class$="-head"],
+:root[data-theme="light"] .onb-glass [class*="-divider"] {
+  border-bottom-color: rgba(40, 25, 10, 0.10) !important;
+}
+:root[data-theme="light"] .onb-glass [class$="-foot"] {
+  border-top-color: rgba(40, 25, 10, 0.10) !important;
+}
+
+/* IDENTITY / ASSETS / ACCOUNTS — explicit card header/foot dividers
+   These cards aren't always wrapped in .onb-glass, so the catch-all
+   above doesn't reach them. Target the section card hierarchies directly. */
+:root[data-theme="light"] .id-card .card-head,
+:root[data-theme="light"] .as-card .card-head,
+:root[data-theme="light"] .ac-card-head {
+  border-bottom-color: rgba(40, 25, 10, 0.10) !important;
+}
+:root[data-theme="light"] .id-card .form-foot,
+:root[data-theme="light"] .ac-card-foot {
+  border-top-color: rgba(40, 25, 10, 0.10) !important;
+}
+:root[data-theme="light"] .id-card,
+:root[data-theme="light"] .as-card,
+:root[data-theme="light"] .ac-card {
+  border-color: rgba(40, 25, 10, 0.10);
+}
+
+/* PENDING JOINING — pj-pill default state
+   Was var(--hr-accent-gold) bright yellow on cream tint = invisible. */
+:root[data-theme="light"] .pj-pill {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.32);
+}
+:root[data-theme="light"] .pj-pill-dot {
+  background: #d97706;
+}
+:root[data-theme="light"] .pj-pill[data-state="started"] {
+  background: rgba(4, 120, 87, 0.14);
+  color: #047857;
+  border-color: rgba(4, 120, 87, 0.32);
+}
+:root[data-theme="light"] .pj-pill[data-state="started"] .pj-pill-dot {
+  background: #047857;
+}
+:root[data-theme="light"] .pj-tag {
+  background: rgba(217, 119, 6, 0.10);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.28);
+}
+:root[data-theme="light"] .pj-rail-month { color: #b45309; }
+
+/* ASSETS — as-pill default + status variants on cream */
+:root[data-theme="light"] .as-pill {
+  background: rgba(217, 119, 6, 0.10);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.24);
+}
+:root[data-theme="light"] .as-pill[data-status="AVAILABLE"] {
+  background: rgba(4, 120, 87, 0.14);
+  color: #047857;
+  border-color: rgba(4, 120, 87, 0.32);
+}
+:root[data-theme="light"] .as-pill[data-status="ALLOCATED"] {
+  background: rgba(217, 119, 6, 0.16);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.36);
+}
+:root[data-theme="light"] .as-pill[data-status="MAINTENANCE"] {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.32);
+}
+:root[data-theme="light"] .as-pill[data-status="RETURNED"] {
+  background: rgba(4, 120, 87, 0.12);
+  color: #047857;
+  border-color: rgba(4, 120, 87, 0.28);
+}
+:root[data-theme="light"] .as-pill[data-status="LOST"] {
+  background: rgba(220, 38, 38, 0.14);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.36);
+}
+
+/* ACCOUNTS — ac-card-del trash button visible on cream */
+:root[data-theme="light"] .ac-card-del {
+  background: rgba(220, 38, 38, 0.10);
+  border-color: rgba(220, 38, 38, 0.32);
+  color: #b91c1c;
+}
+:root[data-theme="light"] .ac-card-del:hover {
+  background: rgba(220, 38, 38, 0.22);
+  border-color: rgba(220, 38, 38, 0.55);
+  color: #7f1d1d;
+}
+:root[data-theme="light"] .ac-card-del::after {
+  background: radial-gradient(closest-side, rgba(220, 38, 38, 0.42), transparent 70%);
+}
+
+/* TRAINING — prog-must + prog-type-pill default
+   prog-must uses bright yellow on yellow tint — barely visible on cream.
+   prog-type-pill default lacks a data-type and uses bright yellow too. */
+:root[data-theme="light"] .prog-must {
+  background: rgba(217, 119, 6, 0.16);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.36);
+}
+:root[data-theme="light"] .prog-type-pill {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.30);
+}
+:root[data-theme="light"] .prog-type-pill[data-type="SECURITY"] {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.32);
+}
+:root[data-theme="light"] .prog-type-pill[data-type="COMPLIANCE"] {
+  background: rgba(124, 58, 237, 0.12);
+  color: #6b21a8;
+  border-color: rgba(124, 58, 237, 0.32);
+}
+:root[data-theme="light"] .prog-type-pill[data-type="HR_ORIENTATION"] {
+  background: rgba(217, 119, 6, 0.16);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.36);
+}

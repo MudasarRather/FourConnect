@@ -25,26 +25,42 @@
 
     <!-- Project Expired Restricted View -->
     <div v-else-if="isProjectExpired && !isAdmin" class="expiry-overlay">
-      <div class="premium-expiry-card">
-         <div class="expired-icon-box">
-           <Clock :size="48" stroke-width="1.5" class="icon-mono" />
-         </div>
-         <div class="expiry-content">
+      <Motion as="div" class="premium-expiry-card"
+        :initial="{ opacity: 0, y: 32, scale: 0.92, filter: 'blur(8px)' }"
+        :animate="{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }"
+        :transition="{ duration: 0.75, ease: easeOutSpring }">
+         <Motion as="div" class="expired-icon-box"
+           :initial="{ opacity: 0, scale: 0.6, rotate: -12 }"
+           :animate="{ opacity: 1, scale: 1, rotate: 0 }"
+           :transition="{ duration: 0.7, ease: easeOutSpring, delay: 0.15 }">
+           <div class="expiry-icon-aura" aria-hidden="true"></div>
+           <Clock :size="48" stroke-width="1.5" class="icon-mono tick-anim" />
+         </Motion>
+         <Motion as="div" class="expiry-content"
+           :initial="{ opacity: 0, y: 14 }"
+           :animate="{ opacity: 1, y: 0 }"
+           :transition="{ duration: 0.6, ease: easeOutSpring, delay: 0.28 }">
             <h2 class="premium-title">Project Expired</h2>
             <p class="premium-subtitle">Timeline Concluded</p>
             <div class="expiry-divider"></div>
             <p class="expiry-description">
-              The professional timeline for this project has reached its conclusion. 
+              The professional timeline for this project has reached its conclusion.
               Further modifications and milestone creation are currently restricted.
             </p>
-         </div>
-         
-         <div class="expiry-actions">
-            <button class="btn-premium-back" @click="$router.push(backPath)">
+         </Motion>
+
+         <Motion as="div" class="expiry-actions"
+           :initial="{ opacity: 0, y: 10 }"
+           :animate="{ opacity: 1, y: 0 }"
+           :transition="{ duration: 0.55, ease: easeOutSpring, delay: 0.42 }">
+            <Motion as="button" class="btn-premium-back" @click="$router.push(backPath)"
+              :whileHover="{ y: -3, scale: 1.025 }"
+              :whileTap="{ scale: 0.96 }"
+              :transition="{ duration: 0.3, ease: easeOutSpring }">
               <ArrowLeft :size="16" /> Return to Projects
-            </button>
-         </div>
-      </div>
+            </Motion>
+         </Motion>
+      </Motion>
     </div>
 
     <!-- Main Content -->
@@ -332,6 +348,9 @@ import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { Loader2, ArrowLeft, ShieldAlert, Briefcase, BarChart2, Users, Info, DollarSign, Clock, CalendarRange, Building2, Hash, Tag, PieChart, Check, Crown, MapPin, Coins, Flame, Activity, User, Mail } from 'lucide-vue-next'
+import { Motion } from 'motion-v'
+
+const easeOutSpring = [0.16, 1, 0.3, 1]
 import MilestoneList from '../components/milestones/MilestoneList.vue'
 import CreateMilestoneModal from '../components/milestones/CreateMilestoneModal.vue'
 import ProjectDescription from '../components/project-console/ProjectDescription.vue'
@@ -596,35 +615,69 @@ const handleMilestoneDelete = (deletedId) => {
 }
 
 .premium-expiry-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  background: linear-gradient(180deg, rgba(28, 28, 32, 0.55) 0%, rgba(18, 18, 22, 0.70) 100%);
+  backdrop-filter: blur(40px) saturate(160%);
+  -webkit-backdrop-filter: blur(40px) saturate(160%);
+  border: 1px solid rgba(245, 158, 11, 0.18);
   border-radius: 24px;
-  padding: 32px;
+  padding: 36px 32px 32px;
   text-align: center;
-  max-width: 400px;
+  max-width: 420px;
   width: 90%;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+  box-shadow:
+    0 40px 100px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 0 60px rgba(245, 158, 11, 0.08);
+  overflow: hidden;
 }
+.premium-expiry-card::before {
+  content: ''; position: absolute; inset: -1px; pointer-events: none; z-index: 0; border-radius: inherit;
+  background:
+    radial-gradient(45% 55% at 0% 0%, rgba(245, 158, 11, 0.10), transparent 70%),
+    radial-gradient(45% 55% at 100% 100%, rgba(249, 115, 22, 0.06), transparent 70%);
+}
+.premium-expiry-card > * { position: relative; z-index: 1; }
 
 .expired-icon-box {
-  width: 64px;
-  height: 64px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 18px;
+  position: relative;
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(249, 115, 22, 0.08));
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.18);
+}
+.expiry-icon-aura {
+  position: absolute;
+  inset: -8px;
+  border-radius: 28px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.32), transparent 65%);
+  filter: blur(12px);
+  z-index: -1;
+  animation: expiry-aura-pulse 3.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes expiry-aura-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.12); }
 }
 
 .icon-mono {
-  color: rgba(255, 255, 255, 0.8);
+  color: #fbbf24;
+  filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.35));
+}
+.tick-anim { animation: tick-tilt 4.2s cubic-bezier(0.4, 0, 0.6, 1) infinite; transform-origin: 50% 50%; }
+@keyframes tick-tilt {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(-6deg); }
+  75%      { transform: rotate(6deg); }
 }
 
 .expiry-content {
@@ -635,27 +688,29 @@ const handleMilestoneDelete = (deletedId) => {
 }
 
 .premium-title {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
-  color: #ffffff;
+  background: linear-gradient(120deg, #ffffff 0%, #fbbf24 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .premium-subtitle {
   font-size: 11px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+  color: #fbbf24;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.18em;
   margin: 0;
 }
 
 .expiry-divider {
-  width: 32px;
+  width: 48px;
   height: 1px;
-  background: rgba(255, 255, 255, 0.15);
-  margin: 12px 0;
+  background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.40), transparent);
+  margin: 14px 0;
 }
 
 .expiry-description {
@@ -672,29 +727,28 @@ const handleMilestoneDelete = (deletedId) => {
 }
 
 .btn-premium-back {
-  background: #ffffff;
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
   border: none;
-  color: #000000;
+  color: #1a1208;
   padding: 14px 32px;
   border-radius: 16px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 14px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+  transition: box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    0 6px 22px rgba(245, 158, 11, 0.32),
+    0 0 0 1px rgba(255, 255, 255, 0.18) inset;
 }
 
 .btn-premium-back:hover {
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 30px rgba(255, 255, 255, 0.15);
-}
-
-.btn-premium-back:active {
-  transform: translateY(0);
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow:
+    0 10px 30px rgba(245, 158, 11, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.30) inset;
 }
 
 @keyframes expiryFadeIn {
@@ -980,5 +1034,63 @@ const handleMilestoneDelete = (deletedId) => {
   border-color: rgba(217, 119, 6, 0.40);
   color: #92400e;
   box-shadow: 0 0 20px rgba(217, 119, 6, 0.18);
+}
+
+/* ─── "Project Expired" premium card ─────────────────────────────────────── */
+/* Overlay backdrop — dark base is rgba(0,0,0,0.6), which leaves a muddy
+   black wash on the cream page. Replace with a warm cream-tinted scrim
+   and stronger blur so the card sits in a frosted glass field. */
+[data-theme="light"] .expiry-overlay {
+  background: rgba(255, 246, 226, 0.45);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+}
+[data-theme="light"] .premium-expiry-card {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.82) 0%, rgba(255, 246, 226, 0.90) 100%);
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  box-shadow:
+    0 40px 90px rgba(40, 25, 10, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+    0 0 60px rgba(217, 119, 6, 0.10);
+}
+[data-theme="light"] .premium-expiry-card::before {
+  background:
+    radial-gradient(45% 55% at 0% 0%, rgba(217, 119, 6, 0.12), transparent 70%),
+    radial-gradient(45% 55% at 100% 100%, rgba(249, 115, 22, 0.08), transparent 70%);
+}
+[data-theme="light"] .expired-icon-box {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.20), rgba(249, 115, 22, 0.10));
+  border-color: rgba(217, 119, 6, 0.38);
+  box-shadow: 0 8px 24px rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .expiry-icon-aura {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.38), transparent 65%);
+}
+[data-theme="light"] .icon-mono {
+  color: #b45309;
+  filter: drop-shadow(0 4px 10px rgba(217, 119, 6, 0.32));
+}
+[data-theme="light"] .premium-title {
+  background: linear-gradient(120deg, #92400e 0%, #d97706 60%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .premium-subtitle { color: #b45309; }
+[data-theme="light"] .expiry-divider {
+  background: linear-gradient(90deg, transparent, rgba(217, 119, 6, 0.50), transparent);
+}
+[data-theme="light"] .expiry-description { color: #6b5840; }
+[data-theme="light"] .btn-premium-back {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  color: #fff;
+  box-shadow:
+    0 6px 22px rgba(217, 119, 6, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.22) inset;
+}
+[data-theme="light"] .btn-premium-back:hover {
+  background: linear-gradient(135deg, #c2410c 0%, #92400e 100%);
+  box-shadow:
+    0 10px 30px rgba(217, 119, 6, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.30) inset;
 }
 </style>

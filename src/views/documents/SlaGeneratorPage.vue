@@ -15,11 +15,12 @@
       <div class="header-actions">
         <div class="project-selector">
           <label>Target Project</label>
-          <SlaSelect 
-            v-model="form.project_id" 
+          <SlaSelect
+            v-model="form.project_id"
             :options="projectOptions"
             placeholder="Select a Project"
             class="design-select"
+            @update:modelValue="onProjectSelect"
           />
         </div>
         <div class="template-selector">
@@ -87,6 +88,40 @@
         </div>
       </main>
     </div>
+
+    <!-- === DUPLICATE-SLA WARNING DIALOG ===
+         Teleported to <body> so the overlay's backdrop-filter blur is computed
+         against the full viewport. Without Teleport, ancestor elements with
+         border-radius / overflow / transform create rectangular "boxed blur"
+         regions visible behind the card. Also fixes the modal being positioned
+         relative to the wizard's scroll container (user had to scroll to see it). -->
+    <Teleport to="body">
+      <transition name="fade">
+        <div v-if="duplicateSlaWarning" class="nano-modal-overlay">
+          <div class="nano-modal-card slide-up">
+            <div class="nano-modal-icon warning">
+              <AlertTriangle :size="32" />
+            </div>
+            <div class="nano-modal-content">
+              <h3>Active SLA Detected</h3>
+              <p>An SLA agreement already exists for this project in our system.</p>
+
+              <div class="duplicate-info-box" v-if="existingSla">
+                <div class="dib-row"><span class="dib-l">Title:</span> <span class="dib-v">{{ existingSla.title || existingSla.client_organization_name || '—' }}</span></div>
+                <div class="dib-row"><span class="dib-l">Version:</span> <span class="dib-v">{{ existingSla.version || '—' }}</span></div>
+                <div class="dib-row"><span class="dib-l">Status:</span> <span class="dib-v status-pill" :class="(existingSla.status || '').toLowerCase().replace(' ', '-')">{{ existingSla.status }}</span></div>
+              </div>
+
+              <p class="nano-modal-subtext">Creating a new agreement will start a fresh 11-step protocol. Any existing drafts for this project will not be merged or imported.</p>
+            </div>
+            <div class="nano-modal-actions">
+              <button class="nano-btn secondary" @click="duplicateSlaWarning = false">Cancel &amp; Change Project</button>
+              <button class="nano-btn primary" @click="duplicateSlaWarning = false">Understood, Proceed</button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
   </div>
 </template>
 
@@ -96,8 +131,8 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { useToast } from '../../composables/useToast'
 import { generateSlaPdf } from '../../utils/slaPdfGenerator'
-import { 
-  ArrowLeft, Save, Check, ChevronLeft, ChevronRight, FileText, Loader2
+import {
+  ArrowLeft, Save, Check, ChevronLeft, ChevronRight, FileText, Loader2, AlertTriangle
 } from 'lucide-vue-next'
 
 // Import Step Components
@@ -371,6 +406,31 @@ const fetchProjects = async () => {
   }
 }
 
+// Duplicate SLA detection (mirrors Handover wizard's onProjectSelect pattern).
+// Warns the user when the chosen project already has a non-Draft / non-Rejected
+// SLA so they don't accidentally start a parallel agreement. Fires whenever
+// project_id changes in the header SlaSelect.
+const duplicateSlaWarning = ref(false)
+const existingSla = ref(null)
+const onProjectSelect = async () => {
+  if (!form.value.project_id) return
+  try {
+    const headers = { Authorization: `Bearer ${token.value}` }
+    const res = await axios.get(`${API}/sla/?limit=100`, { headers })
+    const allSlas = Array.isArray(res.data) ? res.data : (res.data.items || [])
+    const match = allSlas.find(s =>
+      s.project_id === form.value.project_id &&
+      (s.status === 'Approved' || s.status === 'Pending')
+    )
+    if (match) {
+      existingSla.value = match
+      duplicateSlaWarning.value = true
+    }
+  } catch (e) {
+    console.error('Failed to check for duplicate SLAs:', e)
+  }
+}
+
 const saveDraft = async (silent = false, statusOverwrite = null) => {
   if (!form.value.project_id) {
     showError("Please select a target project first")
@@ -453,6 +513,523 @@ watch(form, (newVal) => {
   30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
   40%, 60% { transform: translate3d(4px, 0, 0); }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   LIGHT-THEME RESCUE for the SLA wizard's nested step components.
+   Same pattern as the Edit SLA modal — non-scoped, anchored on
+   .sla-generator-wrapper so it only applies to this page.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Step headings */
+[data-theme="light"] .sla-generator-wrapper .step-header h2 {
+  color: #1a1410 !important;
+  text-shadow: none !important;
+}
+[data-theme="light"] .sla-generator-wrapper .step-header p {
+  color: #6b5840 !important;
+}
+
+/* Form sections — frosted cream cards instead of near-invisible dark glass */
+[data-theme="light"] .sla-generator-wrapper .form-section {
+  background: rgba(255, 250, 240, 0.62) !important;
+  border: 1px solid rgba(217, 119, 6, 0.20) !important;
+  border-radius: 14px !important;
+  box-shadow:
+    0 6px 20px rgba(180, 83, 9, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .form-section.provider-section {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(217, 119, 6, 0.32) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .form-section.timeline-section {
+  background: rgba(255, 250, 240, 0.62) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .form-section.timeline-section::before {
+  background: linear-gradient(180deg, #d97706, #b45309) !important;
+  box-shadow: 0 0 10px rgba(217, 119, 6, 0.40) !important;
+}
+
+/* Section titles + form labels */
+[data-theme="light"] .sla-generator-wrapper .section-title {
+  color: #b45309 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .text-yellow {
+  color: #b45309 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .input-group label,
+[data-theme="light"] .sla-generator-wrapper label {
+  color: #78350f !important;
+  font-weight: 600 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .required,
+[data-theme="light"] .sla-generator-wrapper .error-label,
+[data-theme="light"] .sla-generator-wrapper .error-msg {
+  color: #b91c1c !important;
+}
+
+/* Inputs / textareas / selects — cream pad with dark text + amber focus */
+[data-theme="light"] .sla-generator-wrapper input,
+[data-theme="light"] .sla-generator-wrapper textarea,
+[data-theme="light"] .sla-generator-wrapper select,
+[data-theme="light"] .sla-generator-wrapper .premium-input,
+[data-theme="light"] .sla-generator-wrapper .premium-textarea,
+[data-theme="light"] .sla-generator-wrapper .text-input,
+[data-theme="light"] .sla-generator-wrapper .table-input,
+[data-theme="light"] .sla-generator-wrapper .design-select .select-selected {
+  background: rgba(255, 250, 240, 0.92) !important;
+  border: 1px solid rgba(217, 119, 6, 0.22) !important;
+  color: #1a1410 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+}
+[data-theme="light"] .sla-generator-wrapper input::placeholder,
+[data-theme="light"] .sla-generator-wrapper textarea::placeholder {
+  color: rgba(120, 53, 15, 0.45) !important;
+}
+[data-theme="light"] .sla-generator-wrapper input:focus,
+[data-theme="light"] .sla-generator-wrapper textarea:focus,
+[data-theme="light"] .sla-generator-wrapper select:focus {
+  background: #fffaf0 !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.18) !important;
+  outline: none !important;
+}
+[data-theme="light"] .sla-generator-wrapper .premium-input.highlighted {
+  color: #b45309 !important;
+  font-weight: 600 !important;
+}
+
+/* SlaSelect trigger styled as form field (the dropdown popup itself is teleported
+   to body and already handled in SlaSelect.vue's non-scoped block) */
+[data-theme="light"] .sla-generator-wrapper .sla-select-trigger {
+  background: rgba(255, 250, 240, 0.92) !important;
+  border: 1px solid rgba(217, 119, 6, 0.22) !important;
+  color: #1a1410 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .sla-select-trigger:hover {
+  border-color: rgba(217, 119, 6, 0.40) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .sla-select-trigger.is-open {
+  background: #fffaf0 !important;
+  border-color: #d97706 !important;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.18) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .sla-select-trigger .selected-text {
+  color: #1a1410 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .sla-select-trigger .is-placeholder {
+  color: rgba(120, 53, 15, 0.45) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .sla-select-trigger .chevron {
+  color: #92400e !important;
+}
+/* Header's design-select variant */
+[data-theme="light"] .sla-generator-wrapper .design-select .sla-select-trigger {
+  background: rgba(255, 250, 240, 0.85) !important;
+}
+
+/* Tables (services scope, metrics, escalation, penalty) */
+[data-theme="light"] .sla-generator-wrapper .premium-table-wrapper,
+[data-theme="light"] .sla-generator-wrapper .metrics-table-wrapper {
+  background: rgba(255, 250, 240, 0.78) !important;
+  border: 1px solid rgba(217, 119, 6, 0.22) !important;
+  box-shadow:
+    0 6px 20px rgba(180, 83, 9, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+  overflow: hidden !important;
+}
+[data-theme="light"] .sla-generator-wrapper .premium-table th {
+  background: rgba(245, 158, 11, 0.12) !important;
+  color: #92400e !important;
+  border-bottom: 1px solid rgba(217, 119, 6, 0.28) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .premium-table td {
+  border-top: 1px solid rgba(217, 119, 6, 0.12) !important;
+  color: #1a1410 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .premium-table tr:hover td {
+  background: rgba(245, 158, 11, 0.10) !important;
+}
+
+/* Add buttons (Add Service, Add Metric, Add Tier) — gold gradient on cream */
+[data-theme="light"] .sla-generator-wrapper .add-btn,
+[data-theme="light"] .sla-generator-wrapper .add-metric-btn,
+[data-theme="light"] .sla-generator-wrapper .text-add-btn {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  border: 1px solid rgba(217, 119, 6, 0.55) !important;
+  color: #fffaf0 !important;
+  box-shadow:
+    0 4px 12px rgba(217, 119, 6, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .add-btn:hover,
+[data-theme="light"] .sla-generator-wrapper .add-metric-btn:hover,
+[data-theme="light"] .sla-generator-wrapper .text-add-btn:hover {
+  background: linear-gradient(135deg, #d97706, #b45309) !important;
+}
+
+/* Service badge (Step 4 metrics card "INFRASTRUCTURE") */
+[data-theme="light"] .sla-generator-wrapper .svc-badge {
+  background: rgba(217, 119, 6, 0.16) !important;
+  color: #92400e !important;
+  border: 1px solid rgba(217, 119, 6, 0.32) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .service-metrics-card {
+  background: rgba(255, 250, 240, 0.62) !important;
+  border-color: rgba(217, 119, 6, 0.20) !important;
+}
+
+/* Delete/trash buttons inside table rows */
+[data-theme="light"] .sla-generator-wrapper .premium-table .delete-btn,
+[data-theme="light"] .sla-generator-wrapper .premium-table .icon-btn,
+[data-theme="light"] .sla-generator-wrapper .premium-table .trash-btn {
+  background: rgba(185, 28, 28, 0.10) !important;
+  border: 1px solid rgba(185, 28, 28, 0.25) !important;
+  color: #b91c1c !important;
+  border-radius: 8px !important;
+}
+[data-theme="light"] .sla-generator-wrapper .premium-table .delete-btn:hover {
+  background: rgba(185, 28, 28, 0.20) !important;
+  border-color: rgba(185, 28, 28, 0.50) !important;
+}
+
+/* Checkbox grid (Step 7 Security Measures) */
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper {
+  background: rgba(255, 250, 240, 0.72) !important;
+  border: 1px solid rgba(217, 119, 6, 0.22) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper:hover,
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper:hover .checkbox-label,
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper.is-selected .checkbox-label,
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper.active .checkbox-label,
+[data-theme="light"] .sla-generator-wrapper .checkbox-label {
+  color: #1a1410 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper:hover {
+  background: rgba(245, 158, 11, 0.16) !important;
+  border-color: rgba(217, 119, 6, 0.45) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper.is-selected,
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper.active {
+  background: rgba(245, 158, 11, 0.22) !important;
+  border-color: rgba(217, 119, 6, 0.55) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .checkbox-box {
+  border-color: rgba(120, 53, 15, 0.40) !important;
+  background: rgba(255, 250, 240, 0.92) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .checkbox-box.checked,
+[data-theme="light"] .sla-generator-wrapper .checkbox-box.active {
+  background: #d97706 !important;
+  border-color: #d97706 !important;
+  color: #fffaf0 !important;
+}
+
+/* Standards section + compliance/security chips */
+[data-theme="light"] .sla-generator-wrapper .standards-section {
+  background: rgba(255, 250, 240, 0.62) !important;
+  border: 1px solid rgba(217, 119, 6, 0.22) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .tag-btn,
+[data-theme="light"] .sla-generator-wrapper .compl-tag,
+[data-theme="light"] .sla-generator-wrapper .sec-tag {
+  background: rgba(255, 250, 240, 0.85) !important;
+  color: #78350f !important;
+  border: 1px solid rgba(217, 119, 6, 0.30) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .tag-btn:hover,
+[data-theme="light"] .sla-generator-wrapper .compl-tag:hover {
+  background: rgba(245, 158, 11, 0.18) !important;
+  border-color: rgba(217, 119, 6, 0.55) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .tag-btn.active,
+[data-theme="light"] .sla-generator-wrapper .compl-tag.active,
+[data-theme="light"] .sla-generator-wrapper .tag-btn.is-selected,
+[data-theme="light"] .sla-generator-wrapper .compl-tag.is-selected {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  border-color: rgba(217, 119, 6, 0.65) !important;
+  color: #fffaf0 !important;
+}
+
+/* Signatory cards (Step 10) */
+[data-theme="light"] .sla-generator-wrapper .signatory-card {
+  background: rgba(255, 250, 240, 0.78) !important;
+  border: 1px solid rgba(217, 119, 6, 0.22) !important;
+  box-shadow:
+    0 6px 20px rgba(180, 83, 9, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .signatory-card.provider-card {
+  border-top: 3px solid #d97706 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .signatory-card.client-card {
+  border-top: 3px solid #15803d !important;
+}
+[data-theme="light"] .sla-generator-wrapper .signatory-card .card-title {
+  background: rgba(245, 158, 11, 0.10) !important;
+  border-bottom: 1px solid rgba(217, 119, 6, 0.22) !important;
+  color: #1a1410 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .digital-sig-panel {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border: 1px solid rgba(217, 119, 6, 0.38) !important;
+  border-left: 4px solid #d97706 !important;
+  color: #1a1410 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .digital-sig-panel h4,
+[data-theme="light"] .sla-generator-wrapper .digital-sig-panel strong {
+  color: #92400e !important;
+}
+[data-theme="light"] .sla-generator-wrapper .digital-sig-panel p {
+  color: #6b5840 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .digital-sig-panel svg {
+  color: #b45309 !important;
+}
+
+/* Review step (Step 11) */
+[data-theme="light"] .sla-generator-wrapper .review-section {
+  background: rgba(255, 250, 240, 0.78) !important;
+  border: 1px solid rgba(217, 119, 6, 0.22) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .review-section .section-top {
+  border-bottom: 1px solid rgba(217, 119, 6, 0.20) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .review-section .section-top h3 {
+  color: #1a1410 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .icon-yellow,
+[data-theme="light"] .sla-generator-wrapper .lucide-shield,
+[data-theme="light"] .sla-generator-wrapper .lucide-shield-check {
+  color: #b45309 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .data-item label {
+  color: #b45309 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .data-item span {
+  color: #1a1410 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .data-item .text-green {
+  color: #15803d !important;
+}
+[data-theme="light"] .sla-generator-wrapper .scope-row {
+  background: rgba(255, 250, 240, 0.85) !important;
+  border: 1px solid rgba(217, 119, 6, 0.20) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .scope-row .badge {
+  background: rgba(217, 119, 6, 0.16) !important;
+  color: #92400e !important;
+  border: 1px solid rgba(217, 119, 6, 0.32) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .scope-row .sv-name {
+  color: #1a1410 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .scope-row .metric-count {
+  color: #b45309 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .compl-tag {
+  background: rgba(34, 134, 58, 0.12) !important;
+  color: #15803d !important;
+  border-color: rgba(34, 134, 58, 0.30) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .generation-warning {
+  background: rgba(245, 158, 11, 0.16) !important;
+  border: 1px solid rgba(217, 119, 6, 0.45) !important;
+  border-left: 4px solid #d97706 !important;
+  color: #1a1410 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .warn-icon { color: #b45309 !important; }
+[data-theme="light"] .sla-generator-wrapper .warn-text h4 { color: #92400e !important; }
+[data-theme="light"] .sla-generator-wrapper .warn-text p { color: #6b5840 !important; }
+[data-theme="light"] .sla-generator-wrapper .empty-msg { color: #8a6d4a !important; }
+
+/* Monitoring step tag chips + help text */
+[data-theme="light"] .sla-generator-wrapper .help-text {
+  color: #8a6d4a !important;
+}
+
+/* tool-tags-container has rgba(0,0,0,0.3) background in source — kill it */
+[data-theme="light"] .sla-generator-wrapper .tool-tags-container {
+  background: rgba(255, 250, 240, 0.55) !important;
+  border: 1px solid rgba(217, 119, 6, 0.20) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+}
+/* And in dark mode lighten it slightly so the chips don't sink */
+.sla-generator-wrapper .tool-tags-container {
+  background: rgba(0, 0, 0, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Description paragraph under each section title ("Select the specific...") */
+[data-theme="light"] .sla-generator-wrapper .section-desc {
+  color: #6b5840 !important;
+}
+
+/* Actual checkbox text class is .cb-label (NOT .checkbox-label) */
+[data-theme="light"] .sla-generator-wrapper .cb-label {
+  color: #1a1410 !important;
+  font-weight: 500 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper:hover .cb-label,
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper.active .cb-label {
+  color: #1a1410 !important;
+}
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper.active {
+  background: linear-gradient(135deg,
+      rgba(245, 158, 11, 0.20),
+      rgba(217, 119, 6, 0.14)) !important;
+  border-color: rgba(217, 119, 6, 0.55) !important;
+}
+[data-theme="light"] .sla-generator-wrapper .custom-checkbox-wrapper.active .checkbox-box {
+  background: #d97706 !important;
+  border-color: #d97706 !important;
+  color: #fffaf0 !important;
+}
+
+/* Compliance tags grid (Step 7 uses .tags-grid, Step 6 uses .tool-tags-container) */
+[data-theme="light"] .sla-generator-wrapper .tags-grid {
+  background: transparent !important;
+}
+
+/* Compliance tag-btn active state uses green in source — make it warm gold on cream */
+[data-theme="light"] .sla-generator-wrapper .form-section.standards-section .tag-btn.active {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  border-color: rgba(217, 119, 6, 0.65) !important;
+  color: #fffaf0 !important;
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.35) !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   STEP 9 LEGAL TERMS — same clause-card treatment as Edit SLA modal
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* The Legal step's .form-grid is itself a card-padding container in the
+   source. Strip its outer chrome so each clause becomes the visual card. */
+[data-theme="light"] .sla-generator-wrapper .step-container .form-grid:has(textarea.premium-textarea) {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+.sla-generator-wrapper .step-container .form-grid:has(textarea.premium-textarea) {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  gap: 18px !important;
+}
+
+/* Top-level clause cards (Liability, Termination, Confidentiality) */
+.sla-generator-wrapper .step-container .form-grid > .input-group:has(textarea.premium-textarea) {
+  position: relative;
+  padding: 18px 22px 18px 28px;
+  background: linear-gradient(135deg,
+      rgba(251, 191, 36, 0.06) 0%,
+      rgba(255, 255, 255, 0.02) 40%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+  animation: clauseCardSlide 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.sla-generator-wrapper .step-container .form-grid > .input-group:has(textarea.premium-textarea)::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #fbbf24, #d97706);
+  opacity: 0.68;
+  transition: opacity 0.25s, box-shadow 0.25s;
+}
+.sla-generator-wrapper .step-container .form-grid > .input-group:has(textarea.premium-textarea):focus-within {
+  border-color: rgba(251, 191, 36, 0.40);
+  background: linear-gradient(135deg,
+      rgba(251, 191, 36, 0.12) 0%,
+      rgba(255, 255, 255, 0.05) 45%) !important;
+  box-shadow: 0 6px 22px rgba(245, 158, 11, 0.18);
+}
+.sla-generator-wrapper .step-container .form-grid > .input-group:has(textarea.premium-textarea):focus-within::before {
+  opacity: 1;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.60);
+}
+
+/* Force Majeure + IP — grandchildren via .input-row */
+.sla-generator-wrapper .step-container .form-grid .input-row > .input-group:has(textarea.premium-textarea) {
+  position: relative;
+  padding: 18px 22px 18px 28px;
+  background: linear-gradient(135deg,
+      rgba(251, 191, 36, 0.06) 0%,
+      rgba(255, 255, 255, 0.02) 40%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+  animation: clauseCardSlide 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.28s;
+}
+.sla-generator-wrapper .step-container .form-grid .input-row > .input-group:has(textarea.premium-textarea):nth-of-type(2) {
+  animation-delay: 0.34s;
+}
+.sla-generator-wrapper .step-container .form-grid .input-row > .input-group:has(textarea.premium-textarea)::before {
+  content: '';
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #fbbf24, #d97706);
+  opacity: 0.68;
+  transition: opacity 0.25s, box-shadow 0.25s;
+}
+.sla-generator-wrapper .step-container .form-grid .input-row > .input-group:has(textarea.premium-textarea):focus-within {
+  border-color: rgba(251, 191, 36, 0.40);
+  background: linear-gradient(135deg,
+      rgba(251, 191, 36, 0.12) 0%,
+      rgba(255, 255, 255, 0.05) 45%) !important;
+  box-shadow: 0 6px 22px rgba(245, 158, 11, 0.18);
+}
+.sla-generator-wrapper .step-container .form-grid .input-row > .input-group:has(textarea.premium-textarea):focus-within::before {
+  opacity: 1;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.60);
+}
+
+/* Stagger entries 1-3 (top-level) */
+.sla-generator-wrapper .step-container .form-grid > .input-group:has(textarea.premium-textarea):nth-of-type(1) { animation-delay: 0.06s; }
+.sla-generator-wrapper .step-container .form-grid > .input-group:has(textarea.premium-textarea):nth-of-type(2) { animation-delay: 0.14s; }
+.sla-generator-wrapper .step-container .form-grid > .input-group:has(textarea.premium-textarea):nth-of-type(3) { animation-delay: 0.22s; }
+
+@keyframes clauseCardSlide {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Light-theme variants for the clause cards */
+[data-theme="light"] .sla-generator-wrapper .step-container .form-grid > .input-group:has(textarea.premium-textarea),
+[data-theme="light"] .sla-generator-wrapper .step-container .form-grid .input-row > .input-group:has(textarea.premium-textarea) {
+  background: linear-gradient(135deg,
+      rgba(245, 158, 11, 0.12) 0%,
+      rgba(255, 250, 240, 0.62) 40%) !important;
+  border-color: rgba(217, 119, 6, 0.22) !important;
+  box-shadow: 0 4px 16px rgba(180, 83, 9, 0.08);
+}
+[data-theme="light"] .sla-generator-wrapper .step-container .form-grid > .input-group:has(textarea.premium-textarea)::before,
+[data-theme="light"] .sla-generator-wrapper .step-container .form-grid .input-row > .input-group:has(textarea.premium-textarea)::before {
+  background: linear-gradient(180deg, #d97706, #b45309);
+}
+[data-theme="light"] .sla-generator-wrapper .step-container .form-grid > .input-group:has(textarea.premium-textarea):focus-within,
+[data-theme="light"] .sla-generator-wrapper .step-container .form-grid .input-row > .input-group:has(textarea.premium-textarea):focus-within {
+  border-color: rgba(217, 119, 6, 0.50) !important;
+  background: linear-gradient(135deg,
+      rgba(245, 158, 11, 0.18) 0%,
+      rgba(255, 250, 240, 0.85) 45%) !important;
+  box-shadow: 0 6px 22px rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .sla-generator-wrapper .step-container .form-grid > .input-group:has(textarea.premium-textarea):focus-within::before,
+[data-theme="light"] .sla-generator-wrapper .step-container .form-grid .input-row > .input-group:has(textarea.premium-textarea):focus-within::before {
+  opacity: 1;
+  box-shadow: 0 0 14px rgba(217, 119, 6, 0.65);
+}
 </style>
 
 <style scoped>
@@ -464,20 +1041,73 @@ watch(form, (newVal) => {
   flex-direction: column;
   font-family: 'Inter', sans-serif;
   animation: pageEntry 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  position: relative;
+  isolation: isolate;
 }
 
-/* Header */
+/* Subtle ambient gold glows pinned to corners — give the page warmth without
+   imposing a solid background. Visible in both themes; deeper in light. */
+.sla-generator-wrapper::before,
+.sla-generator-wrapper::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  animation: auraDrift 24s ease-in-out infinite alternate;
+}
+.sla-generator-wrapper::before {
+  top: -160px; left: -160px;
+  width: 480px; height: 480px;
+  background: radial-gradient(closest-side, rgba(251, 191, 36, 0.18), transparent 70%);
+}
+.sla-generator-wrapper::after {
+  bottom: -200px; right: -200px;
+  width: 560px; height: 560px;
+  background: radial-gradient(closest-side, rgba(217, 119, 6, 0.16), transparent 70%);
+  animation-delay: -6s;
+}
+@keyframes auraDrift {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(40px, 30px); }
+}
+
+/* Header — transparent in both modes with subtle gold underline + animated rail */
 .sla-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 32px;
-  background: rgba(18, 18, 18, 0.6);
+  padding: 24px 40px 22px;
+  background: transparent;
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   position: sticky;
   top: 0;
   z-index: 100;
+  animation: headerSlideIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.sla-header::after {
+  content: '';
+  position: absolute;
+  left: 8%; right: 8%; bottom: -1px; height: 1px;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(251, 191, 36, 0.55) 50%,
+      transparent 100%);
+  background-size: 200% 100%;
+  animation: railShimmer 5s ease-in-out infinite;
+}
+@keyframes railShimmer {
+  0%, 100% { background-position: 0 0; opacity: 0.6; }
+  50%      { background-position: 200% 0; opacity: 1; }
+}
+@keyframes headerSlideIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .header-left {
@@ -487,41 +1117,66 @@ watch(form, (newVal) => {
 }
 
 .back-btn {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 8px 16px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: background 0.25s, border-color 0.25s, color 0.25s, transform 0.25s;
 }
 
 .back-btn:hover {
   color: #fff;
+  background: rgba(251, 191, 36, 0.10);
+  border-color: rgba(251, 191, 36, 0.35);
+  transform: translateX(-2px);
 }
 
 .header-title h1 {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 600;
   letter-spacing: -0.5px;
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
+  background: linear-gradient(120deg, #fef3c7 0%, #fbbf24 55%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .badge {
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  padding: 4px 8px;
-  background: rgba(255, 235, 59, 0.1);
-  color: #ffeb3b;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 235, 59, 0.2);
+  padding: 5px 10px;
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde047;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+  -webkit-text-fill-color: #fde047; /* override the gradient text-fill from h1 */
+}
+.badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.25) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: badgeShimmer 4s ease-in-out infinite;
+}
+@keyframes badgeShimmer {
+  0%, 100% { background-position: -100% 0; }
+  50%      { background-position: 200% 0; }
 }
 
 .header-actions {
@@ -558,13 +1213,21 @@ watch(form, (newVal) => {
 }
 
 .save-draft {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background: rgba(251, 191, 36, 0.10);
+  border: 1px solid rgba(251, 191, 36, 0.30);
+  color: #fde047;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0 18px;
+  height: 40px;
 }
 
 .save-draft:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(251, 191, 36, 0.20);
+  border-color: rgba(251, 191, 36, 0.55);
+  color: #fef3c7;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.22);
 }
 
 /* Wizard Layout */
@@ -574,13 +1237,31 @@ watch(form, (newVal) => {
   overflow: hidden;
 }
 
-/* Sidebar Stepper */
+/* Sidebar Stepper — transparent in both themes, gold-tinted rail divider */
 .wizard-sidebar {
   width: 280px;
-  background: rgba(10, 10, 10, 0.5);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+  background: transparent;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
   padding: 32px 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+.wizard-sidebar::-webkit-scrollbar { width: 6px; }
+.wizard-sidebar::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.30); border-radius: 3px; }
+.wizard-sidebar::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.50); }
+.wizard-sidebar::before {
+  content: '';
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  right: -1px;
+  width: 1px;
+  background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(251, 191, 36, 0.35) 50%,
+      transparent 100%);
 }
 
 .steps-nav {
@@ -625,8 +1306,10 @@ watch(form, (newVal) => {
 
 .step-item.active {
   opacity: 1 !important;
-  background: rgba(255, 235, 59, 0.03);
-  transform: translateX(8px);
+  background: linear-gradient(90deg,
+      rgba(251, 191, 36, 0.12) 0%,
+      rgba(251, 191, 36, 0.02) 80%);
+  transform: translateX(6px);
 }
 
 .step-item.completed {
@@ -649,15 +1332,32 @@ watch(form, (newVal) => {
 }
 
 .step-item.active .step-indicator {
-  border-color: #ffeb3b;
-  color: #ffeb3b;
-  box-shadow: 0 0 10px rgba(255, 235, 59, 0.2);
+  background: linear-gradient(135deg, #fbbf24, #d97706);
+  border-color: rgba(255, 255, 255, 0.45);
+  color: #1a1410;
+  box-shadow:
+    0 0 0 3px rgba(251, 191, 36, 0.18),
+    0 4px 12px rgba(217, 119, 6, 0.40);
+  animation: indicatorPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes indicatorPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 3px rgba(251, 191, 36, 0.18),
+      0 4px 12px rgba(217, 119, 6, 0.40);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(251, 191, 36, 0.10),
+      0 6px 18px rgba(217, 119, 6, 0.55);
+  }
 }
 
 .step-item.completed .step-indicator {
-  background: #ffeb3b;
-  color: #000;
-  border-color: #ffeb3b;
+  background: rgba(251, 191, 36, 0.18);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.50);
 }
 
 .step-label {
@@ -680,17 +1380,18 @@ watch(form, (newVal) => {
 }
 
 .step-item.active .step-desc {
-  color: #ffeb3b;
+  color: #fbbf24;
 }
 
 .active-glow {
   position: absolute;
   left: 0;
-  top: 0;
-  bottom: 0;
+  top: 8px;
+  bottom: 8px;
   width: 3px;
-  background: #ffeb3b;
-  box-shadow: 0 0 10px rgba(255, 235, 59, 0.5);
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(180deg, #fbbf24, #d97706);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.55);
 }
 
 /* Connective Line */
@@ -719,21 +1420,32 @@ watch(form, (newVal) => {
   scroll-behavior: smooth;
 }
 
-/* Footer Navigation */
+/* Footer Navigation — transparent fade, no opaque rectangle */
 .wizard-footer {
   margin-top: auto;
-  padding-top: 32px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, transparent 100%);
-  position: absolute; /* Stick to bottom of flex container */
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 32px 40px;
+  padding: 24px 40px;
   z-index: 10;
+}
+/* Soft top-edge fade so step content scrolling under the footer doesn't read
+   as harsh — uses theme-aware token via the page bg. */
+.wizard-footer::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 100%;
+  height: 64px;
+  background: linear-gradient(to top,
+      var(--bg-color, #000) 0%,
+      transparent 100%);
+  pointer-events: none;
 }
 
 .nav-btn {
@@ -751,12 +1463,16 @@ watch(form, (newVal) => {
 
 .btn-prev {
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   color: #fff;
+  border-radius: 999px;
 }
 
 .btn-prev:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(251, 191, 36, 0.10);
+  border-color: rgba(251, 191, 36, 0.30);
+  color: #fde047;
+  transform: translateX(-2px);
 }
 
 .btn-prev:disabled {
@@ -765,26 +1481,41 @@ watch(form, (newVal) => {
 }
 
 .btn-next {
-  background: #ffeb3b;
-  color: #000;
+  background: linear-gradient(135deg, #fde047 0%, #fbbf24 50%, #f59e0b 100%);
+  color: #1a1410;
   border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  box-shadow:
+    0 6px 18px rgba(245, 158, 11, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
 }
 
 .btn-next:hover {
-  background: #fdd835;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #fef08a 0%, #fde047 50%, #fbbf24 100%);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 10px 26px rgba(245, 158, 11, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.60);
 }
 
 .btn-finish {
-  background: #4caf50;
+  background: linear-gradient(135deg, #34d399, #15803d);
   color: #fff;
   border: none;
+  border-radius: 999px;
+  font-weight: 700;
+  box-shadow:
+    0 6px 18px rgba(21, 128, 61, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.30);
 }
 
 .btn-finish:hover {
-  background: #43a047;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+  background: linear-gradient(135deg, #6ee7b7, #34d399);
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 10px 26px rgba(21, 128, 61, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40);
 }
 
 .progress-indicator {
@@ -812,8 +1543,16 @@ watch(form, (newVal) => {
 
 .progress-fill {
   height: 100%;
-  background: #ffeb3b;
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #fde047 100%);
+  background-size: 200% 100%;
+  border-radius: 999px;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.55);
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: progressShimmer 4s linear infinite;
+}
+@keyframes progressShimmer {
+  0%   { background-position: 0 0; }
+  100% { background-position: 200% 0; }
 }
 
 /* Advanced Animations */
@@ -875,5 +1614,306 @@ watch(form, (newVal) => {
   0% { left: -100%; }
   20% { left: 200%; }
   100% { left: 200%; }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   LIGHT THEME — page on cream, transparent surfaces, gold accents.
+   Preserves the yellow/orange/golden palette and transparency throughout.
+   ════════════════════════════════════════════════════════════════════════ */
+[data-theme="light"] .sla-generator-wrapper {
+  color: var(--text-primary, #1a1410);
+}
+
+/* Stronger ambient glow on cream so the warm gold is visible */
+[data-theme="light"] .sla-generator-wrapper::before {
+  background: radial-gradient(closest-side, rgba(251, 191, 36, 0.28), transparent 70%);
+  opacity: 0.7;
+}
+[data-theme="light"] .sla-generator-wrapper::after {
+  background: radial-gradient(closest-side, rgba(217, 119, 6, 0.24), transparent 70%);
+  opacity: 0.7;
+}
+
+/* Header */
+[data-theme="light"] .sla-header {
+  border-bottom-color: rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .sla-header::after {
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(217, 119, 6, 0.55) 50%,
+      transparent 100%);
+}
+[data-theme="light"] .back-btn {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: #6b5840;
+}
+[data-theme="light"] .back-btn:hover {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(217, 119, 6, 0.50);
+  color: #78350f;
+}
+[data-theme="light"] .header-title h1 {
+  background: linear-gradient(120deg, #92400e 0%, #d97706 60%, #b45309 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+[data-theme="light"] .badge {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+  border-color: rgba(217, 119, 6, 0.42);
+  -webkit-text-fill-color: #92400e;
+}
+[data-theme="light"] .project-selector label,
+[data-theme="light"] .template-selector label {
+  color: #b45309;
+}
+[data-theme="light"] .save-draft {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-color: rgba(217, 119, 6, 0.55);
+  color: #fffaf0;
+  box-shadow:
+    0 4px 12px rgba(217, 119, 6, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40);
+}
+[data-theme="light"] .save-draft:hover {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fffaf0;
+  box-shadow:
+    0 6px 18px rgba(217, 119, 6, 0.50),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+}
+
+/* Sidebar */
+[data-theme="light"] .wizard-sidebar {
+  border-right-color: rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .wizard-sidebar::before {
+  background: linear-gradient(180deg,
+      transparent 0%,
+      rgba(217, 119, 6, 0.45) 50%,
+      transparent 100%);
+}
+[data-theme="light"] .step-item:hover {
+  background: rgba(245, 158, 11, 0.10);
+}
+[data-theme="light"] .step-item.active {
+  background: linear-gradient(90deg,
+      rgba(245, 158, 11, 0.20) 0%,
+      rgba(255, 250, 240, 0.05) 80%);
+}
+[data-theme="light"] .step-indicator {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.28);
+  color: #92400e;
+}
+[data-theme="light"] .step-item.active .step-indicator {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  border-color: rgba(255, 255, 255, 0.65);
+  color: #fffaf0;
+  box-shadow:
+    0 0 0 3px rgba(217, 119, 6, 0.20),
+    0 4px 12px rgba(180, 83, 9, 0.45);
+}
+[data-theme="light"] @keyframes indicatorPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 3px rgba(217, 119, 6, 0.20),
+      0 4px 12px rgba(180, 83, 9, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 6px rgba(217, 119, 6, 0.12),
+      0 6px 18px rgba(180, 83, 9, 0.60);
+  }
+}
+[data-theme="light"] .step-item.completed .step-indicator {
+  background: rgba(217, 119, 6, 0.18);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .step-title { color: #92400e; }
+[data-theme="light"] .step-desc { color: #1a1410; }
+[data-theme="light"] .step-item.active .step-desc { color: #b45309; }
+[data-theme="light"] .active-glow {
+  background: linear-gradient(180deg, #d97706, #b45309);
+  box-shadow: 0 0 14px rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .step-item:not(:last-child)::after {
+  background: rgba(217, 119, 6, 0.16);
+}
+[data-theme="light"] .step-item.completed:not(:last-child)::after {
+  background: rgba(217, 119, 6, 0.40);
+}
+
+/* Footer */
+[data-theme="light"] .wizard-footer {
+  border-top-color: rgba(217, 119, 6, 0.18);
+}
+/* The fade above the footer uses var(--bg-color) which resolves to #faf7f0 in light */
+[data-theme="light"] .btn-prev {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: #6b5840;
+}
+[data-theme="light"] .btn-prev:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.18);
+  border-color: rgba(217, 119, 6, 0.55);
+  color: #78350f;
+}
+[data-theme="light"] .btn-next {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+  color: #fffaf0;
+  box-shadow:
+    0 6px 18px rgba(217, 119, 6, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.40);
+}
+[data-theme="light"] .btn-next:hover {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #92400e 100%);
+  box-shadow:
+    0 10px 26px rgba(217, 119, 6, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+}
+[data-theme="light"] .btn-finish {
+  background: linear-gradient(135deg, #15803d, #166534);
+}
+[data-theme="light"] .btn-finish:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+[data-theme="light"] .progress-indicator span { color: #92400e; }
+[data-theme="light"] .progress-bar {
+  background: rgba(217, 119, 6, 0.16);
+}
+[data-theme="light"] .progress-fill {
+  background: linear-gradient(90deg, #d97706 0%, #f59e0b 50%, #fbbf24 100%);
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.55);
+}
+
+/* ═══════════════════════════════════════════
+   DUPLICATE-SLA WARNING MODAL
+   Mirrors HandoverWizardPage's .nano-modal-* design exactly so the two
+   wizards look identical when the duplicate dialog appears. Dark base
+   first, then light-theme overrides below.
+   ═══════════════════════════════════════════ */
+
+.nano-modal-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.nano-modal-card {
+  width: 100%; max-width: 440px;
+  background: #121214; border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px; padding: 32px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  text-align: center;
+}
+.slide-up { animation: nano-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes nano-slide-up {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.nano-modal-icon {
+  width: 64px; height: 64px; border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 24px;
+}
+.nano-modal-icon.warning { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+.nano-modal-content h3 { font-size: 20px; font-weight: 700; color: #fff; margin: 0 0 12px; }
+.nano-modal-content p { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.6; margin-bottom: 24px; }
+.duplicate-info-box {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px; padding: 20px; margin-bottom: 24px; text-align: left;
+}
+.dib-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+.dib-row:last-child { margin-bottom: 0; }
+.dib-l { color: rgba(255,255,255,0.4); }
+.dib-v { color: #fff; font-weight: 500; }
+.status-pill {
+  padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+  background: rgba(167, 139, 250, 0.1); color: #a78bfa;
+}
+.status-pill.approved { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.status-pill.pending { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+.status-pill.rejected { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.status-pill.draft { background: rgba(113, 113, 122, 0.12); color: #a1a1aa; }
+.nano-modal-subtext { font-size: 11px !important; color: rgba(255,255,255,0.3) !important; font-style: italic; }
+.nano-modal-actions { display: flex; gap: 12px; }
+.nano-btn {
+  flex: 1; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.nano-btn.primary { background: #fbbf24; color: #000; border: none; }
+.nano-btn.primary:hover { background: #fcd34d; transform: translateY(-2px); }
+.nano-btn.secondary { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); }
+.nano-btn.secondary:hover { background: rgba(255,255,255,0.1); }
+
+/* Fade transition for the overlay */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+/* ─── Light theme overrides for the duplicate-SLA modal ─── */
+[data-theme="light"] .nano-modal-overlay {
+  background: rgba(26, 20, 16, 0.42);
+  backdrop-filter: blur(8px);
+}
+[data-theme="light"] .nano-modal-card {
+  background: rgba(255, 250, 240, 0.96);
+  border: 1px solid rgba(180, 110, 30, 0.22);
+  box-shadow: 0 30px 70px rgba(120, 80, 20, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+[data-theme="light"] .nano-modal-icon.warning {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.18);
+}
+[data-theme="light"] .nano-modal-content h3 { color: var(--text-primary); }
+[data-theme="light"] .nano-modal-content p { color: #6b5840; }
+[data-theme="light"] .duplicate-info-box {
+  background: rgba(245, 158, 11, 0.07);
+  border-color: rgba(245, 158, 11, 0.22);
+}
+[data-theme="light"] .dib-l { color: #6b5840 !important; }
+[data-theme="light"] .dib-v { color: var(--text-primary) !important; }
+[data-theme="light"] .status-pill {
+  background: rgba(167, 139, 250, 0.16);
+  color: #6d28d9;
+}
+[data-theme="light"] .status-pill.approved {
+  background: rgba(16, 185, 129, 0.16);
+  color: #047857;
+}
+[data-theme="light"] .status-pill.pending {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+}
+[data-theme="light"] .status-pill.rejected {
+  background: rgba(239, 68, 68, 0.16);
+  color: #b91c1c;
+}
+[data-theme="light"] .status-pill.draft {
+  background: rgba(113, 113, 122, 0.16);
+  color: #52525b;
+}
+[data-theme="light"] .nano-modal-subtext { color: rgba(107, 88, 64, 0.6) !important; }
+[data-theme="light"] .nano-btn.primary {
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+[data-theme="light"] .nano-btn.primary:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.45);
+}
+[data-theme="light"] .nano-btn.secondary {
+  background: rgba(26, 20, 16, 0.05);
+  color: var(--text-primary);
+  border: 1px solid rgba(26, 20, 16, 0.14);
+}
+[data-theme="light"] .nano-btn.secondary:hover {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.35);
 }
 </style>

@@ -666,4 +666,100 @@ onBeforeUnmount(() => { if (cycleTimer) clearInterval(cycleTimer) })
   .display-title .word { opacity: 1; transform: none; animation: none; }
   .step-line { animation: none; opacity: 1; transform: none; }
 }
+
+/* ═════════ LIGHT THEME OVERRIDES — warm cream + amber palette ═════════
+   Keep the orange/amber/golden accents vivid; only neutrals invert.
+   Frosted-glass feel is preserved with translucent cream surfaces. */
+[data-theme="light"] .hero {
+  background: linear-gradient(135deg,
+    rgba(255, 250, 240, 0.85) 0%,
+    rgba(255, 244, 220, 0.62) 100%);
+  border-color: rgba(217, 119, 6, 0.16);
+  box-shadow: 0 14px 36px -18px rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .grid-bg {
+  background-image: radial-gradient(rgba(217, 119, 6, 0.18) 1px, transparent 1px);
+  opacity: 0.32;
+}
+[data-theme="light"] .aurora-blob {
+  background: radial-gradient(closest-side,
+    rgba(251, 146, 60, 0.32),
+    rgba(251, 191, 36, 0.18) 50%,
+    transparent 80%);
+}
+[data-theme="light"] .status-strip {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .status-text { color: #047857; }
+[data-theme="light"] .status-meta { color: #6b5840; }
+[data-theme="light"] .status-divider { background: rgba(40, 25, 10, 0.18); }
+[data-theme="light"] .overline { color: #d97706; }
+[data-theme="light"] .display-title { color: #1a1410; }
+[data-theme="light"] .display-title .w2 { color: #b45309; }
+[data-theme="light"] .desc { color: #44362a; }
+[data-theme="light"] .cmdk-hint { color: #6b5840; }
+[data-theme="light"] .cmdk-hint kbd {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(40, 25, 10, 0.18);
+  color: #44362a;
+}
+/* Terminal-style step preview — recoloured for cream so the surface blends
+   with the hero. The amber active state still pops. */
+[data-theme="light"] .preview-frame {
+  background: rgba(255, 244, 220, 0.78);
+  border-color: rgba(40, 25, 10, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45),
+              0 14px 32px -22px rgba(40, 25, 10, 0.28);
+}
+[data-theme="light"] .preview-head {
+  border-bottom-color: rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .preview-title { color: #6b5840; }
+[data-theme="light"] .step-line { color: #6b5840; }
+[data-theme="light"] .step-line .step-num { color: #8d7b62; }
+[data-theme="light"] .step-line .step-name { color: #44362a; }
+[data-theme="light"] .step-line .step-fields { color: #8d7b62; }
+[data-theme="light"] .step-line.active {
+  background: linear-gradient(90deg, rgba(217, 119, 6, 0.18), transparent 80%);
+  color: #b45309;
+}
+[data-theme="light"] .step-line.active .step-num { color: #c2410c; }
+[data-theme="light"] .step-line.active .step-name { color: #1a1410; }
+[data-theme="light"] .step-line.active .step-fields { color: #b45309; }
+[data-theme="light"] .preview-foot {
+  border-top-color: rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .progress-track { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .progress-text { color: #6b5840; }
+
+[data-theme="light"] .meta-card {
+  background: rgba(255, 250, 240, 0.72);
+  border-color: rgba(40, 25, 10, 0.10);
+  box-shadow: 0 10px 28px -18px rgba(40, 25, 10, 0.20);
+}
+[data-theme="light"] .meta-card:hover {
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .meta-icon {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+[data-theme="light"] .meta-card h4 { color: #1a1410; }
+[data-theme="light"] .meta-list li { color: #44362a; }
+[data-theme="light"] .meta-list strong { color: #1a1410; }
+[data-theme="light"] .meta-list code {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.28);
+}
+[data-theme="light"] .link-card-desc { color: #44362a; }
+[data-theme="light"] .link-card-arrow {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #b45309;
+}
+[data-theme="light"] .link-card:hover .link-card-arrow {
+  background: rgba(217, 119, 6, 0.22);
+}
 </style>

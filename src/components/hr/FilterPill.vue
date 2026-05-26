@@ -277,4 +277,36 @@ onBeforeUnmount(() => {
   opacity: 0;
   transform: scale(0.96);
 }
+
+/* ═══════════ LIGHT THEME ═══════════
+   The popover is teleported to body, so this rule uses [data-theme="light"]
+   without depending on the SFC root. */
+[data-theme="light"] .pill-popover {
+  background: rgba(255, 250, 240, 0.92);
+  border-color: rgba(40, 25, 10, 0.14);
+  box-shadow: 0 22px 56px -22px rgba(40, 25, 10, 0.42);
+}
+[data-theme="light"] .pill-item { color: #44362a; }
+[data-theme="light"] .pill-item:hover {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+[data-theme="light"] .pill-item.selected {
+  background: rgba(217, 119, 6, 0.18);
+  color: #b45309;
+}
+[data-theme="light"] .opt-check { color: #b45309; }
+[data-theme="light"] .pill-empty { color: #8d7b62; }
+
+[data-theme="light"] .pill-btn { color: #1a1410; }
+[data-theme="light"] .pill-label { color: #92400e; }
+[data-theme="light"] .pill-value { color: #44362a; }
+[data-theme="light"] .filter-pill.active .pill-label { color: #c2410c; }
+[data-theme="light"] .filter-pill.active .pill-value { color: #b45309; }
+[data-theme="light"] .pill-chev { color: #8d7b62; }
+[data-theme="light"] .pill-chev.flipped { color: #b45309; }
+[data-theme="light"] .filter-pill.active .pill-btn {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.40);
+}
 </style>

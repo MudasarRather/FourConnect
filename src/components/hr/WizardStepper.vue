@@ -127,4 +127,48 @@ const onStepClick = (idx) => {
 }
 .step.active .step-label { color: var(--hr-text); }
 .step.done .step-label { color: var(--hr-text-secondary); }
+
+/* ─── Light-theme softening ─────────────────────────────────────
+   The hr-border-strong token reads as a heavy dark ring on cream.
+   Replace with a faint warm hairline + soft cream surface; keep
+   the gold active/done states untouched. */
+[data-theme="light"] .track-bg { background: rgba(40, 25, 10, 0.10); }
+
+[data-theme="light"] .step-marker {
+  background: rgba(255, 250, 240, 0.92);
+  /* The wizard header behind the stepper has an orange aurora gradient —
+     any visible border on the cream circle reads as a hard ring. Drop the
+     border for inactive steps and rely on the cream surface for definition. */
+  border-color: transparent;
+  color: #92400e;
+  box-shadow: 0 2px 8px -2px rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .step.active .step-marker {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(217, 119, 6, 0.55);
+  color: #b45309;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
+    0 6px 18px -6px rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .step.done .step-marker {
+  background: #d97706;
+  border-color: #d97706;
+  color: #fff;
+  box-shadow: 0 4px 12px -3px rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .step-label { color: #6b5840; }
+[data-theme="light"] .step.active .step-label { color: #92400e; }
+[data-theme="light"] .step.done .step-label { color: #b45309; }
+
+/* The global rescue stylesheet (theme-light-rescue.css) treats any .step-num
+   as a "section number badge" and paints a gradient + 1px solid border on
+   it. Inside this wizard's marker circles the digit must stay a transparent
+   inline span — defeat the rescue rule. */
+[data-theme="light"] .step-marker .step-num {
+  background: transparent !important;
+  border: 0 !important;
+  color: inherit !important;
+  padding: 0 !important;
+}
 </style>

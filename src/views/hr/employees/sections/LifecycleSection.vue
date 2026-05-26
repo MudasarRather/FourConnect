@@ -476,4 +476,86 @@ const triggerAction = (key) => {
 
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
+
+/* ─── LIGHT THEME OVERRIDES — warm cream + amber/golden palette ─────────── */
+[data-theme="light"] .lc-head-panel {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.82), rgba(255, 246, 226, 0.72));
+  border-color: rgba(217, 119, 6, 0.22);
+}
+[data-theme="light"] .lc-aurora {
+  background:
+    radial-gradient(50% 80% at 0% 0%, rgba(217, 119, 6, 0.14), transparent 60%),
+    radial-gradient(40% 60% at 100% 100%, rgba(147, 51, 234, 0.10), transparent 60%);
+}
+/* Title gradient — white→gray is invisible on cream */
+[data-theme="light"] .lc-head-text h3 {
+  background: linear-gradient(120deg, #1a1410 0%, #92400e 70%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .lc-head-text p { color: #6b5840; }
+
+[data-theme="light"] .legend-pill {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .legend-count { color: #6b5840; }
+[data-theme="light"] .lc-loading { color: #6b5840; }
+
+/* Columns */
+[data-theme="light"] .lc-col {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.70), rgba(255, 246, 226, 0.55));
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .lc-col:hover { border-color: rgba(217, 119, 6, 0.36); }
+[data-theme="light"] .col-count {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+}
+[data-theme="light"] .col-body::-webkit-scrollbar-thumb { background: rgba(217, 119, 6, 0.30); }
+[data-theme="light"] .col-empty { color: #8d7b62; }
+
+/* Cards */
+[data-theme="light"] .lc-card {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.85), rgba(255, 246, 226, 0.72));
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .lc-card::before {
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+}
+[data-theme="light"] .lc-card::after {
+  background: linear-gradient(180deg, #d97706, #b45309);
+}
+[data-theme="light"] .lc-card:hover {
+  border-color: rgba(217, 119, 6, 0.36);
+  box-shadow: 0 12px 24px -16px rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .lc-name { color: #1a1410; }
+[data-theme="light"] .lc-meta { color: #6b5840; }
+[data-theme="light"] .lc-action-trigger { color: #92400e; }
+[data-theme="light"] .lc-card:hover .lc-action-trigger { color: #b45309; }
+[data-theme="light"] .lc-action-trigger:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+
+/* Action popover */
+[data-theme="light"] .action-popover {
+  background: rgba(255, 250, 240, 0.96);
+  border-color: rgba(217, 119, 6, 0.28);
+  box-shadow: 0 16px 50px -16px rgba(40, 25, 10, 0.28);
+}
+[data-theme="light"] .action-item { color: #44362a; }
+[data-theme="light"] .action-item:hover {
+  background: rgba(217, 119, 6, 0.10);
+  color: #1a1410;
+}
+[data-theme="light"] .action-item.tone-green { color: #047857; }
+[data-theme="light"] .action-item.tone-gold { color: #b45309; }
+[data-theme="light"] .action-item.tone-red { color: #b91c1c; }
+[data-theme="light"] .action-item.tone-orange { color: #c2410c; }
+[data-theme="light"] .action-item.neutral {
+  border-top-color: rgba(40, 25, 10, 0.10);
+  color: #6b5840;
+}
 </style>

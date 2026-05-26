@@ -460,4 +460,57 @@ onMounted(fetchList)
 }
 .primary:disabled { opacity: 0.5; cursor: not-allowed; }
 .grow { flex: 1; }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+[data-theme="light"] .offer-status-draft           {
+  color: #6b5840;
+  background: rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .offer-status-pending_approval {
+  color: #b45309;
+  background: rgba(251, 191, 36, 0.18);
+}
+[data-theme="light"] .offer-status-approved        {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .offer-status-released        {
+  color: #c2410c;
+  background: rgba(251, 146, 60, 0.16);
+}
+[data-theme="light"] .offer-status-accepted        {
+  color: #065f46;
+  background: rgba(16, 185, 129, 0.24);
+}
+[data-theme="light"] .offer-status-rejected        {
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.10);
+}
+[data-theme="light"] .offer-status-expired         {
+  color: #6b5840;
+  background: rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .offer-status-withdrawn       {
+  color: #6b5840;
+  background: rgba(40, 25, 10, 0.06);
+}
+/* Offer card internals on cream */
+[data-theme="light"] .offer-card {
+  border-color: rgba(40, 25, 10, 0.16);
+}
+/* The .offer-stats top/bottom rule was rgba(255,255,255,0.04) — invisible
+   on cream. Tint to a warm dark hairline so the stat row separates from
+   meta + actions. */
+[data-theme="light"] .offer-stats {
+  border-top-color: rgba(40, 25, 10, 0.12);
+  border-bottom-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .stat .label { color: #92400e; }
+[data-theme="light"] .stat .value { color: #1a1410; }
+[data-theme="light"] .hint-muted {
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #44362a;
+}
+[data-theme="light"] .hint-muted svg { color: #b45309; }
 </style>

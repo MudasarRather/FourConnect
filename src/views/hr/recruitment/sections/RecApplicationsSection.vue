@@ -170,15 +170,18 @@ function humanStageLabel(s) {
   }[s] || s)
 }
 
+const countByStage = (stage) =>
+  (items.value || []).reduce((n, it) => n + (it.current_stage === stage ? 1 : 0), 0)
+
 const kpiChips = computed(() => [
-  { key: 'all',         label: 'All',         value: total.value || 0, tone: 'neutral', icon: Layers },
-  { key: 'APPLIED',     label: 'Applied',     value: null, tone: 'gold' },
-  { key: 'SCREENING',   label: 'Screening',   value: null, tone: 'gold' },
-  { key: 'SHORTLISTED', label: 'Shortlisted', value: null, tone: 'orange' },
-  { key: 'INTERVIEW',   label: 'Interview',   value: null, tone: 'orange' },
-  { key: 'SELECTED',    label: 'Selected',    value: null, tone: 'orange' },
-  { key: 'OFFER',       label: 'Offer',       value: null, tone: 'orange' },
-  { key: 'JOINED',      label: 'Joined',      value: null, tone: 'green' },
+  { key: 'all',         label: 'All',         value: total.value || 0,       tone: 'neutral', icon: Layers },
+  { key: 'APPLIED',     label: 'Applied',     value: countByStage('APPLIED'),     tone: 'gold' },
+  { key: 'SCREENING',   label: 'Screening',   value: countByStage('SCREENING'),   tone: 'gold' },
+  { key: 'SHORTLISTED', label: 'Shortlisted', value: countByStage('SHORTLISTED'), tone: 'orange' },
+  { key: 'INTERVIEW',   label: 'Interview',   value: countByStage('INTERVIEW'),   tone: 'orange' },
+  { key: 'SELECTED',    label: 'Selected',    value: countByStage('SELECTED'),    tone: 'orange' },
+  { key: 'OFFER',       label: 'Offer',       value: countByStage('OFFER'),       tone: 'orange' },
+  { key: 'JOINED',      label: 'Joined',      value: countByStage('JOINED'),      tone: 'green' },
 ])
 
 const setStage = async (key) => {

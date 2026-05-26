@@ -150,8 +150,8 @@ export function usePositions() {
     const res = await axios.post(`${API_BASE}/positions/${id}/hold`, {}, { headers: authHeader() })
     return res.data
   }
-  const close = async (id) => {
-    const res = await axios.post(`${API_BASE}/positions/${id}/close`, {}, { headers: authHeader() })
+  const close = async (id, payload) => {
+    const res = await axios.post(`${API_BASE}/positions/${id}/close`, payload, { headers: authHeader() })
     return res.data
   }
   const archive = async (id) => {

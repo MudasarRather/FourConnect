@@ -411,98 +411,198 @@
       :width="640"
       @close="showTeamModal = false"
     >
-      <!-- Structured Content -->
-      <div class="team-modal-content">
-        <!-- Search Section -->
-        <div class="search-section">
-          <label class="section-label">Find Team Members</label>
-          <div class="team-search">
-            <Search :size="14" />
-            <input v-model="memberSearch" type="text" placeholder="Search users..." />
-          </div>
-        </div>
-
-        <!-- Divider -->
-        <div class="section-divider"></div>
-
-        <!-- Users Section -->
-        <div class="users-section">
-          <label class="section-label">Available Users <span class="count">({{ filteredUsers.length }})</span></label>
-          <div class="users-list">
-        <div 
-          v-for="user in filteredUsers" 
-          :key="user.id"
-          class="user-item"
-          :class="{ selected: isSelected(user.id) }"
-          @click="toggleUser(user)"
+      <!-- Redesigned Team Management — structured, scroll-free, motion-v driven -->
+      <div class="tmp">
+        <!-- Insights strip -->
+        <Motion
+          class="tmp-insights"
+          :initial="{ opacity: 0, y: 12 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }"
         >
-          <div class="user-avatar" :style="{ background: getGradient(user.full_name) }">
-            {{ getInitials(user.full_name) }}
-          </div>
-          <div class="user-info">
-            <span class="user-name">{{ user.full_name }}</span>
-            <span class="user-email">{{ user.email }}</span>
-          </div>
-          <div class="user-check">
-            <Check v-if="isSelected(user.id)" :size="16" />
-            <Plus v-else :size="16" />
-          </div>
-          </div>
-        </div>
-      </div>
+          <Motion
+            class="tmp-insight"
+            :initial="{ opacity: 0, y: 8 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.4, delay: 0.06, ease: [0.16, 1, 0.3, 1] }"
+            :whileHover="{ y: -2 }"
+          >
+            <div class="tmp-insight__num">{{ filteredUsers.length }}</div>
+            <div class="tmp-insight__label"><Users :size="11" /> Available</div>
+          </Motion>
+          <Motion
+            class="tmp-insight tmp-insight--selected"
+            :class="{ 'is-active': selectedUsers.length }"
+            :initial="{ opacity: 0, y: 8 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.4, delay: 0.12, ease: [0.16, 1, 0.3, 1] }"
+            :whileHover="{ y: -2 }"
+          >
+            <div class="tmp-insight__num">{{ selectedUsers.length }}</div>
+            <div class="tmp-insight__label"><Sparkles :size="11" /> Selected</div>
+          </Motion>
+          <Motion
+            class="tmp-insight"
+            :initial="{ opacity: 0, y: 8 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.4, delay: 0.18, ease: [0.16, 1, 0.3, 1] }"
+            :whileHover="{ y: -2 }"
+          >
+            <div class="tmp-insight__num">{{ assignedMembers.length }}</div>
+            <div class="tmp-insight__label"><ShieldCheck :size="11" /> On team</div>
+          </Motion>
+        </Motion>
 
-        <!-- Divider -->
-        <div class="section-divider" v-if="isAdmin && assignedMembers.length"></div>
+        <!-- Search -->
+        <Motion
+          class="tmp-search"
+          :initial="{ opacity: 0, y: 10 }"
+          :animate="{ opacity: 1, y: 0 }"
+          :transition="{ duration: 0.4, delay: 0.22, ease: [0.16, 1, 0.3, 1] }"
+        >
+          <Search :size="15" class="tmp-search__icon" />
+          <input
+            v-model="memberSearch"
+            type="text"
+            class="tmp-search__input"
+            placeholder="Search teammates by name…"
+          />
+          <button
+            v-if="memberSearch"
+            class="tmp-search__clear"
+            type="button"
+            @click="memberSearch = ''"
+            aria-label="Clear search"
+          >
+            <X :size="13" />
+          </button>
+        </Motion>
 
-        <!-- Assigned Users Section (Admin Only) -->
-        <div class="assigned-section" v-if="isAdmin && assignedMembers.length">
-          <div class="assigned-header">
-            <label class="section-label">Assigned Team</label>
-            <span class="member-count">{{ assignedMembers.length }} {{ assignedMembers.length === 1 ? 'member' : 'members' }}</span>
-          </div>
-          <div class="assigned-list">
-            <div 
-              v-for="member in assignedMembers" 
-              :key="member.id"
-              class="assigned-item"
-              :class="{ 'is-owner': member.role === 'Owner' }"
+        <!-- Available people -->
+        <section class="tmp-section">
+          <Motion
+            class="tmp-section__head"
+            :initial="{ opacity: 0, x: -8 }"
+            :animate="{ opacity: 1, x: 0 }"
+            :transition="{ duration: 0.36, delay: 0.28, ease: [0.16, 1, 0.3, 1] }"
+          >
+            <span class="tmp-section__bar"></span>
+            <h3 class="tmp-section__title">Available people</h3>
+            <span class="tmp-section__pill">{{ filteredUsers.length }}</span>
+          </Motion>
+
+          <div v-if="filteredUsers.length" class="tmp-roster">
+            <Motion
+              v-for="(user, i) in filteredUsers"
+              :key="user.id"
+              as="button"
+              type="button"
+              class="tmp-card"
+              :class="{ 'tmp-card--on': isSelected(user.id) }"
+              :initial="{ opacity: 0, y: 14, scale: 0.96 }"
+              :animate="{ opacity: 1, y: 0, scale: 1 }"
+              :transition="{ duration: 0.32, delay: 0.30 + Math.min(i, 14) * 0.025, ease: [0.16, 1, 0.3, 1] }"
+              :whileHover="{ y: -3, scale: 1.015 }"
+              :whileTap="{ scale: 0.96 }"
+              @click="toggleUser(user)"
             >
-              <div class="assigned-avatar" :style="{ background: getGradient(member.user_name) }">
+              <div class="tmp-card__glow" aria-hidden="true"></div>
+              <div class="tmp-card__avatar" :style="{ background: getGradient(user.full_name) }">
+                {{ getInitials(user.full_name) }}
+              </div>
+              <div class="tmp-card__body">
+                <span class="tmp-card__name">{{ user.full_name }}</span>
+                <span class="tmp-card__email">{{ user.email }}</span>
+              </div>
+              <span class="tmp-card__mark">
+                <Check v-if="isSelected(user.id)" :size="14" />
+                <Plus v-else :size="14" />
+              </span>
+            </Motion>
+          </div>
+
+          <Motion
+            v-else
+            class="tmp-empty"
+            :initial="{ opacity: 0, y: 8 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }"
+          >
+            <div class="tmp-empty__icon"><Users :size="20" /></div>
+            <p class="tmp-empty__text">{{ memberSearch ? 'No teammates match your search.' : 'Every available teammate is already on this project.' }}</p>
+          </Motion>
+        </section>
+
+        <!-- Assigned team (admin only) -->
+        <section class="tmp-section" v-if="isAdmin && assignedMembers.length">
+          <Motion
+            class="tmp-section__head"
+            :initial="{ opacity: 0, x: -8 }"
+            :animate="{ opacity: 1, x: 0 }"
+            :transition="{ duration: 0.36, delay: 0.34, ease: [0.16, 1, 0.3, 1] }"
+          >
+            <span class="tmp-section__bar tmp-section__bar--gold"></span>
+            <h3 class="tmp-section__title">On the team</h3>
+            <span class="tmp-section__pill">{{ assignedMembers.length }}</span>
+          </Motion>
+
+          <div class="tmp-team">
+            <Motion
+              v-for="(member, i) in assignedMembers"
+              :key="member.id"
+              class="tmp-member"
+              :class="{ 'is-owner': member.role === 'Owner', 'is-declined': member.status === 'declined' }"
+              :initial="{ opacity: 0, x: -14 }"
+              :animate="{ opacity: 1, x: 0 }"
+              :transition="{ duration: 0.34, delay: 0.36 + i * 0.04, ease: [0.16, 1, 0.3, 1] }"
+              :whileHover="{ x: 2 }"
+            >
+              <div class="tmp-member__avatar" :style="{ background: getGradient(member.user_name) }">
                 {{ getInitials(member.user_name) }}
               </div>
-              <div class="assigned-info">
-                <div class="assigned-name-row">
-                  <span class="assigned-name">{{ member.user_name }}</span>
-                  <span v-if="member.role === 'Owner'" class="owner-badge">
+              <div class="tmp-member__body">
+                <div class="tmp-member__row">
+                  <span class="tmp-member__name">{{ member.user_name }}</span>
+                  <span v-if="member.role === 'Owner'" class="tmp-member__crown">
                     <Crown :size="10" />
                     Owner
                   </span>
                 </div>
-                <span class="assigned-status" :class="member.status">{{ member.status }}</span>
+                <span class="tmp-member__status" :class="member.status">
+                  <span class="tmp-status-dot" :class="member.status"></span>
+                  {{ member.status }}
+                </span>
               </div>
-              <button 
-                v-if="member.status === 'declined' && isAdmin"
-                class="override-btn"
-                @click="openOverrideDialog(member)"
-                title="Override and Add to Team"
-              >
-                <UserCheck :size="14" />
-              </button>
-
-              <!-- Only show remove button for non-owners -->
-              <button 
-                v-if="member.role !== 'Owner'"
-                class="remove-btn" 
-                @click="openRemoveDialog(member)"
-                :disabled="removingMember === member.id"
-                title="Remove from team"
-              >
-                <Loader2 v-if="removingMember === member.id" :size="14" class="spin" />
-                <Trash2 v-else :size="14" />
-              </button>
-            </div>
+              <div class="tmp-member__actions" v-if="member.role !== 'Owner'">
+                <Motion
+                  v-if="member.status === 'declined'"
+                  as="button"
+                  type="button"
+                  class="tmp-iconbtn tmp-iconbtn--override"
+                  title="Override and add to team"
+                  :whileHover="{ y: -1, scale: 1.05 }"
+                  :whileTap="{ scale: 0.94 }"
+                  @click="openOverrideDialog(member)"
+                >
+                  <UserCheck :size="13" />
+                </Motion>
+                <Motion
+                  as="button"
+                  type="button"
+                  class="tmp-iconbtn tmp-iconbtn--remove"
+                  title="Remove from team"
+                  :whileHover="{ y: -1, scale: 1.05 }"
+                  :whileTap="{ scale: 0.94 }"
+                  :disabled="removingMember === member.id"
+                  @click="openRemoveDialog(member)"
+                >
+                  <Loader2 v-if="removingMember === member.id" :size="13" class="spin" />
+                  <Trash2 v-else :size="13" />
+                </Motion>
+              </div>
+            </Motion>
           </div>
-        </div>
+        </section>
       </div>
 
       <template #footer>
@@ -613,8 +713,9 @@ import ConfirmationModal from '../components/ui/ConfirmationModal.vue'
 import {
   UsersRound, Search, FolderKanban, Briefcase, UserPlus, Users, Calendar,
   Check, Plus, Send, Loader2, AlertCircle, Clock, X, UserMinus, Crown, Trash2, UserCheck,
-  Compass, ArrowRight
+  Compass, ArrowRight, Sparkles, ShieldCheck
 } from 'lucide-vue-next'
+import { Motion } from 'motion-v'
 import PaginationControls from '../components/ui/PaginationControls.vue'
 import gsap from 'gsap'
 import { useGsapAnim } from '../composables/useGsapAnim'
@@ -1520,6 +1621,10 @@ onUnmounted(() => {
   gap: 12px;
   margin-bottom: 24px;
   flex-wrap: wrap;
+  /* Sit above .atp-table — that table uses backdrop-filter, which spawns a
+     new stacking context and was making the dropdowns appear behind it. */
+  position: relative;
+  z-index: 30;
 }
 
 .filter-date {
@@ -3481,5 +3586,625 @@ onUnmounted(() => {
   border-color: rgba(153, 76, 0, 0.30);
   color: #fff;
   box-shadow: 0 4px 14px rgba(217, 119, 6, 0.18);
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   TMP — Team Management Panel (redesigned, scroll-free, motion-v)
+   ════════════════════════════════════════════════════════════════════ */
+.tmp {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Insights strip ─────────────────────────────────────────────── */
+.tmp-insights {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.tmp-insight {
+  position: relative;
+  padding: 14px 14px 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  transition: border-color 0.25s ease;
+  cursor: default;
+}
+.tmp-insight::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 80% at 0% 0%, rgba(249, 115, 22, 0.10), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.tmp-insight:hover { border-color: rgba(249, 115, 22, 0.20); }
+.tmp-insight:hover::after { opacity: 1; }
+
+.tmp-insight__num {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f5f5f7;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.tmp-insight__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: rgba(255, 255, 255, 0.45);
+}
+.tmp-insight__label svg { color: rgba(255, 255, 255, 0.4); }
+
+/* Selected insight — orange when active */
+.tmp-insight--selected.is-active {
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.14), rgba(249, 115, 22, 0.04));
+  border-color: rgba(249, 115, 22, 0.35);
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.05), 0 8px 24px -10px rgba(249, 115, 22, 0.4);
+}
+.tmp-insight--selected.is-active .tmp-insight__num { color: #fbbf24; }
+.tmp-insight--selected.is-active .tmp-insight__label,
+.tmp-insight--selected.is-active .tmp-insight__label svg { color: #fbbf24; }
+
+/* ── Search ─────────────────────────────────────────────────────── */
+.tmp-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.tmp-search__icon {
+  position: absolute;
+  left: 14px;
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+.tmp-search__input {
+  width: 100%;
+  height: 44px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0 40px 0 40px;
+  color: #fff;
+  font-size: 13.5px;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.tmp-search__input::placeholder { color: rgba(255, 255, 255, 0.32); }
+.tmp-search__input:focus {
+  outline: none;
+  border-color: rgba(249, 115, 22, 0.55);
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+}
+.tmp-search__clear {
+  position: absolute;
+  right: 10px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.tmp-search__clear:hover {
+  background: rgba(249, 115, 22, 0.15);
+  border-color: rgba(249, 115, 22, 0.30);
+  color: #fbbf24;
+}
+
+/* ── Sections ───────────────────────────────────────────────────── */
+.tmp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tmp-section__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tmp-section__bar {
+  width: 3px;
+  height: 16px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #f97316, #c2410c);
+  box-shadow: 0 0 8px rgba(249, 115, 22, 0.45);
+}
+.tmp-section__bar--gold {
+  background: linear-gradient(180deg, #fbbf24, #d97706);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.45);
+}
+.tmp-section__title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+.tmp-section__pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 8px;
+  background: rgba(249, 115, 22, 0.12);
+  border: 1px solid rgba(249, 115, 22, 0.22);
+  color: #fbbf24;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Roster grid (Available people) ────────────────────────────── */
+.tmp-roster {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.tmp-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 14px;
+  text-align: left;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: inherit;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.22s ease, background 0.22s ease, box-shadow 0.25s ease;
+  will-change: transform;
+}
+.tmp-card__glow {
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(40% 40% at 30% 0%, rgba(249, 115, 22, 0.22), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+.tmp-card:hover {
+  border-color: rgba(249, 115, 22, 0.30);
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.05), rgba(255, 255, 255, 0.015));
+}
+.tmp-card:hover .tmp-card__glow { opacity: 1; }
+
+.tmp-card--on {
+  border-color: rgba(249, 115, 22, 0.55);
+  background: linear-gradient(180deg, rgba(249, 115, 22, 0.14), rgba(249, 115, 22, 0.04));
+  box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.10), 0 14px 32px -14px rgba(249, 115, 22, 0.45);
+}
+.tmp-card--on .tmp-card__glow { opacity: 1; }
+
+.tmp-card__avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.25);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.tmp-card__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
+  z-index: 1;
+}
+.tmp-card__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f5f5f7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tmp-card__email {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.48);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tmp-card__mark {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.45);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  transition: all 0.22s ease;
+}
+.tmp-card--on .tmp-card__mark {
+  background: linear-gradient(135deg, #f97316, #c2410c);
+  border-color: rgba(249, 115, 22, 0.65);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+
+/* ── Empty state (Available) ───────────────────────────────────── */
+.tmp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.10);
+  text-align: center;
+}
+.tmp-empty__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.18);
+  color: #fbbf24;
+}
+.tmp-empty__text {
+  margin: 0;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.55);
+  max-width: 280px;
+  line-height: 1.45;
+}
+
+/* ── On the team list ──────────────────────────────────────────── */
+.tmp-team {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tmp-member {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: border-color 0.22s ease, background 0.22s ease;
+  will-change: transform;
+}
+.tmp-member:hover {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(255, 255, 255, 0.10);
+}
+.tmp-member.is-owner {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(249, 115, 22, 0.02));
+  border-color: rgba(251, 191, 36, 0.22);
+  box-shadow: inset 2px 0 0 rgba(251, 191, 36, 0.6);
+}
+.tmp-member.is-declined {
+  background: rgba(220, 38, 38, 0.04);
+  border-color: rgba(220, 38, 38, 0.15);
+}
+
+.tmp-member__avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+.tmp-member__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.tmp-member__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tmp-member__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f5f5f7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tmp-member__crown {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+.tmp-member__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  text-transform: capitalize;
+  color: rgba(255, 255, 255, 0.50);
+  font-weight: 500;
+}
+.tmp-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 6px currentColor;
+}
+.tmp-status-dot.accepted { background: #34d399; }
+.tmp-status-dot.pending  { background: #fbbf24; animation: tmp-pulse 1.8s ease-in-out infinite; }
+.tmp-status-dot.declined { background: #ef4444; }
+
+.tmp-member__status.accepted { color: #34d399; }
+.tmp-member__status.pending  { color: #fbbf24; }
+.tmp-member__status.declined { color: #ef4444; }
+
+@keyframes tmp-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.4); opacity: 0.55; }
+}
+
+.tmp-member__actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tmp-iconbtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+  will-change: transform;
+}
+.tmp-iconbtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.tmp-iconbtn--override {
+  background: rgba(245, 158, 11, 0.10);
+  border-color: rgba(245, 158, 11, 0.22);
+  color: #fbbf24;
+}
+.tmp-iconbtn--override:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.20);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fde68a;
+}
+.tmp-iconbtn--remove {
+  background: rgba(239, 68, 68, 0.10);
+  border-color: rgba(239, 68, 68, 0.22);
+  color: #f87171;
+}
+.tmp-iconbtn--remove:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.20);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   TMP — Light theme overrides
+   ──────────────────────────────────────────────────────────────── */
+[data-theme="light"] .tmp-insight {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.95), rgba(250, 245, 235, 0.85));
+  border-color: rgba(26, 20, 16, 0.08);
+}
+[data-theme="light"] .tmp-insight::after {
+  background: radial-gradient(120% 80% at 0% 0%, rgba(217, 119, 6, 0.10), transparent 60%);
+}
+[data-theme="light"] .tmp-insight:hover { border-color: rgba(217, 119, 6, 0.30); }
+[data-theme="light"] .tmp-insight__num { color: var(--text-primary); }
+[data-theme="light"] .tmp-insight__label { color: var(--text-tertiary); }
+[data-theme="light"] .tmp-insight__label svg { color: var(--text-tertiary); }
+[data-theme="light"] .tmp-insight--selected.is-active {
+  background: linear-gradient(180deg, rgba(217, 119, 6, 0.14), rgba(217, 119, 6, 0.04));
+  border-color: rgba(153, 76, 0, 0.32);
+  box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.05), 0 8px 24px -10px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .tmp-insight--selected.is-active .tmp-insight__num,
+[data-theme="light"] .tmp-insight--selected.is-active .tmp-insight__label,
+[data-theme="light"] .tmp-insight--selected.is-active .tmp-insight__label svg { color: #92400e; }
+
+[data-theme="light"] .tmp-search__input {
+  background: rgba(255, 250, 240, 0.85);
+  border-color: rgba(26, 20, 16, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="light"] .tmp-search__input::placeholder { color: rgba(26, 20, 16, 0.42); }
+[data-theme="light"] .tmp-search__input:focus {
+  border-color: rgba(217, 119, 6, 0.55);
+  background: rgba(255, 246, 226, 0.95);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+}
+[data-theme="light"] .tmp-search__icon { color: rgba(146, 64, 14, 0.65); }
+[data-theme="light"] .tmp-search__clear {
+  background: rgba(26, 20, 16, 0.05);
+  border-color: rgba(26, 20, 16, 0.10);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .tmp-search__clear:hover {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: #92400e;
+}
+
+[data-theme="light"] .tmp-section__title { color: var(--text-primary); }
+[data-theme="light"] .tmp-section__pill {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(153, 76, 0, 0.20);
+  color: #92400e;
+}
+[data-theme="light"] .tmp-section__bar {
+  background: linear-gradient(180deg, #d97706, #c2410c);
+  box-shadow: 0 0 8px rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .tmp-section__bar--gold {
+  background: linear-gradient(180deg, #f59e0b, #b45309);
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.40);
+}
+
+[data-theme="light"] .tmp-card {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.90), rgba(250, 245, 235, 0.75));
+  border-color: rgba(26, 20, 16, 0.08);
+}
+[data-theme="light"] .tmp-card:hover {
+  background: linear-gradient(180deg, rgba(217, 119, 6, 0.06), rgba(255, 250, 240, 0.80));
+  border-color: rgba(153, 76, 0, 0.28);
+}
+[data-theme="light"] .tmp-card--on {
+  background: linear-gradient(180deg, rgba(217, 119, 6, 0.14), rgba(217, 119, 6, 0.04));
+  border-color: rgba(153, 76, 0, 0.45);
+  box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.08), 0 14px 32px -14px rgba(217, 119, 6, 0.35);
+}
+[data-theme="light"] .tmp-card__glow {
+  background: radial-gradient(40% 40% at 30% 0%, rgba(217, 119, 6, 0.22), transparent 70%);
+}
+[data-theme="light"] .tmp-card__avatar { color: #fff; box-shadow: 0 4px 14px rgba(217, 119, 6, 0.30); }
+[data-theme="light"] .tmp-card__name { color: var(--text-primary); }
+[data-theme="light"] .tmp-card__email { color: var(--text-tertiary); }
+[data-theme="light"] .tmp-card__mark {
+  background: rgba(26, 20, 16, 0.06);
+  border-color: rgba(26, 20, 16, 0.10);
+  color: var(--text-tertiary);
+}
+[data-theme="light"] .tmp-card--on .tmp-card__mark {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  border-color: rgba(153, 76, 0, 0.55);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+}
+
+[data-theme="light"] .tmp-empty {
+  background: rgba(26, 20, 16, 0.02);
+  border-color: rgba(26, 20, 16, 0.14);
+}
+[data-theme="light"] .tmp-empty__icon {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: #92400e;
+}
+[data-theme="light"] .tmp-empty__text { color: var(--text-tertiary); }
+
+[data-theme="light"] .tmp-member {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(26, 20, 16, 0.08);
+}
+[data-theme="light"] .tmp-member:hover {
+  background: rgba(255, 250, 240, 0.95);
+  border-color: rgba(26, 20, 16, 0.14);
+}
+[data-theme="light"] .tmp-member.is-owner {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(217, 119, 6, 0.02));
+  border-color: rgba(153, 76, 0, 0.25);
+  box-shadow: inset 2px 0 0 rgba(180, 83, 9, 0.7);
+}
+[data-theme="light"] .tmp-member.is-declined {
+  background: rgba(220, 38, 38, 0.04);
+  border-color: rgba(220, 38, 38, 0.18);
+}
+[data-theme="light"] .tmp-member__avatar { color: #fff; box-shadow: 0 4px 10px rgba(40, 25, 10, 0.18); }
+[data-theme="light"] .tmp-member__name { color: var(--text-primary); }
+[data-theme="light"] .tmp-member__crown {
+  color: #92400e;
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(153, 76, 0, 0.28);
+}
+[data-theme="light"] .tmp-member__status { color: var(--text-tertiary); }
+[data-theme="light"] .tmp-member__status.accepted { color: #047857; }
+[data-theme="light"] .tmp-member__status.pending  { color: #b45309; }
+[data-theme="light"] .tmp-member__status.declined { color: #b91c1c; }
+
+[data-theme="light"] .tmp-iconbtn {
+  background: rgba(26, 20, 16, 0.04);
+  border-color: rgba(26, 20, 16, 0.10);
+  color: var(--text-secondary);
+}
+[data-theme="light"] .tmp-iconbtn--override {
+  background: rgba(245, 158, 11, 0.10);
+  border-color: rgba(245, 158, 11, 0.22);
+  color: #b45309;
+}
+[data-theme="light"] .tmp-iconbtn--override:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.20);
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #92400e;
+}
+[data-theme="light"] .tmp-iconbtn--remove {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: rgba(220, 38, 38, 0.20);
+  color: #b91c1c;
+}
+[data-theme="light"] .tmp-iconbtn--remove:hover:not(:disabled) {
+  background: rgba(220, 38, 38, 0.18);
+  border-color: rgba(220, 38, 38, 0.42);
+  color: #7f1d1d;
+}
+
+/* ── Small-width drawers: keep cards single-column ───────────── */
+@media (max-width: 520px) {
+  .tmp-roster { grid-template-columns: 1fr; }
+  .tmp-insights { grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .tmp-insight__num { font-size: 18px; }
 }
 </style>

@@ -65,11 +65,15 @@
 
     <!-- CATEGORY TILE STRIP -->
     <section class="tile-strip fade-up" style="animation-delay: 0.15s">
-      <button
-        v-for="t in tiles"
-        :key="t.kind || 'all'"
+      <Motion v-for="(t, i) in tiles" :key="t.kind || 'all'"
+        as="button"
         class="vault-tile"
         :class="{ active: currentType === t.kind }"
+        :initial="{ opacity: 0, y: 16, scale: 0.94 }"
+        :animate="{ opacity: 1, y: 0, scale: 1 }"
+        :whileHover="{ y: -4, scale: 1.025 }"
+        :whileTap="{ scale: 0.96 }"
+        :transition="{ duration: 0.5, ease: easeOutSpring, delay: 0.25 + i * 0.07 }"
         @click="currentType = t.kind"
       >
         <div class="tile-icon"><component :is="t.icon" :size="16" stroke-width="1.8" /></div>
@@ -77,7 +81,7 @@
           <span class="tile-label">{{ t.label }}</span>
           <span class="tile-count">{{ counts[t.kind ?? 'all'] }}</span>
         </div>
-      </button>
+      </Motion>
     </section>
 
     <!-- FILTER BAR -->
@@ -134,11 +138,16 @@
       </div>
 
       <transition-group v-else name="grid-shuffle" tag="div" class="docs-grid">
-        <article
+        <Motion
           v-for="(d, i) in items"
           :key="d.id"
-          class="doc-card pop-in"
-          :style="{ animationDelay: `${i * 30}ms` }"
+          as="article"
+          class="doc-card"
+          :initial="{ opacity: 0, y: 24, scale: 0.94, filter: 'blur(4px)' }"
+          :animate="{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }"
+          :whileHover="{ y: -6, scale: 1.02 }"
+          :whileTap="{ scale: 0.985 }"
+          :transition="{ duration: 0.55, ease: easeOutSpring, delay: i * 0.05 }"
           @click="openDrawer(d)"
         >
           <header class="dc-head">
@@ -168,7 +177,7 @@
               <span>{{ downloadingId === d.id ? 'Preparing…' : 'Download' }}</span>
             </button>
           </div>
-        </article>
+        </Motion>
       </transition-group>
 
       <!-- pagination -->
@@ -331,12 +340,22 @@
         </div>
 
         <footer class="vd-footer">
-          <button class="vd-btn ghost" @click="selectedDoc = null">Close</button>
-          <button class="vd-btn primary" @click="downloadDoc(selectedDoc)" :disabled="downloadingId === selectedDoc.id">
+          <Motion as="button" class="vd-btn ghost" @click="selectedDoc = null"
+            :initial="{ opacity: 0, y: 12 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :whileHover="{ y: -2, scale: 1.02 }"
+            :whileTap="{ scale: 0.96 }"
+            :transition="{ duration: 0.4, ease: easeOutSpring, delay: 0.2 }">Close</Motion>
+          <Motion as="button" class="vd-btn primary" @click="downloadDoc(selectedDoc)" :disabled="downloadingId === selectedDoc.id"
+            :initial="{ opacity: 0, y: 12 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :whileHover="{ y: -3, scale: 1.03 }"
+            :whileTap="{ scale: 0.96 }"
+            :transition="{ duration: 0.4, ease: easeOutSpring, delay: 0.28 }">
             <Loader2 v-if="downloadingId === selectedDoc.id" :size="14" class="spin" />
             <Download v-else :size="14" />
             <span>{{ downloadingId === selectedDoc.id ? 'Preparing…' : 'Download PDF' }}</span>
-          </button>
+          </Motion>
         </footer>
       </div>
     </div>
@@ -355,11 +374,15 @@ import {
   GitBranch, Loader2
 } from 'lucide-vue-next'
 import CustomSelect from '../../components/ui/CustomSelect.vue'
+import { Motion } from 'motion-v'
 import { useToast } from 'vue-toastification'
 import { generateSlaPdf } from '../../utils/slaPdfGenerator'
 import { generateHandoverPdf } from '../../utils/handoverPdfGenerator'
 import { generateDprPdf } from '../../utils/dprPdfGenerator'
 import { API_BASE } from '@/utils/api'
+
+// Signature easing used across motion-v transitions on this page
+const easeOutSpring = [0.16, 1, 0.3, 1]
 
 const route = useRoute()
 const toast = useToast()
@@ -1118,4 +1141,316 @@ onMounted(async () => {
 .custom-scroll::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.20); border-radius: 999px; }
 .custom-scroll::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.40); }
 .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* ═══════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES — warm cream + amber/golden palette
+   Preserves transparency; replaces white-on-dark with brown-on-cream.
+   Brand chips (kind-* badges, status dots) stay vivid for legibility.
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="light"] .vault-root { color: var(--text-primary); }
+
+/* ── Backdrop ── */
+[data-theme="light"] .vault-base {
+  background: linear-gradient(180deg, #faf3e3 0%, #f7ecd2 100%);
+}
+[data-theme="light"] .vault-grain { opacity: 0.30; }
+[data-theme="light"] .vault-shaft {
+  background: linear-gradient(60deg, transparent 30%, rgba(217, 119, 6, 0.08) 50%, transparent 70%);
+}
+
+/* ── Hero ── */
+[data-theme="light"] .vault-hero { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .vault-eyebrow {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.28);
+}
+[data-theme="light"] .vault-title {
+  background: linear-gradient(120deg, #92400e 0%, #d97706 60%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+[data-theme="light"] .vault-subtitle { color: #6b5840; }
+
+/* ── Folder clusters ── */
+[data-theme="light"] .folder-cluster {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(217, 119, 6, 0.20);
+  backdrop-filter: blur(14px);
+}
+[data-theme="light"] .folder-cluster:hover {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.42);
+  box-shadow: 0 18px 40px rgba(40, 25, 10, 0.16), 0 0 24px rgba(217, 119, 6, 0.12);
+}
+[data-theme="light"] .folder-cluster.active {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.55);
+  box-shadow: 0 12px 30px rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .stack-card {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.12), rgba(180, 83, 9, 0.06));
+  border-color: rgba(217, 119, 6, 0.20);
+}
+[data-theme="light"] .stack-front { color: #b45309; }
+[data-theme="light"] .cluster-count { color: var(--text-primary); }
+[data-theme="light"] .cluster-label { color: #92400e; }
+
+/* ── Metric card ── */
+[data-theme="light"] .metric-card {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.78) 0%, rgba(255, 246, 226, 0.62) 100%);
+  border-color: rgba(217, 119, 6, 0.28);
+}
+[data-theme="light"] .metric-card::before {
+  background: radial-gradient(60% 80% at 100% 0%, rgba(217, 119, 6, 0.14), transparent 70%);
+}
+[data-theme="light"] .metric-eyebrow { color: #b45309; }
+[data-theme="light"] .metric-num {
+  background: linear-gradient(180deg, #b45309, #d97706);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .metric-suffix { color: #92400e; }
+[data-theme="light"] .metric-foot { color: #6b5840; }
+[data-theme="light"] .metric-bar { background: rgba(40, 25, 10, 0.08); }
+
+/* ── Tile strip ── */
+[data-theme="light"] .vault-tile {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(217, 119, 6, 0.20);
+  backdrop-filter: blur(14px);
+}
+[data-theme="light"] .vault-tile:hover {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .vault-tile.active {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(249, 115, 22, 0.10));
+  border-color: rgba(217, 119, 6, 0.55);
+  box-shadow: 0 6px 18px rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .tile-icon {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+}
+[data-theme="light"] .vault-tile.active .tile-icon {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+}
+[data-theme="light"] .tile-label { color: var(--text-primary); }
+[data-theme="light"] .tile-count { color: var(--text-primary); }
+
+/* ── Filter bar ── */
+[data-theme="light"] .filter-bar {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(217, 119, 6, 0.20);
+  backdrop-filter: blur(14px);
+}
+[data-theme="light"] .search-icon { color: rgba(217, 119, 6, 0.65); }
+[data-theme="light"] .search-input {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: var(--text-primary);
+}
+[data-theme="light"] .search-input::placeholder { color: rgba(26, 20, 16, 0.42); }
+[data-theme="light"] .search-input:focus {
+  background: rgba(255, 246, 226, 0.92);
+  border-color: rgba(217, 119, 6, 0.55);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .search-clear {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(40, 25, 10, 0.12);
+  color: #6b5840;
+}
+[data-theme="light"] .search-clear:hover { background: rgba(217, 119, 6, 0.22); color: #92400e; }
+[data-theme="light"] .clear-chip {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #b45309;
+}
+[data-theme="light"] .clear-chip:hover { background: rgba(217, 119, 6, 0.20); }
+
+/* ── Doc cards ── */
+[data-theme="light"] .doc-card {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.68) 0%, rgba(255, 246, 226, 0.55) 100%);
+  border-color: rgba(217, 119, 6, 0.20);
+  backdrop-filter: blur(14px);
+}
+[data-theme="light"] .doc-card:hover {
+  border-color: rgba(217, 119, 6, 0.45);
+  background: linear-gradient(180deg, rgba(255, 246, 226, 0.88) 0%, rgba(255, 250, 240, 0.62) 100%);
+  box-shadow: 0 18px 40px rgba(40, 25, 10, 0.18), 0 0 0 1px rgba(217, 119, 6, 0.08) inset;
+}
+[data-theme="light"] .age-pill {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: #92400e;
+}
+[data-theme="light"] .age-pill svg { color: rgba(217, 119, 6, 0.65); }
+[data-theme="light"] .dc-title { color: var(--text-primary); }
+[data-theme="light"] .dc-client { color: #6b5840; }
+[data-theme="light"] .dc-code { color: #92400e; }
+[data-theme="light"] .dc-divider { background: linear-gradient(90deg, rgba(40, 25, 10, 0.12), transparent); }
+[data-theme="light"] .dc-foot { color: #6b5840; }
+[data-theme="light"] .status-label { color: #6b5840; }
+[data-theme="light"] .dc-date svg { color: rgba(217, 119, 6, 0.65); }
+
+/* Hover-actions overlay on cards (cream gradient instead of black) */
+[data-theme="light"] .dc-hover-actions {
+  background: linear-gradient(180deg, transparent, rgba(255, 246, 226, 0.95));
+}
+[data-theme="light"] .dc-action.ghost {
+  background: rgba(255, 250, 240, 0.82);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: var(--text-primary);
+}
+[data-theme="light"] .dc-action.ghost:hover {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.42);
+}
+
+/* ── Skeleton ── */
+[data-theme="light"] .skel-card {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.16);
+}
+[data-theme="light"] .skel-line {
+  background: linear-gradient(90deg, rgba(40, 25, 10, 0.05) 0%, rgba(217, 119, 6, 0.16) 50%, rgba(40, 25, 10, 0.05) 100%);
+  background-size: 200% 100%;
+}
+
+/* ── Empty state ── */
+[data-theme="light"] .vault-empty {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.18);
+  backdrop-filter: blur(14px);
+}
+[data-theme="light"] .empty-folder {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: rgba(180, 83, 9, 0.65);
+}
+[data-theme="light"] .vault-empty h3 { color: var(--text-primary); }
+[data-theme="light"] .vault-empty p { color: #6b5840; }
+
+/* ── Pagination ── */
+[data-theme="light"] .pg-btn {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: var(--text-primary);
+}
+[data-theme="light"] .pg-btn:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.10);
+  color: #b45309;
+}
+[data-theme="light"] .pg-info { color: #92400e; }
+
+/* ─────────────────────────────────────────────
+   DRAWER — light mode (frosted cream glass)
+   ───────────────────────────────────────────── */
+[data-theme="light"] .vault-drawer-overlay {
+  background: rgba(26, 20, 16, 0.42);
+  backdrop-filter: blur(6px);
+}
+[data-theme="light"] .vault-drawer {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.78) 0%, rgba(255, 246, 226, 0.86) 100%);
+  border-left: 1px solid rgba(217, 119, 6, 0.24);
+  box-shadow: -28px 0 80px rgba(40, 25, 10, 0.24), inset 1px 0 0 rgba(255, 255, 255, 0.45);
+}
+[data-theme="light"] .vd-header {
+  background: rgba(255, 250, 240, 0.50);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .vd-code {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.28);
+}
+[data-theme="light"] .vd-close {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #6b5840;
+}
+[data-theme="light"] .vd-close:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+}
+
+/* Paper preview — keep its cream paper feel (already light-tinted),
+   but tone down the harsh dark backs since they're now on a light bg. */
+[data-theme="light"] .paper-back {
+  background: rgba(40, 25, 10, 0.08);
+  border-color: rgba(40, 25, 10, 0.12);
+}
+
+/* Drawer tabs */
+[data-theme="light"] .vd-tabs {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.20);
+}
+[data-theme="light"] .vd-tab { color: #6b5840; }
+[data-theme="light"] .vd-tab.active {
+  background: rgba(217, 119, 6, 0.14);
+  color: #b45309;
+  box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.32);
+}
+
+/* Info blocks */
+[data-theme="light"] .info-block h4 { color: #b45309; }
+[data-theme="light"] .info-block-icon { color: #d97706; }
+[data-theme="light"] .separator-line {
+  background: linear-gradient(90deg, rgba(40, 25, 10, 0.16), transparent);
+}
+[data-theme="light"] .ib-row { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .ib-label { color: #92400e; }
+[data-theme="light"] .ib-label svg { color: rgba(217, 119, 6, 0.65); }
+[data-theme="light"] .ib-val { color: var(--text-primary); }
+[data-theme="light"] .empty-row {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.24);
+  color: #92400e;
+}
+[data-theme="light"] .empty-row .empty-row-icon { color: rgba(217, 119, 6, 0.55); }
+
+/* Timeline */
+[data-theme="light"] .tl-item::before {
+  background: linear-gradient(180deg, rgba(217, 119, 6, 0.34), rgba(217, 119, 6, 0.06));
+}
+[data-theme="light"] .tl-node {
+  background: #d97706;
+  border-color: rgba(255, 250, 240, 0.92);
+  box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.45), 0 0 12px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .tl-node-start { background: #fbbf24; }
+[data-theme="light"] .tl-node-end {
+  background: #047857;
+  box-shadow: 0 0 0 1px rgba(4, 120, 87, 0.45), 0 0 12px rgba(4, 120, 87, 0.30);
+}
+[data-theme="light"] .tl-title { color: var(--text-primary); }
+[data-theme="light"] .tl-meta { color: #6b5840; }
+
+/* Drawer footer */
+[data-theme="light"] .vd-footer {
+  background: rgba(255, 250, 240, 0.50);
+  border-top-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .vd-btn.ghost {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #6b5840;
+}
+[data-theme="light"] .vd-btn.ghost:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #92400e;
+}
+[data-theme="light"] .vd-btn.primary {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .vd-btn.primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c2410c, #92400e);
+  box-shadow: 0 10px 28px rgba(217, 119, 6, 0.42);
+}
 </style>

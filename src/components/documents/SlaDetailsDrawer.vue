@@ -23,9 +23,13 @@
                   </button>
                 </template>
 
-                <button 
-                  v-if="(isAdminMode || (sla.status !== 'Approved' && sla.status !== 'Rejected')) && (!isAdminMode || sla.status !== 'Pending')" 
-                  class="delete-btn" 
+                <!-- Delete visibility:
+                     - Admin: any status except Pending (must Approve/Reject first).
+                     - Non-admin: own Draft only. NOT Pending (under review), NOT
+                       Approved (finalized), NOT Rejected (view-only mode handled below). -->
+                <button
+                  v-if="isAdminMode ? sla.status !== 'Pending' : sla.status === 'Draft'"
+                  class="delete-btn"
                   :class="{ 'confirm': showDeleteConfirm }"
                   @click="handleDeleteClick"
                   :disabled="isDeleting"
@@ -260,16 +264,34 @@
 
         </div>
 
-        <!-- Footer Actions -->
-        <div v-if="isAdminMode || (sla.status !== 'Rejected')" class="drawer-footer" :style="(sla.status === 'Approved' && !isAdminMode) ? { gridTemplateColumns: '1fr' } : {}">
-             <button v-if="isAdminMode || (sla.status !== 'Approved' && sla.status !== 'Rejected')" class="btn-custom secondary" @click="$emit('edit', sla)">
-                <Edit2 :size="16" /> Edit SLA
-             </button>
-             <button v-if="isAdminMode || sla.status !== 'Rejected'" class="btn-custom primary" @click="$emit('generate', sla)">
-                <Download v-if="sla.status === 'Approved' && !isAdminMode" :size="16" />
-                <FileText v-else :size="16" />
-                {{ (sla.status === 'Approved' && !isAdminMode) ? 'Download SLA Document' : (isAdminMode ? 'View Document' : 'View Document') }}
-             </button>
+        <!-- Footer Actions.
+             Edit:     admin (any status) OR non-admin (Draft only).
+             Download: status === 'Approved' ONLY — the SLA PDF is the official
+                       executed agreement; drafts / pending / rejected SLAs are
+                       not shareable artifacts.
+             Non-admin viewing a Rejected SLA still gets the read-only marker.
+             Footer collapses to single column when only one button renders. -->
+        <div
+          v-if="isAdminMode || sla.status !== 'Pending'"
+          class="drawer-footer"
+          :style="(isAdminMode && sla.status === 'Approved') ? {} : { gridTemplateColumns: '1fr' }"
+        >
+             <!-- Rejected SLA in user mode → read-only footer -->
+             <template v-if="!isAdminMode && sla.status === 'Rejected'">
+                <div class="view-only-footer">
+                   <Lock :size="13" />
+                   <span>View Only · Rejected SLA</span>
+                </div>
+             </template>
+             <template v-else>
+                <button v-if="isAdminMode || sla.status === 'Draft'" class="btn-custom secondary" @click="$emit('edit', sla)">
+                   <Edit2 :size="16" /> Edit SLA
+                </button>
+                <button v-if="sla.status === 'Approved'" class="btn-custom primary" @click="$emit('generate', sla)">
+                   <Download :size="16" />
+                   Download SLA Document
+                </button>
+             </template>
         </div>
       </div>
     </div>
@@ -277,7 +299,7 @@
 </template>
 
 <script setup>
-import { Clock, X, Edit2, Trash2, FileText, Check, XSquare, CheckCircle, AlertCircle, Calendar, Building2, CreditCard, Server, Activity, ExternalLink, Shield, FileCheck, Download, Loader2 } from 'lucide-vue-next'
+import { Clock, X, Edit2, Trash2, FileText, Check, XSquare, CheckCircle, AlertCircle, Calendar, Building2, CreditCard, Server, Activity, ExternalLink, Shield, FileCheck, Download, Loader2, Lock } from 'lucide-vue-next'
 import { defineProps, defineEmits, ref } from 'vue'
 import axios from 'axios'
 import { useToast } from '../../composables/useToast'
@@ -553,5 +575,332 @@ const formatDate = (d) => {
 .btn-custom.primary { background: #f59e0b; color: #18181b; }
 .btn-custom.primary:hover { background: #fcd34d; }
 
+.view-only-footer {
+  flex: 1; display: flex; align-items: center; justify-content: flex-start; gap: 6px;
+  color: rgba(255,255,255,0.40); font-size: 13px; font-weight: 500;
+  padding: 8px 0;
+}
+.view-only-footer svg { opacity: 0.7; }
+
 @media (max-width: 768px) { .drawer-panel { width: 100%; top: auto; bottom: 0; min-height: 80vh; transform: translateY(100%); } .drawer-panel.is-open { transform: translateY(0); } }
+
+/* ════════════════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES — preserve gold/amber/orange palette + frosted glass
+   ════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="light"] .drawer-overlay {
+  background: rgba(60, 30, 10, 0.25);
+}
+
+[data-theme="light"] .drawer-panel {
+  background: linear-gradient(180deg,
+      rgba(255, 250, 240, 0.78) 0%,
+      rgba(254, 243, 199, 0.72) 100%);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border-left: 1px solid rgba(217, 119, 6, 0.20);
+  box-shadow: -16px 0 48px rgba(120, 53, 15, 0.22);
+}
+
+[data-theme="light"] .drawer-header {
+  background: rgba(255, 250, 240, 0.35);
+  border-bottom: 1px solid rgba(217, 119, 6, 0.18);
+}
+
+[data-theme="light"] .id-badge {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+}
+
+[data-theme="light"] .id-badge .label {
+  color: #92400e;
+}
+
+[data-theme="light"] .id-badge .value {
+  color: #b45309;
+}
+
+[data-theme="light"] .close-btn {
+  color: #78350f;
+}
+
+[data-theme="light"] .close-btn:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #1a1410;
+}
+
+[data-theme="light"] .approve-btn {
+  background: rgba(34, 134, 58, 0.10);
+  border: 1px solid rgba(34, 134, 58, 0.30);
+  color: #15803d;
+}
+
+[data-theme="light"] .approve-btn:hover:not(:disabled) {
+  background: rgba(34, 134, 58, 0.20);
+  border-color: #15803d;
+}
+
+[data-theme="light"] .reject-btn,
+[data-theme="light"] .delete-btn {
+  background: rgba(185, 28, 28, 0.10);
+  border: 1px solid rgba(185, 28, 28, 0.30);
+  color: #b91c1c;
+}
+
+[data-theme="light"] .reject-btn:hover:not(:disabled),
+[data-theme="light"] .delete-btn:hover {
+  background: rgba(185, 28, 28, 0.20);
+  border-color: #b91c1c;
+}
+
+[data-theme="light"] .delete-btn.confirm {
+  background: #b91c1c;
+  color: #fffaf0;
+  border-color: #b91c1c;
+}
+
+[data-theme="light"] .vendor-avatar {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.25), rgba(217, 119, 6, 0.18));
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.30);
+  box-shadow: 0 2px 8px rgba(217, 119, 6, 0.18);
+}
+
+[data-theme="light"] .vendor-info h2 {
+  color: #1a1410;
+}
+
+[data-theme="light"] .vendor-info .category {
+  color: #6b5840;
+}
+
+[data-theme="light"] .amount-display .currency {
+  color: #8a6d4a;
+}
+
+[data-theme="light"] .amount-display .amount {
+  color: #1a1410;
+}
+
+/* Status bar variants — keep semantic colors but tone for cream bg */
+[data-theme="light"] .status-bar {
+  background: rgba(217, 119, 6, 0.08);
+  border: 1px solid rgba(217, 119, 6, 0.20);
+  color: #78350f;
+}
+
+[data-theme="light"] .status-bar.draft {
+  background: rgba(120, 53, 15, 0.08);
+  border-color: rgba(120, 53, 15, 0.20);
+  color: #78350f;
+}
+
+[data-theme="light"] .status-bar.pending {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.28);
+  color: #b45309;
+}
+
+[data-theme="light"] .status-bar.approved {
+  background: rgba(34, 134, 58, 0.10);
+  border-color: rgba(34, 134, 58, 0.28);
+  color: #15803d;
+}
+
+[data-theme="light"] .status-bar.rejected {
+  background: rgba(185, 28, 28, 0.10);
+  border-color: rgba(185, 28, 28, 0.28);
+  color: #b91c1c;
+}
+
+[data-theme="light"] .status-bar .date {
+  color: rgba(120, 53, 15, 0.55);
+}
+
+/* Scrollbar */
+[data-theme="light"] .nano-scroll::-webkit-scrollbar-thumb {
+  background: rgba(180, 83, 9, 0.25);
+}
+
+/* Section headings & fields */
+[data-theme="light"] .detail-section h3 {
+  color: #92400e;
+}
+
+[data-theme="light"] .field label,
+[data-theme="light"] .field-mini label {
+  color: #8a6d4a;
+}
+
+[data-theme="light"] .field .value,
+[data-theme="light"] .field-mini .val {
+  color: #1a1410;
+}
+
+[data-theme="light"] .value-pill {
+  background: rgba(245, 158, 11, 0.10);
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+
+[data-theme="light"] .paid-pill {
+  background: rgba(34, 134, 58, 0.12);
+  color: #15803d;
+  border-color: rgba(34, 134, 58, 0.22);
+}
+
+/* Notes / description boxes */
+[data-theme="light"] .notes-box {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.15);
+  border-left: 3px solid rgba(217, 119, 6, 0.45);
+}
+
+[data-theme="light"] .notes-box strong {
+  color: #92400e;
+}
+
+[data-theme="light"] .notes-box p {
+  color: #1a1410;
+}
+
+[data-theme="light"] .warning-box {
+  background: rgba(245, 158, 11, 0.10);
+  border-left-color: #d97706;
+}
+
+[data-theme="light"] .warning-box strong {
+  color: #b45309;
+}
+
+[data-theme="light"] .rejection-box {
+  background: rgba(185, 28, 28, 0.08);
+  border-left-color: #b91c1c;
+}
+
+[data-theme="light"] .rejection-header {
+  color: #b91c1c;
+}
+
+[data-theme="light"] .rejection-header strong {
+  color: #b91c1c;
+}
+
+/* Detail cards (Client/Provider, Monitoring) */
+[data-theme="light"] .detail-card,
+[data-theme="light"] .breakdown-list {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.15);
+}
+
+[data-theme="light"] .bank-row .icon {
+  color: #b45309;
+}
+
+[data-theme="light"] .bank-name {
+  color: #1a1410;
+}
+
+[data-theme="light"] .ifsc {
+  color: #6b5840;
+}
+
+[data-theme="light"] .account-row {
+  border-top: 1px solid rgba(217, 119, 6, 0.15);
+}
+
+[data-theme="light"] .divider {
+  background: rgba(217, 119, 6, 0.15);
+}
+
+/* Breakdown rows (Data Retention / Incident Reporting) — kill the white text */
+[data-theme="light"] .break-row.sub {
+  color: #1a1410;
+}
+
+[data-theme="light"] .break-row.sub span[style*="color:white"],
+[data-theme="light"] .break-row.sub span[style*="color: white"] {
+  color: #1a1410 !important;
+}
+
+[data-theme="light"] .text-amber-400 {
+  color: #b45309 !important;
+}
+
+/* Inline-styled section labels (Security Measures / Compliance) */
+[data-theme="light"] .breakdown-list label[style*="color:rgba(255,255,255"] {
+  color: #92400e !important;
+}
+
+/* Tool/security/compliance tags */
+[data-theme="light"] .tool-tag {
+  background: rgba(217, 119, 6, 0.10);
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.18);
+}
+
+[data-theme="light"] .sec-tag {
+  background: rgba(34, 134, 58, 0.10);
+  color: #15803d;
+  border: 1px solid rgba(34, 134, 58, 0.22);
+}
+
+/* Audit trail */
+[data-theme="light"] .audit-card {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(217, 119, 6, 0.15);
+}
+
+[data-theme="light"] .audit-avatar {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.25), rgba(217, 119, 6, 0.18));
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.30);
+}
+
+[data-theme="light"] .audit-action {
+  color: #1a1410;
+}
+
+[data-theme="light"] .audit-user {
+  color: #b45309;
+}
+
+[data-theme="light"] .audit-time {
+  color: #8a6d4a;
+}
+
+/* Footer / actions */
+[data-theme="light"] .drawer-footer {
+  background: rgba(255, 250, 240, 0.45);
+  border-top: 1px solid rgba(217, 119, 6, 0.18);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+[data-theme="light"] .btn-custom.secondary {
+  background: rgba(217, 119, 6, 0.08);
+  color: #78350f;
+  border: 1px solid rgba(217, 119, 6, 0.25);
+}
+
+[data-theme="light"] .btn-custom.secondary:hover {
+  background: rgba(245, 158, 11, 0.18);
+  color: #92400e;
+  border-color: #d97706;
+}
+
+[data-theme="light"] .btn-custom.primary {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a1410;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.32);
+}
+
+[data-theme="light"] .btn-custom.primary:hover {
+  background: linear-gradient(135deg, #fcd34d, #fbbf24);
+  box-shadow: 0 8px 22px rgba(217, 119, 6, 0.45);
+}
+
+[data-theme="light"] .view-only-footer {
+  color: #92400e;
+}
 </style>

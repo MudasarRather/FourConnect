@@ -62,6 +62,9 @@
               <span class="as-pill" :data-status="a.status">{{ a.status }}</span>
               <button v-if="a.status === 'AVAILABLE'" class="onb-btn-ghost mini" @click="openAllocate(a)">Allocate</button>
               <span v-else-if="a.assigned_employee_name" class="as-emp">→ {{ a.assigned_employee_name }}</span>
+              <button class="as-del" type="button" :title="`Delete ${a.asset_code}`" :aria-label="`Delete ${a.asset_code}`" @click="openDelete(a)">
+                <Trash2 :size="13" />
+              </button>
             </div>
           </Motion>
           <li v-if="!assets.length" class="as-empty">No assets in inventory.</li>
@@ -137,18 +140,90 @@
         <button class="onb-btn-primary" :disabled="!isAssetValid" @click="doCreate"><Plus :size="13" />Add asset</button>
       </template>
     </OnbModal>
+
+    <!-- Asset allocated — must be returned before delete -->
+    <OnbModal
+      :open="!!blockedAsset"
+      title="Asset is allocated"
+      :subtitle="blockedAsset ? `${blockedAsset.asset_code} is currently issued and can't be deleted.` : ''"
+      :icon="AlertTriangle"
+      :width="520"
+      @close="closeBlockedAsset"
+    >
+      <div class="as-blocked">
+        <div class="as-blocked-note">
+          <ShieldAlert :size="15" />
+          <span>
+            This asset is allocated to a joiner. Deleting it now would leave a dangling allocation
+            record — reverse the allocation first. Returning it here continues to the delete step automatically.
+          </span>
+        </div>
+
+        <div v-if="blockedAlloc" class="as-blocked-card">
+          <span class="as-blocked-avatar"><User :size="14" /></span>
+          <div class="as-blocked-main">
+            <div class="as-blocked-name">{{ blockedAlloc.employee_name || blockedAsset?.assigned_employee_name || 'Unknown holder' }}</div>
+            <div class="as-blocked-meta">
+              <span class="as-pill" data-status="ALLOCATED">ALLOCATED</span>
+              <span v-if="blockedAlloc.allocated_date">since {{ formatDate(blockedAlloc.allocated_date) }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-else class="as-blocked-card is-unknown">
+          <span class="as-blocked-avatar"><User :size="14" /></span>
+          <div class="as-blocked-main">
+            <div class="as-blocked-name">{{ blockedAsset?.assigned_employee_name || 'Currently issued' }}</div>
+            <div class="as-blocked-meta">
+              Return this asset from the <strong>Active allocations</strong> panel, then delete it.
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <button class="onb-btn-ghost" :disabled="returningBlocked" @click="closeBlockedAsset">Cancel</button>
+        <Motion v-if="blockedAlloc" as="button" type="button" class="onb-btn-primary as-return-now"
+          :disabled="returningBlocked"
+          :whileHover="returningBlocked ? {} : { y: -1, scale: 1.02 }"
+          :whileTap="returningBlocked ? {} : { scale: 0.97 }"
+          @click="returnBlockedAlloc"
+        >
+          <Loader2 v-if="returningBlocked" :size="13" class="as-spin" />
+          <RotateCcw v-else :size="13" />
+          {{ returningBlocked ? 'Returning…' : 'Return & continue' }}
+        </Motion>
+      </template>
+    </OnbModal>
+
+    <!-- Delete asset modal -->
+    <OnbDeleteModal
+      :open="!!pendingDelete"
+      title="Delete asset?"
+      :subtitle="pendingDelete ? `Permanently remove ${pendingDelete.asset_code} from inventory.` : ''"
+      :target-label="pendingDelete?.asset_code"
+      :target-meta="pendingDelete ? `${[pendingDelete.brand, pendingDelete.model].filter(Boolean).join(' ') || pendingDelete.asset_type}` : ''"
+      :target-tag="pendingDelete?.asset_type"
+      :target-icon="Package"
+      :presets="ASSET_PRESETS"
+      warning="The asset will be removed from inventory. This does not affect historical allocation records."
+      confirm-label="Delete asset"
+      submitting-label="Deleting…"
+      :submitting="removingAsset"
+      @close="pendingDelete = null"
+      @confirm="confirmDelete"
+    />
   </section>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Motion } from 'motion-v'
-import { RefreshCw, Plus, Package, CheckCircle2 } from 'lucide-vue-next'
+import { RefreshCw, Plus, Package, CheckCircle2, Trash2, AlertTriangle, ShieldAlert, RotateCcw, Loader2, User } from 'lucide-vue-next'
 import OnbProcessPicker from '../components/OnbProcessPicker.vue'
 import OnbModal from '../components/OnbModal.vue'
+import OnbDeleteModal from '../components/OnbDeleteModal.vue'
 import OnbField from '../components/OnbField.vue'
 import {
-  fetchAssets, createAsset, allocateAsset, returnAllocation, fetchAllocations,
+  fetchAssets, createAsset, allocateAsset, returnAllocation, fetchAllocations, deleteAsset,
 } from '../composables/useOnbAssets'
 import { fetchProcessDetail } from '../composables/useOnboarding'
 import { useToast } from 'vue-toastification'
@@ -234,6 +309,74 @@ const doCreate = async () => {
     toast.success('Asset added')
   } catch (e) { toast.error(e?.response?.data?.detail || 'Create failed') }
 }
+
+// ── Delete flow — allocated assets must be returned first ──
+const ASSET_PRESETS = [
+  'Damaged beyond repair',
+  'Lost or stolen',
+  'Retired / end of life',
+  'Created by mistake / duplicate entry',
+]
+const pendingDelete = ref(null)
+const removingAsset = ref(false)
+const blockedAsset = ref(null)
+const blockedAlloc = ref(null)
+const returningBlocked = ref(false)
+
+const activeAllocFor = (asset) =>
+  allocations.value.find(al => String(al.asset_id) === String(asset.id) && al.status === 'ALLOCATED')
+
+const openDelete = (a) => {
+  if (a.status === 'ALLOCATED') {
+    blockedAsset.value = a
+    blockedAlloc.value = activeAllocFor(a) || null
+  } else {
+    pendingDelete.value = a
+  }
+}
+
+const closeBlockedAsset = () => {
+  if (returningBlocked.value) return
+  blockedAsset.value = null
+  blockedAlloc.value = null
+}
+
+const returnBlockedAlloc = async () => {
+  if (!blockedAlloc.value) return
+  returningBlocked.value = true
+  const asset = blockedAsset.value
+  try {
+    await returnAllocation(blockedAlloc.value.id, { returned_date: new Date().toISOString().slice(0, 10), status: 'RETURNED' })
+    toast.success('Asset returned — confirm deletion below')
+    blockedAsset.value = null
+    blockedAlloc.value = null
+    await reload()
+    const fresh = assets.value.find(x => String(x.id) === String(asset.id))
+    pendingDelete.value = fresh || { ...asset, status: 'AVAILABLE' }
+  } catch (e) {
+    toast.error(e?.response?.data?.detail || 'Return failed')
+  } finally {
+    returningBlocked.value = false
+  }
+}
+
+const confirmDelete = async (reason) => {
+  if (!pendingDelete.value) return
+  removingAsset.value = true
+  const id = pendingDelete.value.id
+  try {
+    await deleteAsset(id)
+    assets.value = assets.value.filter(x => x.id !== id)
+    pendingDelete.value = null
+    await reload()
+    toast.success(reason ? `Asset deleted — ${reason.split('\n')[0]}` : 'Asset deleted')
+  } catch (e) {
+    toast.error(e?.response?.data?.detail || 'Could not delete asset')
+  } finally {
+    removingAsset.value = false
+  }
+}
+
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : ''
 </script>
 
@@ -293,6 +436,92 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-IN', { day: '2-
 .as-emp { font-size: 11px; color: var(--hr-text-muted); }
 .as-empty { padding: 22px; text-align: center; font-size: 12px; color: var(--hr-text-dim); }
 .mini { padding: 4px 10px; font-size: 11px; }
+
+/* Delete affordance — reveals on row hover, mirrors .prog-del / .ac-card-del */
+.as-del {
+  width: 28px; height: 28px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(248, 113, 113, 0.10);
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  border-radius: 8px;
+  color: #fca5a5;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .18s var(--hr-spring),
+              background .18s var(--hr-spring),
+              border-color .18s var(--hr-spring),
+              color .18s var(--hr-spring),
+              transform .15s var(--hr-spring);
+}
+.as-row:hover .as-del { opacity: 0.95; }
+.as-del:hover {
+  opacity: 1;
+  background: rgba(248, 113, 113, 0.22);
+  border-color: rgba(248, 113, 113, 0.60);
+  color: #f87171;
+  transform: rotate(-8deg) scale(1.08);
+}
+.as-del:active { transform: scale(0.92); }
+.as-row { transition: background .18s var(--hr-spring); }
+.as-row:hover { background: rgba(251, 191, 36, 0.04); }
+[data-theme="light"] .as-row:hover { background: rgba(217, 119, 6, 0.06); }
+[data-theme="light"] .as-del {
+  background: rgba(220, 38, 38, 0.10);
+  border-color: rgba(220, 38, 38, 0.30);
+  color: #b91c1c;
+}
+[data-theme="light"] .as-del:hover {
+  background: rgba(220, 38, 38, 0.22);
+  border-color: rgba(220, 38, 38, 0.55);
+  color: #7f1d1d;
+}
+
+/* ── "Asset allocated" blocking modal ── */
+.as-blocked { display: flex; flex-direction: column; gap: 16px; }
+.as-blocked-note {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: 12px;
+  background: rgba(251, 191, 36, 0.06);
+  border: 1px dashed rgba(251, 191, 36, 0.28);
+  font-size: 12px; line-height: 1.55; color: var(--hr-text-secondary);
+}
+.as-blocked-note svg { color: var(--hr-accent-gold); flex-shrink: 0; margin-top: 1px; }
+.as-blocked-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px; border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(248, 113, 113, 0.24);
+}
+.as-blocked-card.is-unknown { border-color: rgba(255, 255, 255, 0.08); }
+.as-blocked-avatar {
+  width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(248, 113, 113, 0.16); color: #fca5a5;
+}
+.as-blocked-main { flex: 1; min-width: 0; }
+.as-blocked-name { font-size: 13.5px; font-weight: 700; color: var(--hr-text); }
+.as-blocked-meta {
+  font-size: 11px; color: var(--hr-text-muted);
+  display: flex; gap: 8px; align-items: center; margin-top: 4px; flex-wrap: wrap;
+}
+.as-blocked-meta strong { color: var(--hr-accent-gold); font-weight: 700; }
+.as-return-now { display: inline-flex; align-items: center; gap: 6px; }
+.as-spin { animation: as-spin 0.8s linear infinite; }
+@keyframes as-spin { to { transform: rotate(360deg); } }
+
+[data-theme="light"] .as-blocked-note {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.30);
+  color: var(--hr-text-secondary);
+}
+[data-theme="light"] .as-blocked-note svg { color: #b45309; }
+[data-theme="light"] .as-blocked-card {
+  background: rgba(255, 250, 240, 0.7);
+  border-color: rgba(220, 38, 38, 0.26);
+}
+[data-theme="light"] .as-blocked-card.is-unknown { border-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .as-blocked-avatar { background: rgba(220, 38, 38, 0.14); color: #b91c1c; }
+[data-theme="light"] .as-blocked-meta strong { color: #b45309; }
 
 .form-stack { display: flex; flex-direction: column; gap: 14px; }
 .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }

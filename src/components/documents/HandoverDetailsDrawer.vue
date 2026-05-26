@@ -23,9 +23,14 @@
                   </button>
                 </template>
 
-                <button 
-                  v-if="(isAdminMode || (dpr.status !== 'Approved' && dpr.status !== 'Rejected')) && (!isAdminMode || dpr.status !== 'Internal Review')" 
-                  class="delete-btn" 
+                <!-- Delete visibility:
+                     - Admin: any status except Internal Review (must Approve/Reject instead).
+                     - Non-admin: own Draft only. NOT Internal Review (under review),
+                       NOT Approved (finalized), NOT Rejected (view-only — mirrors
+                       SLA Rejected behaviour; user views with a "View Only" marker). -->
+                <button
+                  v-if="isAdminMode ? dpr.status !== 'Internal Review' : dpr.status === 'Draft'"
+                  class="delete-btn"
                   :class="{ 'confirm': showDeleteConfirm }"
                   @click="handleDeleteClick"
                   :disabled="isDeleting"
@@ -321,20 +326,48 @@
           </div>
         </div>
 
-        <!-- Footer Actions -->
-        <div v-if="isAdminMode || dpr.status !== 'Rejected'" class="drawer-footer" :style="(dpr.status === 'Approved' && !isAdminMode) ? { gridTemplateColumns: '1fr' } : {}">
-             <button v-if="isAdminMode || (dpr.status !== 'Approved' && dpr.status !== 'Rejected')" class="btn-custom secondary" @click="$emit('edit', dpr)">
-                <Pencil :size="16" /> Edit Handover
-             </button>
-             <button 
-               v-if="isAdminMode || dpr.status !== 'Rejected'" 
-               class="btn-custom primary" 
-               @click="$emit('generate', dpr)"
-             >
-                <Download v-if="dpr.status === 'Approved' && !isAdminMode" :size="16" />
-                <FileText v-else :size="16" />
-                {{ (dpr.status === 'Approved' && !isAdminMode) ? 'Download PDF' : 'Download Document' }}
-             </button>
+        <!-- Footer Actions.
+             Non-admin sees a "View Only" marker for Internal Review (under review)
+             and Rejected (read-only, matches SLA Rejected behaviour) — no Edit, no
+             Delete, no Download. Mirrors the SLA drawer's view-only-footer pattern.
+
+             Otherwise:
+              - Edit:     admin (any status) OR non-admin Draft only.
+              - Download: status === 'Approved' ONLY (the handover PDF is the
+                          official project-closure document; drafts/pending/rejected
+                          docs are not shareable artifacts).
+             Grid: 2-column only when both Edit and Download render (admin + Approved);
+             1-column otherwise. -->
+        <div
+          class="drawer-footer"
+          :style="(isAdminMode && dpr.status === 'Approved') ? {} : { gridTemplateColumns: '1fr' }"
+        >
+             <!-- View-only markers for non-admin Internal Review / Rejected -->
+             <template v-if="!isAdminMode && dpr.status === 'Internal Review'">
+                <div class="view-only-footer">
+                   <Lock :size="13" />
+                   <span>View Only · Pending Admin Review</span>
+                </div>
+             </template>
+             <template v-else-if="!isAdminMode && dpr.status === 'Rejected'">
+                <div class="view-only-footer">
+                   <Lock :size="13" />
+                   <span>View Only · Rejected Handover</span>
+                </div>
+             </template>
+             <template v-else>
+                <button v-if="isAdminMode || dpr.status === 'Draft'" class="btn-custom secondary" @click="$emit('edit', dpr)">
+                   <Pencil :size="16" /> Edit Handover
+                </button>
+                <button
+                  v-if="dpr.status === 'Approved'"
+                  class="btn-custom primary"
+                  @click="$emit('generate', dpr)"
+                >
+                   <Download :size="16" />
+                   Download PDF
+                </button>
+             </template>
         </div>
       </div>
     </div>
@@ -350,7 +383,7 @@ import axios from 'axios'
 import { API } from '@/utils/api'
 import {
   Clock, X, Pencil, Trash2, FileText, Download, CheckCircle, XCircle, ChevronRight, Check, XSquare, AlertCircle,
-  FolderDot, CheckSquare, Settings, Activity, Server, Users, HardDrive, KeyRound, Cpu, Package, ClipboardList, Building2, Calendar, BookOpen
+  FolderDot, CheckSquare, Settings, Activity, Server, Users, HardDrive, KeyRound, Cpu, Package, ClipboardList, Building2, Calendar, BookOpen, Lock
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -797,5 +830,224 @@ const handleDeleteClick = async () => {
 .btn-custom.primary { background: #f59e0b; color: #18181b; }
 .btn-custom.primary:hover { background: #fcd34d; }
 
+/* View-only marker shown when no actions are available
+   (non-admin viewing an Internal Review or Rejected handover). Mirrors the
+   same marker used by SlaDetailsDrawer for rejected SLAs. */
+.view-only-footer {
+  flex: 1; display: flex; align-items: center; justify-content: flex-start; gap: 6px;
+  color: rgba(255,255,255,0.40); font-size: 13px; font-weight: 500;
+  padding: 8px 0;
+}
+.view-only-footer svg { opacity: 0.7; }
+
 @media (max-width: 768px) { .drawer-panel { width: 100%; top: auto; bottom: 0; min-height: 80vh; transform: translateY(100%); } .drawer-panel.is-open { transform: translateY(0); } }
+
+/* ═══════════════════════════════════════════
+   LIGHT THEME OVERRIDES — preserve gold/amber/orange/emerald palette + frosted glass.
+   Drawer becomes a warm cream sheet; primary text dark; semantic accents stay vivid.
+   ═══════════════════════════════════════════ */
+
+[data-theme="light"] .drawer-overlay {
+  background: rgba(26, 20, 16, 0.32);
+}
+[data-theme="light"] .drawer-panel {
+  background: rgba(255, 250, 240, 0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid rgba(245, 158, 11, 0.18);
+  box-shadow: -18px 0 48px rgba(120, 80, 20, 0.12);
+}
+
+/* ─── Header ─── */
+[data-theme="light"] .drawer-header {
+  background: rgba(255, 250, 240, 0.5);
+  border-bottom-color: rgba(26, 20, 16, 0.08);
+}
+[data-theme="light"] .id-badge {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.22);
+}
+[data-theme="light"] .id-badge .label { color: #6b5840; }
+[data-theme="light"] .id-badge .value { color: #b45309; }
+
+[data-theme="light"] .close-btn { color: #6b5840; }
+[data-theme="light"] .close-btn:hover {
+  background: rgba(26, 20, 16, 0.08);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .approve-btn {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.32);
+  color: #047857;
+}
+[data-theme="light"] .approve-btn:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: #047857;
+}
+
+[data-theme="light"] .reject-btn,
+[data-theme="light"] .delete-btn {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #b91c1c;
+}
+[data-theme="light"] .reject-btn:hover:not(:disabled),
+[data-theme="light"] .delete-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #b91c1c;
+}
+[data-theme="light"] .delete-btn.confirm { background: #b91c1c; color: #fff; border-color: #b91c1c; }
+
+/* Vendor / project header */
+[data-theme="light"] .vendor-avatar {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+[data-theme="light"] .vendor-info h2 { color: var(--text-primary); }
+[data-theme="light"] .vendor-info .category { color: #6b5840; }
+
+/* Status bar — preserve semantic colors, brighten contrast on cream */
+[data-theme="light"] .status-bar {
+  background: rgba(26, 20, 16, 0.04);
+  border-color: rgba(26, 20, 16, 0.08);
+  color: var(--text-primary);
+}
+[data-theme="light"] .status-bar.draft {
+  background: rgba(113, 113, 122, 0.12);
+  border-color: rgba(113, 113, 122, 0.28);
+  color: #52525b;
+}
+[data-theme="light"] .status-bar.pending {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.38);
+  color: #b45309;
+}
+[data-theme="light"] .status-bar.approved {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #047857;
+}
+[data-theme="light"] .status-bar.rejected {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.38);
+  color: #b91c1c;
+}
+[data-theme="light"] .status-bar .date { color: #6b5840; }
+
+/* Rejection alert */
+[data-theme="light"] .rejection-alert {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.22);
+}
+[data-theme="light"] .rejection-alert .alert-icon {
+  background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
+}
+[data-theme="light"] .alert-content h4 { color: #b91c1c; }
+[data-theme="light"] .alert-content p { color: var(--text-primary); }
+
+/* Scrollbar */
+[data-theme="light"] .drawer-content::-webkit-scrollbar-thumb { background: rgba(26, 20, 16, 0.18); }
+
+/* ─── Sections ─── */
+[data-theme="light"] .detail-section h3 {
+  color: #6b5840;
+}
+[data-theme="light"] .detail-grid .field label { color: #6b5840; }
+[data-theme="light"] .detail-grid .field .value { color: var(--text-primary); }
+[data-theme="light"] .detail-grid .field .value-pill {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #047857;
+}
+
+/* Notes box */
+[data-theme="light"] .notes-box {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.16);
+  color: var(--text-primary);
+}
+[data-theme="light"] .notes-box strong { color: #6b5840; }
+[data-theme="light"] .notes-box p { color: var(--text-primary); }
+
+/* Item cards (stakeholders / modules / assets / training / etc.) */
+[data-theme="light"] .item-card {
+  background: rgba(255, 250, 240, 0.6);
+  border-color: rgba(26, 20, 16, 0.08);
+}
+[data-theme="light"] .item-card:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+[data-theme="light"] .item-avatar {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+[data-theme="light"] .item-avatar.signed {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+[data-theme="light"] .item-info .name { color: var(--text-primary); }
+[data-theme="light"] .item-info .name .qty { color: #6b5840; }
+[data-theme="light"] .item-info .sub { color: #6b5840; }
+[data-theme="light"] .item-meta { color: #6b5840; }
+
+/* Item badges */
+[data-theme="light"] .item-badge.green {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+[data-theme="light"] .item-badge.amber {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+}
+[data-theme="light"] .item-badge.red {
+  background: rgba(239, 68, 68, 0.14);
+  color: #b91c1c;
+}
+
+/* Finance summary */
+[data-theme="light"] .fs-item {
+  background: rgba(255, 250, 240, 0.7);
+  border-color: rgba(26, 20, 16, 0.08);
+}
+[data-theme="light"] .fs-label { color: #6b5840; }
+[data-theme="light"] .fs-val { color: var(--text-primary); }
+[data-theme="light"] .fs-val.highlight { color: #047857; }
+[data-theme="light"] .fs-val.green { color: #047857; }
+[data-theme="light"] .fs-val.amber { color: #b45309; }
+
+/* Footer */
+[data-theme="light"] .drawer-footer {
+  background: rgba(255, 250, 240, 0.5);
+  border-top-color: rgba(26, 20, 16, 0.08);
+}
+[data-theme="light"] .btn-custom.secondary {
+  background: rgba(26, 20, 16, 0.05);
+  color: var(--text-primary);
+  border-color: rgba(26, 20, 16, 0.12);
+}
+[data-theme="light"] .btn-custom.secondary:hover {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+[data-theme="light"] .btn-custom.primary {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+[data-theme="light"] .btn-custom.primary:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45);
+}
+
+[data-theme="light"] .view-only-footer {
+  color: #92400e;
+}
 </style>

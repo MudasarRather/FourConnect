@@ -108,7 +108,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import {
-  UserPlus, UserSearch, Mail, Phone, Layers, Star, CheckCircle, XCircle, Clock, Sparkles,
+  UserPlus, UserSearch, Mail, Phone, Layers, Star, CheckCircle, XCircle, Clock, Sparkles, Mail as MailIcon, Award,
 } from 'lucide-vue-next'
 
 import RecKpiRow from '../components/RecKpiRow.vue'
@@ -128,13 +128,18 @@ const {
 } = useCandidates()
 
 // KPI status chips
+const countByStatus = (status) =>
+  (items.value || []).reduce((n, it) => n + (it.status === status ? 1 : 0), 0)
+
 const kpiChips = computed(() => [
-  { key: 'all',         label: 'All',         value: total.value || 0, tone: 'neutral', icon: Layers },
-  { key: 'NEW',         label: 'New',         value: null, tone: 'gold',    icon: Star },
-  { key: 'SHORTLISTED', label: 'Shortlisted', value: null, tone: 'orange',  icon: CheckCircle },
-  { key: 'INTERVIEW',   label: 'Interview',   value: null, tone: 'orange',  icon: Clock },
-  { key: 'SELECTED',    label: 'Selected',    value: null, tone: 'orange',  icon: CheckCircle },
-  { key: 'REJECTED',    label: 'Rejected',    value: null, tone: 'red',     icon: XCircle },
+  { key: 'all',         label: 'All',         value: total.value || 0,             tone: 'neutral', icon: Layers },
+  { key: 'NEW',         label: 'New',         value: countByStatus('NEW'),         tone: 'gold',    icon: Star },
+  { key: 'SHORTLISTED', label: 'Shortlisted', value: countByStatus('SHORTLISTED'), tone: 'orange',  icon: CheckCircle },
+  { key: 'INTERVIEW',   label: 'Interview',   value: countByStatus('INTERVIEW'),   tone: 'orange',  icon: Clock },
+  { key: 'SELECTED',    label: 'Selected',    value: countByStatus('SELECTED'),    tone: 'orange',  icon: CheckCircle },
+  { key: 'OFFERED',     label: 'Offered',     value: countByStatus('OFFERED'),     tone: 'orange',  icon: MailIcon },
+  { key: 'JOINED',      label: 'Joined',      value: countByStatus('JOINED'),      tone: 'green',   icon: Award },
+  { key: 'REJECTED',    label: 'Rejected',    value: countByStatus('REJECTED'),    tone: 'red',     icon: XCircle },
 ])
 
 const setStatus = async (key) => {
@@ -386,4 +391,53 @@ onMounted(fetchList)
   border-color: var(--hr-accent-gold-border);
 }
 .page-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+/* Stronger border on cream — the inherited `.rec-card` border is too faint
+   to read on the warm page background. */
+[data-theme="light"] .cand-card {
+  border-color: rgba(40, 25, 10, 0.16);
+  box-shadow: 0 8px 22px -16px rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .cand-card:hover {
+  border-color: rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .cand-code { color: #b45309; }
+[data-theme="light"] .cand-name { color: #1a1410; }
+[data-theme="light"] .cand-meta { color: #6b5840; }
+[data-theme="light"] .contact { color: #44362a; }
+[data-theme="light"] .cand-stats {
+  border-top-color: rgba(40, 25, 10, 0.10);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .cand-stats .label { color: #92400e; }
+[data-theme="light"] .cand-stats .value { color: #1a1410; }
+[data-theme="light"] .skill-pill {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #b45309;
+}
+[data-theme="light"] .skill-more { color: #6b5840; }
+[data-theme="light"] .cand-status-new         { background: rgba(251, 191, 36, 0.20); color: #b45309; }
+[data-theme="light"] .cand-status-screening   { background: rgba(217, 119, 6, 0.18);  color: #b45309; }
+[data-theme="light"] .cand-status-shortlisted { background: rgba(217, 119, 6, 0.20);  color: #b45309; }
+[data-theme="light"] .cand-status-interview   { background: rgba(251, 146, 60, 0.18); color: #c2410c; }
+[data-theme="light"] .cand-status-selected    { background: rgba(234, 88, 12, 0.18);  color: #c2410c; }
+[data-theme="light"] .cand-status-offered     { background: rgba(249, 115, 22, 0.18); color: #c2410c; }
+[data-theme="light"] .cand-status-joined      { background: rgba(16, 185, 129, 0.24); color: #065f46; }
+[data-theme="light"] .cand-status-rejected    { background: rgba(220, 38, 38, 0.12);  color: #b91c1c; }
+[data-theme="light"] .cand-status-on_hold     { background: rgba(40, 25, 10, 0.10);   color: #6b5840; }
+[data-theme="light"] .cand-status-talent_pool { background: rgba(251, 146, 60, 0.18); color: #c2410c; }
+[data-theme="light"] .cand-status-archived    { background: rgba(40, 25, 10, 0.10);   color: #6b5840; }
+[data-theme="light"] .page-info { color: #6b5840; }
+[data-theme="light"] .page-chip {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #44362a;
+}
+[data-theme="light"] .page-chip:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.42);
+  color: #b45309;
+}
 </style>

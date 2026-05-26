@@ -29,14 +29,14 @@ If a request would force a shortcut that breaks any of the above, flag it before
 
 | Layer | Technology |
 |---|---|
-| **Frontend runtime** | Vue 3 (`<script setup>` SFCs) + Vite 5 |
+| **Frontend runtime** | Vue 3 (`<script setup>` SFCs) + Vite 8 (requires Node 20.19+ or 22.12+ — Vite 8 throws `node:util.styleText` import error on Node 21.x) |
 | **Frontend routing** | Vue Router 4 |
 | **HTTP client** | Axios |
 | **Charts** | Chart.js 4 + vue-chartjs |
 | **Icons** | lucide-vue-next |
 | **Toast notifications** | vue-toastification (globally installed) |
 | **PDF export** | jspdf + jspdf-autotable |
-| **3D / animation** | three, @tresjs/core, @tresjs/cientos, @theatre/core, @theatre/studio, gsap, motion-v, @vueuse/motion, @lottiefiles/dotlottie-vue |
+| **3D / animation** | three, @tresjs/core, @tresjs/cientos, @theatre/core, @theatre/studio, gsap, motion-v, @vueuse/motion, @lottiefiles/dotlottie-vue. The bare `motion` package is also installed as a sibling — **do not import from it**; use `motion-v` (see Animations convention below). |
 | **Utilities** | lodash, @vueuse/core, country-state-city |
 | **Backend runtime** | Python 3.14 (path: `C:\Users\91700\AppData\Local\Programs\Python\Python314\`) |
 | **Web framework** | FastAPI |
@@ -53,19 +53,23 @@ If a request would force a shortcut that breaks any of the above, flag it before
 ## Build & Run
 
 ### Prerequisites
-- Node.js ≥ 18 (for frontend)
+- **Node.js 20.19+, 22.12+, or 24 LTS** (Vite 8 requires this; Node 21.x fails to start the dev server with a `node:util.styleText` SyntaxError — Node 24 has been verified working)
 - Python 3.14 at `C:\Users\91700\AppData\Local\Programs\Python\Python314\python.exe`
 - PostgreSQL running on port 5432 with database `fourreck_db`
 
 ### Start frontend (from repo root)
 ```powershell
-npm install           # first time only
-npm run dev           # Vite dev server on http://localhost:5173
-npm run build         # production build → dist/
-npm run preview       # preview the production build
+npm install --legacy-peer-deps   # required — see peer-dep note below
+npm run dev                      # Vite dev server on http://localhost:5173
+npm run build                    # production build → dist/
+npm run preview                  # preview the production build
 ```
 
-> **No lint or test scripts.** `package.json` ships only `dev`, `build`, `preview` — there is no `lint`, `format`, or `test` script. Don't run `npm run lint` / `npm test`; they will fail. The Vite dev server proxies `/api/*` to `http://127.0.0.1:8000` (see [vite.config.js](vite.config.js)) — the backend CORS list separately whitelists `localhost:5173` and `127.0.0.1:5173`, so keep both forms in sync when changing ports.
+> **`--legacy-peer-deps` is required.** `package.json` declares `vite@^8` but `@vitejs/plugin-vue@^5` only lists Vite 5/6 as compatible peers, so `npm install` (clean) fails with `ERESOLVE`. The legacy flag is the right escape hatch until someone bumps `@vitejs/plugin-vue` to v6+.
+
+> **If Vite throws `Cannot find module '.../dep-XXXXXX.js'` mid-session**, your dev process is referencing chunk hashes from a prior install that was wiped or replaced. Kill the dev server PID (the hashes are baked into the running process) and restart from a fresh terminal. Reinstalling Vite without restarting the dev server reproduces this error.
+
+> **No lint or test scripts.** `package.json` ships only `dev`, `build`, `preview` — there is no `lint`, `format`, or `test` script. Don't run `npm run lint` / `npm test`; they will fail. The Vite dev server still proxies bare `/api/*` paths to `http://127.0.0.1:8000` (see [vite.config.js](vite.config.js)) for the small number of relative-path call sites that remain, but new code should route through `@/utils/api` (see Key Conventions). The backend CORS list whitelists `localhost:5173` + `127.0.0.1:5173` + `:5174` + production domains — keep both forms in sync when changing dev ports.
 
 ### Start backend (from `C:\Projects\FourConnectService`)
 
@@ -239,7 +243,7 @@ The app supports a dark/light theme toggle. The codebase was designed dark-first
 - **Don't promote the rescue stylesheet to use `!important` everywhere.** The `:root[data-theme="light"]` prefix already wins via specificity (0,3,0 vs scoped 0,2,0). Reserve `!important` for vue-toastification only (it uses inline styles).
 
 **Light theme is incomplete:**
-The user panel has had broad light-mode overrides applied across ~25 pages and ~15 shared components, but rough edges remain on: Documents wizards (SLA/Handover/DPR), HR admin module deep surfaces, and any modal/drawer that hasn't been explicitly toured. When adding light overrides to a NEW page, follow this checklist:
+The user panel has had broad light-mode overrides applied across ~30 pages and ~20 shared components. The HR module's main surfaces (topbar, rail, lifecycle modal, profile drawer wide, all employee sections — All / Directory / Profiles / Lifecycle / History / Probation / Suspended / Inactive / Archived / Transfers via shared `_FilteredListSection`) now have light-theme overrides. Rough edges remain on: Documents wizards (SLA/Handover/DPR), HR recruitment + onboarding submodules, and any modal/drawer that hasn't been explicitly toured. When adding light overrides to a NEW page, follow this checklist:
 1. Page wrapper `color` (replace `#fff` / `#f5f5f7` with `var(--text-primary)`)
 2. All section/card titles, eyebrows, descriptions
 3. Form labels + required asterisks
@@ -436,7 +440,7 @@ Uploaded files land in `C:\Projects\FourConnectService\uploads\` (served at `/up
 The Vite proxy only forwards requests with the `/api` prefix to the backend. Every router must be mounted with `app.include_router(router, prefix="/api")` in `main.py`.
 
 ### CORS: hardcoded origin allowlist
-Only `localhost:5173`, `127.0.0.1:5173`, `localhost:5174`, `127.0.0.1:5174` are allowed. If the dev server port changes, update the `allow_origins` list in `main.py`.
+`ALLOWED_ORIGINS` in `app/main.py` whitelists the four local dev origins (`localhost:5173`, `127.0.0.1:5173`, `localhost:5174`, `127.0.0.1:5174`) plus the production frontend domains (`https://crm.fourreck.com`, `https://www.crm.fourreck.com`). If you add a new origin (new dev port, new staging domain), add it to that list — and remember the global exception handler in `main.py` also re-injects CORS headers on 500s, so cross-origin error visibility depends on this list staying complete.
 
 ### `auto-create` vs Alembic
 `Base.metadata.create_all()` runs on startup and creates tables for any new model class automatically. Use this for **new tables**. Use Alembic for **column additions, index changes, renames, or data migrations** on existing tables. Never delete a `versions/` file to "start fresh" — it will corrupt the migration graph.
@@ -469,11 +473,39 @@ Older models use `default=datetime.utcnow` (Python-side, naive UTC). Newer model
 ### Vue `<script setup>` SFCs
 All Vue components use the Composition API with `<script setup>`. Do not introduce Options API components. Emit events with `defineEmits`, expose slots with `defineSlots`, and props with `defineProps` — all at the top of the `<script setup>` block.
 
-### Axios base URL
-The Vite proxy handles `/api/*` routing. Axios calls in the frontend use relative paths like `/api/projects/` — no `http://localhost:8000` prefix needed in development. Do not hardcode the backend URL.
+### Axios base URL — import from `@/utils/api`
+The canonical pattern is the centralised helper at [src/utils/api.js](src/utils/api.js), which exports:
+
+```js
+export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+export const API = `${API_BASE}/api`
+```
+
+Every new view, component, or composable that talks to the backend must import these and prefix URLs with `${API}`:
+
+```js
+import { API, API_BASE } from '@/utils/api'
+
+axios.get(`${API}/projects/`)                 // API endpoints
+imageUrl = `${API_BASE}${doc.file_url}`       // static assets under /uploads or /storage
+```
+
+The current frontend uses this pattern in ~83 files. **Do not** hardcode `http://localhost:8000` or `http://127.0.0.1:8000` anywhere — `VITE_API_URL` in `.env` is the production override (e.g. `VITE_API_URL=https://apifc.fourreck.com`). The Vite proxy in [vite.config.js](vite.config.js) still forwards bare `/api/*` paths to `127.0.0.1:8000` for any remaining relative-path callers, but new code should go through `@/utils/api`.
+
+### `@` path alias
+[vite.config.js](vite.config.js) maps `@` → `./src`. Use it for any cross-folder import (`@/utils/api`, `@/components/ui/CustomSelect.vue`, `@/composables/useToast`) — currently in use across ~82 files. Don't write deep relative chains like `../../../utils/api` in new code.
 
 ### Modal overlays must `<Teleport to="body">`
 Any modal that uses `backdrop-filter: blur(...)` on its overlay **must** wrap its template in `<Teleport to="body">`. Without that, the overlay is rendered inside the page's stacking context — and `backdrop-filter` scopes itself to the containing block, so descendants with their own `border-radius`, `overflow`, or `transform` produce visible **boxed blur regions** that look like rectangular ghost outlines behind the modal. (Past offender: `UploadDocModal.vue`. Fix: added `<Teleport to="body">` to match `PaymentEntryModal.vue` and `CreateMilestoneModal.vue`.) The Record Payment / New Milestone / Tracker modals are the reference pattern.
+
+### Dropdowns trapped under sticky headers / tab strips — the GSAP-transform pitfall
+The page-entry choreography in [src/animations/pageChoreography.js](src/animations/pageChoreography.js) runs `tl.from(items, { x: -24, opacity: 0, ... })` against tab strips (e.g. `[data-anim="tabs-dock"]`). GSAP **leaves `transform: translate3d(0,0,0)` inline** on each `.dock-item` after the animation completes because the timeline is invoked without `clearProps`. A non-identity transform creates a stacking context per element, and combined with the page header's `isolation: isolate` + `z-index: 50`, an in-header dropdown can no longer escape — its `z-index: 1500` is scoped to the header's local context and ends up painting under the tabs even though the dropdown owns a higher z-index.
+
+**Symptoms**: tab pill text shows through (or above) the dropdown body even after the dropdown's background is set to near-opaque.
+
+**Fix**: don't fight the stacking context — `<Teleport to="body">` the popover and position it with `position: fixed` driven by `getBoundingClientRect()` of the trigger. Recalc on `resize` and on `scroll` with `capture: true` so sticky-header scroll events fire it. Reference: project-selector dropdown on [src/views/ProjectFinancialsPage.vue](src/views/ProjectFinancialsPage.vue) (`triggerRef` / `dropdownPos` / `recalcDropdownPos`).
+
+When you teleport a popover that lives inside a parent with `v-click-outside`, **also add `@mousedown.stop @click.stop` to the teleported root**. The directive checks `el.contains(event.target)` against the original parent — once the popover is moved to `<body>`, clicks inside it look like outside-clicks and the popover closes on every interaction.
 
 ### Shared form-input components — use the Compact* variants
 Newer Vue forms (milestones, financials) use a parallel set of input components prefixed `Compact*`:
@@ -486,6 +518,53 @@ Chart.js renders axis ticks, legends, gridlines, and tooltips via JS-supplied co
 
 ### ID comparison — stringify both sides
 JWT claims are strings; SQLAlchemy returns `uuid.UUID` objects; localStorage stores either. Comparing a project/milestone's `created_by_id` against `currentUser.id` directly can fail when one side is a UUID object and the other a string. **Always stringify both sides for cross-boundary checks**: `String(milestone.created_by_id) === String(currentUser.id)`. Inside SQLAlchemy filters, keep it native (`Project.created_by_id == current_user.id`). The bug surfaces as "creator gets denied access to their own resource" — see the fix in [MilestoneTrackerModal.vue](src/components/milestones/MilestoneTrackerModal.vue) `canEditTracker` + `isCreator` computeds.
+
+### Animations — prefer `motion-v` for new component motion
+
+`motion-v` (the Vue port of Framer Motion) is installed and is the **default tool for any new component-level animation**: hover lifts, tap presses, entrance/exit transitions, staggered list reveals, drawer slides, modal pops, progress fills. Do **not** reach for raw CSS `@keyframes`, hand-written `<Transition>` blocks, or GSAP tweens unless the effect genuinely needs imperative control over a long timeline.
+
+**Import the component, not a plugin:**
+```js
+import { Motion } from 'motion-v'
+```
+There is no global plugin registration — import per-file where you use it.
+
+**The four reactive props you'll use 95% of the time:**
+| Prop | Purpose | Example |
+|---|---|---|
+| `initial` | State the element mounts from | `:initial="{ opacity: 0, y: 12 }"` |
+| `animate` | Target state to animate toward (reactive) | `:animate="{ opacity: 1, y: 0 }"` |
+| `whileHover` | Applied on pointer hover, released on leave | `:whileHover="{ y: -2, scale: 1.02 }"` |
+| `whileTap` | Applied on press, released on pointer up | `:whileTap="{ scale: 0.96 }"` |
+
+Also useful: `exit` (paired with `<Presence>`/`<AnimatePresence>` for unmount), `:transition` (`{ duration, delay, ease }` — prefer `ease: [0.16, 1, 0.3, 1]` for the project's signature ease-out spring).
+
+**Render as any element with `as`:**
+```vue
+<Motion as="button" class="btn-pill primary"
+  :initial="{ opacity: 0, y: 8 }"
+  :animate="{ opacity: 1, y: 0 }"
+  :whileHover="{ y: -2, scale: 1.02 }"
+  :whileTap="{ scale: 0.97 }"
+  :transition="{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }">
+  Continue
+</Motion>
+```
+
+**Reference implementations in this repo:**
+- [src/views/hr/onboarding/components/OnbTabBar.vue](src/views/hr/onboarding/components/OnbTabBar.vue) — staggered tab entrance + hover/tap micro-interactions on a tab dock.
+- [src/components/documents/EditSlaModal.vue](src/components/documents/EditSlaModal.vue) — multi-step wizard with animated step dots, modal entrance, animated progress fill, and hover-lift CTAs.
+
+**When to still use other tools:**
+- **`v-reveal` directive** (already global) — for one-shot scroll-into-view fade-up of decorative blocks. Don't replace it with motion-v.
+- **GSAP** — long imperative timelines, scrub-controlled scroll, route-leave cleanup (`attachRouterCleanup()` already wired in [src/main.js](src/main.js)).
+- **Plain CSS `@keyframes`** — pure decorative loops (shimmer sweeps, aura drift, breathing glows) that don't need to react to JS state.
+- **Vue `<Transition>` / `<TransitionGroup>`** — acceptable for trivial enter/leave on a single element; switch to `<Motion>` once you need hover/tap variants or any reactive `animate` target.
+
+**Anti-patterns to avoid:**
+- Don't combine motion-v `:animate` with conflicting CSS `transition: transform ...` on the same property — the CSS transition fights the motion engine.
+- Don't animate `transform: translateY(-1px)` in an infinite `repeat: -1` loop on layout-affecting elements (CLAUDE.md already calls this out elsewhere — "Continuous-motion GSAP breathing" applies to motion-v too). Bobbing tabs/cards shift surrounding content. Use CSS-only `::after` glow shimmers for ambient breathing instead.
+- Don't import from `'motion'` — the package is `'motion-v'`. The bare `'motion'` package is the JS/framework-agnostic version and isn't installed here.
 
 ### currentUser hydration — fetch from `/api/auth/me`
 Several views read `currentUser` from `localStorage.getItem('user')`. That key is only populated by `LoginPage.vue` after a recent login — older sessions don't have it. When `currentUser` is needed for permission checks, **hydrate it from `/api/auth/me` on mount** as a fallback before relying on the localStorage value. The endpoint is cheap and returns the full `UserResponse`. Pattern: [ProjectDetailsLandingPage.vue](src/views/ProjectDetailsLandingPage.vue) `hydrateCurrentUser()`.
@@ -508,7 +587,7 @@ Several views read `currentUser` from `localStorage.getItem('user')`. That key i
 - **Changing `StaticPool` to a standard pool** — until Python 3.14 SQLAlchemy compatibility is verified, leave the pool configuration alone.
 - **Adding logic to the Vite proxy** — `vite.config.js` proxies `/api` only. Do not add path rewrites without testing the backend route prefix.
 - **Using `useToast` composable for new notifications** — the custom composable in `src/composables/useToast.js` is superseded. Use `vue-toastification`'s `useToast` from `'vue-toastification'`.
-- **Hardcoding `http://localhost:8000` in frontend code** — all API calls must use relative `/api/*` paths so the Vite proxy handles them.
+- **Hardcoding `http://localhost:8000` (or any backend URL) in frontend code** — import `API` / `API_BASE` from `@/utils/api` instead. The base URL is driven by `VITE_API_URL` at build time, with localhost as the dev fallback. Hardcoding breaks production deploys against `apifc.fourreck.com`.
 - **Auto-creating admin users via API** — `is_superuser` can only be set directly in the database or via `ensure_admin.py` at the backend root (`C:\Projects\FourConnectService\ensure_admin.py`).
 - **Ignoring crash.log** — if the backend returns 500, check `C:\Projects\FourConnectService\crash.log` before debugging in the source; the full traceback is written there.
 - **Touching `main.py` to add an HR endpoint** — HR sub-routers are aggregated in `app/routers/hr/__init__.py`. Add them there, not in `main.py`.
@@ -517,6 +596,9 @@ Several views read `currentUser` from `localStorage.getItem('user')`. That key i
 - **Continuous-motion GSAP "breathing" on active UI elements** — `gsap.to(el, { y: -1, yoyo: true, repeat: -1 })` on an active tab/card makes the element visibly bob and shifts surrounding layout. Prefer a CSS-only shimmer/glow on a child pseudo-element (`::after` with `box-shadow` keyframe or gradient flow) so nothing in the layout moves. Past offender removed from [pageChoreography.js](src/animations/pageChoreography.js) `projectNotesEntry`.
 - **Introducing blue/purple/indigo/teal accents** — the brand palette is warm orange/amber/golden. The Tailwind-style utility classes (`text-blue-400`, `text-purple-400`, `text-indigo-400`, etc.) appear in older code and must be remapped to amber (`#fbbf24`, `#f59e0b`, `#d97706`, `#b45309`, `#92400e`) when touching that file. Emerald `#34d399`/`#047857` is reserved for success-state semantics; red `#ef4444`/`#b91c1c` for danger.
 - **Off-cwd ad-hoc script invocation** — running `python C:\Projects\FourConnectService\some_script.py` from a different working directory makes `pydantic-settings` miss `.env` and use the hardcoded fallback DB. Either `cd` to the backend root first OR have the script load `.env` itself with a small text parser (see Environment config section).
+- **Returning soft-deleted records in list-shape responses** — soft delete is enforced at the *primary fetch* (e.g. `Project.is_deleted == False`), but several list endpoints serialize nested arrays (`team_members`, `attachments`, etc.) from the relationship without filtering by status. Past offender: `GET /api/team/projects` was including team members with `status='removed'` in each project's `team_members` array — so removed members kept appearing in row avatars and `team_count` even though the side-panel "Assigned Team" filter hid them. After a successful "Remove" this looked like the action had failed. **When serializing a relationship array in a list endpoint, filter out tombstoned rows** (`status='removed'`, `is_deleted=True`, etc.) before iterating — match what the detail view shows.
+- **Bare `npm install` (without `--legacy-peer-deps`)** — fails with `ERESOLVE` because `@vitejs/plugin-vue@^5` lists Vite 5/6 as peer but the project declares Vite 8. Always pass `--legacy-peer-deps` for installs in this repo until plugin-vue is bumped to v6+.
+- **Targeting a globally-styled class without `!important`** — [src/styles/theme-light-rescue.css](src/styles/theme-light-rescue.css) applies broad pattern overrides to generic class names like `.table-header`, `.glass-card`, `.modal-*`. If a specific page needs a *different* light-mode background for one of these classes (e.g., transparent instead of the rescue's faint overlay), the page's scoped CSS specificity ties with the rescue rule (both at 0,3,0 after the data-v attribute) and the cascade order is unreliable. Use `!important` only on the conflicting property and add a one-line comment naming the rescue rule that's being defeated — example: [DocumentDrivePage.vue](src/views/documents/DocumentDrivePage.vue) `.table-header` override.
 
 ---
 
@@ -528,7 +610,7 @@ Track these before any public or production deployment:
 2. **`SECRET_KEY` default** — `config.py` ships with `"your-secret-key-here-change-this-in-production"`. Must be overridden via `.env` before production.
 3. **No rate limiting** — `/api/auth/login` is open to brute force. Add `slowapi` or equivalent before public exposure.
 4. **No structured logging** — errors go to `crash.log` (plain text). Add `structlog` or `loguru` with JSON output for production observability.
-5. **CORS is localhost-only** — update `allow_origins` in `main.py` for production domain(s).
+5. **CORS allowlist is hardcoded in source** — `ALLOWED_ORIGINS` in `main.py` already includes `crm.fourreck.com` + dev ports. New staging/production frontends require a code change and redeploy, not a config flip.
 6. **JWT `ACCESS_TOKEN_EXPIRE_MINUTES = 1440`** — 24-hour tokens with no refresh mechanism. Implement a refresh token flow before production.
 7. **No file upload validation** — `uploads.py` currently accepts any file. Add MIME sniffing and size limits.
 8. **`datetime.utcnow()` in older models** — deprecated in Python 3.12+. Migrate to `datetime.now(timezone.utc)` in `Project`, `Milestone`, `DprDocument`, and similar older models.

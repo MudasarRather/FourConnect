@@ -122,4 +122,21 @@ const DotLottieVue = defineAsyncComponent(() =>
 .rec-empty-cta { margin-top: 6px; }
 
 @keyframes rec-orbit-spin { to { transform: rotate(360deg); } }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+[data-theme="light"] .rec-empty { color: #6b5840; }
+[data-theme="light"] .orbit-ring { border-color: rgba(217, 119, 6, 0.40); }
+[data-theme="light"] .orbit-ring-2 { border-color: rgba(251, 146, 60, 0.38); }
+[data-theme="light"] .orbit-pulse {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.20), rgba(251, 146, 60, 0.08) 70%, transparent 100%);
+}
+[data-theme="light"] .orbit-icon {
+  background: linear-gradient(135deg, rgba(255, 244, 220, 0.95), rgba(255, 250, 240, 0.85));
+  border-color: rgba(217, 119, 6, 0.42);
+  color: #b45309;
+  box-shadow: 0 8px 28px -10px rgba(217, 119, 6, 0.32),
+              inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+[data-theme="light"] .rec-empty-title { color: #1a1410; }
+[data-theme="light"] .rec-empty-body { color: #6b5840; }
 </style>

@@ -205,4 +205,47 @@ onBeforeUnmount(() => {
   transform: translateY(8px) scale(0.98);
   opacity: 0;
 }
+
+/* ═══════════ LIGHT THEME ═══════════
+   Modal is teleported to body, so plain [data-theme="light"] suffices. */
+[data-theme="light"] .rec-modal-overlay {
+  background: rgba(40, 25, 10, 0.30);
+}
+[data-theme="light"] .rec-modal {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.14);
+  box-shadow:
+    0 30px 80px -20px rgba(40, 25, 10, 0.40),
+    0 0 0 1px rgba(217, 119, 6, 0.18),
+    0 0 80px rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .modal-aurora {
+  background:
+    radial-gradient(80% 100% at 0% 0%, rgba(251, 191, 36, 0.32), transparent 60%),
+    radial-gradient(60% 80% at 100% 30%, rgba(251, 146, 60, 0.26), transparent 60%);
+}
+[data-theme="light"] .modal-head { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .title-icon {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.42);
+  color: #b45309;
+}
+[data-theme="light"] .title-block h3 { color: #1a1410; }
+[data-theme="light"] .title-block p { color: #6b5840; }
+[data-theme="light"] .close-btn {
+  background: rgba(255, 250, 240, 0.72);
+  border-color: rgba(40, 25, 10, 0.16);
+  color: #6b5840;
+}
+[data-theme="light"] .close-btn:hover {
+  background: rgba(217, 119, 6, 0.12);
+  color: #b45309;
+}
+[data-theme="light"] .modal-footer {
+  background: rgba(255, 244, 220, 0.55);
+  border-top-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .modal-body::-webkit-scrollbar-thumb {
+  background: rgba(40, 25, 10, 0.16);
+}
 </style>

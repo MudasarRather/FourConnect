@@ -121,14 +121,98 @@
         </Motion>
       </div>
     </template>
+
+    <!-- ════════ Rejection modal ════════ -->
+    <OnbModal
+      :open="rejectModalOpen"
+      title="Reject document"
+      subtitle="Tell the joiner exactly what to fix so they can re-upload."
+      :icon="ShieldAlert"
+      :width="520"
+      @close="cancelReject"
+    >
+      <div class="rej-stack">
+        <!-- Slot summary -->
+        <div class="rej-summary" v-if="rejectingSlot">
+          <div class="rej-summary-icon"><FileText :size="16" /></div>
+          <div class="rej-summary-body">
+            <div class="rej-summary-name">{{ rejectingSlot.document_label || rejectingSlot.document_type || 'Document' }}</div>
+            <div class="rej-summary-meta">
+              <span v-if="rejectingSlot.file_name">{{ rejectingSlot.file_name }}</span>
+              <span v-else>Uploaded file</span>
+              <span class="rej-summary-sep">·</span>
+              <span class="rej-summary-tag">UPLOADED</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preset chips -->
+        <div class="rej-presets">
+          <span class="rej-presets-label">Quick reasons</span>
+          <div class="rej-chips">
+            <MotionEl
+              v-for="p in REJECT_PRESETS"
+              :key="p"
+              as="button"
+              type="button"
+              class="rej-chip"
+              :whileHover="{ y: -2 }"
+              :whileTap="{ scale: 0.96 }"
+              @click="pickPreset(p)"
+            >
+              <Plus :size="11" /> {{ p }}
+            </MotionEl>
+          </div>
+        </div>
+
+        <!-- Reason -->
+        <div class="rej-field">
+          <label class="rej-field-label">
+            Rejection reason <span class="rej-req">*</span>
+          </label>
+          <textarea
+            v-model="rejectReason"
+            class="rej-textarea"
+            :class="{ 'has-error': rejectError }"
+            rows="4"
+            placeholder="Explain what's wrong with this document and how to fix it..."
+            @input="rejectError = false"
+          ></textarea>
+          <span v-if="rejectError" class="rej-field-error">
+            <AlertTriangle :size="11" /> Reason is required.
+          </span>
+        </div>
+
+        <!-- Warning -->
+        <div class="rej-warn">
+          <ShieldAlert :size="13" />
+          <span>The joiner will be notified and can re-upload a corrected file.</span>
+        </div>
+      </div>
+
+      <template #footer>
+        <button class="onb-btn-ghost" :disabled="rejectSubmitting" @click="cancelReject">Cancel</button>
+        <button
+          class="onb-btn-danger rej-confirm-btn"
+          :disabled="rejectSubmitting || !rejectReason.trim()"
+          @click="confirmReject"
+        >
+          <Loader2 v-if="rejectSubmitting" :size="13" class="rej-spin" />
+          <XCircle v-else :size="13" />
+          {{ rejectSubmitting ? 'Rejecting…' : 'Reject document' }}
+        </button>
+      </template>
+    </OnbModal>
   </section>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import { Motion } from 'motion-v'
-import { FileCheck2, Upload, FileText, CheckCircle2, XCircle, ArrowUpRight, Clock, AlertTriangle } from 'lucide-vue-next'
+import { FileCheck2, Upload, FileText, CheckCircle2, XCircle, ArrowUpRight, Clock, AlertTriangle, ShieldAlert, Loader2, Plus } from 'lucide-vue-next'
+import { Motion as MotionEl } from 'motion-v'
 import OnbProcessPicker from '../components/OnbProcessPicker.vue'
+import OnbModal from '../components/OnbModal.vue'
 import { fetchSlots, uploadToSlot, verifySlot, rejectSlot } from '../composables/useOnbDocuments'
 import { useToast } from 'vue-toastification'
 import { API_BASE } from '@/utils/api'
@@ -176,14 +260,62 @@ const verify = async (slot) => {
     toast.success('Verified')
   } catch (e) { toast.error(e?.response?.data?.detail || 'Could not verify') }
 }
-const reject = async (slot) => {
-  const reason = window.prompt('Reason for rejection:')
-  if (!reason) return
+// ── Rejection modal state ──
+const rejectModalOpen = ref(false)
+const rejectingSlot = ref(null)
+const rejectReason = ref('')
+const rejectError = ref(false)
+const rejectSubmitting = ref(false)
+
+const REJECT_PRESETS = [
+  'Document is blurry / illegible',
+  'Wrong document type uploaded',
+  'Information mismatch with employee record',
+  'Document has expired',
+  'Missing signature or stamp',
+]
+
+const reject = (slot) => {
+  rejectingSlot.value = slot
+  rejectReason.value = ''
+  rejectError.value = false
+  rejectModalOpen.value = true
+}
+
+const pickPreset = (preset) => {
+  rejectReason.value = rejectReason.value ? `${rejectReason.value}\n${preset}` : preset
+  rejectError.value = false
+}
+
+const cancelReject = () => {
+  if (rejectSubmitting.value) return
+  rejectModalOpen.value = false
+  rejectingSlot.value = null
+  rejectReason.value = ''
+  rejectError.value = false
+}
+
+const confirmReject = async () => {
+  if (!rejectReason.value.trim()) {
+    rejectError.value = true
+    return
+  }
+  const slot = rejectingSlot.value
+  if (!slot) return
+  rejectSubmitting.value = true
   try {
-    const updated = await rejectSlot(slot.id, reason)
+    const updated = await rejectSlot(slot.id, rejectReason.value.trim())
     const idx = slots.value.findIndex(s => s.id === slot.id)
     if (idx >= 0) slots.value[idx] = updated
-  } catch (e) { toast.error(e?.response?.data?.detail || 'Could not reject') }
+    toast.success('Document rejected')
+    rejectModalOpen.value = false
+    rejectingSlot.value = null
+    rejectReason.value = ''
+  } catch (e) {
+    toast.error(e?.response?.data?.detail || 'Could not reject')
+  } finally {
+    rejectSubmitting.value = false
+  }
 }
 const formatDateTime = (iso) => new Date(iso).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 
@@ -368,4 +500,183 @@ const resolveFileUrl = (url) => {
 }
 
 .tile-foot { display: flex; gap: 8px; padding-top: 4px; }
+
+/* ═════════════════════════════════════════════════════════════════════
+   Rejection modal — premium gold/cream glass, status-aware accents
+   ═════════════════════════════════════════════════════════════════════ */
+.rej-stack { display: flex; flex-direction: column; gap: 16px; }
+
+/* Slot summary card */
+.rej-summary {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(251, 146, 60, 0.10), rgba(251, 191, 36, 0.04)),
+    rgba(20, 16, 12, 0.30);
+  border: 1px solid rgba(251, 146, 60, 0.22);
+  backdrop-filter: blur(12px);
+}
+.rej-summary-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(251, 146, 60, 0.18);
+  color: #fb923c;
+  flex-shrink: 0;
+}
+.rej-summary-body { min-width: 0; }
+.rej-summary-name { font-size: 13.5px; font-weight: 700; color: var(--hr-text); }
+.rej-summary-meta {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10.5px; color: var(--hr-text-muted);
+  margin-top: 2px;
+}
+.rej-summary-sep { opacity: 0.5; }
+.rej-summary-tag {
+  font-weight: 700; letter-spacing: 0.5px;
+  padding: 1px 6px; border-radius: 4px;
+  background: rgba(251, 146, 60, 0.18); color: #fb923c;
+}
+
+/* Preset chips */
+.rej-presets { display: flex; flex-direction: column; gap: 8px; }
+.rej-presets-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.4px;
+  text-transform: uppercase; color: var(--hr-text-muted);
+}
+.rej-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rej-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 10px;
+  font-size: 11px; font-weight: 600;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--hr-text-secondary);
+  cursor: pointer;
+  transition: border-color .18s var(--hr-spring), background .18s var(--hr-spring), color .18s var(--hr-spring);
+}
+.rej-chip:hover {
+  border-color: rgba(251, 191, 36, 0.40);
+  background: rgba(251, 191, 36, 0.10);
+  color: var(--hr-accent-gold);
+}
+
+/* Reason textarea */
+.rej-field { display: flex; flex-direction: column; gap: 6px; }
+.rej-field-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.4px;
+  text-transform: uppercase; color: var(--hr-text-muted);
+}
+.rej-req { color: #f87171; }
+.rej-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13px; line-height: 1.55;
+  color: var(--hr-text);
+  font-family: inherit;
+  resize: vertical;
+  min-height: 92px;
+  outline: none;
+  transition: border-color .2s var(--hr-spring), box-shadow .2s var(--hr-spring), background .2s var(--hr-spring);
+}
+.rej-textarea::placeholder { color: rgba(255, 255, 255, 0.35); }
+.rej-textarea:focus {
+  border-color: rgba(248, 113, 113, 0.55);
+  background: rgba(248, 113, 113, 0.05);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.14);
+}
+.rej-textarea.has-error {
+  border-color: #f87171;
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.18);
+}
+.rej-field-error {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; color: #f87171;
+}
+
+/* Warning footer line */
+.rej-warn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11.5px; color: var(--hr-text-muted);
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(251, 191, 36, 0.06);
+  border: 1px dashed rgba(251, 191, 36, 0.22);
+}
+.rej-warn svg { color: var(--hr-accent-gold); }
+
+/* Submit button — red gradient when active */
+.rej-confirm-btn {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: #fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 22px -8px rgba(220, 38, 38, 0.55);
+}
+.rej-confirm-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+  box-shadow: 0 12px 30px -8px rgba(220, 38, 38, 0.70);
+}
+.rej-confirm-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.rej-spin { animation: rej-spin 0.8s linear infinite; }
+@keyframes rej-spin { to { transform: rotate(360deg); } }
+
+/* ── Light theme overrides for the rejection modal ── */
+[data-theme="light"] .rej-summary {
+  background:
+    linear-gradient(135deg, rgba(251, 146, 60, 0.14), rgba(251, 191, 36, 0.06)),
+    rgba(255, 250, 240, 0.80);
+  border-color: rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .rej-summary-icon {
+  background: rgba(217, 119, 6, 0.18);
+  color: #b45309;
+}
+[data-theme="light"] .rej-summary-tag {
+  background: rgba(217, 119, 6, 0.18);
+  color: #b45309;
+}
+[data-theme="light"] .rej-chip {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(40, 25, 10, 0.12);
+  color: var(--hr-text-secondary);
+}
+[data-theme="light"] .rej-chip:hover {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.40);
+  color: #b45309;
+}
+[data-theme="light"] .rej-textarea {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: var(--hr-text);
+}
+[data-theme="light"] .rej-textarea::placeholder { color: rgba(40, 25, 10, 0.40); }
+[data-theme="light"] .rej-textarea:focus {
+  border-color: rgba(220, 38, 38, 0.55);
+  background: rgba(255, 246, 226, 0.95);
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.14);
+}
+[data-theme="light"] .rej-textarea.has-error {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.18);
+}
+[data-theme="light"] .rej-field-error { color: #b91c1c; }
+[data-theme="light"] .rej-req { color: #b91c1c; }
+[data-theme="light"] .rej-warn {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: var(--hr-text-secondary);
+}
+[data-theme="light"] .rej-warn svg { color: #b45309; }
+[data-theme="light"] .rej-confirm-btn {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  box-shadow: 0 8px 22px -8px rgba(220, 38, 38, 0.60);
+}
 </style>

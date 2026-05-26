@@ -11,32 +11,38 @@
              <div class="identity-text">
                 <label>Financial Control Center</label>
                 <div class="project-selector" v-click-outside="() => switcherOpen = false">
-                   <h1 @click="switcherOpen = !switcherOpen">
+                   <h1 ref="triggerRef" @click="switcherOpen = !switcherOpen">
                      {{ selectedProject?.name || 'Select Project' }}
                      <ChevronDown :size="18" class="chevron" :class="{ open: switcherOpen }" />
                    </h1>
-                   
-                   <!-- Dropdown -->
-                   <transition name="scale-fade">
-                      <div v-if="switcherOpen" class="project-dropdown">
-                         <div class="search-wrap">
-                            <Search :size="14" />
-                            <input v-model="projectSearch" placeholder="Filter projects..." autofocus />
+
+                   <!-- Dropdown teleported to <body> to escape the header's
+                        stacking context (see recalcDropdownPos comment).
+                        @mousedown.stop prevents v-click-outside on the parent
+                        .project-selector from firing for clicks inside the
+                        teleported dropdown (which is now DOM-outside it). -->
+                   <Teleport to="body">
+                      <transition name="scale-fade">
+                         <div v-if="switcherOpen" class="project-dropdown project-dropdown--floating" :style="dropdownStyle" @mousedown.stop @click.stop>
+                            <div class="search-wrap">
+                               <Search :size="14" />
+                               <input v-model="projectSearch" placeholder="Filter projects..." autofocus />
+                            </div>
+                            <div class="dropdown-scroll">
+                               <button
+                                 v-for="p in filteredProjects" :key="p.id"
+                                 class="dropdown-item"
+                                 :class="{ active: selectedProject?.id === p.id }"
+                                 @click="selectProject(p)"
+                               >
+                                  <span class="p-icon">{{ p.name.charAt(0) }}</span>
+                                  <span class="p-name">{{ p.name }}</span>
+                                  <Check v-if="selectedProject?.id === p.id" :size="14" class="p-check" />
+                               </button>
+                            </div>
                          </div>
-                         <div class="dropdown-scroll">
-                            <button 
-                              v-for="p in filteredProjects" :key="p.id" 
-                              class="dropdown-item"
-                              :class="{ active: selectedProject?.id === p.id }"
-                              @click="selectProject(p)"
-                            >
-                               <span class="p-icon">{{ p.name.charAt(0) }}</span>
-                               <span class="p-name">{{ p.name }}</span>
-                               <Check v-if="selectedProject?.id === p.id" :size="14" class="p-check" />
-                            </button>
-                         </div>
-                      </div>
-                   </transition>
+                      </transition>
+                   </Teleport>
                 </div>
              </div>
           </div>
@@ -106,7 +112,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, defineAsyncComponent } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick, defineAsyncComponent } from 'vue'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
 import { 
@@ -138,6 +144,39 @@ const projects = ref([])
 const selectedProject = ref(null)
 const switcherOpen = ref(false)
 const projectSearch = ref('')
+
+// Project-selector dropdown is teleported to <body> to escape the
+// .glass-header stacking context (isolation: isolate + a GSAP entry
+// animation that leaves transform on each .dock-item, both of which
+// would otherwise paint the tabs above the dropdown).
+const triggerRef = ref(null)
+const dropdownPos = ref({ top: 0, left: 0 })
+
+const recalcDropdownPos = () => {
+  if (!triggerRef.value) return
+  const r = triggerRef.value.getBoundingClientRect()
+  dropdownPos.value = { top: r.bottom + 12, left: r.left - 10 }
+}
+
+const dropdownStyle = computed(() => ({
+  position: 'fixed',
+  top: `${dropdownPos.value.top}px`,
+  left: `${dropdownPos.value.left}px`,
+}))
+
+watch(switcherOpen, (open) => {
+  if (open) nextTick(recalcDropdownPos)
+})
+
+onMounted(() => {
+  window.addEventListener('resize', recalcDropdownPos)
+  // 'true' = capture: catches scrolls inside any ancestor (sticky header etc.)
+  window.addEventListener('scroll', recalcDropdownPos, true)
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', recalcDropdownPos)
+  window.removeEventListener('scroll', recalcDropdownPos, true)
+})
 const currentTab = ref('overview')
 
 const tabs = [
@@ -343,32 +382,81 @@ onMounted(fetchProjects)
 .chevron { opacity: 0.6; transition: transform 0.30s cubic-bezier(0.16, 1, 0.3, 1); color: #fbbf24; -webkit-text-fill-color: #fbbf24; }
 .chevron.open { transform: rotate(180deg); opacity: 1; }
 
-/* PROJECT DROPDOWN */
+/* PROJECT DROPDOWN — frosted glass with amber-tinted edge.
+   Background is intentionally near-opaque (96%+): the .glass-header parent uses
+   `isolation: isolate`, so the dropdown's stacking is local to the header and
+   the tabs-dock would otherwise bleed through a translucent panel. */
 .project-dropdown {
-  position: absolute; top: 100%; left: -10px; margin-top: 12px; width: 300px;
-  background: #18181b; border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px; padding: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  z-index: 100;
+  position: absolute; top: 100%; left: -10px; margin-top: 12px;
+  width: 320px; max-width: calc(100vw - 80px);
+  background: linear-gradient(180deg, rgba(22, 22, 26, 0.97) 0%, rgba(16, 16, 20, 0.98) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  border-radius: 16px; padding: 10px;
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 0 40px rgba(245, 158, 11, 0.08);
+  z-index: 1500;
 }
+.scale-fade-enter-active, .scale-fade-leave-active {
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top left;
+}
+.scale-fade-enter-from, .scale-fade-leave-to { opacity: 0; transform: scale(0.96) translateY(-6px); }
+
 .search-wrap {
-  display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05);
-  padding: 8px 12px; border-radius: 8px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0, 0, 0, 0.30);
+  border: 1px solid rgba(245, 158, 11, 0.14);
+  padding: 9px 12px; border-radius: 10px; margin-bottom: 8px;
+  transition: border-color 0.2s ease, background 0.2s ease;
 }
+.search-wrap:focus-within {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.40);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.08);
+}
+.search-wrap svg { color: rgba(245, 158, 11, 0.65); flex-shrink: 0; }
 .search-wrap input { background: transparent; border: none; outline: none; color: white; width: 100%; font-size: 13px; }
-.dropdown-scroll { max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+.search-wrap input::placeholder { color: rgba(255, 255, 255, 0.35); }
+.dropdown-scroll { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; padding: 2px 0; }
+.dropdown-scroll::-webkit-scrollbar { width: 4px; }
+.dropdown-scroll::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.25); border-radius: 99px; }
+.dropdown-scroll::-webkit-scrollbar-track { background: transparent; }
 .dropdown-item {
-  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
-  background: transparent; border: none; color: #a1a1aa; cursor: pointer;
-  border-radius: 8px; transition: all 0.2s; text-align: left;
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px;
+  background: transparent; border: none; color: #c9c9cf; cursor: pointer;
+  border-radius: 10px; transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1); text-align: left;
 }
-.dropdown-item:hover { background: rgba(255,255,255,0.05); color: white; }
-.dropdown-item.active { background: #27272a; color: white; }
-.p-icon { 
-  width: 24px; height: 24px; background: rgba(255,255,255,0.1); border-radius: 6px; 
-  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; 
+.dropdown-item:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.22);
+  color: #fff;
+  transform: translateX(2px);
 }
-.p-name { flex: 1; font-size: 13px; font-weight: 500; }
-.p-check { color: #fbbf24; }
+.dropdown-item.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(249, 115, 22, 0.08));
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.32) inset;
+}
+.p-icon {
+  width: 26px; height: 26px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.20), rgba(249, 115, 22, 0.10));
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 7px;
+  color: #fbbf24;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+  flex-shrink: 0;
+}
+.dropdown-item.active .p-icon {
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  border-color: rgba(255, 255, 255, 0.20);
+  color: #1a1208;
+}
+.p-name { flex: 1; font-size: 13px; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.p-check { color: #fbbf24; flex-shrink: 0; }
 
 /* HEADER ACTIONS */
 .header-actions { display: flex; align-items: center; gap: 20px; }
@@ -653,24 +741,49 @@ onMounted(fetchProjects)
   box-shadow: 0 -2px 14px rgba(217, 119, 6, 0.55);
 }
 [data-theme="light"] .project-dropdown {
-  background: #faf7f0;
-  border-color: rgba(26, 20, 16, 0.10);
-  box-shadow: 0 10px 30px rgba(26, 20, 16, 0.08);
+  /* Near-opaque cream — see comment on .project-dropdown above for why. */
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.97) 0%, rgba(255, 246, 226, 0.98) 100%);
+  border-color: rgba(217, 119, 6, 0.30);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  box-shadow:
+    0 24px 70px rgba(40, 25, 10, 0.26),
+    0 0 0 1px rgba(255, 255, 255, 0.55) inset,
+    0 0 40px rgba(217, 119, 6, 0.12);
 }
 [data-theme="light"] .search-wrap {
-  background: rgba(26, 20, 16, 0.05);
-  border-color: rgba(26, 20, 16, 0.10);
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(217, 119, 6, 0.22);
 }
+[data-theme="light"] .search-wrap:focus-within {
+  background: rgba(255, 246, 226, 0.92);
+  border-color: rgba(217, 119, 6, 0.55);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .search-wrap svg { color: rgba(217, 119, 6, 0.65); }
 [data-theme="light"] .search-wrap input { color: var(--text-primary); }
-[data-theme="light"] .dropdown-item { color: var(--text-secondary); }
+[data-theme="light"] .search-wrap input::placeholder { color: rgba(26, 20, 16, 0.42); }
+[data-theme="light"] .dropdown-scroll::-webkit-scrollbar-thumb { background: rgba(217, 119, 6, 0.30); }
+[data-theme="light"] .dropdown-item { color: #6b5840; }
 [data-theme="light"] .dropdown-item:hover {
-  background: rgba(26, 20, 16, 0.08);
+  background: rgba(217, 119, 6, 0.10);
   color: var(--text-primary);
 }
 [data-theme="light"] .dropdown-item.active {
-  background: rgba(217, 119, 6, 0.1);
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(249, 115, 22, 0.08));
   color: var(--text-primary);
+  box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.40) inset;
 }
+[data-theme="light"] .p-icon {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(180, 83, 9, 0.10));
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #b45309;
+}
+[data-theme="light"] .dropdown-item.active .p-icon {
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+}
+[data-theme="light"] .p-check { color: #d97706; }
 [data-theme="light"] .mini-metric .label { color: var(--text-tertiary); }
 [data-theme="light"] .mini-metric .value { color: #d97706; }
 [data-theme="light"] .action-btn { background: #d97706; color: #fff; }

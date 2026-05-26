@@ -411,32 +411,37 @@
       </main>
     </div>
 
-    <!-- === DUPLICATE WARNING DIALOG === -->
-    <transition name="fade">
-      <div v-if="duplicateHandoverWarning" class="nano-modal-overlay">
-        <div class="nano-modal-card slide-up">
-          <div class="nano-modal-icon warning">
-            <AlertTriangle :size="32" />
-          </div>
-          <div class="nano-modal-content">
-            <h3>Active Handover Detected</h3>
-            <p>A handover document already exists for this project in our system.</p>
-            
-            <div class="duplicate-info-box" v-if="existingHandover">
-              <div class="dib-row"><span class="dib-l">Project:</span> <span class="dib-v">{{ existingHandover.project_name }}</span></div>
-              <div class="dib-row"><span class="dib-l">Code:</span> <span class="dib-v">{{ existingHandover.project_code }}</span></div>
-              <div class="dib-row"><span class="dib-l">Status:</span> <span class="dib-v status-pill" :class="existingHandover.status.toLowerCase().replace(' ', '-')">{{ existingHandover.status }}</span></div>
+    <!-- === DUPLICATE WARNING DIALOG ===
+         Teleported to <body> so the overlay's backdrop-filter blur isn't clipped
+         to a rectangular region by ancestor border-radius/overflow, and so the
+         modal centers on the viewport instead of the wizard's scroll container. -->
+    <Teleport to="body">
+      <transition name="fade">
+        <div v-if="duplicateHandoverWarning" class="nano-modal-overlay">
+          <div class="nano-modal-card slide-up">
+            <div class="nano-modal-icon warning">
+              <AlertTriangle :size="32" />
             </div>
+            <div class="nano-modal-content">
+              <h3>Active Handover Detected</h3>
+              <p>A handover document already exists for this project in our system.</p>
 
-            <p class="nano-modal-subtext">Creating a new document will start a fresh 15-step protocol. Any existing drafts for this project will not be merged or imported.</p>
-          </div>
-          <div class="nano-modal-actions">
-            <button class="nano-btn secondary" @click="duplicateHandoverWarning = false">Cancel & Change Project</button>
-            <button class="nano-btn primary" @click="duplicateHandoverWarning = false">Understood, Proceed</button>
+              <div class="duplicate-info-box" v-if="existingHandover">
+                <div class="dib-row"><span class="dib-l">Project:</span> <span class="dib-v">{{ existingHandover.project_name }}</span></div>
+                <div class="dib-row"><span class="dib-l">Code:</span> <span class="dib-v">{{ existingHandover.project_code }}</span></div>
+                <div class="dib-row"><span class="dib-l">Status:</span> <span class="dib-v status-pill" :class="existingHandover.status.toLowerCase().replace(' ', '-')">{{ existingHandover.status }}</span></div>
+              </div>
+
+              <p class="nano-modal-subtext">Creating a new document will start a fresh 15-step protocol. Any existing drafts for this project will not be merged or imported.</p>
+            </div>
+            <div class="nano-modal-actions">
+              <button class="nano-btn secondary" @click="duplicateHandoverWarning = false">Cancel & Change Project</button>
+              <button class="nano-btn primary" @click="duplicateHandoverWarning = false">Understood, Proceed</button>
+            </div>
           </div>
         </div>
-      </div>
-    </transition>
+      </transition>
+    </Teleport>
   </div>
 </template>
 
@@ -1730,4 +1735,371 @@ input[type="number"] {
 /* Requirement Indicators */
 .req { color: #f87171; margin-left: 2px; }
 .sub-req { font-size: 10px; color: #f87171; text-transform: none; letter-spacing: 0; font-weight: 500; margin-left: 8px; opacity: 0.8; }
+
+/* ═══════════════════════════════════════════
+   LIGHT THEME OVERRIDES — preserve gold/amber/orange palette + frosted glass.
+   Wrapper drops its hard black background so the page cream shows through.
+   Every internal surface (timeline, command bar, fields, tables, footer dock)
+   gets a warm cream-readable variant. Inline #000/#fff style attributes are
+   beaten with [style] + !important attribute selectors.
+   ═══════════════════════════════════════════ */
+
+[data-theme="light"] .dpr-wizard-wrapper {
+  background: transparent;
+  color: var(--text-primary);
+}
+[data-theme="light"] .dpr-body { background: transparent; }
+
+/* ─── Command Bar ─── */
+[data-theme="light"] .dpr-command-bar {
+  background: rgba(255, 250, 240, 0.78);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(180, 110, 30, 0.16);
+  box-shadow: 0 4px 18px rgba(120, 80, 20, 0.04);
+}
+[data-theme="light"] .cmd-back {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #b45309;
+}
+[data-theme="light"] .cmd-back:hover {
+  background: rgba(245, 158, 11, 0.18);
+  color: #92400e;
+}
+[data-theme="light"] .cmd-badge {
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+[data-theme="light"] .cmd-title h1 { color: var(--text-primary); }
+[data-theme="light"] .cmd-version {
+  color: #6b5840;
+  background: rgba(245, 158, 11, 0.1);
+}
+/* cmd-project-select — outer pill + force inner SlaSelect trigger borderless
+   (fixes the double-border the user reported in BOTH themes) */
+[data-theme="light"] .cmd-project-select {
+  background: rgba(255, 250, 240, 0.78);
+  border: 1px solid rgba(217, 119, 6, 0.32);
+  color: #6b5840;
+}
+[data-theme="light"] .cmd-project-select:hover {
+  background: rgba(255, 250, 240, 0.92);
+  border-color: #d97706;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.18);
+}
+.cmd-project-select :deep(.sla-select-trigger),
+.cmd-project-select :deep(.sla-select-trigger:hover),
+.cmd-project-select :deep(.sla-select-trigger.is-open) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-height: 38px !important;
+  padding: 0 !important;
+}
+[data-theme="light"] .cmd-project-select :deep(.sla-select-trigger),
+[data-theme="light"] .cmd-project-select :deep(.sla-select-trigger:hover),
+[data-theme="light"] .cmd-project-select :deep(.sla-select-trigger.is-open) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .cmd-project-select :deep(.selected-text.is-placeholder) {
+  color: rgba(107, 88, 64, 0.65) !important;
+}
+[data-theme="light"] .cmd-project-select :deep(.chevron) { color: #b45309 !important; }
+[data-theme="light"] .cmd-project-select svg { color: #b45309; }
+[data-theme="light"] .cmd-save {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+[data-theme="light"] .cmd-save:hover {
+  background: rgba(245, 158, 11, 0.22);
+  color: #92400e;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.22);
+}
+[data-theme="light"] .cmd-submit {
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+
+/* ─── Timeline (left rail) ─── */
+[data-theme="light"] .dpr-timeline {
+  background: rgba(255, 250, 240, 0.5);
+  border-right: 1px solid rgba(180, 110, 30, 0.14);
+}
+[data-theme="light"] .tl-progress-track { background: rgba(180, 110, 30, 0.14); }
+/* keep .tl-fill gold gradient as-is — already brand */
+[data-theme="light"] .tl-node:hover {
+  background: rgba(245, 158, 11, 0.06);
+}
+[data-theme="light"] .tl-dot {
+  background: rgba(255, 250, 240, 0.9);
+  border-color: rgba(180, 110, 30, 0.25);
+  color: #6b5840;
+}
+[data-theme="light"] .tl-node.completed .tl-dot {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #d97706;
+  color: #b45309;
+}
+/* tl-node.active stays gold filled — already brand */
+[data-theme="light"] .tl-num { color: rgba(107, 88, 64, 0.5); }
+[data-theme="light"] .tl-name { color: #6b5840; }
+[data-theme="light"] .tl-node.active .tl-name { color: var(--text-primary); }
+[data-theme="light"] .tl-node.completed .tl-name { color: #92400e; }
+
+/* ─── Step header + content ─── */
+[data-theme="light"] .step-header-bar { border-bottom-color: rgba(180, 110, 30, 0.14); }
+[data-theme="light"] .shb-step-badge {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+[data-theme="light"] .shb-left h2 { color: var(--text-primary); }
+[data-theme="light"] .shb-progress {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+/* ─── Form fields ─── */
+[data-theme="light"] .field-group label { color: #6b5840; }
+[data-theme="light"] .field-group label.error-label { color: #b91c1c; }
+[data-theme="light"] .field-group .error-msg { color: #b91c1c; }
+[data-theme="light"] .field-group input,
+[data-theme="light"] .field-group select,
+[data-theme="light"] .field-group textarea {
+  background: rgba(255, 250, 240, 0.7);
+  border: 1px solid rgba(180, 110, 30, 0.2);
+  color: var(--text-primary);
+  box-shadow: inset 0 1px 2px rgba(120, 80, 20, 0.04);
+}
+[data-theme="light"] .field-group input::placeholder,
+[data-theme="light"] .field-group textarea::placeholder {
+  color: rgba(107, 88, 64, 0.55);
+}
+[data-theme="light"] .field-group input:focus,
+[data-theme="light"] .field-group select:focus,
+[data-theme="light"] .field-group textarea:focus {
+  border-color: #d97706;
+  background: #fffaf0;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18);
+}
+[data-theme="light"] .field-group select option {
+  background: #fffaf0;
+  color: var(--text-primary);
+}
+[data-theme="light"] .computed-field {
+  color: #b45309 !important;
+  background: rgba(245, 158, 11, 0.14) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+[data-theme="light"] .section-sub-title { color: var(--text-primary); }
+[data-theme="light"] .section-sub-title svg { color: #b45309; }
+
+/* ─── Tables (Step 1-15 detail tables) ─── */
+[data-theme="light"] .dts-header h3 { color: var(--text-primary); }
+[data-theme="light"] .add-row-btn {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.4);
+}
+[data-theme="light"] .add-row-btn:hover {
+  background: rgba(245, 158, 11, 0.28);
+  color: #92400e;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+}
+[data-theme="light"] .dpr-table {
+  background: rgba(255, 250, 240, 0.55);
+  border: 1px solid rgba(180, 110, 30, 0.18);
+  box-shadow: 0 6px 20px rgba(120, 80, 20, 0.05);
+}
+[data-theme="light"] .dt-header-row {
+  background: rgba(245, 158, 11, 0.08);
+  border-bottom-color: rgba(180, 110, 30, 0.16);
+}
+[data-theme="light"] .dt-header-row span { color: #6b5840; }
+[data-theme="light"] .dt-row {
+  border-bottom-color: rgba(180, 110, 30, 0.1);
+  color: var(--text-primary);
+}
+[data-theme="light"] .dt-row:hover { background: rgba(245, 158, 11, 0.06); }
+[data-theme="light"] .dt-row > input,
+[data-theme="light"] .dt-row > select {
+  color: var(--text-primary);
+}
+[data-theme="light"] .dt-row > input::placeholder { color: rgba(107, 88, 64, 0.5); }
+[data-theme="light"] .dt-row > input:focus,
+[data-theme="light"] .dt-row > select:focus {
+  border-color: #d97706;
+  background: rgba(255, 250, 240, 0.85);
+}
+[data-theme="light"] .dt-row select option {
+  background: #fffaf0;
+  color: var(--text-primary);
+}
+
+/* Inner SlaSelect inside table rows */
+[data-theme="light"] .dt-row :deep(.sla-select-trigger) {
+  color: var(--text-primary);
+}
+[data-theme="light"] .dt-row :deep(.sla-select-trigger:hover) {
+  background: rgba(245, 158, 11, 0.08);
+}
+[data-theme="light"] .dt-row :deep(.sla-select-trigger.is-open) {
+  background: #fffaf0;
+  border-color: #d97706;
+}
+
+[data-theme="light"] .dt-row .toggle-check span { color: var(--text-primary); }
+[data-theme="light"] .dt-empty { color: #6b5840; }
+[data-theme="light"] .rm-btn {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #b91c1c;
+}
+[data-theme="light"] .rm-btn:hover { background: rgba(239, 68, 68, 0.22); color: #991b1b; }
+
+/* ─── Secure notice + toggles ─── */
+[data-theme="light"] .secure-notice {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.32);
+  color: var(--text-primary);
+}
+[data-theme="light"] .toggle-check { color: var(--text-primary); }
+
+/* ─── Review panel (Step 15) ─── */
+[data-theme="light"] .review-card {
+  background: rgba(255, 250, 240, 0.78);
+  border: 1px solid rgba(180, 110, 30, 0.18);
+  box-shadow: 0 6px 18px rgba(120, 80, 20, 0.05);
+}
+[data-theme="light"] .review-card:hover {
+  background: rgba(255, 250, 240, 0.95);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 14px 32px rgba(180, 110, 30, 0.12);
+}
+[data-theme="light"] .review-card.highlight {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(251, 191, 36, 0.1) 100%);
+  border-color: rgba(245, 158, 11, 0.45);
+}
+[data-theme="light"] .rc-label { color: #6b5840; }
+[data-theme="light"] .rc-val { color: var(--text-primary); }
+[data-theme="light"] .review-card.highlight .rc-val { color: #b45309; }
+
+/* ─── Navigation dock (Previous / Next + dots) ─── */
+[data-theme="light"] .nav-dock { border-top-color: rgba(180, 110, 30, 0.14); }
+[data-theme="light"] .dock-btn {
+  background: rgba(255, 250, 240, 0.75);
+  border-color: rgba(180, 110, 30, 0.2);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(120, 80, 20, 0.04);
+}
+[data-theme="light"] .dock-btn:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #b45309;
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.2);
+}
+/* dock-next — replace bright #ffeb3b yellow with gold gradient on both themes */
+.dock-next {
+  background: linear-gradient(135deg, #f59e0b, #fb923c) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+.dock-next:hover:not(:disabled) {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.45) !important;
+  transform: translateY(-2px);
+}
+[data-theme="light"] .dock-dot { background: rgba(180, 110, 30, 0.18); }
+/* .dock-dot.active stays gold — already brand */
+
+/* ─── Status pills in Review panel ─── */
+[data-theme="light"] .status-pill {
+  background: rgba(167, 139, 250, 0.14);
+  color: #6d28d9;
+}
+[data-theme="light"] .status-pill.approved {
+  background: rgba(16, 185, 129, 0.16);
+  color: #047857;
+}
+[data-theme="light"] .status-pill.internal-review {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+}
+
+/* ─── Misc inline-styled white-text overrides scattered in step panels ─── */
+[data-theme="light"] .dib-l { color: #6b5840 !important; }
+[data-theme="light"] .dib-v { color: var(--text-primary) !important; }
+[data-theme="light"] .nano-modal-subtext { color: rgba(107, 88, 64, 0.6) !important; }
+
+/* ─── Duplicate-warning modal (.nano-modal-card .slide-up "Active Handover Detected") ─── */
+[data-theme="light"] .nano-modal-overlay {
+  background: rgba(26, 20, 16, 0.42);
+  backdrop-filter: blur(8px);
+}
+[data-theme="light"] .nano-modal-card {
+  background: rgba(255, 250, 240, 0.96);
+  border: 1px solid rgba(180, 110, 30, 0.22);
+  box-shadow: 0 30px 70px rgba(120, 80, 20, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+[data-theme="light"] .nano-modal-icon.warning {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.18);
+}
+[data-theme="light"] .nano-modal-content h3 { color: var(--text-primary); }
+[data-theme="light"] .nano-modal-content p { color: #6b5840; }
+[data-theme="light"] .duplicate-info-box {
+  background: rgba(245, 158, 11, 0.07);
+  border-color: rgba(245, 158, 11, 0.22);
+}
+[data-theme="light"] .status-pill {
+  background: rgba(167, 139, 250, 0.16);
+  color: #6d28d9;
+}
+[data-theme="light"] .status-pill.approved {
+  background: rgba(16, 185, 129, 0.16);
+  color: #047857;
+}
+[data-theme="light"] .status-pill.internal-review,
+[data-theme="light"] .status-pill.pending {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+}
+[data-theme="light"] .status-pill.rejected {
+  background: rgba(239, 68, 68, 0.16);
+  color: #b91c1c;
+}
+[data-theme="light"] .status-pill.draft {
+  background: rgba(113, 113, 122, 0.16);
+  color: #52525b;
+}
+[data-theme="light"] .nano-btn.primary {
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+[data-theme="light"] .nano-btn.primary:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.45);
+}
+[data-theme="light"] .nano-btn.secondary {
+  background: rgba(26, 20, 16, 0.05);
+  color: var(--text-primary);
+  border: 1px solid rgba(26, 20, 16, 0.14);
+}
+[data-theme="light"] .nano-btn.secondary:hover {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.35);
+}
 </style>

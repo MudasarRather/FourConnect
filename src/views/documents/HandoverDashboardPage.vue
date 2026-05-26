@@ -4,20 +4,20 @@
     <header class="dpr-header">
       <div class="nav-left">
         <div class="tabs-dock">
-          <button class="n-tab" :class="{ active: activeTab === 'dashboard' }" @click="activeTab = 'dashboard'">
+          <button class="n-tab" :class="{ active: activeTab === 'dashboard' }" @click="setTab('dashboard')">
             <LayoutGrid :size="14" class="tab-icon"/> Dashboard
           </button>
           <div class="tab-sep"></div>
-          <button class="n-tab" :class="{ active: activeTab === 'draft' }" @click="activeTab = 'draft'">
+          <button class="n-tab" :class="{ active: activeTab === 'draft' }" @click="setTab('draft')">
             <FileText :size="14" class="tab-icon"/> Draft Documents
           </button>
-          <button v-if="isAdmin" class="n-tab" :class="{ active: activeTab === 'pending' }" @click="activeTab = 'pending'">
+          <button v-if="isAdmin" class="n-tab" :class="{ active: activeTab === 'pending' }" @click="setTab('pending')">
             <Clock :size="14" class="tab-icon"/> Pending Approvals
           </button>
-          <button class="n-tab" :class="{ active: activeTab === 'rejected' }" @click="activeTab = 'rejected'">
+          <button class="n-tab" :class="{ active: activeTab === 'rejected' }" @click="setTab('rejected')">
             <XCircle :size="14" class="tab-icon"/> Rejected
           </button>
-          <button class="n-tab" :class="{ active: activeTab === 'approved' }" @click="activeTab = 'approved'">
+          <button class="n-tab" :class="{ active: activeTab === 'approved' }" @click="setTab('approved')">
             <CheckCircle :size="14" class="tab-icon"/> Approved Documents
           </button>
         </div>
@@ -66,11 +66,11 @@
                 <div class="cv-ac-icon"><Plus :size="18" /></div>
                 <span>New DPR</span>
               </router-link>
-              <div class="cv-action-circle" @click="activeTab='draft'">
+              <div class="cv-action-circle" @click="setTab('draft')">
                 <div class="cv-ac-icon"><Activity :size="18" /></div>
                 <span>In Progress</span>
               </div>
-              <div class="cv-action-circle" @click="activeTab='approved'">
+              <div class="cv-action-circle" @click="setTab('approved')">
                 <div class="cv-ac-icon"><Layers :size="18" /></div>
                 <span>Completed</span>
               </div>
@@ -91,7 +91,7 @@
           </div>
 
           <!-- Status Cards (Green + Purple) -->
-          <div class="cv-card cv-status-card green ani-2" @click="activeTab='draft'">
+          <div class="cv-card cv-status-card green ani-2" @click="setTab('draft')">
             <div class="cv-sc-top">
               <div class="cv-sc-icon"><FileText :size="18" /></div>
               <span class="cv-sc-type">Draft Handover</span>
@@ -104,7 +104,7 @@
             </div>
           </div>
 
-          <div class="cv-card cv-status-card purple ani-3" @click="activeTab='approved'">
+          <div class="cv-card cv-status-card purple ani-3" @click="setTab('approved')">
             <div class="cv-sc-top">
               <div class="cv-sc-icon"><CheckCircle :size="18" /></div>
               <span class="cv-sc-type">Approved Handover</span>
@@ -168,7 +168,7 @@
           </div>
 
           <!-- Analytics Bar Grid -->
-          <div class="cv-card cv-analytics ani-4" style="flex: 1; display: flex; flex-direction: column;">
+          <div class="cv-card cv-analytics ani-4">
             <div class="cv-cf-header">
               <div>
                 <h3 class="cv-card-title">Handover Velocity</h3>
@@ -191,7 +191,7 @@
               </div>
             </div>
 
-            <div class="cv-bar-grid" style="flex: 1; align-items: flex-end;">
+            <div class="cv-bar-grid">
               <div class="cv-bar-col" v-for="(day, i) in weeklyActivity" :key="i">
                 <div class="cv-bar-stack">
                   <div class="cv-bar-block b1" :style="{ height: `${day.h1}px`, animationDelay: `${0.8 + i * 0.07}s` }"><span class="cv-bv" v-if="day.h1 > 16">{{ day.v1 }}</span></div>
@@ -477,7 +477,13 @@
     <!-- Drawers -->
     <HandoverDetailsDrawer :is-open="!!selectedDraftId" :dpr="draftDprs.find(d => d.id === selectedDraftId)" :is-admin-mode="isAdmin"
       @close="selectedDraftId = null" @edit="editDpr" @generate="generatePdf" @deleted="() => { selectedDraftId = null; fetchData(); }" />
-    <HandoverDetailsDrawer :is-open="!!selectedPendingId" :dpr="pendingDprs.find(d => d.id === selectedPendingId)" :is-admin-mode="true"
+    <!-- Pending drawer instance is shared by:
+         - admins browsing /admin/...?tab=pending (need Approve/Reject buttons)
+         - normal users clicking their own submitted handover from the recent list
+         is-admin-mode must mirror the actual role, NOT be hardcoded true. Otherwise
+         a normal user can see (and click) Approve / Reject / admin Edit on their
+         own Internal-Review handover. -->
+    <HandoverDetailsDrawer :is-open="!!selectedPendingId" :dpr="pendingDprs.find(d => d.id === selectedPendingId)" :is-admin-mode="isAdmin"
       @close="selectedPendingId = null" @generate="generatePdf" @approve="approveDpr" @reject="rejectDpr" @edit="editDpr" />
     <HandoverDetailsDrawer :is-open="!!selectedRejectedId" :dpr="rejectedDprs.find(d => d.id === selectedRejectedId)" :is-admin-mode="isAdmin"
       @close="selectedRejectedId = null" @edit="editDpr" @generate="generatePdf" @deleted="() => { selectedRejectedId = null; fetchData(); }" />
@@ -496,7 +502,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import {
@@ -508,11 +514,30 @@ import HandoverDetailsDrawer from '../../components/documents/HandoverDetailsDra
 import RejectionModal from '../../components/documents/RejectionModal.vue'
 import { generateHandoverPdf } from '../../utils/handoverPdfGenerator'
 import { API } from '@/utils/api'
+import { useToast } from 'vue-toastification'
+
+const toast = useToast()
 
 const route = useRoute()
 const router = useRouter()
 const isAdmin = computed(() => route.path.startsWith('/admin'))
 const activeTab = ref(route.query.tab || 'dashboard')
+
+// Tab → URL sync. Click handlers call setTab(name) which (a) updates local state
+// for instant visual feedback and (b) pushes ?tab=name into the URL so the tab is
+// linkable / shareable / back-button-friendly. Polling refetches every 3s, so we
+// also need a watcher for when the URL changes EXTERNALLY (notification bell
+// pushes `/user/documents/handover?tab=rejected`, etc.) — without this watcher,
+// clicking a notification while already on this page only changed the URL and
+// left activeTab stuck on the previous value.
+const setTab = (name) => {
+  activeTab.value = name
+  router.replace({ query: { ...route.query, tab: name } }).catch(() => {})
+}
+watch(() => route.query.tab, (newTab) => {
+  const resolved = newTab || 'dashboard'
+  if (resolved !== activeTab.value) activeTab.value = resolved
+})
 const userProfile = ref({})
 
 const draftDprs = ref([])
@@ -725,22 +750,25 @@ const generatePdf = async (dpr) => {
   }
 }
 const updateStatus = async (id, status, reason = null) => {
+  // Send ONLY the changed fields. The backend's PUT handler treats any nested
+  // array in the body as a full overwrite (DELETE + re-INSERT for every
+  // stakeholder/module/asset/etc.). Spreading the whole DPR caused one
+  // nested-child validation failure to silently roll back the entire
+  // transaction — including the status change — leaving the doc stuck in
+  // "Internal Review". Mirror the SLA dashboard's working pattern.
   try {
-    const dpr = allDprs.value.find(d => d.id === id)
-    if (!dpr) return
-    const payload = { ...dpr, status }
-    if (reason) {
-      payload.rejection_reason = reason
-    }
-    // Clean empty strings to null for UUID and date fields
-    ;['start_date', 'completion_date', 'created_by_id', 'project_manager_id'].forEach(key => {
-      if (payload[key] === '') payload[key] = null
+    const payload = { status }
+    if (reason) payload.rejection_reason = reason
+    await axios.put(`${API}/handover/${id}`, payload, {
+      headers: { Authorization: `Bearer ${getToken()}` }
     })
-    
-    await axios.put(`${API}/handover/${id}`, payload, { headers: { Authorization: `Bearer ${getToken()}` } })
     await fetchData()
+    if (status === 'Rejected') toast.success('Handover rejected — creator notified.')
+    else if (status === 'Approved') toast.success('Handover approved.')
   } catch (e) {
     console.error('Status update failed:', e)
+    const detail = e?.response?.data?.detail || e?.message || 'Unknown error'
+    toast.error(`Failed to update handover status: ${detail}`)
   }
 }
 
@@ -1100,8 +1128,8 @@ onUnmounted(() => { if (poll) clearInterval(poll) })
 @keyframes areaReveal { to { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); } }
 @keyframes lineDraw { to { stroke-dashoffset: 0; } }
 
-/* Analytics Bar Grid */
-.cv-analytics { flex: 1; }
+/* Analytics Bar Grid — size to content, do NOT stretch to fill column */
+.cv-analytics { display: flex; flex-direction: column; }
 .cv-bar-grid {
   display: flex;
   justify-content: space-between;
@@ -1314,4 +1342,357 @@ onUnmounted(() => { if (poll) clearInterval(poll) })
 
 .glow-btn { box-shadow: 0 0 15px rgba(163, 230, 53, 0.3); }
 .glow-btn:hover { box-shadow: 0 0 25px rgba(163, 230, 53, 0.5); transform: translateY(-2px); }
+
+/* ═══════════════════════════════════════════
+   LIGHT THEME OVERRIDES — preserve gold/amber/orange/emerald palette + transparency.
+   Warm cream surface (#faf7f0) requires dark text and softer translucent backgrounds.
+   Semantic accents (gold #f59e0b, emerald #10b981, lime #a3e635, purple #a78bfa,
+   sky #38bdf8, red #ef4444) stay vivid — only neutrals invert.
+   ═══════════════════════════════════════════ */
+
+[data-theme="light"] .dpr-page { color: var(--text-primary); }
+
+/* ─── Tabs Dock — ultra-modern frosted pill with glow active state ─── */
+[data-theme="light"] .tabs-dock {
+  background: rgba(255, 250, 240, 0.72);
+  border: 1px solid rgba(26, 20, 16, 0.08);
+  box-shadow: 0 4px 18px rgba(120, 80, 20, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+[data-theme="light"] .n-tab {
+  color: #6b5840;
+}
+[data-theme="light"] .n-tab:hover {
+  color: var(--text-primary);
+  background: rgba(245, 158, 11, 0.08);
+}
+[data-theme="light"] .n-tab.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(251, 191, 36, 0.18) 100%);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  font-weight: 600;
+}
+[data-theme="light"] .n-tab.active .tab-icon { color: #d97706; opacity: 1; }
+[data-theme="light"] .tab-sep { background: rgba(26, 20, 16, 0.12); }
+
+/* ─── Title Row ─── */
+[data-theme="light"] .cv-h1 { color: var(--text-primary); }
+[data-theme="light"] .cv-date { color: #6b5840; }
+[data-theme="light"] .cv-chip {
+  border-color: rgba(26, 20, 16, 0.15);
+  color: #6b5840;
+}
+[data-theme="light"] .cv-chip:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+  color: var(--text-primary);
+}
+[data-theme="light"] .cv-chip.active {
+  background: #f59e0b;
+  color: #1a1410;
+}
+
+/* ─── Common Cards — frosted glass on cream, visible warm border + lift ─── */
+[data-theme="light"] .cv-card {
+  background: rgba(255, 250, 240, 0.88);
+  border: 1px solid rgba(180, 110, 30, 0.32);
+  box-shadow: 0 12px 32px rgba(120, 80, 20, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+[data-theme="light"] .cv-card:hover {
+  border-color: rgba(217, 119, 6, 0.55);
+  box-shadow: 0 20px 44px rgba(180, 110, 30, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  transform: translateY(-5px);
+}
+
+/* ─── Catch-all sweep: ANY remaining inline `color:#fff`, `color:rgba(255,255,255,X)`
+       on the dashboard becomes a dark warm tone. Targets [style] attribute values. ─── */
+[data-theme="light"] .dpr-page [style*="color: #fff"],
+[data-theme="light"] .dpr-page [style*="color:#fff"],
+[data-theme="light"] .dpr-page [style*="color: rgb(255, 255, 255)"],
+[data-theme="light"] .dpr-page [style*="color:rgb(255,255,255)"] {
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .dpr-page [style*="color: rgba(255,255,255,0.6"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255,255,255,0.7"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255,255,255,0.8"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255, 255, 255, 0.6"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255, 255, 255, 0.7"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255, 255, 255, 0.8"] {
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .dpr-page [style*="color: rgba(255,255,255,0.3"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255,255,255,0.4"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255,255,255,0.5"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255, 255, 255, 0.3"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255, 255, 255, 0.4"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255, 255, 255, 0.5"] {
+  color: #6b5840 !important;
+}
+[data-theme="light"] .dpr-page [style*="color: rgba(255,255,255,0.1"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255,255,255,0.2"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255, 255, 255, 0.1"],
+[data-theme="light"] .dpr-page [style*="color: rgba(255, 255, 255, 0.2"] {
+  color: rgba(107, 88, 64, 0.5) !important;
+}
+/* Catch white-rgba backgrounds + borders on inline-styled boxes */
+[data-theme="light"] .dpr-page [style*="background: rgba(255,255,255,0.0"],
+[data-theme="light"] .dpr-page [style*="background:rgba(255,255,255,0.0"],
+[data-theme="light"] .dpr-page [style*="background: rgba(255, 255, 255, 0.0"] {
+  background: rgba(255, 250, 240, 0.55) !important;
+}
+[data-theme="light"] .dpr-page [style*="border: 1px solid rgba(255,255,255"],
+[data-theme="light"] .dpr-page [style*="border: 1px solid rgba(255, 255, 255"] {
+  border-color: rgba(180, 110, 30, 0.18) !important;
+}
+[data-theme="light"] .cv-card-title { color: var(--text-primary); }
+
+/* ─── Portfolio Card (Your Handovers) ─── */
+[data-theme="light"] .cv-health-item {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(26, 20, 16, 0.08);
+  color: var(--text-primary);
+}
+[data-theme="light"] .cv-health-item:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+[data-theme="light"] .cv-hi-icon { background: rgba(245, 158, 11, 0.1); }
+
+[data-theme="light"] .cv-ac-icon {
+  background: rgba(255, 250, 240, 0.85);
+  color: var(--text-primary);
+  border: 1px solid rgba(26, 20, 16, 0.08);
+  box-shadow: 0 2px 8px rgba(120, 80, 20, 0.06);
+}
+[data-theme="light"] .cv-action-circle:hover .cv-ac-icon {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+[data-theme="light"] .cv-action-circle span { color: #6b5840; }
+
+[data-theme="light"] .cv-balance-section { border-top-color: rgba(26, 20, 16, 0.1); }
+[data-theme="light"] .cv-bal-title { color: var(--text-primary); }
+[data-theme="light"] .cv-bal-icon { color: #6b5840; }
+[data-theme="light"] .cv-bal-label { color: #6b5840; }
+[data-theme="light"] .cv-bal-item strong { color: var(--text-primary); }
+[data-theme="light"] .cv-progress-track { background: rgba(26, 20, 16, 0.08); }
+/* keep .cv-progress-fill lime green */
+
+/* ─── Status Cards (Green Draft + Purple Approved) ─── */
+[data-theme="light"] .cv-status-card.green {
+  background: linear-gradient(145deg, rgba(255, 250, 240, 0.95) 40%, rgba(74, 222, 128, 0.22) 100%);
+  border-color: rgba(16, 185, 129, 0.32);
+}
+[data-theme="light"] .cv-status-card.purple {
+  background: linear-gradient(145deg, rgba(255, 250, 240, 0.95) 40%, rgba(167, 139, 250, 0.22) 100%);
+  border-color: rgba(139, 92, 246, 0.32);
+}
+[data-theme="light"] .cv-sc-type { color: var(--text-primary); }
+[data-theme="light"] .cv-dots { color: #6b5840; }
+[data-theme="light"] .cv-sc-val { color: var(--text-primary); }
+[data-theme="light"] .cv-sc-change {
+  background: rgba(26, 20, 16, 0.06);
+  color: #6b5840;
+}
+[data-theme="light"] .cv-sc-tag { color: #6b5840; }
+
+/* ─── Cashflow (Transitioned Value) ─── */
+[data-theme="light"] .cv-cf-sub { color: #6b5840; }
+[data-theme="light"] .cv-cf-amount { color: var(--text-primary); }
+[data-theme="light"] .cv-corner-btn {
+  border-color: rgba(26, 20, 16, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="light"] .cv-corner-btn:hover { background: rgba(245, 158, 11, 0.08); }
+
+/* Chart labels + legend */
+[data-theme="light"] .cv-chart-label { fill: #6b5840; }
+[data-theme="light"] .cv-leg { color: #6b5840; }
+
+/* Enhanced cashflow border + amount tint */
+[data-theme="light"] .enhanced-cashflow.emerald { border-color: rgba(16, 185, 129, 0.45); }
+[data-theme="light"] .enhanced-cashflow.amber { border-color: rgba(245, 158, 11, 0.45); }
+[data-theme="light"] .enhanced-cashflow.purple { border-color: rgba(139, 92, 246, 0.45); }
+[data-theme="light"] .enhanced-cashflow.emerald .cv-cf-amount { color: #047857; text-shadow: 0 0 14px rgba(16, 185, 129, 0.22); }
+[data-theme="light"] .enhanced-cashflow.amber .cv-cf-amount { color: #b45309; text-shadow: 0 0 14px rgba(245, 158, 11, 0.22); }
+[data-theme="light"] .enhanced-cashflow.purple .cv-cf-amount { color: #6d28d9; text-shadow: 0 0 14px rgba(139, 92, 246, 0.22); }
+
+/* ─── Analytics (Handover Velocity) ─── */
+[data-theme="light"] .cv-analytics .velocity-stats > div:first-child { color: #6b5840 !important; }
+[data-theme="light"] .cv-analytics .velocity-stats > div:last-child { color: var(--text-primary) !important; }
+[data-theme="light"] .cv-analytics .velocity-stats > div:last-child > span { color: #6b5840 !important; }
+
+/* Stat tiles inside analytics (Pending / Approved Docs) — they use inline styles */
+[data-theme="light"] .cv-analytics > div[style*="display: flex"] > div[style*="background: rgba(255,255,255,0.03)"] {
+  background: rgba(255, 250, 240, 0.6) !important;
+  border-color: rgba(26, 20, 16, 0.08) !important;
+}
+[data-theme="light"] .cv-analytics > div[style*="display: flex"] > div > div[style*="color: rgba(255,255,255,0.4)"] {
+  color: #6b5840 !important;
+}
+
+[data-theme="light"] .cv-bar-block.b1 { background: #fbbf24; } /* amber instead of dark blue on cream */
+[data-theme="light"] .cv-bar-block.b2 { background: #10b981; } /* keep emerald */
+[data-theme="light"] .b1 .cv-bv { color: rgba(26, 20, 16, 0.75); }
+[data-theme="light"] .cv-bar-day { color: rgba(26, 20, 16, 0.45); }
+[data-theme="light"] .cv-bar-day.active { color: var(--text-primary); }
+
+/* ─── Promo Card (Create & Deliver) ─── */
+[data-theme="light"] .cv-promo {
+  background: linear-gradient(145deg, rgba(255, 250, 240, 0.95) 0%, rgba(254, 240, 200, 0.9) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+[data-theme="light"] .cv-promo-mesh {
+  background: radial-gradient(circle at 100% 0%, rgba(245, 158, 11, 0.18) 0%, transparent 50%),
+              radial-gradient(circle at 0% 100%, rgba(56, 189, 248, 0.15) 0%, transparent 50%);
+}
+[data-theme="light"] .cv-promo-title { color: var(--text-primary); }
+[data-theme="light"] .cv-promo-sub { color: #6b5840; }
+[data-theme="light"] .cv-start-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
+}
+[data-theme="light"] .cv-start-btn:hover {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.5);
+}
+
+/* ─── Quick / Recent Creators ─── */
+[data-theme="light"] .cv-q-header { color: var(--text-primary); }
+[data-theme="light"] .cv-plus-btn { color: #6b5840; }
+[data-theme="light"] .cv-plus-btn:hover { color: #b45309; }
+[data-theme="light"] .cv-av { border-color: rgba(255, 250, 240, 0.95); }
+[data-theme="light"] .cv-q-bg-glow {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, transparent 70%);
+}
+
+[data-theme="light"] .modern-ri:hover { background: rgba(245, 158, 11, 0.08); }
+[data-theme="light"] .cv-ri-avatar {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+[data-theme="light"] .cv-ri-name { color: var(--text-primary); }
+[data-theme="light"] .cv-ri-sub { color: #6b5840; }
+[data-theme="light"] .cv-ri-action-glow { color: #047857; }
+
+/* ─── Transfer / Latest Draft Card ─── */
+[data-theme="light"] .cv-tf-ref { color: var(--text-primary); }
+[data-theme="light"] .cv-tf-type { color: #6b5840; }
+[data-theme="light"] .cv-pill-btn {
+  background: rgba(56, 189, 248, 0.15);
+  color: #0369a1;
+}
+[data-theme="light"] .cv-tf-amount-row {
+  background: rgba(245, 158, 11, 0.05);
+  border-color: rgba(245, 158, 11, 0.18);
+}
+[data-theme="light"] .cv-tf-label { color: #6b5840; }
+[data-theme="light"] .cv-tf-amount { color: var(--text-primary); }
+[data-theme="light"] .from-box { border-top-color: rgba(26, 20, 16, 0.1); }
+[data-theme="light"] .cv-tf-tag-main { color: var(--text-primary); }
+[data-theme="light"] .cv-transfer-btn {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+}
+[data-theme="light"] .cv-transfer-btn:hover {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+}
+[data-theme="light"] .glow-btn { box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); }
+[data-theme="light"] .glow-btn:hover { box-shadow: 0 8px 22px rgba(16, 185, 129, 0.45); }
+
+/* ─── Table Tabs (Draft / Pending / Approved / Rejected) ─── */
+[data-theme="light"] .title-group h3 { color: var(--text-primary); }
+[data-theme="light"] .title-group p { color: #6b5840; }
+
+[data-theme="light"] .pm-table-modern {
+  background: rgba(255, 250, 240, 0.72) !important;
+  border: 1px solid rgba(26, 20, 16, 0.08);
+  box-shadow: 0 6px 22px rgba(120, 80, 20, 0.06);
+}
+[data-theme="light"] .pm-row-modern {
+  border-bottom-color: rgba(26, 20, 16, 0.08);
+}
+[data-theme="light"] .pm-row-modern.header {
+  color: #6b5840;
+  border-bottom-color: rgba(26, 20, 16, 0.15);
+  background: transparent;
+}
+[data-theme="light"] .pm-row-modern.item {
+  background: transparent;
+  color: var(--text-primary);
+}
+[data-theme="light"] .pm-row-modern.item:hover {
+  background: rgba(245, 158, 11, 0.07);
+}
+[data-theme="light"] .pm-row-modern .col { color: var(--text-primary); }
+[data-theme="light"] .pm-row-modern .col.sn { color: #6b5840; }
+[data-theme="light"] .pm-row-modern .col.date,
+[data-theme="light"] .pm-row-modern .col[style*="color:rgba(255,255,255"] { color: #6b5840 !important; }
+
+/* category column inline-styled spans (.v-ref + .pill) */
+[data-theme="light"] .pm-row-modern .col .v-name { color: var(--text-primary); }
+[data-theme="light"] .pm-row-modern .col .v-ref,
+[data-theme="light"] .pm-row-modern .col .v-ref[style] { color: #6b5840 !important; }
+[data-theme="light"] .pm-row-modern .col .pill,
+[data-theme="light"] .pm-row-modern .col .pill[style] {
+  background: rgba(26, 20, 16, 0.06) !important;
+  color: #6b5840 !important;
+}
+
+/* client column inline-styled v-name (white-on-cream override) */
+[data-theme="light"] .pm-row-modern .col.client .v-name,
+[data-theme="light"] .pm-row-modern .col.client .v-name[style] { color: var(--text-primary) !important; }
+
+/* Status badges — preserve semantic colors with cream-readable variants */
+[data-theme="light"] .status-badge.draft {
+  background: rgba(113, 113, 122, 0.14);
+  border-color: rgba(113, 113, 122, 0.3);
+  color: #52525b;
+}
+[data-theme="light"] .status-badge.pending,
+[data-theme="light"] .status-badge.compact.pending[style] {
+  background: rgba(249, 115, 22, 0.16) !important;
+  border-color: rgba(249, 115, 22, 0.4) !important;
+  color: #c2410c !important;
+}
+[data-theme="light"] .status-badge.approved,
+[data-theme="light"] .status-badge.compact.approved[style] {
+  background: rgba(16, 185, 129, 0.16) !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+  color: #047857 !important;
+}
+[data-theme="light"] .status-badge.rejected,
+[data-theme="light"] .status-badge.compact.rejected[style] {
+  background: rgba(239, 68, 68, 0.16) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #b91c1c !important;
+}
+
+/* Empty-state */
+[data-theme="light"] .empty-state h4,
+[data-theme="light"] .empty-state h4[style] { color: var(--text-primary) !important; }
+[data-theme="light"] .empty-state p { color: #6b5840; }
+[data-theme="light"] .empty-state svg,
+[data-theme="light"] .empty-state [style*="color: rgba(255,255,255"] { color: rgba(26, 20, 16, 0.22) !important; }
+
+/* ─── Search Box — transparent pill, gold border, matches SLA dashboard
+       (!important needed to beat src/styles/theme-light-rescue.css line 132 which
+        forces a cream background onto .search-box input) ─── */
+[data-theme="light"] .search-box {
+  background: transparent !important;
+  border: 1px solid rgba(217, 119, 6, 0.35) !important;
+  box-shadow: none !important;
+}
+[data-theme="light"] .search-box:focus-within {
+  border-color: #d97706 !important;
+  background: transparent !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18) !important;
+}
+[data-theme="light"] .search-box svg { color: #b45309; }
+[data-theme="light"] .search-box input {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .search-box input::placeholder { color: rgba(120, 53, 15, 0.5) !important; }
 </style>

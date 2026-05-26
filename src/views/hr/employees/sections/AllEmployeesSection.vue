@@ -473,7 +473,7 @@ const SortIcon = {
   display: grid;
   width: 100%;
   /* checkbox | name | emp-id | designation | department | joined | status */
-  grid-template-columns: 36px minmax(260px, 1.6fr) 130px 1fr 1fr 140px 130px;
+  grid-template-columns: 56px minmax(260px, 1.6fr) 130px 1fr 1fr 140px 130px;
 }
 .emp-thead, .emp-tbody, .emp-row { display: contents; }
 
@@ -502,6 +502,9 @@ const SortIcon = {
 .emp-table .th:last-child,
 .emp-table .td:last-child { padding-right: 20px; }
 .th-check { cursor: default; }
+/* The checkbox is 18px wide with a 3px focus ring — let it draw outside the
+   16px-content-area first column without being clipped by overflow:hidden. */
+.emp-table .th-check, .emp-table .td-check { overflow: visible; }
 
 .emp-row {
   cursor: pointer;
@@ -611,4 +614,89 @@ const SortIcon = {
 .page-chip:disabled { opacity: 0.4; cursor: not-allowed; }
 
 :deep(.sort-ic.active) { color: var(--hr-accent-gold); display: inline; margin-left: 4px; vertical-align: middle; }
+
+/* ─── LIGHT THEME OVERRIDES — warm cream + amber/golden palette ─────────── */
+[data-theme="light"] .search-input {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #1a1410;
+}
+[data-theme="light"] .search-input::placeholder { color: rgba(26, 20, 16, 0.42); }
+[data-theme="light"] .search-input:focus {
+  background: rgba(255, 246, 226, 0.95);
+  border-color: rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .search-ic { color: rgba(217, 119, 6, 0.65); }
+[data-theme="light"] .ghost-mini {
+  background: rgba(255, 250, 240, 0.55);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #6b5840;
+}
+[data-theme="light"] .ghost-mini:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #b45309;
+}
+[data-theme="light"] .bulk-bar {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #b45309;
+}
+[data-theme="light"] .bulk-btn {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #b45309;
+}
+[data-theme="light"] .bulk-btn:hover { background: rgba(217, 119, 6, 0.18); }
+[data-theme="light"] .muted { color: #6b5840; }
+
+[data-theme="light"] .table-card {
+  background: rgba(255, 250, 240, 0.82);
+  border-color: rgba(40, 25, 10, 0.10);
+  box-shadow: 0 12px 32px -16px rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .emp-table .th {
+  color: #92400e;
+  border-bottom-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .emp-table .th.th-sort:hover { color: #b45309; }
+[data-theme="light"] .emp-table .td {
+  color: #1a1410;
+  border-bottom-color: rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .emp-row:hover > .td { background: rgba(217, 119, 6, 0.06); }
+[data-theme="light"] .emp-row.selected > .td { background: rgba(217, 119, 6, 0.10); }
+/* The td-check column has a 2px gold accent bar with an 8px outer glow.
+   On the cream surface the glow bleeds into the avatar's td-name column
+   so the edge looks dirty. Use a darker amber bar and clip the glow. */
+[data-theme="light"] .emp-table .emp-row > .td:first-child::before {
+  background: #d97706;
+  box-shadow: 0 0 4px 0 rgba(217, 119, 6, 0.35);
+}
+[data-theme="light"] .full-name { color: #1a1410; }
+[data-theme="light"] .email { color: #6b5840; }
+[data-theme="light"] .emp-id { color: #b45309; }
+[data-theme="light"] .date { color: #6b5840; }
+[data-theme="light"] .empty-state { color: #6b5840; }
+
+[data-theme="light"] .pagination-bar {
+  border-top-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .page-info { color: #6b5840; }
+[data-theme="light"] .page-chip {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #6b5840;
+}
+[data-theme="light"] .page-chip:hover:not(:disabled):not(.active):not(.ellipsis) {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #b45309;
+}
+[data-theme="light"] .page-chip.active {
+  background: rgba(217, 119, 6, 0.18);
+  color: #b45309;
+  border-color: rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] :deep(.sort-ic.active) { color: #b45309; }
 </style>

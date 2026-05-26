@@ -883,6 +883,9 @@ onMounted(() => {
   color: var(--text-primary);
   border-color: rgba(217, 119, 6, 0.20);
 }
+/* Active tab's lucide icon — dark base rule sets color:#fff, invisible on cream. */
+[data-theme="light"] .nav-tab.active .tab-icon { color: #b45309; }
+[data-theme="light"] .nav-tab .tab-icon { color: #92400e; }
 [data-theme="light"] .settings-card {
   background: rgba(255, 250, 240, 0.85);
   border-color: rgba(26, 20, 16, 0.10);
@@ -913,4 +916,38 @@ onMounted(() => {
 [data-theme="light"] .toggle-info p { color: var(--text-secondary); }
 [data-theme="light"] .info-label { color: var(--text-secondary); }
 [data-theme="light"] .info-value { color: var(--text-primary); }
+
+/* Avatar preview — dark base uses rgba(255,255,255,0.05) which is invisible on cream. */
+[data-theme="light"] .avatar-preview {
+  background: rgba(255, 250, 240, 0.85);
+  border: 1px solid rgba(217, 119, 6, 0.32);
+  box-shadow: 0 4px 14px rgba(40, 25, 10, 0.08);
+}
+[data-theme="light"] .avatar-placeholder { color: #b45309; }
+
+/* "Change Photo" button — dark base has color:#fff which goes invisible on cream. */
+[data-theme="light"] .btn-sm {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #b45309;
+}
+[data-theme="light"] .btn-sm:hover {
+  background: rgba(217, 119, 6, 0.12);
+  border-color: rgba(217, 119, 6, 0.50);
+  color: #92400e;
+}
+[data-theme="light"] .helper-text { color: #6b5840; }
+
+/* Textarea — dark base sets background:#232325 on focus, which stays dark on cream. */
+[data-theme="light"] .minimal-textarea {
+  background: rgba(255, 255, 255, 0.6);
+  border-color: rgba(26, 20, 16, 0.12);
+  color: var(--text-primary);
+}
+[data-theme="light"] .minimal-textarea::placeholder { color: rgba(26, 20, 16, 0.42); }
+[data-theme="light"] .minimal-textarea:focus {
+  background: #fff;
+  border-color: rgba(217, 119, 6, 0.40);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.10);
+}
 </style>

@@ -61,6 +61,9 @@ export async function patchTrainingProgram(id, payload) {
   const { data } = await axios.patch(`/api/hr/training/programs/${id}`, payload, { headers: authHeader() })
   return data
 }
+export async function deleteTrainingProgram(id) {
+  await axios.delete(`/api/hr/training/programs/${id}`, { headers: authHeader() })
+}
 export async function fetchTrainingAssignments(params = {}) {
   const { data } = await axios.get('/api/hr/training/assignments', { headers: authHeader(), params })
   return data
@@ -72,6 +75,9 @@ export async function createTrainingAssignment(payload) {
 export async function patchTrainingAssignment(id, payload) {
   const { data } = await axios.patch(`/api/hr/training/assignments/${id}`, payload, { headers: authHeader() })
   return data
+}
+export async function deleteTrainingAssignment(id) {
+  await axios.delete(`/api/hr/training/assignments/${id}`, { headers: authHeader() })
 }
 
 // ── Induction ──
@@ -89,6 +95,9 @@ export async function createSession(payload) {
 export async function patchSession(id, payload) {
   const { data } = await axios.patch(`/api/hr/induction/sessions/${id}`, payload, { headers: authHeader() })
   return data
+}
+export async function deleteSession(id) {
+  await axios.delete(`/api/hr/induction/sessions/${id}`, { headers: authHeader() })
 }
 export async function fetchAttendees(sessionId) {
   const { data } = await axios.get(`/api/hr/induction/sessions/${sessionId}/attendees`, { headers: authHeader() })

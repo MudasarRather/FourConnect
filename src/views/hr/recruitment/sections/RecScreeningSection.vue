@@ -121,10 +121,16 @@ const minExp = ref(null)
 
 const loading = computed(() => apps.loading.value)
 
+// Applications past the screening funnel — JOINED, REJECTED, WITHDRAWN —
+// have no business showing up in the resume-screening view (you can't
+// shortlist someone who already joined, and rejected/withdrawn are out).
+const TERMINAL_STAGES = new Set(['JOINED', 'REJECTED', 'WITHDRAWN'])
+
 const filteredApps = computed(() => {
   const skill = (skillFilter.value || '').toLowerCase().trim()
   const min = minExp.value || 0
   return (apps.items.value || []).filter(a => {
+    if (TERMINAL_STAGES.has(a.current_stage)) return false
     if (skill) {
       const cands = (a.skills || []).join(',').toLowerCase()
       if (!cands.includes(skill)) return false
@@ -284,4 +290,34 @@ onMounted(async () => {
 @media (max-width: 720px) {
   .screen-filters { grid-template-columns: 1fr; }
 }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+[data-theme="light"] .header-aurora {
+  background:
+    radial-gradient(60% 80% at 20% 0%, rgba(251, 191, 36, 0.30), transparent 60%),
+    radial-gradient(50% 70% at 80% 100%, rgba(251, 146, 60, 0.26), transparent 60%);
+}
+[data-theme="light"] .head-icon {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.42);
+  color: #b45309;
+}
+[data-theme="light"] .screening-head h2 { color: #1a1410; }
+[data-theme="light"] .screening-head p { color: #6b5840; }
+[data-theme="light"] .card-info h3 { color: #1a1410; }
+[data-theme="light"] .dim { color: #6b5840; }
+[data-theme="light"] .stage-pill-applied     { color: #b45309; }
+[data-theme="light"] .stage-pill-screening   { color: #b45309; }
+[data-theme="light"] .stage-pill-shortlisted { color: #b45309; }
+[data-theme="light"] .stage-pill-interview   { color: #c2410c; }
+[data-theme="light"] .stage-pill-selected    { color: #c2410c; }
+[data-theme="light"] .stage-pill-offer       { color: #c2410c; }
+[data-theme="light"] .stage-pill-joined      {
+  color: #065f46;
+  background: rgba(16, 185, 129, 0.24);
+}
+[data-theme="light"] .stage-pill-rejected    { color: #b91c1c; }
+[data-theme="light"] .match-label { color: #92400e; }
+[data-theme="light"] .match-track { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .match-pct { color: #1a1410; }
 </style>

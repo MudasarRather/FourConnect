@@ -388,4 +388,91 @@ const hasFilters = computed(() => !!(props.searchValue || props.departmentId))
     radial-gradient(50% 80% at 0% 0%, rgba(192, 132, 252, 0.10), transparent 60%),
     radial-gradient(40% 60% at 100% 100%, rgba(168, 85, 247, 0.05), transparent 60%);
 }
+
+/* ─── LIGHT THEME OVERRIDES — warm cream + amber/golden palette ─────────── */
+[data-theme="light"] .hdr-panel {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.82), rgba(255, 246, 226, 0.72));
+  border-color: rgba(217, 119, 6, 0.22);
+  box-shadow: 0 12px 32px -16px rgba(40, 25, 10, 0.16);
+}
+/* Title gradient — white→gray is invisible on cream */
+[data-theme="light"] .hdr-text h3 {
+  background: linear-gradient(120deg, #1a1410 0%, #92400e 70%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .hdr-text p { color: #6b5840; }
+[data-theme="light"] .stat {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .stat-label { color: #92400e; }
+
+/* Toolbar */
+[data-theme="light"] .tool-cell {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .tool-cell:focus-within {
+  background: rgba(255, 246, 226, 0.95);
+  border-color: rgba(217, 119, 6, 0.55);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.10);
+}
+[data-theme="light"] .tool-ic { color: rgba(217, 119, 6, 0.65); }
+[data-theme="light"] .tool-input { color: #1a1410; }
+[data-theme="light"] .tool-input::placeholder { color: rgba(26, 20, 16, 0.42); }
+[data-theme="light"] .tool-select {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #1a1410;
+}
+[data-theme="light"] .ghost-mini {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #6b5840;
+}
+[data-theme="light"] .ghost-mini:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #b45309;
+}
+
+/* Employee rows */
+[data-theme="light"] .emp-row {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.78), rgba(255, 246, 226, 0.68));
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .emp-row:hover { border-color: rgba(217, 119, 6, 0.40); }
+[data-theme="light"] .row-main { color: #1a1410; }
+[data-theme="light"] .row-name { color: #1a1410; }
+[data-theme="light"] .row-id { color: #92400e; }
+[data-theme="light"] .row-meta { color: #6b5840; }
+[data-theme="light"] .row-actions { border-left-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .action-btn {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #b45309;
+}
+[data-theme="light"] .action-btn:hover { background: rgba(217, 119, 6, 0.22); }
+[data-theme="light"] .action-btn.tone-green {
+  background: rgba(5, 150, 105, 0.12);
+  color: #047857;
+  border-color: rgba(5, 150, 105, 0.32);
+}
+[data-theme="light"] .action-btn.tone-green:hover { background: rgba(5, 150, 105, 0.18); }
+
+[data-theme="light"] .empty { color: #6b5840; }
+
+/* Pagination */
+[data-theme="light"] .page-info { color: #6b5840; }
+[data-theme="light"] .page-chip {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #6b5840;
+}
+[data-theme="light"] .page-chip:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #b45309;
+}
 </style>

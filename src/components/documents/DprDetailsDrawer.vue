@@ -366,16 +366,32 @@
           </section>
         </main>
 
-        <!-- Footer -->
-        <footer class="drawer-footer" v-if="showFooter">
-            <button v-if="isAdminMode" class="footer-btn secondary" @click="$emit('edit', dpr)">
+        <!-- Footer
+             Mirrors Handover drawer behaviour:
+              - Admin: Edit on any status (except Approved which is frozen);
+                       Download only on Approved.
+              - Non-admin Draft: Edit (own draft).
+              - Non-admin Internal Review: "View Only · Pending Admin Review".
+              - Non-admin Approved: Download DPR.
+              - Non-admin Rejected: "View Only · Rejected DPR".
+             Footer hides entirely if no button or notice would render.
+             Grid collapses to single column when only one element renders. -->
+        <footer
+          class="drawer-footer"
+          v-if="showFooter"
+          :style="(isAdminMode && isApproved) ? {} : { gridTemplateColumns: '1fr' }"
+        >
+            <button v-if="canEdit" class="footer-btn secondary" @click="$emit('edit', dpr)">
               <Pencil :size="16" /><span>Edit Proposal</span>
             </button>
             <button v-if="showDownload" class="footer-btn primary" @click="$emit('generate', dpr)">
               <Download :size="16" /><span>Download DPR</span>
             </button>
-            <div v-if="!isAdminMode && isPending" class="view-only-notice">
-              <Clock :size="14" /><span>Pending Review — View Only</span>
+            <div v-if="!isAdminMode && isInternalReview" class="view-only-notice">
+              <Lock :size="14" /><span>View Only · Pending Admin Review</span>
+            </div>
+            <div v-if="!isAdminMode && isRejected" class="view-only-notice">
+              <Lock :size="14" /><span>View Only · Rejected DPR</span>
             </div>
         </footer>
       </div>
@@ -390,7 +406,7 @@ import { API } from '@/utils/api'
 import {
   Clock, X, Pencil, Trash2, FileText, Download, CheckCircle, XCircle, Check, XSquare, AlertCircle,
   Activity, Users, Cpu, ClipboardList, Building2, Calendar, BookOpen, Target, Maximize,
-  DollarSign, ShieldAlert, TrendingUp, PenTool, Layers, Loader2
+  DollarSign, ShieldAlert, TrendingUp, PenTool, Layers, Loader2, Lock
 } from 'lucide-vue-next'
 
 const props = defineProps({ isOpen: Boolean, dpr: Object, isAdminMode: Boolean })
@@ -399,24 +415,41 @@ const emit = defineEmits(['close', 'edit', 'approve', 'reject', 'deleted', 'gene
 const isDeleting = ref(false)
 const showDeleteConfirm = ref(false)
 
-const isPending = computed(() => props.dpr?.status === 'Internal Review' || props.dpr?.status === 'Draft')
+// Status helpers — keep semantic intent close to the template so v-if reads naturally.
+const isDraft = computed(() => props.dpr?.status === 'Draft')
+const isInternalReview = computed(() => props.dpr?.status === 'Internal Review')
+const isApproved = computed(() => props.dpr?.status === 'Approved')
+const isRejected = computed(() => props.dpr?.status === 'Rejected')
 const statusClass = computed(() => (props.dpr?.status || 'draft').toLowerCase().replace(' ', '-'))
 
-// Users: hide delete for pending DPRs. Admins always see delete.
+// Permission rules — match Handover drawer exactly.
+// Admin can delete any status except Internal Review (must Approve/Reject first).
+// Non-admin can only delete their own Draft.
 const canDelete = computed(() => {
   if (!props.dpr) return false
-  if (props.isAdminMode) return true
-  return props.dpr.status === 'Draft'
+  if (props.isAdminMode) return !isInternalReview.value
+  return isDraft.value
 })
 
-// Users: hide download for pending DPRs. Admins always see download.
-const showDownload = computed(() => {
+// Admin can Edit any status (handles fixing typos, post-rejection cleanup).
+// Non-admin can only Edit their own Draft (NOT Rejected — view-only per user's
+// "rejected should also be view only just like how it is in handover" request).
+const canEdit = computed(() => {
+  if (!props.dpr) return false
   if (props.isAdminMode) return true
-  return !isPending.value
+  return isDraft.value
 })
 
+// Download is reserved for Approved DPRs only (both admin + non-admin).
+// Drafts, Internal Review, and Rejected docs are not shareable artifacts.
+const showDownload = computed(() => isApproved.value)
+
+// Footer renders when at least one button / notice would show.
 const showFooter = computed(() => {
-  return props.isAdminMode || showDownload.value || isPending.value
+  if (canEdit.value) return true
+  if (showDownload.value) return true
+  if (!props.isAdminMode && (isInternalReview.value || isRejected.value)) return true
+  return false
 })
 
 const getInitials = (name) => {
@@ -686,4 +719,222 @@ const handleDeleteClick = async () => {
 .nano-scroll::-webkit-scrollbar { width: 4px; }
 .nano-scroll::-webkit-scrollbar-track { background: transparent; }
 .nano-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 10px; }
+
+/* ═══════════════════════════════════════════
+   LIGHT THEME OVERRIDES — preserve gold/amber/orange + emerald palette.
+   Cream frosted drawer; all white text flipped to warm dark; semantic
+   accents (gold #f59e0b, emerald #22c55e, red #ef4444) preserved with
+   readable variants on cream.
+   ═══════════════════════════════════════════ */
+
+[data-theme="light"] .drawer-overlay {
+  background: rgba(26, 20, 16, 0.32);
+}
+[data-theme="light"] .drawer-panel {
+  background: rgba(255, 250, 240, 0.94);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-left: 1px solid rgba(245, 158, 11, 0.18);
+  box-shadow: -18px 0 48px rgba(120, 80, 20, 0.12);
+}
+
+/* ─── Header ─── */
+[data-theme="light"] .drawer-header {
+  border-bottom-color: rgba(180, 110, 30, 0.14);
+}
+[data-theme="light"] .dpr-badge {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+[data-theme="light"] .badge-label { color: #6b5840; }
+[data-theme="light"] .badge-value { color: #b45309; }
+
+[data-theme="light"] .action-pill.approve {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.32);
+}
+[data-theme="light"] .action-pill.reject,
+[data-theme="light"] .action-pill.delete {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+[data-theme="light"] .action-pill.delete.confirming {
+  background: #b91c1c;
+  color: #fff;
+}
+[data-theme="light"] .close-circle {
+  color: #6b5840;
+}
+[data-theme="light"] .close-circle:hover {
+  background: rgba(26, 20, 16, 0.08);
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .identity-avatar {
+  background: rgba(245, 158, 11, 0.18);
+  color: #b45309;
+}
+[data-theme="light"] .identity-text h1 { color: var(--text-primary); }
+[data-theme="light"] .identity-meta { color: #6b5840; }
+
+/* Status ribbon — keep colored borders, but cream-readable text */
+[data-theme="light"] .status-ribbon {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(180, 110, 30, 0.18);
+}
+[data-theme="light"] .status-ribbon.approved {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.32);
+}
+[data-theme="light"] .status-ribbon.approved .sr-left { color: #047857; }
+[data-theme="light"] .status-ribbon.rejected {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+[data-theme="light"] .status-ribbon.rejected .sr-left { color: #b91c1c; }
+[data-theme="light"] .status-ribbon.internal-review {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.32);
+}
+[data-theme="light"] .status-ribbon.internal-review .sr-left { color: #b45309; }
+[data-theme="light"] .status-ribbon.draft .sr-left { color: #52525b; }
+[data-theme="light"] .sr-right { color: #6b5840; }
+
+/* ─── Body sections ─── */
+[data-theme="light"] .sec-head { color: #b45309; }
+[data-theme="light"] .sec-head h3 { color: var(--text-primary); }
+[data-theme="light"] .sf-label { color: #6b5840; }
+[data-theme="light"] .sf-value { color: var(--text-primary); }
+[data-theme="light"] .sf-amber { color: #b45309; }
+[data-theme="light"] .sf-pill {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+}
+
+[data-theme="light"] .sec-box {
+  background: rgba(245, 158, 11, 0.06);
+  border-color: rgba(245, 158, 11, 0.18);
+}
+[data-theme="light"] .sb-label { color: #6b5840; }
+[data-theme="light"] .sb-text { color: var(--text-primary); }
+
+/* Objective cards */
+[data-theme="light"] .obj-card {
+  background: rgba(255, 250, 240, 0.7);
+  border-color: rgba(180, 110, 30, 0.14);
+}
+[data-theme="light"] .obj-card:hover {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+[data-theme="light"] .obj-num { color: #b45309; }
+[data-theme="light"] .obj-title { color: var(--text-primary); }
+[data-theme="light"] .obj-desc { color: #6b5840; }
+[data-theme="light"] .obj-badge.high { background: rgba(239, 68, 68, 0.14); color: #b91c1c; }
+[data-theme="light"] .obj-badge.medium { background: rgba(245, 158, 11, 0.16); color: #b45309; }
+[data-theme="light"] .obj-badge.low { background: rgba(16, 185, 129, 0.14); color: #047857; }
+
+/* Milestones (timeline rail) */
+[data-theme="light"] .ms-list { border-left-color: rgba(180, 110, 30, 0.18); }
+[data-theme="light"] .ms-dot { border-color: rgba(255, 250, 240, 0.96); background: #d97706; }
+[data-theme="light"] .ms-title { color: var(--text-primary); }
+[data-theme="light"] .ms-meta { color: #b45309; }
+[data-theme="light"] .ms-desc { color: #6b5840; }
+
+/* Team cards */
+[data-theme="light"] .team-card {
+  background: rgba(255, 250, 240, 0.7);
+  border-color: rgba(180, 110, 30, 0.14);
+}
+[data-theme="light"] .tc-avatar {
+  background: rgba(245, 158, 11, 0.16);
+  color: #b45309;
+}
+[data-theme="light"] .tc-name { color: var(--text-primary); }
+[data-theme="light"] .tc-role { color: #6b5840; }
+[data-theme="light"] .tc-resp { color: rgba(107, 88, 64, 0.7); }
+
+/* Finance + budget */
+[data-theme="light"] .finance-card {
+  background: rgba(245, 158, 11, 0.07);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+[data-theme="light"] .fc-label { color: #6b5840; }
+[data-theme="light"] .fc-currency { color: #6b5840; }
+[data-theme="light"] .fc-number { color: #b45309; }
+
+[data-theme="light"] .budget-item,
+[data-theme="light"] .obj-card,
+[data-theme="light"] .risk-card,
+[data-theme="light"] .att-card,
+[data-theme="light"] .audit-card {
+  background: rgba(255, 250, 240, 0.7);
+  border-color: rgba(180, 110, 30, 0.14);
+}
+[data-theme="light"] .bl-cat { color: var(--text-primary); }
+[data-theme="light"] .bl-desc { color: #6b5840; }
+[data-theme="light"] .bl-amt { color: #b45309; }
+
+/* Risks */
+[data-theme="light"] .risk-card.risk-high { border-left-color: #b91c1c; }
+[data-theme="light"] .risk-card.risk-medium { border-left-color: #d97706; }
+[data-theme="light"] .risk-card.risk-low { border-left-color: #047857; }
+[data-theme="light"] .rc-desc { color: var(--text-primary); }
+[data-theme="light"] .rc-impact.high { background: rgba(239, 68, 68, 0.14); color: #b91c1c; }
+[data-theme="light"] .rc-impact.medium { background: rgba(245, 158, 11, 0.16); color: #b45309; }
+[data-theme="light"] .rc-impact.low { background: rgba(16, 185, 129, 0.14); color: #047857; }
+[data-theme="light"] .rc-mitigation { color: #6b5840; }
+[data-theme="light"] .rc-mlabel { color: rgba(107, 88, 64, 0.7); }
+
+/* Attachments */
+[data-theme="light"] .att-icon { color: #b45309; }
+[data-theme="light"] .att-name { color: var(--text-primary); }
+[data-theme="light"] .att-type { color: #6b5840; }
+
+/* Audit (Created By) */
+[data-theme="light"] .audit-section { border-top-color: rgba(180, 110, 30, 0.14); }
+[data-theme="light"] .ac-avatar {
+  background: rgba(245, 158, 11, 0.14);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+[data-theme="light"] .ac-label { color: #6b5840; }
+[data-theme="light"] .ac-name { color: var(--text-primary); }
+[data-theme="light"] .ac-email { color: #6b5840; }
+
+/* ─── Footer ─── */
+[data-theme="light"] .drawer-footer {
+  background: rgba(255, 250, 240, 0.5);
+  border-top-color: rgba(180, 110, 30, 0.14);
+}
+[data-theme="light"] .footer-btn.primary {
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+}
+[data-theme="light"] .footer-btn.primary:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.45);
+}
+[data-theme="light"] .footer-btn.secondary {
+  background: rgba(26, 20, 16, 0.05);
+  color: var(--text-primary);
+  border-color: rgba(26, 20, 16, 0.14);
+}
+[data-theme="light"] .footer-btn.secondary:hover {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+[data-theme="light"] .view-only-notice {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.2);
+  color: #92400e;
+}
+
+[data-theme="light"] .nano-scroll::-webkit-scrollbar-thumb {
+  background: rgba(180, 110, 30, 0.22);
+}
 </style>

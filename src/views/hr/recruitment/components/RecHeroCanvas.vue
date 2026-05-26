@@ -463,4 +463,59 @@ onMounted(() => {
   .rec-hero { padding: 24px 18px; }
   .hero-title { font-size: 30px; }
 }
+
+/* ═══════════════════ LIGHT THEME ═══════════════════
+   Keep the gold/amber/orange accents vivid; only the dark base layer
+   inverts to a translucent cream so the hero reads on the warm page. */
+[data-theme="light"] .rec-hero {
+  background:
+    linear-gradient(180deg, rgba(255, 250, 240, 0.85) 0%, rgba(255, 244, 220, 0.92) 100%);
+  border-color: rgba(40, 25, 10, 0.10);
+  box-shadow:
+    0 30px 60px -30px rgba(40, 25, 10, 0.35),
+    0 0 0 1px rgba(217, 119, 6, 0.10) inset;
+}
+[data-theme="light"] .rec-hero::before {
+  background: linear-gradient(135deg,
+    rgba(217, 119, 6, 0.45) 0%,
+    rgba(251, 146, 60, 0.28) 35%,
+    rgba(40, 25, 10, 0.06) 60%,
+    rgba(217, 119, 6, 0.35) 100%);
+  opacity: 0.65;
+}
+[data-theme="light"] .hero-glow {
+  background:
+    radial-gradient(70% 50% at 14% 0%, rgba(251, 191, 36, 0.30), transparent 70%),
+    radial-gradient(60% 45% at 100% 100%, rgba(251, 146, 60, 0.22), transparent 70%);
+}
+[data-theme="light"] .hero-grid-bg {
+  background-image:
+    linear-gradient(rgba(40, 25, 10, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(40, 25, 10, 0.05) 1px, transparent 1px);
+  opacity: 0.6;
+}
+[data-theme="light"] .hero-badge {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.22), rgba(251, 191, 36, 0.10));
+  border-color: rgba(217, 119, 6, 0.45);
+  color: #b45309;
+  box-shadow: 0 0 24px -6px rgba(217, 119, 6, 0.35);
+}
+[data-theme="light"] .badge-phase { color: #c2410c; }
+[data-theme="light"] .hero-sub { color: #44362a; }
+[data-theme="light"] .stat-pill {
+  background: linear-gradient(135deg, rgba(255, 250, 240, 0.78), rgba(255, 244, 220, 0.55));
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #1a1410;
+}
+[data-theme="light"] .stat-pill:hover {
+  border-color: rgba(217, 119, 6, 0.45);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.18), rgba(255, 250, 240, 0.65));
+  box-shadow: 0 8px 22px -10px rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .stat-icon {
+  background: rgba(255, 250, 240, 0.65);
+  box-shadow: inset 0 0 0 1px rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .stat-label { color: #6b5840; }
+[data-theme="light"] .orbit { border-color: rgba(217, 119, 6, 0.32); }
 </style>

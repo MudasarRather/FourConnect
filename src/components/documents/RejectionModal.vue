@@ -272,4 +272,63 @@ button {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ═══════════════════════════════════════════
+   LIGHT THEME OVERRIDES — preserve red rejection accent on cream surface.
+   ═══════════════════════════════════════════ */
+
+[data-theme="light"] .modal-overlay {
+  background: rgba(26, 20, 16, 0.45);
+}
+[data-theme="light"] .modal-container {
+  background: rgba(255, 250, 240, 0.96);
+  border: 1px solid rgba(180, 110, 30, 0.18);
+  box-shadow: 0 40px 100px rgba(120, 80, 20, 0.25);
+}
+[data-theme="light"] .modal-container::after { opacity: 0.015; }
+[data-theme="light"] .header-icon.reject {
+  background: rgba(239, 68, 68, 0.15);
+  color: #b91c1c;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.18);
+}
+[data-theme="light"] .header-text h2 { color: var(--text-primary); }
+[data-theme="light"] .header-text p { color: #6b5840; }
+[data-theme="light"] .input-group label { color: #6b5840; }
+[data-theme="light"] textarea {
+  background: rgba(255, 250, 240, 0.7);
+  border: 1px solid rgba(180, 110, 30, 0.2);
+  color: var(--text-primary);
+}
+[data-theme="light"] textarea::placeholder { color: rgba(107, 88, 64, 0.5); }
+[data-theme="light"] textarea:focus {
+  background: #fffaf0;
+  border-color: rgba(239, 68, 68, 0.45);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.14);
+}
+[data-theme="light"] .modal-footer {
+  background: rgba(255, 250, 240, 0.5);
+  border-top-color: rgba(180, 110, 30, 0.1);
+}
+[data-theme="light"] .btn-secondary {
+  background: rgba(26, 20, 16, 0.04);
+  border-color: rgba(26, 20, 16, 0.14);
+  color: var(--text-primary);
+}
+[data-theme="light"] .btn-secondary:hover {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+[data-theme="light"] .btn-primary {
+  background: var(--text-primary);
+  color: #fffaf0;
+}
+[data-theme="light"] .btn-primary.danger {
+  background: #b91c1c;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(185, 28, 28, 0.3);
+}
+[data-theme="light"] .btn-primary:hover:not(:disabled) {
+  box-shadow: 0 8px 22px rgba(185, 28, 28, 0.35);
+}
 </style>

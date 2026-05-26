@@ -115,4 +115,14 @@ watch(
 @media (max-width: 640px) {
   .drawer, .drawer.wide { width: 100vw; }
 }
+
+/* ═════════ LIGHT THEME OVERRIDES — warm cream frosted surface ═════════ */
+[data-theme="light"] .drawer-backdrop {
+  background: rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .drawer {
+  background: rgba(255, 250, 240, 0.72);
+  border-left-color: rgba(40, 25, 10, 0.14);
+  box-shadow: -32px 0 80px -20px rgba(40, 25, 10, 0.28);
+}
 </style>

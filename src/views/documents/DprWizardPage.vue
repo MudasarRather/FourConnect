@@ -22,28 +22,132 @@
     </header>
 
     <div class="dpr-body">
-      <!-- LEFT: Creative Neon Stepper (Floating) -->
+      <!-- LEFT: Premium 15-Step Stepper (Re-imagined)
+           Design language:
+             - Layered glass shell with ambient drifting gold glow
+             - Circular SVG progress ring in the header (animated dash-offset)
+             - Vertical timeline rail that fills with a gold gradient as the
+               user advances (animated height via motion-v)
+             - Each step node is a motion-v <Motion> with reactive scale +
+               magnetic hover, plus a check-mark morph when it moves to "done"
+             - Active node has two outward-pulsing rings for a "live" pulse
+             - Footer mini-stats (Done / Left) animate in last
+           All motion uses motion-v reactive props so transitions are physics-
+           based, not CSS keyframe stutter. -->
       <aside class="dpr-stepper-container">
-        <div class="floating-stepper glass-panel">
-          <div class="stepper-scroll nano-scroll">
-            <div class="neon-trace" :style="{ transform: `translateY(${(currentStep - 1) * 56}px)` }"></div>
-            <div
-              v-for="step in steps"
-              :key="step.id"
-              class="step-node"
-              :class="{ active: step.id === currentStep, done: step.id < currentStep }"
-              @click="goToStep(step.id)"
-            >
-              <div class="step-icon-wrapper">
-                <component :is="getStepIcon(step.id)" :size="14" />
-                <div class="node-pulse" v-if="step.id === currentStep"></div>
+        <div class="stepper-shell">
+
+          <!-- ── Header: counter + circular progress ring ── -->
+          <Motion class="stepper-header"
+            :initial="{ opacity: 0, y: -8 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }"
+          >
+            <div class="header-text">
+              <span class="header-eyebrow">DPR Proposal</span>
+              <div class="header-counter">
+                <span class="counter-current">{{ String(currentStep).padStart(2, '0') }}</span>
+                <span class="counter-divider">/</span>
+                <span class="counter-total">15</span>
               </div>
-              <div class="step-info">
-                <span class="step-label">Step {{ String(step.id).padStart(2, '0') }}</span>
-                <span class="step-title">{{ step.title }}</span>
+            </div>
+            <div class="progress-ring">
+              <svg viewBox="0 0 44 44" width="44" height="44" aria-hidden="true">
+                <defs>
+                  <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%"  stop-color="#fbbf24"/>
+                    <stop offset="100%" stop-color="#f97316"/>
+                  </linearGradient>
+                </defs>
+                <circle class="ring-bg" cx="22" cy="22" r="18" />
+                <!-- SVG attribute transitions via CSS — more bulletproof than
+                     wrapping <circle> in <Motion>; the dash offset animates the
+                     ring fill smoothly via a CSS transition declared in the
+                     .ring-fill rule below. -->
+                <circle class="ring-fill" cx="22" cy="22" r="18"
+                  :stroke-dashoffset="113.1 - (113.1 * currentStep / 15)" />
+              </svg>
+              <span class="ring-percent">{{ Math.round((currentStep / 15) * 100) }}<small>%</small></span>
+            </div>
+          </Motion>
+
+          <!-- ── Rail with steps ── -->
+          <div class="stepper-rail nano-scroll">
+            <!-- Wrapper sizes to content so absolute lines extend through all
+                 15 nodes even when the rail scrolls. -->
+            <div class="rail-content">
+              <!-- Background track -->
+              <div class="rail-line"></div>
+              <!-- Filled track — animated height -->
+              <Motion class="rail-line-fill"
+                :initial="{ height: '0%' }"
+                :animate="{ height: `${((currentStep - 1) / 14) * 100}%` }"
+                :transition="{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }"
+              />
+
+              <div class="rail-nodes">
+              <Motion v-for="(step, idx) in steps" :key="step.id"
+                as="div"
+                class="rail-node"
+                :class="{
+                  active: step.id === currentStep,
+                  done: step.id < currentStep,
+                  future: step.id > currentStep
+                }"
+                :initial="{ opacity: 0, x: -14 }"
+                :animate="{ opacity: 1, x: 0 }"
+                :transition="{ delay: 0.08 + idx * 0.035, duration: 0.5, ease: [0.16, 1, 0.3, 1] }"
+                :whileHover="step.id === currentStep ? { x: 0 } : { x: 4 }"
+                :whileTap="{ scale: 0.97 }"
+                @click="goToStep(step.id)"
+              >
+                <!-- Node circle with morphing icon -->
+                <div class="node-circle-wrap">
+                  <Motion as="div" class="node-circle"
+                    :animate="{ scale: step.id === currentStep ? 1.18 : 1 }"
+                    :transition="{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1] }"
+                  >
+                    <Transition name="node-icon" mode="out-in">
+                      <Check v-if="step.id < currentStep" :key="'done-' + step.id" :size="13" />
+                      <component v-else :is="getStepIcon(step.id)" :key="'step-' + step.id" :size="12" />
+                    </Transition>
+                  </Motion>
+                  <!-- Twin pulse rings on active -->
+                  <template v-if="step.id === currentStep">
+                    <div class="node-pulse-ring"></div>
+                    <div class="node-pulse-ring node-pulse-ring-2"></div>
+                  </template>
+                </div>
+
+                <!-- Label content -->
+                <div class="node-content">
+                  <span class="node-eyebrow">Step {{ String(step.id).padStart(2, '0') }}</span>
+                  <span class="node-title">{{ step.title }}</span>
+                </div>
+
+                <!-- Hover chevron -->
+                <ChevronRight v-if="step.id !== currentStep" class="node-chev" :size="14" />
+              </Motion>
               </div>
             </div>
           </div>
+
+          <!-- ── Footer mini-stats ── -->
+          <Motion class="stepper-footer"
+            :initial="{ opacity: 0, y: 8 }"
+            :animate="{ opacity: 1, y: 0 }"
+            :transition="{ delay: 0.65, duration: 0.5, ease: [0.16, 1, 0.3, 1] }"
+          >
+            <div class="footer-stat">
+              <span class="stat-num">{{ Math.max(currentStep - 1, 0) }}</span>
+              <span class="stat-label">Done</span>
+            </div>
+            <div class="footer-stat">
+              <span class="stat-num">{{ Math.max(15 - currentStep + 1, 0) }}</span>
+              <span class="stat-label">Left</span>
+            </div>
+          </Motion>
+
         </div>
       </aside>
 
@@ -603,33 +707,36 @@
               <div v-if="!form.attachments.length" class="empty-hint text-center py-12">Click + to list supporting documents.</div>
           </section>
 
-          <!-- Step 15: Review & Submit -->
+          <!-- Step 15: Review & Submit — redesigned with staggered card entrance,
+               warm gold accent on the highlighted Financial card, and an
+               animated "Ready for Submission" hero with a pulsing glow ring. -->
           <section v-if="currentStep === 15" class="step-section animate-slide-in">
               <div class="sec-header">
                 <div class="sec-icon"><ShieldCheck :size="24" /></div>
                 <div class="sec-info">
-                  <h3>Review & Finalize</h3>
+                  <h3>Review &amp; Finalize</h3>
                   <p>Comprehensive summary of your enterprise proposal.</p>
                 </div>
               </div>
-              <div class="review-grid mt-8">
-                <div class="review-card"><div class="rc-label">Project</div><div class="rc-val">{{ form.title || 'Untitled Proposal' }}</div></div>
-                <div class="review-card"><div class="rc-label">Client</div><div class="rc-val">{{ form.client.organization || '—' }}</div></div>
-                <div class="review-card"><div class="rc-label">Timeline</div><div class="rc-val">{{ form.overview.start_date ? 'Detailed' : '—' }}</div></div>
-                <div class="review-card"><div class="rc-label">Objectives</div><div class="rc-val">{{ form.objectives.length }} items</div></div>
-                <div class="review-card"><div class="rc-label">Scope</div><div class="rc-val">{{ form.scope.in_scope ? 'Defined' : '—' }}</div></div>
-                <div class="review-card"><div class="rc-label">Architecture</div><div class="rc-val">{{ form.architecture.tech_stack.backend ? 'Detailed' : 'Base' }}</div></div>
-                <div class="review-card"><div class="rc-label">Implementation</div><div class="rc-val">{{ form.implementation.methodology }}</div></div>
-                <div class="review-card"><div class="rc-label">Milestones</div><div class="rc-val">{{ form.milestones.length }} peaks</div></div>
-                <div class="review-card"><div class="rc-label">Team Size</div><div class="rc-val">{{ form.team.length }} members</div></div>
-                <div class="review-card highlight"><div class="rc-label">Financial</div><div class="rc-val">₹ {{ formatNumber(form.budget.total_amount) }}</div></div>
-                <div class="review-card"><div class="rc-label">Risks Identified</div><div class="rc-val">{{ form.risks.length }} risks</div></div>
-                <div class="review-card"><div class="rc-label">Attachments</div><div class="rc-val">{{ (form.attachments || []).length }} files</div></div>
+              <div class="review-grid review-grid-modern mt-8">
+                <div class="review-card review-card-modern" style="--rc-i:0"><div class="rc-label">Project</div><div class="rc-val">{{ form.title || 'Untitled Proposal' }}</div></div>
+                <div class="review-card review-card-modern" style="--rc-i:1"><div class="rc-label">Client</div><div class="rc-val">{{ form.client.organization || '—' }}</div></div>
+                <div class="review-card review-card-modern" style="--rc-i:2"><div class="rc-label">Timeline</div><div class="rc-val">{{ form.overview.start_date ? 'Detailed' : '—' }}</div></div>
+                <div class="review-card review-card-modern" style="--rc-i:3"><div class="rc-label">Objectives</div><div class="rc-val">{{ form.objectives.length }} items</div></div>
+                <div class="review-card review-card-modern" style="--rc-i:4"><div class="rc-label">Scope</div><div class="rc-val">{{ form.scope.in_scope ? 'Defined' : '—' }}</div></div>
+                <div class="review-card review-card-modern" style="--rc-i:5"><div class="rc-label">Architecture</div><div class="rc-val">{{ form.architecture.tech_stack.backend ? 'Detailed' : 'Base' }}</div></div>
+                <div class="review-card review-card-modern" style="--rc-i:6"><div class="rc-label">Implementation</div><div class="rc-val">{{ form.implementation.methodology }}</div></div>
+                <div class="review-card review-card-modern" style="--rc-i:7"><div class="rc-label">Milestones</div><div class="rc-val">{{ form.milestones.length }} peaks</div></div>
+                <div class="review-card review-card-modern" style="--rc-i:8"><div class="rc-label">Team Size</div><div class="rc-val">{{ form.team.length }} members</div></div>
+                <div class="review-card review-card-modern highlight" style="--rc-i:9"><div class="rc-label">Financial</div><div class="rc-val">₹ {{ formatNumber(form.budget.total_amount) }}</div></div>
+                <div class="review-card review-card-modern" style="--rc-i:10"><div class="rc-label">Risks Identified</div><div class="rc-val">{{ form.risks.length }} risks</div></div>
+                <div class="review-card review-card-modern" style="--rc-i:11"><div class="rc-label">Attachments</div><div class="rc-val">{{ (form.attachments || []).length }} files</div></div>
               </div>
-              <div class="submission-check mt-8 glass-card text-center p-12">
-                 <div class="confetti-icon mb-6"><Sparkles :size="64" class="color-amber animate-pulse" /></div>
-                 <h2 class="step-title-hero" style="font-size: 32px; margin-bottom: 16px;">Ready for Submission?</h2>
-                 <p class="step-desc-hero mx-auto" style="font-size: 15px; max-width: 450px;">Once submitted, this proposal will be routed to the internal review committee for formal approval.</p>
+              <div class="submission-check submission-check-modern mt-8">
+                 <div class="submission-ring"></div>
+                 <div class="confetti-icon"><Sparkles :size="64" class="color-amber" /></div>
+                 <h2 class="submission-hero">Ready for Submission?</h2>
+                 <p class="submission-sub">Once submitted, this proposal will be routed to the internal review committee for formal approval.</p>
               </div>
           </section>
 
@@ -670,6 +777,7 @@ import {
 import { useToast } from '../../composables/useToast'
 import SlaSelect from '../../components/ui/SlaSelect.vue'
 import CompactDatePicker from '../../components/ui/CompactDatePicker.vue'
+import { Motion } from 'motion-v'
 import { API } from '@/utils/api'
 
 const router = useRouter()
@@ -1028,7 +1136,7 @@ onUnmounted(() => {
 .dpr-wizard-wrapper {
   position: relative;
   min-height: 100vh;
-  background: #000 !important;
+  background: transparent;
   color: #fff;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   display: flex;
@@ -1043,38 +1151,376 @@ onUnmounted(() => {
   to { transform: translate(50px, 100px) scale(1.1); }
 }
 
-.dpr-stepper-container { 
-  width: 240px !important; 
-  padding: 16px 0 16px 12px; 
+/* ═══════════════════════════════════════════
+   STEPPER v2 — Premium 15-step rail with motion-v.
+   See template comments for design intent. Old .floating-stepper / .neon-trace
+   / .step-node selectors are intentionally removed — they're not referenced
+   anymore in the markup.
+   ═══════════════════════════════════════════ */
+
+.dpr-stepper-container {
+  width: 280px !important;
+  flex-shrink: 0;
+  padding: 16px 8px 16px 16px;
   display: flex;
   flex-direction: column;
 }
-.floating-stepper {
+
+.stepper-shell {
   flex: 1;
-  border-radius: 28px;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: transparent; /* UNBOXED */
-  border: none; /* UNBOXED */
+  gap: 20px;
+  padding: 22px 16px 18px;
+  border-radius: 28px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,0.028) 0%, rgba(255,255,255,0.008) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04);
 }
-.stepper-scroll {
+/* Ambient drifting gold aura — purely decorative, fixed in shell coordinate space */
+.stepper-shell::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  left: -20%;
+  width: 240px;
+  height: 240px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+  animation: stepperAura 11s ease-in-out infinite;
+  z-index: 0;
+}
+.stepper-shell::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  right: -20%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.06) 0%, transparent 65%);
+  pointer-events: none;
+  animation: stepperAura 14s ease-in-out -3s infinite reverse;
+  z-index: 0;
+}
+@keyframes stepperAura {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(28px, 40px) scale(1.18); }
+}
+
+/* ── Header ── */
+.stepper-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.header-text { display: flex; flex-direction: column; gap: 6px; }
+.header-eyebrow {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+}
+.header-counter {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: 'SF Mono', 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+.counter-current {
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(135deg, #ffffff 0%, #fbbf24 60%, #f97316 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -1.5px;
+}
+.counter-divider {
+  font-size: 18px;
+  color: rgba(255,255,255,0.22);
+  font-weight: 700;
+}
+.counter-total {
+  font-size: 16px;
+  color: rgba(255,255,255,0.35);
+  font-weight: 700;
+}
+
+.progress-ring {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+.progress-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.35));
+}
+.ring-bg {
+  fill: none;
+  stroke: rgba(255,255,255,0.08);
+  stroke-width: 3;
+}
+.ring-fill {
+  fill: none;
+  stroke: url(#ringGrad);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: 113.1; /* 2π × 18 */
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ring-percent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fbbf24;
+  font-family: 'SF Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+}
+.ring-percent small { font-size: 7px; opacity: 0.7; margin-left: 1px; }
+
+/* ── Rail ── */
+.stepper-rail {
   flex: 1;
   overflow-y: auto;
-  padding: 8px 12px;
-  max-height: calc(100vh - 120px);
-  scrollbar-width: none; /* Hide for cleaner look */
-}
-.stepper-scroll::-webkit-scrollbar { display: none; }
-.neon-trace {
-  position: absolute;
-  left: 28px;
-  width: 2px;
-  height: 32px;
-  background: var(--accent-amber);
-  box-shadow: 0 0 15px var(--accent-amber);
-  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow-x: hidden;
+  padding: 6px 4px 6px 0;
   z-index: 1;
+}
+.stepper-rail::-webkit-scrollbar { width: 3px; }
+.stepper-rail::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+}
+/* Inner wrapper sizes to content height (sum of all nodes), so the absolute
+   rail-line and rail-line-fill extend through every step even when the parent
+   scrolls. Without this, top/bottom absolute positioning would clamp to the
+   rail's visible height (clipping the last few steps' line). */
+.rail-content {
+  position: relative;
+  min-height: 100%;
+}
+
+/* Timeline track (background + fill) */
+.rail-line {
+  position: absolute;
+  left: 27px;
+  top: 18px;
+  bottom: 12px;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%);
+  border-radius: 2px;
+  z-index: 0;
+}
+.rail-line-fill {
+  position: absolute;
+  left: 27px;
+  top: 18px;
+  width: 2px;
+  background: linear-gradient(180deg, #f97316 0%, #fbbf24 50%, #f59e0b 100%);
+  border-radius: 2px;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.7), 0 0 24px rgba(245, 158, 11, 0.35);
+  z-index: 1;
+  max-height: calc(100% - 30px);
+}
+
+.rail-nodes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Node row */
+.rail-node {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px 8px 0;
+  border-radius: 14px;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+.rail-node.active {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.14) 0%, rgba(245, 158, 11, 0.02) 75%, transparent 100%);
+}
+.rail-node:hover:not(.active) {
+  background: rgba(255,255,255,0.025);
+}
+.rail-node.future .node-circle { opacity: 0.85; }
+
+/* Circle */
+.node-circle-wrap {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+.node-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(20, 18, 16, 0.9);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.4);
+  position: relative;
+  z-index: 2;
+  transition: background 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.4s,
+              color 0.4s,
+              box-shadow 0.4s;
+}
+.rail-node.active .node-circle {
+  background: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
+  border-color: #fbbf24;
+  color: #1a1410;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.65),
+              0 4px 14px rgba(245, 158, 11, 0.35),
+              inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.rail-node.done .node-circle {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.55);
+  color: #34d399;
+}
+.rail-node.future .node-circle {
+  background: rgba(20, 18, 16, 0.6);
+  border-color: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.25);
+}
+
+/* Pulse rings on active node */
+.node-pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(245, 158, 11, 0.5);
+  pointer-events: none;
+  z-index: 1;
+  animation: nodePulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+.node-pulse-ring-2 { animation-delay: 1.2s; }
+@keyframes nodePulse {
+  0%   { transform: scale(1);   opacity: 0.65; }
+  100% { transform: scale(2.3); opacity: 0; }
+}
+
+/* Icon morph transition (between step-icon and Check on completion) */
+.node-icon-enter-active,
+.node-icon-leave-active {
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.node-icon-enter-from { opacity: 0; transform: scale(0.4) rotate(-120deg); }
+.node-icon-leave-to   { opacity: 0; transform: scale(0.4) rotate(120deg); position: absolute; }
+
+/* Content */
+.node-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+.node-eyebrow {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  transition: color 0.3s;
+}
+.rail-node.active .node-eyebrow { color: #fbbf24; }
+.rail-node.done .node-eyebrow { color: rgba(52, 211, 153, 0.7); }
+
+.node-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.1px;
+  transition: color 0.3s, font-weight 0.3s;
+}
+.rail-node.active .node-title { color: #fff; font-weight: 700; }
+.rail-node.done .node-title { color: rgba(255,255,255,0.75); }
+
+/* Hover chevron */
+.node-chev {
+  color: rgba(255,255,255,0.2);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.3s;
+  flex-shrink: 0;
+}
+.rail-node:hover .node-chev {
+  opacity: 1;
+  transform: translateX(0);
+  color: #fbbf24;
+}
+
+/* Footer */
+.stepper-footer {
+  display: flex;
+  align-items: stretch;
+  padding: 14px 4px 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  position: relative;
+  z-index: 1;
+  gap: 12px;
+}
+.footer-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.footer-stat:first-child {
+  border-right: 1px solid rgba(255,255,255,0.05);
+}
+.stat-num {
+  font-size: 22px;
+  font-weight: 900;
+  color: #fff;
+  font-family: 'SF Mono', 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
 }
 
 /* === CARD-BASED INPUTS === */
@@ -1353,14 +1799,18 @@ input:focus, textarea:focus {
 }
 .glass-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.04); }
 
+/* Floating bottom action dock — was pinned to right with `right: 48px`,
+   now horizontally centered via left:50% + translateX(-50%) so it sits at
+   the visual midline regardless of viewport width. */
 .content-footer {
   position: fixed;
   bottom: 32px;
-  right: 48px;
-  left: auto;
-  transform: none;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
   width: auto;
   min-width: 680px;
+  max-width: calc(100vw - 96px);
   height: 64px;
   border-radius: 20px;
   display: flex;
@@ -1431,7 +1881,7 @@ input:focus, textarea:focus {
 
 @keyframes slideUpFloat {
   from { transform: translateX(-50%) translateY(100px); opacity: 0; }
-  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+  to   { transform: translateX(-50%) translateY(0); opacity: 1; }
 }
 
 /* MATH ANIMATION HOVER */
@@ -1749,9 +2199,491 @@ input[type=number] {
 }
 .required { color: #ff5252; text-shadow: 0 0 5px rgba(255,82,82,0.5); font-weight: bold; }
 .error-label { color: #ff5252 !important; text-shadow: 0 0 5px rgba(255,82,82,0.5); }
-.error-border { 
-  border-color: #ff5252 !important; 
-  box-shadow: 0 0 0 3px rgba(255,82,82,0.2) !important; 
+.error-border {
+  border-color: #ff5252 !important;
+  box-shadow: 0 0 0 3px rgba(255,82,82,0.2) !important;
   animation: errorShake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* ═══════════════════════════════════════════
+   LIGHT THEME OVERRIDES — preserve gold/amber/orange palette + transparency.
+   Wrapper, command bar, and body all sit on the page's cream background
+   (no opaque dark fills). Stepper + field cards get warm frosted-glass
+   surfaces with visible borders.
+   ═══════════════════════════════════════════ */
+
+[data-theme="light"] .dpr-wizard-wrapper { color: var(--text-primary); }
+[data-theme="light"] .dpr-body { background: transparent; }
+[data-theme="light"] .dpr-content-area { background: transparent; }
+
+/* ─── Command bar — frosted cream, no opaque black ─── */
+[data-theme="light"] .dpr-command-bar {
+  background: rgba(255, 250, 240, 0.78);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(180, 110, 30, 0.16);
+  box-shadow: 0 4px 18px rgba(120, 80, 20, 0.04);
+}
+[data-theme="light"] .cmd-back {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #b45309;
+}
+[data-theme="light"] .cmd-back:hover {
+  background: rgba(245, 158, 11, 0.2);
+  color: #92400e;
+}
+[data-theme="light"] .cmd-title h1 { color: var(--text-primary); }
+[data-theme="light"] .cmd-version { color: #6b5840; }
+[data-theme="light"] .cmd-badge {
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+[data-theme="light"] .cmd-project-select {
+  background: rgba(255, 250, 240, 0.78);
+  border: 1px solid rgba(217, 119, 6, 0.32);
+}
+[data-theme="light"] .cmd-project-select:hover {
+  background: rgba(255, 250, 240, 0.95);
+  border-color: #d97706;
+}
+[data-theme="light"] .cmd-project-select :deep(.sla-select-trigger),
+[data-theme="light"] .cmd-project-select :deep(.sla-select-trigger:hover),
+[data-theme="light"] .cmd-project-select :deep(.sla-select-trigger.is-open) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--text-primary) !important;
+}
+[data-theme="light"] .cmd-project-select :deep(.chevron) { color: #b45309 !important; }
+[data-theme="light"] .cmd-project-select svg { color: #b45309; }
+[data-theme="light"] .cmd-save {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+[data-theme="light"] .cmd-save:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.22);
+  color: #92400e;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.22);
+}
+[data-theme="light"] .cmd-save:hover span { color: #92400e !important; }
+
+/* ─── Stepper v2 — light theme: warm cream shell, gold accents, emerald done state ─── */
+[data-theme="light"] .stepper-shell {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.88) 0%, rgba(255, 250, 240, 0.55) 100%);
+  border: 1px solid rgba(180, 110, 30, 0.22);
+  box-shadow: 0 14px 36px rgba(180, 110, 30, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+[data-theme="light"] .stepper-shell::before {
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, transparent 60%);
+}
+[data-theme="light"] .stepper-shell::after {
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.12) 0%, transparent 65%);
+}
+[data-theme="light"] .stepper-header {
+  border-bottom-color: rgba(180, 110, 30, 0.16);
+}
+[data-theme="light"] .header-eyebrow { color: #6b5840; }
+[data-theme="light"] .counter-current {
+  background: linear-gradient(135deg, #1a1410 0%, #b45309 60%, #d97706 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .counter-divider { color: rgba(180, 110, 30, 0.35); }
+[data-theme="light"] .counter-total { color: #6b5840; }
+[data-theme="light"] .ring-bg { stroke: rgba(180, 110, 30, 0.18); }
+[data-theme="light"] .ring-percent { color: #b45309; }
+
+[data-theme="light"] .rail-line {
+  background: linear-gradient(180deg, rgba(180, 110, 30, 0.12) 0%, rgba(180, 110, 30, 0.2) 50%, rgba(180, 110, 30, 0.12) 100%);
+}
+/* rail-line-fill keeps the same gold gradient on both themes — already brand */
+
+[data-theme="light"] .rail-node.active {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.22) 0%, rgba(245, 158, 11, 0.04) 75%, transparent 100%);
+}
+[data-theme="light"] .rail-node:hover:not(.active) {
+  background: rgba(245, 158, 11, 0.08);
+}
+[data-theme="light"] .node-circle {
+  background: rgba(255, 250, 240, 0.95);
+  border-color: rgba(180, 110, 30, 0.32);
+  color: rgba(107, 88, 64, 0.65);
+}
+[data-theme="light"] .rail-node.active .node-circle {
+  background: linear-gradient(135deg, #f97316 0%, #fbbf24 100%);
+  border-color: #d97706;
+  color: #ffffff;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.45),
+              0 4px 14px rgba(245, 158, 11, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+[data-theme="light"] .rail-node.done .node-circle {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: #047857;
+  color: #047857;
+}
+[data-theme="light"] .rail-node.future .node-circle {
+  background: rgba(255, 250, 240, 0.6);
+  border-color: rgba(180, 110, 30, 0.18);
+  color: rgba(107, 88, 64, 0.45);
+}
+[data-theme="light"] .node-pulse-ring {
+  border-color: rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .node-eyebrow { color: rgba(107, 88, 64, 0.5); }
+[data-theme="light"] .rail-node.active .node-eyebrow { color: #b45309; }
+[data-theme="light"] .rail-node.done .node-eyebrow { color: rgba(4, 120, 87, 0.85); }
+[data-theme="light"] .node-title { color: #6b5840; }
+[data-theme="light"] .rail-node.active .node-title { color: var(--text-primary); }
+[data-theme="light"] .rail-node.done .node-title { color: #2e4a3a; }
+[data-theme="light"] .node-chev { color: rgba(107, 88, 64, 0.35); }
+[data-theme="light"] .rail-node:hover .node-chev { color: #b45309; }
+
+[data-theme="light"] .stepper-footer {
+  border-top-color: rgba(180, 110, 30, 0.14);
+}
+[data-theme="light"] .footer-stat:first-child {
+  border-right-color: rgba(180, 110, 30, 0.14);
+}
+[data-theme="light"] .stat-num { color: var(--text-primary); }
+[data-theme="light"] .stat-label { color: #6b5840; }
+[data-theme="light"] .stepper-rail::-webkit-scrollbar-thumb {
+  background: rgba(180, 110, 30, 0.22);
+}
+
+/* ─── Section / content headers ─── */
+[data-theme="light"] .content-header { border-bottom-color: rgba(180, 110, 30, 0.14); }
+[data-theme="light"] .sec-icon {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+[data-theme="light"] .sec-info h3 { color: var(--text-primary); }
+[data-theme="light"] .sec-info p { color: #6b5840; }
+[data-theme="light"] .flex-between { border-bottom-color: rgba(180, 110, 30, 0.14); }
+
+/* ─── Generic <input> / <textarea> base
+       The wizard has a top-level `input, textarea { border: rgba(255,255,255,0.15) }`
+       rule (line 1332) that applies to EVERY input across all 15 steps —
+       including the plain inputs inside Objective / Milestone / Team / Budget /
+       Risk item-rows (no .input-card-group wrapper). On cream that white-alpha
+       border is invisible. Replace with a warm brown border that reads at rest. */
+[data-theme="light"] .dpr-wizard-wrapper input,
+[data-theme="light"] .dpr-wizard-wrapper textarea {
+  background: rgba(255, 250, 240, 0.7);
+  border: 1px solid rgba(180, 110, 30, 0.34);
+  color: var(--text-primary);
+}
+[data-theme="light"] .dpr-wizard-wrapper input::placeholder,
+[data-theme="light"] .dpr-wizard-wrapper textarea::placeholder {
+  color: rgba(107, 88, 64, 0.5);
+}
+[data-theme="light"] .dpr-wizard-wrapper input:focus,
+[data-theme="light"] .dpr-wizard-wrapper textarea:focus {
+  border-color: #d97706;
+  background: #fffaf0;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.18);
+}
+/* Inputs that sit INSIDE an .input-card-group already get the card's border —
+   strip their own border + background so we don't get a double pill. */
+[data-theme="light"] .input-card-group input,
+[data-theme="light"] .input-card-group textarea {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+[data-theme="light"] .input-card-group input:focus,
+[data-theme="light"] .input-card-group textarea:focus {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* ─── Input card groups (the core form atom)
+       Border at rest needs to be visible on cream — dark mode used a barely-
+       there 0.03 alpha because the surrounding black gave contrast for free.
+       On cream we bump to ~0.34 (warm brown) so each field reads as a discrete
+       card before focus/hover. Inner inputs share the warm border so date
+       pickers, selects, and textareas all sit consistently. ─── */
+[data-theme="light"] .input-card-group {
+  background: rgba(255, 250, 240, 0.78);
+  border: 1px solid rgba(180, 110, 30, 0.34);
+  box-shadow: 0 2px 8px rgba(180, 110, 30, 0.04);
+}
+[data-theme="light"] .input-card-group:hover,
+[data-theme="light"] .input-card-group:focus-within {
+  background: rgba(255, 250, 240, 0.96);
+  border-color: #d97706;
+  box-shadow: 0 12px 32px rgba(180, 110, 30, 0.16), 0 0 0 3px rgba(245, 158, 11, 0.14);
+}
+[data-theme="light"] .icg-icon {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+}
+[data-theme="light"] .input-card-group:focus-within .icg-icon {
+  background: rgba(245, 158, 11, 0.2);
+  color: #92400e;
+}
+[data-theme="light"] .icg-content label { color: #6b5840; }
+[data-theme="light"] .icg-content input,
+[data-theme="light"] .icg-content textarea,
+[data-theme="light"] .icg-content select {
+  color: var(--text-primary);
+  background: transparent;
+}
+[data-theme="light"] .icg-content input::placeholder,
+[data-theme="light"] .icg-content textarea::placeholder {
+  color: rgba(107, 88, 64, 0.5);
+}
+
+/* ─── Glass cards & buttons inside steps ─── */
+[data-theme="light"] .glass-card {
+  background: rgba(255, 250, 240, 0.78);
+  border: 1px solid rgba(180, 110, 30, 0.18);
+}
+[data-theme="light"] .glass-card:hover {
+  background: rgba(255, 250, 240, 0.95);
+}
+[data-theme="light"] .add-btn-premium {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #b45309;
+}
+[data-theme="light"] .add-btn-premium:hover,
+[data-theme="light"] .btn-icon-add:hover,
+[data-theme="light"] .add-btn:hover {
+  background: linear-gradient(135deg, #f59e0b, #fb923c) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.45) !important;
+}
+
+/* Budget / amount tiles */
+[data-theme="light"] .currency-symbol { color: #b45309; }
+[data-theme="light"] .bsc-info h4 { color: var(--text-primary); }
+[data-theme="light"] .bsc-info p { color: #6b5840; }
+[data-theme="light"] .bsc-total .sym { color: #b45309; }
+[data-theme="light"] .bsc-total .val { color: var(--text-primary); }
+
+/* Upload icon button */
+[data-theme="light"] .btn-icon-upload {
+  background: rgba(245, 158, 11, 0.16);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #b45309;
+}
+[data-theme="light"] .btn-icon-upload:hover {
+  background: linear-gradient(135deg, #f59e0b, #fb923c);
+  color: #fff;
+}
+
+/* ─── Floating bottom dock (content-footer) ─── */
+[data-theme="light"] .content-footer {
+  background: rgba(255, 250, 240, 0.92);
+  border: 1px solid rgba(180, 110, 30, 0.22);
+  box-shadow: 0 20px 50px rgba(120, 80, 20, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+[data-theme="light"] .footer-btn.prev {
+  background: rgba(26, 20, 16, 0.05);
+  color: var(--text-primary);
+  border-color: rgba(26, 20, 16, 0.14);
+}
+[data-theme="light"] .footer-btn.prev:hover:not(:disabled) {
+  background: rgba(245, 158, 11, 0.1);
+  color: #b45309;
+}
+[data-theme="light"] .footer-btn.next,
+[data-theme="light"] .footer-btn.submit {
+  background: linear-gradient(135deg, #f59e0b, #fb923c) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
+}
+[data-theme="light"] .footer-btn.next:hover:not(:disabled),
+[data-theme="light"] .footer-btn.submit:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 22px rgba(245, 158, 11, 0.5) !important;
+}
+[data-theme="light"] .dot {
+  background: rgba(180, 110, 30, 0.2);
+}
+[data-theme="light"] .dot.active {
+  background: #d97706;
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.5);
+}
+[data-theme="light"] .dot.done {
+  background: rgba(217, 119, 6, 0.45);
+}
+
+/* Scrollbar */
+[data-theme="light"] .nano-scroll::-webkit-scrollbar-thumb {
+  background: rgba(180, 110, 30, 0.22);
+}
+
+/* ═══════════════════════════════════════════
+   STEP 15 — REVIEW & FINALIZE (modern redesign)
+   Staggered card entrance, gold-tinted highlight tile, animated submission
+   hero with pulsing glow ring. Works on both themes — the review-card-modern
+   base uses brand-neutral surfaces, light-theme overrides flip text.
+   ═══════════════════════════════════════════ */
+
+.review-grid-modern {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 32px;
+}
+.review-card-modern {
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 18px 18px 20px;
+  overflow: hidden;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.5s, background 0.5s, box-shadow 0.5s;
+  animation: reviewCardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--rc-i, 0) * 60ms + 80ms);
+}
+.review-card-modern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 60%, rgba(245, 158, 11, 0.06) 100%);
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+}
+.review-card-modern:hover {
+  transform: translateY(-6px);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 16px 36px rgba(245, 158, 11, 0.16);
+}
+.review-card-modern:hover::before { opacity: 1; }
+.review-card-modern.highlight {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(251, 191, 36, 0.08) 100%);
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 10px 28px rgba(245, 158, 11, 0.22);
+}
+.review-card-modern.highlight .rc-val { color: #f59e0b; }
+@keyframes reviewCardIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.submission-check-modern {
+  position: relative;
+  padding: 64px 40px 56px;
+  border-radius: 28px;
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  background: radial-gradient(circle at 50% 30%, rgba(245, 158, 11, 0.12) 0%, transparent 60%),
+              rgba(255, 255, 255, 0.02);
+  text-align: center;
+  overflow: hidden;
+  animation: submissionIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.9s;
+}
+.submission-ring {
+  position: absolute;
+  top: 56px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.22) 0%, transparent 70%);
+  animation: ringPulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+.submission-check-modern .confetti-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.16), rgba(251, 191, 36, 0.1));
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  margin: 0 auto 28px;
+  color: #f59e0b;
+  filter: drop-shadow(0 0 24px rgba(245, 158, 11, 0.45));
+  animation: confettiFloat 4s ease-in-out infinite;
+}
+.submission-hero {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  margin: 0 0 14px;
+  color: #fff;
+  background: linear-gradient(120deg, #fff 0%, #fbbf24 50%, #fff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: heroShimmer 5s linear infinite;
+}
+.submission-sub {
+  font-size: 15px;
+  max-width: 460px;
+  margin: 0 auto;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.6;
+}
+@keyframes submissionIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ringPulse {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.6; }
+  50%      { transform: translateX(-50%) scale(1.18); opacity: 0.9; }
+}
+@keyframes confettiFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+@keyframes heroShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ─── Light theme overrides for Step 15 ─── */
+[data-theme="light"] .review-card-modern {
+  background: rgba(255, 250, 240, 0.78);
+  border: 1px solid rgba(180, 110, 30, 0.28);
+  box-shadow: 0 4px 14px rgba(180, 110, 30, 0.06);
+}
+[data-theme="light"] .review-card-modern:hover {
+  border-color: rgba(245, 158, 11, 0.55);
+  box-shadow: 0 16px 36px rgba(245, 158, 11, 0.22);
+}
+[data-theme="light"] .review-card-modern .rc-label { color: #6b5840; }
+[data-theme="light"] .review-card-modern .rc-val { color: var(--text-primary); }
+[data-theme="light"] .review-card-modern.highlight {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(251, 191, 36, 0.1) 100%);
+  border-color: rgba(217, 119, 6, 0.5);
+}
+[data-theme="light"] .review-card-modern.highlight .rc-val { color: #b45309; }
+
+[data-theme="light"] .submission-check-modern {
+  background: radial-gradient(circle at 50% 30%, rgba(245, 158, 11, 0.18) 0%, transparent 60%),
+              rgba(255, 250, 240, 0.85);
+  border-color: rgba(245, 158, 11, 0.35);
+  box-shadow: 0 16px 40px rgba(180, 110, 30, 0.12);
+}
+[data-theme="light"] .submission-hero {
+  background: linear-gradient(120deg, #1a1410 0%, #b45309 50%, #1a1410 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .submission-sub { color: #6b5840; }
+[data-theme="light"] .submission-check-modern .confetti-icon {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(251, 191, 36, 0.14));
+  border-color: rgba(217, 119, 6, 0.45);
+  color: #b45309;
+  filter: drop-shadow(0 0 28px rgba(245, 158, 11, 0.4));
 }
 </style>

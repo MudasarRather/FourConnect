@@ -560,4 +560,35 @@ onMounted(async () => {
   color: var(--hr-text-muted);
   font-size: 12px;
 }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+/* Sit on the page background — the user wants the cream overlay removed.
+   Border becomes the only definition. */
+[data-theme="light"] .pipe-shell-card {
+  background: transparent;
+  border-color: rgba(40, 25, 10, 0.16);
+}
+[data-theme="light"] .pipe-grid thead th { color: #92400e; }
+[data-theme="light"] .pos-title { color: #1a1410; }
+[data-theme="light"] .pos-sub { color: #b45309; }
+[data-theme="light"] .pos-meta { color: #6b5840; }
+[data-theme="light"] .pipe-row:hover .pos-cell { border-left-color: #d97706; }
+[data-theme="light"] .cell-drawer-head { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .cell-drawer-head h3 { color: #1a1410; }
+[data-theme="light"] .cd-eyebrow { color: #b45309; }
+[data-theme="light"] .cd-sub { color: #6b5840; }
+[data-theme="light"] .cell-drawer-head .close-btn {
+  background: rgba(255, 250, 240, 0.72);
+  border-color: rgba(40, 25, 10, 0.16);
+  color: #6b5840;
+}
+[data-theme="light"] .cell-drawer-head .close-btn:hover { color: #b45309; }
+[data-theme="light"] .cd-item {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .cd-name { color: #1a1410; }
+[data-theme="light"] .cd-meta { color: #6b5840; }
+[data-theme="light"] .cd-meta .rec-mono { color: #b45309; }
+[data-theme="light"] .empty-mini { color: #6b5840; }
 </style>

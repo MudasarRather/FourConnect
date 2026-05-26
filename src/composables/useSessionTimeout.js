@@ -2,10 +2,16 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 const SESSION_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes
-const ACTIVITY_EVENTS = ['mousedown', 'keydown', 'scroll', 'touchstart']
+// `mousemove` + `click` were missing — a user reading the page and moving
+// the cursor around (without typing or scrolling) was treated as idle and
+// got logged out mid-task. `mousemove` is throttled below so it doesn't
+// thrash the timer on every pixel.
+const ACTIVITY_EVENTS = ['mousedown', 'click', 'keydown', 'scroll', 'wheel', 'touchstart', 'mousemove']
 
 let timeoutId = null
 let lastActivity = Date.now()
+let lastMouseMoveReset = 0
+const MOUSEMOVE_THROTTLE_MS = 5000   // only reset once every 5s for mousemove
 let isLoggedOut = false
 
 export function useSessionTimeout() {
@@ -34,7 +40,15 @@ export function useSessionTimeout() {
         }
     }
 
-    const resetTimer = () => {
+    const resetTimer = (event) => {
+        // Throttle mousemove specifically — it fires per pixel and would
+        // call clearTimeout/setTimeout thousands of times per minute.
+        if (event && event.type === 'mousemove') {
+            const now = Date.now()
+            if (now - lastMouseMoveReset < MOUSEMOVE_THROTTLE_MS) return
+            lastMouseMoveReset = now
+        }
+
         lastActivity = Date.now()
         isWarningShown.value = false
         isLoggedOut = false

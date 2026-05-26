@@ -21,7 +21,7 @@
           </div>
         </header>
         <div class="chart-wrap">
-          <Line v-if="hasTrend" :data="trendData" :options="trendOptions" />
+          <Line v-if="hasTrend" :key="`trend-${theme}`" :data="trendData" :options="trendOptions" />
           <div v-else class="empty-mini">
             <LineChart :size="20" /> <span>No trend data yet</span>
           </div>
@@ -42,31 +42,52 @@
         <div v-if="!sources.length" class="empty-mini">
           <Users :size="20" /> <span>No source data yet</span>
         </div>
-        <div v-else class="sources-row">
-          <div class="donut-wrap">
-            <Doughnut :data="sourcesData" :options="sourcesOptions" class="sources-donut" />
-            <div class="donut-center">
-              <span class="donut-count">{{ sourcesTotal }}</span>
-              <span class="donut-label">Total</span>
+        <!-- Ultra-modern animated source visualization: pulsing orbital
+             totals on the left + glowing horizontal source bars on the
+             right with shimmer + drift. Replaces the clip-prone donut. -->
+        <div v-else class="sources-pulse-row">
+          <div class="orb-stack">
+            <div class="orb-core-wrap">
+              <span class="orb-pulse" />
+              <span class="orb-pulse delay-1" />
+              <span class="orb-pulse delay-2" />
+              <div class="orb-core">
+                <span class="orb-total">{{ sourcesTotal }}</span>
+                <span class="orb-label">SOURCES</span>
+              </div>
+            </div>
+            <div class="orb-meta">
+              <span class="meta-row"><span class="meta-dot meta-dot-gold" />{{ sources.length }} channels</span>
+              <span class="meta-row"><span class="meta-dot meta-dot-orange" />Top: {{ topSourceLabel }}</span>
             </div>
           </div>
-          <ul class="sources-legend">
+          <ul class="src-list">
             <li
               v-for="(s, i) in sources"
               :key="s.stage"
-              class="src-row"
+              class="src-tile"
               :style="{ '--i': i, '--c': sourceColor(i) }"
             >
-              <span class="leg-dot" :style="{ background: sourceColor(i) }" />
-              <span class="leg-label">{{ humanSource(s.stage) }}</span>
-              <span class="leg-bar">
-                <span class="leg-bar-fill"
-                  :style="{
-                    '--final': pct(s.count, sourcesTotal) + '%',
-                    background: sourceColor(i),
-                  }" />
-              </span>
-              <span class="leg-count rec-mono">{{ s.count }}</span>
+              <span class="tile-dot" />
+              <div class="tile-body">
+                <div class="tile-head">
+                  <span class="tile-name">{{ humanSource(s.stage) }}</span>
+                  <span class="tile-count rec-mono">{{ s.count }}</span>
+                </div>
+                <div class="tile-track">
+                  <span
+                    class="tile-fill"
+                    :style="{
+                      '--final': pct(s.count, sourcesTotal) + '%',
+                      background: `linear-gradient(90deg, ${sourceColor(i)}, ${sourceColor(i)}cc)`,
+                      boxShadow: `0 0 14px ${sourceColor(i)}55`,
+                    }"
+                  >
+                    <span class="tile-shine" />
+                  </span>
+                </div>
+                <div class="tile-pct rec-mono">{{ pct(s.count, sourcesTotal).toFixed(0) }}%</div>
+              </div>
             </li>
           </ul>
         </div>
@@ -91,7 +112,7 @@
         </div>
       </header>
       <div class="chart-wrap large">
-        <Bar v-if="hasDept" :data="deptData" :options="deptOptions" />
+        <Bar v-if="hasDept" :key="`dept-${theme}`" :data="deptData" :options="deptOptions" />
         <div v-else class="empty-mini">
           <Building2 :size="20" /> <span>No department data yet</span>
         </div>
@@ -153,25 +174,23 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import {
   Building2, LineChart, GitBranch, Users, Clock, Target,
   Award, ArrowUp, ArrowDown,
 } from 'lucide-vue-next'
 
-import { Line, Bar, Doughnut } from 'vue-chartjs'
+import { Line, Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale, LinearScale,
   PointElement, LineElement, BarElement,
-  ArcElement,
   Title, Tooltip, Legend, Filler,
 } from 'chart.js'
 
 ChartJS.register(
   CategoryScale, LinearScale,
   PointElement, LineElement, BarElement,
-  ArcElement,
   Title, Tooltip, Legend, Filler,
 )
 
@@ -182,6 +201,44 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
 })
 
+// ─── Theme reactivity for Chart.js (CSS overrides can't reach canvas labels) ───
+const theme = ref(
+  (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme')) || 'dark'
+)
+let themeObserver = null
+onMounted(() => {
+  if (typeof MutationObserver === 'undefined') return
+  themeObserver = new MutationObserver(() => {
+    theme.value = document.documentElement.getAttribute('data-theme') || 'dark'
+  })
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+})
+onBeforeUnmount(() => themeObserver?.disconnect())
+
+const chartTokens = computed(() => theme.value === 'light'
+  ? {
+      tick:     '#6b5840',
+      gridLine: 'rgba(40, 25, 10, 0.08)',
+      border:   'rgba(40, 25, 10, 0.14)',
+      tooltipBg: 'rgba(255, 250, 240, 0.97)',
+      tooltipTitle: '#1a1410',
+      tooltipBody:  '#44362a',
+      tooltipBorder: 'rgba(217, 119, 6, 0.42)',
+      pointBorder: 'rgba(255, 250, 240, 0.95)',
+      donutBorder: 'rgba(255, 250, 240, 0.95)',
+    }
+  : {
+      tick:     '#8e8e93',
+      gridLine: 'rgba(255,255,255,0.04)',
+      border:   'rgba(255,255,255,0.06)',
+      tooltipBg: 'rgba(14, 14, 16, 0.96)',
+      tooltipTitle: '#f5f5f7',
+      tooltipBody:  '#c5c5c8',
+      tooltipBorder: 'rgba(251, 191, 36, 0.32)',
+      pointBorder: 'rgba(8,8,11,0.95)',
+      donutBorder: 'rgba(8,8,11,0.95)',
+    })
+
 const stats = computed(() => props.dashboard?.stats || {})
 const funnel = computed(() => props.dashboard?.funnel || [])
 const dept = computed(() => props.dashboard?.department_hiring || [])
@@ -190,6 +247,11 @@ const sources = computed(() => props.dashboard?.sources_distribution || [])
 
 const sourcesTotal = computed(() =>
   sources.value.reduce((acc, s) => acc + (s.count || 0), 0))
+
+const topSourceLabel = computed(() => {
+  const sorted = [...(sources.value || [])].sort((a, b) => (b.count || 0) - (a.count || 0))
+  return sorted[0] ? humanSource(sorted[0].stage) : '—'
+})
 
 const kpiChips = computed(() => [
   { key: 'tth',  label: 'Time to Hire',   value: stats.value.avg_time_to_hire_days || 0, tone: 'gold',   icon: Clock,  suffix: 'd' },
@@ -225,7 +287,7 @@ const trendData = computed(() => ({
       borderColor: '#fbbf24',
       backgroundColor: (ctx) => makeAreaGradient(ctx.chart.ctx, ctx.chart.chartArea, '#fbbf24', 0.45, 0),
       pointBackgroundColor: '#fbbf24',
-      pointBorderColor: 'rgba(8,8,11,0.95)',
+      pointBorderColor: chartTokens.value.pointBorder,
       pointBorderWidth: 2,
       pointRadius: 4,
       pointHoverRadius: 7,
@@ -239,7 +301,7 @@ const trendData = computed(() => ({
       borderColor: '#fb923c',
       backgroundColor: (ctx) => makeAreaGradient(ctx.chart.ctx, ctx.chart.chartArea, '#fb923c', 0.42, 0),
       pointBackgroundColor: '#fb923c',
-      pointBorderColor: 'rgba(8,8,11,0.95)',
+      pointBorderColor: chartTokens.value.pointBorder,
       pointBorderWidth: 2,
       pointRadius: 4,
       pointHoverRadius: 7,
@@ -250,7 +312,7 @@ const trendData = computed(() => ({
   ],
 }))
 
-const trendOptions = {
+const trendOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   interaction: { mode: 'index', intersect: false },
@@ -258,10 +320,10 @@ const trendOptions = {
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: 'rgba(14, 14, 16, 0.96)',
-      titleColor: '#f5f5f7',
-      bodyColor: '#c5c5c8',
-      borderColor: 'rgba(251, 191, 36, 0.32)',
+      backgroundColor: chartTokens.value.tooltipBg,
+      titleColor: chartTokens.value.tooltipTitle,
+      bodyColor: chartTokens.value.tooltipBody,
+      borderColor: chartTokens.value.tooltipBorder,
       borderWidth: 1,
       padding: 12,
       cornerRadius: 10,
@@ -273,52 +335,24 @@ const trendOptions = {
   },
   scales: {
     x: {
-      ticks: { color: '#8e8e93', font: { size: 11, family: 'ui-monospace, monospace' } },
+      ticks: { color: chartTokens.value.tick, font: { size: 11, family: 'ui-monospace, monospace' } },
       grid: { display: false },
-      border: { color: 'rgba(255,255,255,0.06)' },
+      border: { color: chartTokens.value.border },
     },
     y: {
-      ticks: { color: '#8e8e93', font: { size: 11 }, precision: 0 },
-      grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false },
+      ticks: { color: chartTokens.value.tick, font: { size: 11 }, precision: 0 },
+      grid: { color: chartTokens.value.gridLine, drawTicks: false },
       border: { display: false },
       beginAtZero: true,
     },
   },
-}
+}))
 
 const SOURCE_COLORS = ['#fbbf24', '#f59e0b', '#fb923c', '#ea580c', '#fde68a', '#f97316', '#dc2626', '#34d399', '#9ca3af']
 const sourceColor = (i) => SOURCE_COLORS[i % SOURCE_COLORS.length]
 
-const sourcesData = computed(() => ({
-  labels: sources.value.map(s => humanSource(s.stage)),
-  datasets: [{
-    data: sources.value.map(s => s.count),
-    backgroundColor: sources.value.map((_, i) => sourceColor(i)),
-    borderColor: 'rgba(8,8,11,0.95)',
-    borderWidth: 3,
-    hoverOffset: 12,
-    hoverBorderColor: 'rgba(251, 191, 36, 0.6)',
-  }],
-}))
-
-const sourcesOptions = {
-  responsive: true,
-  maintainAspectRatio: false,
-  cutout: '68%',
-  animation: { animateRotate: true, animateScale: true, duration: 1200, easing: 'easeOutQuart' },
-  plugins: {
-    legend: { display: false },
-    tooltip: {
-      backgroundColor: 'rgba(14, 14, 16, 0.96)',
-      titleColor: '#f5f5f7',
-      bodyColor: '#c5c5c8',
-      borderColor: 'rgba(251, 191, 36, 0.32)',
-      borderWidth: 1,
-      padding: 12,
-      cornerRadius: 10,
-    },
-  },
-}
+// (Donut chart removed in favor of the animated source-tile visualization;
+//  sourcesData/sourcesOptions no longer needed.)
 
 const hasDept = computed(() => dept.value.length > 0)
 const deptData = computed(() => ({
@@ -347,17 +381,17 @@ const deptData = computed(() => ({
     },
   ],
 }))
-const deptOptions = {
+const deptOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   animation: { duration: 1100, easing: 'easeOutQuart' },
   plugins: {
     legend: { display: false },
     tooltip: {
-      backgroundColor: 'rgba(14, 14, 16, 0.96)',
-      titleColor: '#f5f5f7',
-      bodyColor: '#c5c5c8',
-      borderColor: 'rgba(251, 191, 36, 0.32)',
+      backgroundColor: chartTokens.value.tooltipBg,
+      titleColor: chartTokens.value.tooltipTitle,
+      bodyColor: chartTokens.value.tooltipBody,
+      borderColor: chartTokens.value.tooltipBorder,
       borderWidth: 1,
       padding: 12,
       cornerRadius: 10,
@@ -365,18 +399,18 @@ const deptOptions = {
   },
   scales: {
     x: {
-      ticks: { color: '#8e8e93', font: { size: 11 } },
+      ticks: { color: chartTokens.value.tick, font: { size: 11 } },
       grid: { display: false },
-      border: { color: 'rgba(255,255,255,0.06)' },
+      border: { color: chartTokens.value.border },
     },
     y: {
-      ticks: { color: '#8e8e93', font: { size: 11 }, precision: 0 },
-      grid: { color: 'rgba(255,255,255,0.04)', drawTicks: false },
+      ticks: { color: chartTokens.value.tick, font: { size: 11 }, precision: 0 },
+      grid: { color: chartTokens.value.gridLine, drawTicks: false },
       border: { display: false },
       beginAtZero: true,
     },
   },
-}
+}))
 
 // ─── Funnel helpers ───
 const maxFunnel = computed(() => Math.max(1, ...funnel.value.map(f => f.count)))
@@ -544,42 +578,194 @@ const shortMonth = (m) => {
   font-size: 12px;
 }
 
-/* ─── Sources donut with center label and animated bars ─── */
-.sources-row {
+/* ─── Sources: orbital pulse + animated source tiles ─── */
+.sources-pulse-row {
   display: grid;
   grid-template-columns: 220px 1fr;
-  gap: 22px;
+  gap: 28px;
   align-items: center;
 }
-.donut-wrap {
-  position: relative;
-  width: 220px; height: 220px;
+
+.orb-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
 }
-.sources-donut { width: 220px !important; height: 220px !important; }
-.donut-center {
-  position: absolute;
-  inset: 0;
+.orb-core-wrap {
+  position: relative;
+  width: 168px; height: 168px;
   display: grid; place-items: center;
+}
+.orb-pulse {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(251, 191, 36, 0.55);
+  animation: orb-pulse-out 3.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
   pointer-events: none;
 }
-.donut-center .donut-count {
-  font-size: 30px;
-  font-weight: 800;
-  color: var(--hr-text);
-  letter-spacing: -0.02em;
-  background: var(--hr-gradient-hero);
-  -webkit-background-clip: text;
-          background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 4px 12px rgba(251, 146, 60, 0.4));
+.orb-pulse.delay-1 { animation-delay: 1.1s; border-color: rgba(251, 146, 60, 0.50); }
+.orb-pulse.delay-2 { animation-delay: 2.2s; border-color: rgba(234, 88, 12, 0.40); }
+@keyframes orb-pulse-out {
+  0%   { transform: scale(0.55); opacity: 0.9; }
+  80%  { transform: scale(1.30); opacity: 0.0; }
+  100% { transform: scale(1.30); opacity: 0.0; }
 }
-.donut-center .donut-label {
-  margin-top: 4px;
-  font-size: 10px;
+
+.orb-core {
+  position: relative;
+  width: 116px; height: 116px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: radial-gradient(circle at 35% 30%, #fde68a 0%, #fbbf24 30%, #fb923c 75%, #ea580c 100%);
+  box-shadow:
+    0 0 0 1px rgba(251, 191, 36, 0.45) inset,
+    0 0 40px -4px rgba(251, 146, 60, 0.65),
+    0 18px 36px -16px rgba(234, 88, 12, 0.55);
+  animation: orb-core-breath 5s ease-in-out infinite;
+}
+@keyframes orb-core-breath {
+  0%, 100% { transform: scale(1);    filter: brightness(1.0); }
+  50%      { transform: scale(1.04); filter: brightness(1.12); }
+}
+.orb-total {
+  font-family: var(--rec-mono);
+  font-size: 38px;
+  font-weight: 800;
+  color: #1a1410;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.orb-label {
+  margin-top: 6px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: rgba(26, 20, 16, 0.72);
+}
+
+.orb-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+.meta-row {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11.5px;
+  color: var(--hr-text-secondary);
+  font-weight: 600;
+}
+.meta-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+.meta-dot-gold   { background: #fbbf24; color: #fbbf24; }
+.meta-dot-orange { background: #fb923c; color: #fb923c; }
+
+/* Source tiles */
+.src-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.src-tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 14px 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  overflow: hidden;
+  animation: tile-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms);
+  transition: border-color 220ms var(--hr-spring), background 220ms var(--hr-spring), transform 220ms var(--hr-spring);
+}
+.src-tile:hover {
+  border-color: var(--c);
+  transform: translateX(2px);
+  background: color-mix(in srgb, var(--c) 6%, rgba(255, 255, 255, 0.02));
+}
+@keyframes tile-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.tile-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 10px var(--c);
+  align-self: start;
+  margin-top: 6px;
+}
+.tile-body {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 'name count' 'track pct';
+  gap: 4px 12px;
+  align-items: center;
+}
+.tile-name {
+  grid-area: name;
+  font-size: 12.5px;
   font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  color: var(--hr-text);
+  letter-spacing: -0.005em;
+}
+.tile-count {
+  grid-area: count;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--c);
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 12px color-mix(in srgb, var(--c) 35%, transparent);
+}
+.tile-track {
+  grid-area: track;
+  position: relative;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.tile-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0;
+  border-radius: inherit;
+  animation: tile-fill-grow 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(var(--i, 0) * 70ms + 200ms);
+}
+@keyframes tile-fill-grow { to { width: var(--final, 100%); } }
+.tile-shine {
+  position: absolute;
+  top: 0; left: -40%;
+  width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  filter: blur(1px);
+  animation: tile-shine-pan 2.8s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 70ms + 1.2s);
+}
+@keyframes tile-shine-pan {
+  0%   { transform: translateX(0); }
+  60%  { transform: translateX(360%); }
+  100% { transform: translateX(360%); }
+}
+.tile-pct {
+  grid-area: pct;
+  font-size: 10.5px;
+  font-weight: 700;
   color: var(--hr-text-muted);
+  text-align: right;
+  letter-spacing: 0.04em;
 }
 .sources-legend { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
 .src-row {
@@ -693,8 +879,85 @@ const shortMonth = (m) => {
 
 @media (max-width: 1100px) {
   .ana-grid { grid-template-columns: 1fr; }
-  .sources-row { grid-template-columns: 1fr; }
-  .donut-wrap { margin: 0 auto; }
+  .sources-pulse-row { grid-template-columns: 1fr; gap: 18px; }
+  .orb-stack { flex-direction: row; justify-content: center; }
   .funnel-row { grid-template-columns: 100px 1fr 70px; gap: 10px; }
 }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+[data-theme="light"] .glass-card {
+  background:
+    linear-gradient(180deg, rgba(255, 250, 240, 0.85) 0%, rgba(255, 244, 220, 0.92) 100%);
+  border-color: rgba(40, 25, 10, 0.10);
+  box-shadow:
+    0 24px 60px -32px rgba(40, 25, 10, 0.30),
+    0 0 0 1px rgba(217, 119, 6, 0.06) inset;
+}
+[data-theme="light"] .glass-card::before {
+  background: linear-gradient(135deg,
+    rgba(217, 119, 6, 0.40) 0%,
+    rgba(251, 146, 60, 0.18) 35%,
+    rgba(40, 25, 10, 0.06) 60%,
+    rgba(217, 119, 6, 0.32) 100%);
+  opacity: 0.65;
+}
+[data-theme="light"] .card-glow {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(251, 191, 36, 0.22), transparent 70%);
+}
+[data-theme="light"] .glass-card:nth-of-type(2n) .card-glow {
+  background: radial-gradient(50% 50% at 50% 50%, rgba(251, 146, 60, 0.22), transparent 70%);
+}
+[data-theme="light"] .card-title { color: #1a1410; }
+[data-theme="light"] .title-icon {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.26), rgba(251, 146, 60, 0.14));
+  border-color: rgba(217, 119, 6, 0.42);
+  color: #b45309;
+}
+[data-theme="light"] .card-sub { color: #6b5840; }
+[data-theme="light"] .trend-legend { color: #6b5840; }
+[data-theme="light"] .lg {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(40, 25, 10, 0.12);
+  color: #44362a;
+}
+[data-theme="light"] .empty-mini { color: #6b5840; }
+
+/* Sources — animated orbital + tile visualization */
+[data-theme="light"] .orb-pulse { border-color: rgba(217, 119, 6, 0.60); }
+[data-theme="light"] .orb-pulse.delay-1 { border-color: rgba(251, 146, 60, 0.55); }
+[data-theme="light"] .orb-pulse.delay-2 { border-color: rgba(234, 88, 12, 0.45); }
+[data-theme="light"] .meta-row { color: #44362a; }
+[data-theme="light"] .src-tile {
+  background: rgba(255, 250, 240, 0.65);
+  border-color: rgba(40, 25, 10, 0.12);
+}
+[data-theme="light"] .src-tile:hover {
+  background: color-mix(in srgb, var(--c) 14%, rgba(255, 250, 240, 0.65));
+}
+[data-theme="light"] .tile-name { color: #1a1410; }
+[data-theme="light"] .tile-track { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .tile-pct { color: #6b5840; }
+[data-theme="light"] .tile-shine {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+}
+
+/* Funnel */
+[data-theme="light"] .f-stage { color: #44362a; }
+[data-theme="light"] .f-track {
+  background: rgba(255, 244, 220, 0.55);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .f-fill { color: #fff; }
+[data-theme="light"] .f-count { text-shadow: 0 1px 0 rgba(0, 0, 0, 0.20); }
+[data-theme="light"] .conv-chip {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.42);
+  color: #047857;
+}
+[data-theme="light"] .conv-chip.neg {
+  background: rgba(220, 38, 38, 0.12);
+  border-color: rgba(220, 38, 38, 0.42);
+  color: #b91c1c;
+}
+[data-theme="light"] .dim { color: #6b5840; }
 </style>

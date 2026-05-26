@@ -129,11 +129,19 @@ const roundOptions = [
   { value: 'FINAL', label: 'Final' },
 ]
 
+// Applications whose pipeline is already closed shouldn't be schedulable:
+// you can't interview someone who already joined, was rejected, or
+// withdrew. Filter them out of the picker rather than relying on the
+// caller to do it.
+const SCHEDULE_BLOCKED_STAGES = new Set(['JOINED', 'REJECTED', 'WITHDRAWN'])
+
 const appOptions = computed(() =>
-  (props.applications || []).map(a => ({
-    value: a.id,
-    label: `${a.candidate_name || '—'} · ${a.position_title || '—'} (${a.application_code})`,
-  }))
+  (props.applications || [])
+    .filter(a => !SCHEDULE_BLOCKED_STAGES.has(a.current_stage))
+    .map(a => ({
+      value: a.id,
+      label: `${a.candidate_name || '—'} · ${a.position_title || '—'} (${a.application_code})`,
+    }))
 )
 const panelOptions = computed(() =>
   (props.panels || []).map(p => ({ value: p.id, label: p.name }))

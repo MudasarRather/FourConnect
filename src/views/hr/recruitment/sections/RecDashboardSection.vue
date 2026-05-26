@@ -653,4 +653,67 @@ watch(() => props.dashboard, () => {
 @media (max-width: 600px) {
   .kpi-cards { grid-template-columns: 1fr; }
 }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+/* Sit on the page background instead of painting a separate cream panel —
+   the user wants the overlay removed. Keep the border for definition. */
+[data-theme="light"] .dash-card {
+  background: transparent;
+  border-color: rgba(40, 25, 10, 0.10);
+  box-shadow: none;
+}
+[data-theme="light"] .card-title { color: #1a1410; }
+[data-theme="light"] .card-sub { color: #6b5840; }
+
+/* Pipeline table */
+[data-theme="light"] .pipe-grid thead th { color: #92400e; }
+[data-theme="light"] .pipe-grid .pos-th { color: #92400e; }
+[data-theme="light"] .pos-title { color: #1a1410; }
+[data-theme="light"] .pos-sub { color: #b45309; }
+
+/* KPI cards */
+[data-theme="light"] .kpi-card {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .kpi-card:hover {
+  border-color: rgba(217, 119, 6, 0.45);
+}
+[data-theme="light"] .kpi-label { color: #92400e; }
+[data-theme="light"] .kpi-value { color: #1a1410; }
+[data-theme="light"] .kpi-delta.pos {
+  background: rgba(16, 185, 129, 0.14);
+  color: #047857;
+}
+[data-theme="light"] .kpi-delta.neg {
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+}
+
+/* Bottom grid (upcoming interviews + sources) */
+[data-theme="light"] .upcoming-card {
+  background: rgba(255, 244, 220, 0.55);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .upcoming-item {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .upcoming-item:hover {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.42);
+}
+[data-theme="light"] .date-pill {
+  background: rgba(251, 191, 36, 0.20);
+  border-color: rgba(217, 119, 6, 0.42);
+  color: #b45309;
+}
+[data-theme="light"] .ie-title { color: #1a1410; }
+[data-theme="light"] .ie-meta { color: #6b5840; }
+[data-theme="light"] .ie-meta .mono { color: #b45309; }
+[data-theme="light"] .empty-mini { color: #6b5840; }
+
+/* Sources donut */
+[data-theme="light"] .sources-legend li { color: #44362a; }
+[data-theme="light"] .leg-count { color: #1a1410; }
 </style>

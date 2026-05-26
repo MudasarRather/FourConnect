@@ -96,14 +96,14 @@ onBeforeUnmount(() => io?.disconnect())
               border-color 220ms var(--hr-spring),
               backdrop-filter 220ms var(--hr-spring);
 }
-/* When the topbar sticks (page scrolled), gently fade in a transparent
-   blur so the title stays readable against scrolling content — but no
-   distinct rectangular background panel. */
+/* User requested no background panel on the stuck state — the topbar
+   should always sit directly on the page background. We keep the rule
+   so the .stuck data-attribute remains a no-op hook for future tweaks. */
 .hr-topbar.stuck {
-  background: linear-gradient(180deg, rgba(8, 8, 10, 0.42), rgba(8, 8, 10, 0.22) 75%, transparent);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
-  border-bottom-color: rgba(255, 255, 255, 0.04);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom-color: transparent;
 }
 
 .row {
@@ -275,5 +275,58 @@ onBeforeUnmount(() => io?.disconnect())
   .row { padding: 10px 16px; }
   .section-title { font-size: 18px; }
   .tour-cluster { display: none; }
+}
+
+/* ─── LIGHT THEME OVERRIDES — warm cream + amber/golden palette ─────────── */
+/* When the topbar sticks under the global nav, the page body would scroll
+   through it on light theme — because the bar is transparent on cream the
+   table rows below are visible through the title. Apply a frosted cream
+   surface in the stuck state to keep the title row legible. */
+[data-theme="light"] .hr-topbar.stuck {
+  background: rgba(255, 250, 240, 0.78);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+  box-shadow: 0 8px 20px -16px rgba(40, 25, 10, 0.22);
+}
+[data-theme="light"] .crumb-row {
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .crumb-chip {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: #6b5840;
+}
+[data-theme="light"] .crumb-chip:not(.current):hover {
+  border-color: rgba(217, 119, 6, 0.45);
+  color: #1a1410;
+}
+[data-theme="light"] .crumb-chip.current {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.45);
+  color: #b45309;
+}
+[data-theme="light"] .crumb-sep { color: #92400e; }
+/* Title gradient — white→cream is invisible on cream; switch to amber-brown */
+[data-theme="light"] .section-title {
+  background: linear-gradient(120deg, #1a1410 0%, #92400e 70%, #b45309 100%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+[data-theme="light"] .section-subtitle { color: #6b5840; }
+[data-theme="light"] .tour-text { color: #92400e; }
+[data-theme="light"] .tour-dot { background: rgba(40, 25, 10, 0.16); }
+[data-theme="light"] .tour-dot.active {
+  background: #d97706;
+  box-shadow: 0 0 6px rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .cta-primary {
+  color: #fff;
+  box-shadow: 0 8px 20px -6px rgba(217, 119, 6, 0.45),
+              0 0 24px rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .cta-primary:hover {
+  box-shadow: 0 12px 28px -6px rgba(217, 119, 6, 0.55),
+              0 0 36px rgba(217, 119, 6, 0.28);
 }
 </style>

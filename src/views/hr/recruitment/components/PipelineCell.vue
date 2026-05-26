@@ -151,4 +151,30 @@ const onDrop = (e) => {
 
 .pipe-arrow { color: var(--hr-text-muted); transition: color 220ms; }
 .pipe-cell:hover .pipe-arrow:not(.is-empty *) { color: var(--stage-color); }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+[data-theme="light"] .pipe-cell {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #1a1410;
+}
+[data-theme="light"] .pipe-cell.is-clickable:not(.is-empty):hover {
+  background: rgba(255, 244, 220, 0.85);
+}
+/* Empty cells: a clearly visible dashed amber outline on cream so the
+   stage "slot" reads as a placeholder, with a faint amber zero. */
+[data-theme="light"] .pipe-cell.is-empty {
+  background: rgba(255, 250, 240, 0.40);
+  border-color: rgba(217, 119, 6, 0.28);
+  color: rgba(180, 83, 9, 0.45);
+}
+[data-theme="light"] .pipe-cell.is-empty .pipe-arrow { color: rgba(180, 83, 9, 0.32); }
+/* Active pill: the gold gradient stays vivid — match the dark-theme
+   contrast model with dark text instead of white, so the yellow reads. */
+[data-theme="light"] .pipe-cell.is-active {
+  color: #1a1410;
+  box-shadow: 0 8px 22px -6px rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .pipe-cell.is-active .pipe-arrow { color: #1a1410; }
+[data-theme="light"] .pipe-arrow { color: #6b5840; }
 </style>

@@ -577,4 +577,71 @@ const onConfirm = () => {
   .lc-modal-fields { grid-template-columns: 1fr; }
   .modal-field.full { grid-column: span 1; }
 }
+
+/* ─── LIGHT THEME OVERRIDES — warm cream + amber/golden palette ─────────── */
+[data-theme="light"] .lc-modal-backdrop {
+  background: rgba(40, 25, 10, 0.38);
+}
+[data-theme="light"] .lc-modal-card {
+  background: linear-gradient(180deg,
+    rgba(255, 250, 240, 0.97),
+    rgba(255, 246, 226, 0.97));
+  border: 1px solid rgba(217, 119, 6, 0.28);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.60) inset,
+    0 30px 90px -20px rgba(40, 25, 10, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.40);
+}
+[data-theme="light"] .aurora {
+  background:
+    radial-gradient(70% 100% at 0% 0%, rgba(217, 119, 6, 0.18), transparent 60%),
+    radial-gradient(50% 80% at 100% 0%, rgba(249, 115, 22, 0.14), transparent 60%);
+}
+[data-theme="light"] .lc-modal-head { border-bottom-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .lc-modal-head.tone-neutral .head-icon {
+  background: rgba(40, 25, 10, 0.05);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #6b5840;
+}
+[data-theme="light"] .head-text h4 { color: #1a1410; }
+[data-theme="light"] .head-text p { color: #6b5840; }
+[data-theme="light"] .mono { color: #b45309; }
+[data-theme="light"] .close-x {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #6b5840;
+}
+[data-theme="light"] .close-x:hover {
+  background: rgba(217, 119, 6, 0.14);
+  color: #92400e;
+}
+[data-theme="light"] .lc-modal-desc { color: #44362a; }
+[data-theme="light"] .lc-modal-foot {
+  background: rgba(255, 250, 240, 0.55);
+  border-top-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .ghost, [data-theme="light"] .primary {
+  border-color: rgba(40, 25, 10, 0.14);
+}
+[data-theme="light"] .ghost { color: #6b5840; }
+[data-theme="light"] .ghost:hover {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.32);
+  color: #92400e;
+}
+[data-theme="light"] .primary {
+  background: linear-gradient(180deg, #d97706, #b45309);
+  border-color: rgba(217, 119, 6, 0.55);
+  color: #fff;
+  box-shadow: 0 8px 22px -8px rgba(217, 119, 6, 0.55);
+}
+[data-theme="light"] .primary:hover:not(:disabled) {
+  box-shadow: 0 12px 28px -8px rgba(217, 119, 6, 0.70),
+              0 0 36px rgba(217, 119, 6, 0.30);
+}
+[data-theme="light"] .primary.tone-neutral {
+  background: linear-gradient(180deg, #6b5840, #44362a);
+  border-color: rgba(75, 65, 55, 0.55);
+  color: #fff;
+}
 </style>

@@ -263,4 +263,73 @@ onUnmounted(cleanup)
   opacity: 0;
   transform: translateY(-10px);
 }
+
+/* ═══════════ LIGHT THEME OVERRIDES — trigger ═══════════ */
+[data-theme="light"] .sla-select-trigger {
+  background: rgba(255, 250, 240, 0.92);
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  color: #1a1410;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+[data-theme="light"] .sla-select-trigger:hover {
+  border-color: rgba(217, 119, 6, 0.40);
+}
+[data-theme="light"] .sla-select-trigger.is-open {
+  border-color: #d97706;
+  background: #fffaf0;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .is-placeholder { color: rgba(120, 53, 15, 0.45); }
+[data-theme="light"] .chevron { color: #92400e; }
+[data-theme="light"] .chevron.rotate { color: #b45309; }
+
+[data-theme="light"] .design-select .sla-select-trigger {
+  background: rgba(255, 250, 240, 0.85);
+}
+[data-theme="light"] .table-select .sla-select-trigger {
+  background: transparent;
+  color: #1a1410;
+}
+[data-theme="light"] .table-select .sla-select-trigger:hover {
+  background: rgba(245, 158, 11, 0.10);
+}
+[data-theme="light"] .table-select .sla-select-trigger.is-open {
+  background: rgba(255, 250, 240, 0.92);
+  border-color: #d97706;
+}
+</style>
+
+<!--
+  NON-SCOPED block: the dropdown popup is <Teleport>'d to <body>, so
+  scoped CSS won't reach it. Theme it globally via :root[data-theme="light"].
+-->
+<style>
+:root[data-theme="light"] .sla-select-dropdown {
+  background: rgba(255, 250, 240, 0.96) !important;
+  border: 1px solid rgba(217, 119, 6, 0.28) !important;
+  box-shadow:
+    0 10px 40px rgba(180, 83, 9, 0.22),
+    0 0 0 1px rgba(217, 119, 6, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+}
+:root[data-theme="light"] .sla-select-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(217, 119, 6, 0.32) !important;
+}
+:root[data-theme="light"] .sla-select-dropdown .sla-option-item {
+  color: #1a1410 !important;
+}
+:root[data-theme="light"] .sla-select-dropdown .sla-option-item:hover {
+  background: rgba(245, 158, 11, 0.16) !important;
+  color: #78350f !important;
+}
+:root[data-theme="light"] .sla-select-dropdown .sla-option-item.selected {
+  background: rgba(245, 158, 11, 0.22) !important;
+  color: #92400e !important;
+  font-weight: 600 !important;
+}
+:root[data-theme="light"] .sla-select-dropdown .check-icon {
+  color: #b45309 !important;
+}
 </style>

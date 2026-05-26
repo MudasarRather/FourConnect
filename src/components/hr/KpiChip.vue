@@ -216,4 +216,34 @@ const onClick = (e) => {
   transform: translate(-50%, -50%);
   animation: hr-ripple 440ms ease-out forwards;
 }
+
+/* ═══════════ LIGHT THEME ═══════════ */
+[data-theme="light"] .kpi-chip {
+  background: rgba(255, 250, 240, 0.78);
+  border-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .kpi-chip:hover {
+  border-color: rgba(217, 119, 6, 0.42);
+  box-shadow: 0 18px 40px -22px rgba(40, 25, 10, 0.32),
+              0 0 22px rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .arc-track { stroke: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .kpi-icon-wrap { color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .kpi-label { color: #92400e; }
+[data-theme="light"] .kpi-value { color: #1a1410; }
+[data-theme="light"] .kpi-suffix { color: #6b5840; }
+[data-theme="light"] .kpi-helper { color: #8d7b62; }
+[data-theme="light"] .kpi-chip.tone-gold .kpi-icon { color: #b45309; }
+[data-theme="light"] .kpi-chip.tone-green .kpi-icon { color: #047857; }
+[data-theme="light"] .kpi-chip.tone-orange .kpi-icon { color: #c2410c; }
+[data-theme="light"] .kpi-chip.tone-red .kpi-icon { color: #b91c1c; }
+[data-theme="light"] .kpi-chip.tone-violet .kpi-icon { color: #7e22ce; }
+[data-theme="light"] .kpi-chip.tone-neutral .kpi-icon { color: #44362a; }
+[data-theme="light"] .kpi-chip.active {
+  border-color: rgba(217, 119, 6, 0.45);
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(255, 250, 240, 0.62) 70%);
+  box-shadow: 0 8px 22px -8px rgba(217, 119, 6, 0.32),
+              0 0 24px rgba(217, 119, 6, 0.20);
+}
+[data-theme="light"] .kpi-chip.active .kpi-num { color: #b45309; }
 </style>

@@ -132,12 +132,15 @@ const {
   fetchList, create, update, submit, decide, convert,
 } = useRequisitions()
 
+const countByStatus = (status) =>
+  (items.value || []).reduce((n, it) => n + (it.status === status ? 1 : 0), 0)
+
 const kpiChips = computed(() => [
-  { key: 'all',              label: 'All',       value: total.value || 0, tone: 'neutral', icon: Layers },
-  { key: 'DRAFT',            label: 'Draft',     value: null, tone: 'gold',    icon: FileText },
-  { key: 'PENDING_APPROVAL', label: 'Pending',   value: null, tone: 'orange',  icon: Hourglass },
-  { key: 'APPROVED',         label: 'Approved',  value: null, tone: 'green',   icon: CheckCircle },
-  { key: 'REJECTED',         label: 'Rejected',  value: null, tone: 'red',     icon: XCircle },
+  { key: 'all',              label: 'All',       value: total.value || 0,                  tone: 'neutral', icon: Layers },
+  { key: 'DRAFT',            label: 'Draft',     value: countByStatus('DRAFT'),            tone: 'gold',    icon: FileText },
+  { key: 'PENDING_APPROVAL', label: 'Pending',   value: countByStatus('PENDING_APPROVAL'), tone: 'orange',  icon: Hourglass },
+  { key: 'APPROVED',         label: 'Approved',  value: countByStatus('APPROVED'),         tone: 'green',   icon: CheckCircle },
+  { key: 'REJECTED',         label: 'Rejected',  value: countByStatus('REJECTED'),         tone: 'red',     icon: XCircle },
 ])
 
 const setStatus = async (key) => {
@@ -304,4 +307,42 @@ onMounted(fetchList)
 .row-act.approve:hover { background: rgba(52,211,153,0.12);  color: #34d399; }
 .row-act.reject:hover  { background: rgba(248,113,113,0.12); color: #f87171; }
 .row-act.convert:hover { background: rgba(251,146,60,0.12);  color: var(--hr-orange); }
+
+/* ═══════════ LIGHT THEME ═══════════
+   Status pills use `border: 1px solid currentColor` with a transparent fill.
+   On cream, the bare-outline pills wash out. Add a soft tinted background
+   matched to each status so the color code is unmistakable. */
+[data-theme="light"] .status-draft             {
+  color: #6b5840;
+  background: rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .status-pending_approval  {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .status-approved          {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.14);
+}
+[data-theme="light"] .status-rejected          {
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.10);
+}
+[data-theme="light"] .status-converted         {
+  color: #c2410c;
+  background: rgba(251, 146, 60, 0.16);
+}
+[data-theme="light"] .status-archived          {
+  color: #6b5840;
+  background: rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .prio-low      { background: rgba(251, 191, 36, 0.18); color: #b45309; }
+[data-theme="light"] .prio-medium   { background: rgba(217, 119, 6, 0.16);  color: #b45309; }
+[data-theme="light"] .prio-high     { background: rgba(251, 146, 60, 0.18); color: #c2410c; }
+[data-theme="light"] .prio-urgent   { background: rgba(220, 38, 38, 0.14);  color: #b91c1c; }
+[data-theme="light"] .row-act { color: #6b5840; }
+[data-theme="light"] .row-act:hover { background: rgba(217, 119, 6, 0.10); color: #b45309; }
+[data-theme="light"] .row-act.approve:hover { background: rgba(16, 185, 129, 0.14);  color: #047857; }
+[data-theme="light"] .row-act.reject:hover  { background: rgba(220, 38, 38, 0.12); color: #b91c1c; }
+[data-theme="light"] .row-act.convert:hover { background: rgba(251, 146, 60, 0.14);  color: #c2410c; }
 </style>

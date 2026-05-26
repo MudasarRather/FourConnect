@@ -261,4 +261,32 @@ function pseudoEngagement(e) {
 }
 .page-chip:hover:not(:disabled) { background: rgba(255,255,255,0.04); }
 .page-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ─── LIGHT THEME OVERRIDES — warm cream + amber/golden palette ─────────── */
+[data-theme="light"] .emp-card:hover {
+  box-shadow: 0 18px 40px -22px rgba(40, 25, 10, 0.30),
+              0 0 24px rgba(217, 119, 6, 0.18);
+}
+[data-theme="light"] .dept-chip {
+  background: rgba(217, 119, 6, 0.08);
+  border-color: rgba(217, 119, 6, 0.22);
+  color: #92400e;
+}
+[data-theme="light"] .eng-tag { color: #b45309; }
+[data-theme="light"] .eng-bar { background: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .eng-fill {
+  background: linear-gradient(90deg, #d97706, #047857);
+}
+[data-theme="light"] .empty { color: #6b5840; }
+[data-theme="light"] .page-info { color: #6b5840; }
+[data-theme="light"] .page-chip {
+  background: rgba(255, 250, 240, 0.62);
+  border-color: rgba(40, 25, 10, 0.14);
+  color: #6b5840;
+}
+[data-theme="light"] .page-chip:hover:not(:disabled) {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #b45309;
+}
 </style>

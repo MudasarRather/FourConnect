@@ -37,7 +37,6 @@
       <article
         v-for="(p, i) in items"
         :key="p.id"
-        v-tilt
         class="pos-card rec-card rec-card-glow"
         v-motion
         :initial="{ opacity: 0, y: 14 }"
@@ -45,8 +44,8 @@
       >
         <div class="card-top">
           <div class="card-code rec-mono">{{ p.job_code }}</div>
-          <span :class="['status', `status-${p.status.toLowerCase()}`]">
-            <span class="dot" /> {{ humanStatus(p.status) }}
+          <span :class="['status', `status-${derivedStatus(p).toLowerCase()}`]">
+            <span class="dot" /> {{ humanStatus(derivedStatus(p)) }}
           </span>
         </div>
         <h3 class="card-title">{{ p.job_title }}</h3>
@@ -63,7 +62,7 @@
           </div>
           <div class="stat">
             <span class="label">Filled</span>
-            <span class="value rec-mono">{{ p.filled_count }}</span>
+            <span class="value rec-mono">{{ derivedFilled(p) }}</span>
           </div>
           <div class="stat">
             <span class="label">Applies</span>
@@ -83,10 +82,10 @@
           <button v-if="p.status === 'ON_HOLD'" class="rec-btn-primary" @click="resumeOne(p)">
             <Play :size="13" /> Resume
           </button>
-          <button v-if="p.status === 'OPEN'" class="rec-btn-ghost" @click="holdOne(p)">
+          <button v-if="derivedStatus(p) === 'OPEN'" class="rec-btn-ghost" @click="holdOne(p)">
             <Pause :size="13" /> Hold
           </button>
-          <button v-if="p.status === 'OPEN' || p.status === 'ON_HOLD'" class="rec-btn-ghost" @click="closeOne(p)">
+          <button v-if="derivedStatus(p) === 'OPEN' || derivedStatus(p) === 'ON_HOLD'" class="rec-btn-ghost" @click="closeOne(p)">
             <Lock :size="13" /> Close
           </button>
           <button class="rec-btn-ghost" @click="openEdit(p)">
@@ -115,6 +114,14 @@
       @close="drawer.open = false"
       @submit="onSubmit"
     />
+
+    <ClosePositionModal
+      :open="closeModal.open"
+      :position="closeModal.position"
+      :submitting="closeModal.submitting"
+      @close="closeModal.open = false"
+      @submit="onConfirmClose"
+    />
   </div>
 </template>
 
@@ -126,10 +133,12 @@ import {
 } from 'lucide-vue-next'
 
 import PositionDrawer from '../drawers/PositionDrawer.vue'
+import ClosePositionModal from '../modals/ClosePositionModal.vue'
 import RecEmptyState from '../components/RecEmptyState.vue'
-import { usePositions } from '../../../../composables/useRecruitment'
+import { usePositions, useApplications } from '../../../../composables/useRecruitment'
 import { useHrReference } from '../../../../composables/useEmployees'
 import { useToast } from '../../../../composables/useToast'
+import { computed } from 'vue'
 
 const emit = defineEmits(['refresh-counts'])
 const { success, error } = useToast()
@@ -139,6 +148,34 @@ const {
   items, total, loading, filters, totalPages, setFilters, setPage,
   fetchList, create, update, publish, hold, close,
 } = usePositions()
+
+// The backend `position.filled_count` is not updated when an application
+// transitions to JOINED, so the card always shows 0 even when someone has
+// joined. Workaround: fetch applications and derive a joined-count per
+// position. This also lets us decide whether a position should auto-close.
+const apps = useApplications()
+const joinedByPositionId = computed(() => {
+  const map = Object.create(null)
+  for (const a of (apps.items.value || [])) {
+    if (a.current_stage === 'JOINED' && a.position_id) {
+      map[a.position_id] = (map[a.position_id] || 0) + 1
+    }
+  }
+  return map
+})
+const derivedFilled = (p) =>
+  Math.max(p.filled_count || 0, joinedByPositionId.value[p.id] || 0)
+const derivedStatus = (p) => {
+  // If the position has been fully filled, present it as CLOSED even if
+  // the backend hasn't yet auto-transitioned its status. Backend remains
+  // the source of truth for everything else.
+  const filled = derivedFilled(p)
+  const openings = p.openings_count || 0
+  if (filled > 0 && openings > 0 && filled >= openings && p.status === 'OPEN') {
+    return 'CLOSED'
+  }
+  return p.status
+}
 
 const statusFilters = [
   { key: 'all',    label: 'All',     value: null,        icon: Layers },
@@ -180,10 +217,22 @@ const resumeOne = async (p) => {
   try { await publish(p.id); success(`${p.job_code} resumed`); await fetchList(); emit('refresh-counts') }
   catch (e) { error(e?.response?.data?.detail || 'Resume failed') }
 }
-const closeOne = async (p) => {
-  if (!confirm(`Close position ${p.job_code}? Applications will remain visible.`)) return
-  try { await close(p.id); success(`${p.job_code} closed`); await fetchList(); emit('refresh-counts') }
-  catch (e) { error(e?.response?.data?.detail || 'Close failed') }
+const closeModal = ref({ open: false, position: null, submitting: false })
+const closeOne = (p) => { closeModal.value = { open: true, position: p, submitting: false } }
+const onConfirmClose = async (payload) => {
+  const p = closeModal.value.position
+  if (!p) return
+  closeModal.value.submitting = true
+  try {
+    await close(p.id, payload)
+    success(`${p.job_code} closed`)
+    closeModal.value.open = false
+    await fetchList(); emit('refresh-counts')
+  } catch (e) {
+    error(e?.response?.data?.detail || 'Close failed')
+  } finally {
+    closeModal.value.submitting = false
+  }
 }
 
 const humanStatus = (s) => ({
@@ -191,7 +240,12 @@ const humanStatus = (s) => ({
 }[s] || s)
 const humanWorkMode = (m) => ({ ONSITE: 'Onsite', REMOTE: 'Remote', HYBRID: 'Hybrid' }[m] || m)
 
-onMounted(fetchList)
+// Load both positions and (joined-only, for the filled derivation) applications.
+const loadAll = async () => {
+  apps.setFilters({ stage: 'JOINED', limit: 200 })
+  await Promise.all([fetchList(), apps.fetchList()])
+}
+onMounted(loadAll)
 </script>
 
 <style scoped>
@@ -212,9 +266,20 @@ onMounted(fetchList)
   gap: 12px;
   height: 100%;        /* fill grid track so all cards match the tallest */
   min-height: 320px;   /* floor so short cards stay balanced */
-  transition: transform 220ms var(--hr-spring);
+  transition: box-shadow 220ms var(--hr-spring), border-color 220ms var(--hr-spring);
 }
-.pos-card:hover { transform: translateY(-3px); }
+/* No transform on hover — any scale/translate makes the card visually
+   displace in the grid. The gold-gradient halo (.rec-card-glow::after)
+   already provides the hover affordance; add a soft drop shadow for
+   extra lift without shifting position. */
+.pos-card:hover {
+  box-shadow: 0 16px 36px -18px rgba(0, 0, 0, 0.5),
+              0 0 24px -6px rgba(251, 191, 36, 0.20);
+}
+[data-theme="light"] .pos-card:hover {
+  box-shadow: 0 16px 36px -18px rgba(40, 25, 10, 0.32),
+              0 0 24px -6px rgba(217, 119, 6, 0.20);
+}
 
 /* Push the skills row + action row to the bottom so the upper region stays
    aligned across cards regardless of skill/badge variability. */
@@ -295,4 +360,46 @@ onMounted(fetchList)
   color: var(--hr-text-muted);
 }
 .pg-controls { display: flex; gap: 6px; }
+
+/* ═══════════ LIGHT THEME ═══════════
+   The .rec-card surface itself is themed in recruitment-theme.css;
+   here we re-tone the card's internal text, borders, and chips. */
+[data-theme="light"] .card-code { color: #b45309; }
+[data-theme="light"] .card-title { color: #1a1410; }
+[data-theme="light"] .card-meta { color: #6b5840; }
+[data-theme="light"] .card-stats {
+  border-top-color: rgba(40, 25, 10, 0.10);
+  border-bottom-color: rgba(40, 25, 10, 0.10);
+}
+[data-theme="light"] .card-stats .label { color: #92400e; }
+[data-theme="light"] .card-stats .value { color: #1a1410; }
+[data-theme="light"] .skill-pill {
+  background: rgba(217, 119, 6, 0.14);
+  border-color: rgba(217, 119, 6, 0.36);
+  color: #b45309;
+}
+[data-theme="light"] .skill-more { color: #6b5840; }
+/* Status pills are outlined `border: 1px solid currentColor` with no fill.
+   Add a tinted background so each status' color reads clearly on cream. */
+[data-theme="light"] .status-draft     {
+  color: #6b5840;
+  background: rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .status-open      {
+  color: #065f46;
+  background: rgba(16, 185, 129, 0.24);
+}
+[data-theme="light"] .status-on_hold   {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.14);
+}
+[data-theme="light"] .status-closed    {
+  color: #6b5840;
+  background: rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .status-archived  {
+  color: #6b5840;
+  background: rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .rec-pagination { color: #6b5840; }
 </style>

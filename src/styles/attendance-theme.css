@@ -1,0 +1,928 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   ATTENDANCE THEME — yellow / orange / teal
+   ────────────────────────────────────────────────────────────────────────────
+   Scoped to the HR Attendance module only. Imports hr-theme.css for base
+   tokens, then overrides accents with a fresh teal-forward palette so the
+   Attendance surface reads visually distinct from the rest of HR (which
+   continues to use the warm-gold tokens).
+
+   Imported per-view in HrAttendanceWorkspacePage.vue + SelfServiceAttendance.
+   Do NOT promote globally.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@import './hr-theme.css';
+
+/* ────────────────────────────────────────────────────────────────────────────
+   NOTE: The `--att-teal-*` token names below ARE NOT TEAL ANYMORE.
+   They have been repurposed to warm gold/amber/orange values to match the
+   employee-documents palette per user request. The name is kept so every
+   existing component referencing `--att-teal-100` etc. picks up the new
+   palette without a project-wide rename. True teal values are exposed as the
+   parallel `--att-success-*` ramp below for verified/present states.
+   ──────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* ── PRIMARY (warm gold/amber) — used to be teal token names ────────── */
+  --att-teal-50:  #fef3c7;  /* gold-50  */
+  --att-teal-100: #fde68a;  /* gold-100 — light text/labels on dark */
+  --att-teal-200: #fcd34d;  /* gold-200 */
+  --att-teal-300: #fbbf24;  /* gold-300 — anchor */
+  --att-teal-400: #f59e0b;  /* amber-400 */
+  --att-teal-500: #d97706;  /* amber-500 — anchor on light */
+  --att-teal-600: #b45309;
+  --att-teal-700: #92400e;
+
+  /* ── TRUE TEAL (success / verified / present-only accent) ───────────── */
+  --att-success-50:  #ccfbf1;
+  --att-success-100: #5eead4;
+  --att-success-200: #2dd4bf;
+  --att-success-300: #14b8a6;
+  --att-success-400: #0d9488;
+  --att-success-500: #0f766e;
+
+  /* ── Yellow ramp (sun / energy accent) ──────────────────────────────── */
+  --att-yellow-50:  #fef9c3;
+  --att-yellow-100: #fde68a;
+  --att-yellow-200: #fde047;
+  --att-yellow-300: #facc15;
+  --att-yellow-400: #eab308;
+  --att-yellow-500: #ca8a04;
+  --att-yellow-600: #a16207;
+  --att-yellow-700: #854d0e;
+
+  /* ── Orange ramp (secondary heat) ───────────────────────────────────── */
+  --att-orange-50:  #ffedd5;
+  --att-orange-100: #fdba74;
+  --att-orange-200: #fb923c;
+  --att-orange-300: #f97316;
+  --att-orange-400: #ea580c;
+  --att-orange-500: #c2410c;
+  --att-orange-600: #9a3412;
+  --att-orange-700: #7c2d12;
+
+  /* ── Soft fills + borders — pivoted to warm gold/amber ──────────────── */
+  --att-teal-soft:           rgba(251, 191, 36, 0.16);
+  --att-teal-soft-hi:        rgba(251, 191, 36, 0.28);
+  --att-teal-border-soft:    rgba(251, 191, 36, 0.34);
+  --att-yellow-soft:         rgba(234, 179, 8, 0.18);
+  --att-yellow-soft-hi:      rgba(234, 179, 8, 0.30);
+  --att-yellow-border-soft:  rgba(234, 179, 8, 0.36);
+  --att-orange-soft:         rgba(234, 88, 12, 0.18);
+  --att-orange-soft-hi:      rgba(234, 88, 12, 0.30);
+  --att-orange-border-soft:  rgba(234, 88, 12, 0.36);
+  --att-success-soft:        rgba(20, 184, 166, 0.16);
+  --att-success-border-soft: rgba(20, 184, 166, 0.36);
+
+  /* ── Glass surfaces — warm-tinted dark + amber stroke ─────────────────── */
+  --att-glass:           rgba(20, 16, 14, 0.42);
+  --att-glass-hi:        rgba(28, 22, 18, 0.55);
+  --att-glass-deep:      rgba(14, 10, 8, 0.62);
+  --att-glass-stroke:    1px solid rgba(251, 191, 36, 0.20);
+  --att-glass-blur:      blur(26px) saturate(170%);
+  --att-glass-shadow:    0 22px 60px -32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --att-glass-shadow-hi: 0 32px 84px -34px rgba(217, 119, 6, 0.42), 0 0 0 1px rgba(251, 191, 36, 0.22);
+
+  /* ── Gradients — warm punch-card palette ─────────────────────────────── */
+  --att-gradient-hero:    linear-gradient(110deg, #fde68a 0%, #fbbf24 35%, #f59e0b 65%, #fb923c 100%);
+  --att-gradient-cool:    linear-gradient(135deg, #fde68a 0%, #fbbf24 45%, #f59e0b 100%);
+  --att-gradient-warm:    linear-gradient(135deg, #fbbf24 0%, #fb923c 55%, #ea580c 100%);
+  --att-gradient-aurora:  linear-gradient(135deg, #422006 0%, #92400e 35%, #f59e0b 75%, #fde68a 100%);
+  --att-gradient-flow:    linear-gradient(90deg, #fbbf24, #f59e0b, #fb923c, #fbbf24);
+  --att-gradient-punch:   linear-gradient(135deg, #fef3c7 0%, #fbbf24 30%, #f59e0b 60%, #c2410c 100%);
+  --att-gradient-tick:    conic-gradient(from 0deg, #fbbf24 0deg, #fb923c 120deg, #fde68a 240deg, #fbbf24 360deg);
+
+  /* ── Status palette ─────────────────────────────────────────────────── */
+  --att-status-present-bg:  rgba(20, 184, 166, 0.18);
+  --att-status-present-fg:  #5eead4;
+  --att-status-late-bg:     rgba(234, 179, 8, 0.20);
+  --att-status-late-fg:     #fde047;
+  --att-status-absent-bg:   rgba(234, 88, 12, 0.22);
+  --att-status-absent-fg:   #fb923c;
+  --att-status-wfh-bg:      rgba(125, 211, 252, 0.18);
+  --att-status-wfh-fg:      #7dd3fc;
+  --att-status-leave-bg:    rgba(192, 132, 252, 0.18);
+  --att-status-leave-fg:    #c4b5fd;
+  --att-status-od-bg:       rgba(244, 114, 182, 0.18);
+  --att-status-od-fg:       #f9a8d4;
+  --att-status-holiday-bg:  rgba(248, 113, 113, 0.16);
+  --att-status-holiday-fg:  #fca5a5;
+  --att-status-weekoff-bg:  rgba(148, 163, 184, 0.16);
+  --att-status-weekoff-fg:  #cbd5e1;
+  --att-status-halfday-bg:  rgba(251, 146, 60, 0.18);
+  --att-status-halfday-fg:  #fb923c;
+  --att-status-remote-bg:   rgba(45, 212, 191, 0.18);
+  --att-status-remote-fg:   #2dd4bf;
+  --att-status-onduty-bg:   rgba(96, 165, 250, 0.18);
+  --att-status-onduty-fg:   #60a5fa;
+
+  /* ── Heatmap density ramp — warm cascade ─────────────────────────────── */
+  --att-heat-0: rgba(251, 191, 36, 0.06);
+  --att-heat-1: rgba(251, 191, 36, 0.20);
+  --att-heat-2: rgba(252, 211, 77, 0.40);
+  --att-heat-3: rgba(253, 224, 71, 0.58);
+  --att-heat-4: rgba(245, 158, 11, 0.74);
+  --att-heat-5: rgba(251, 146, 60, 0.88);
+  --att-heat-6: rgba(234, 88, 12, 1.00);
+  --att-heat-stroke: rgba(255, 255, 255, 0.04);
+
+  /* ── Motion easing tokens (extend HR spring) ────────────────────────── */
+  --att-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --att-spring-bouncy: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --att-ease-quint: cubic-bezier(0.83, 0, 0.17, 1);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   KEYFRAMES — decorative loops only, never layout-affecting
+   ════════════════════════════════════════════════════════════════════════════ */
+
+@keyframes att-aurora {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1);     opacity: 0.55; }
+  50%      { transform: translate3d(8%, -6%, 0) scale(1.08); opacity: 0.72; }
+}
+
+@keyframes att-glow-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.45; }
+  50%      { transform: translate3d(6%, 4%, 0); opacity: 0.7; }
+}
+
+@keyframes att-heatmap-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(234, 88, 12, 0.55); }
+  50%      { box-shadow: 0 0 0 6px rgba(234, 88, 12, 0.00); }
+}
+
+@keyframes att-ring-rotate {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes att-live-pulse {
+  0%, 100% { opacity: 0.85; box-shadow: 0 0 0 0 rgba(94, 234, 212, 0.6); }
+  50%      { opacity: 1;    box-shadow: 0 0 0 14px rgba(94, 234, 212, 0); }
+}
+
+@keyframes att-confetti-burst {
+  0%   { transform: scale(0.4); opacity: 1; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+@keyframes att-gradient-flow {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes att-aurora-slide {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes att-scan-beam {
+  0%, 100% { transform: translateY(-44%); opacity: 0.3; }
+  50%      { transform: translateY( 44%); opacity: 1; }
+}
+
+@keyframes att-blink {
+  50% { opacity: 0; }
+}
+
+@keyframes att-pulse-rings {
+  0%   { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0;   transform: translate(-50%, -50%) scale(2.2); }
+}
+
+@keyframes att-icon-pop {
+  0%   { transform: scale(0.7) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(1.06) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+
+@keyframes att-title-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* Continuous clock hand sweep — the signature attendance motif */
+@keyframes att-hand-sweep {
+  to { transform: rotate(360deg); }
+}
+
+/* Slower minute hand */
+@keyframes att-hand-sweep-slow {
+  to { transform: rotate(360deg); }
+}
+
+/* Punch-card stamp press — anchor + bounce + recoil */
+@keyframes att-stamp-press {
+  0%, 88%, 100% { transform: scale(1) rotate(0deg); }
+  92%           { transform: scale(1.18) rotate(-4deg); }
+  96%           { transform: scale(1.04) rotate(-1deg); }
+}
+
+/* Falling hour ticks — vertical drift for ambient particles */
+@keyframes att-tick-fall {
+  0%   { transform: translateY(-40px) rotate(-2deg); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(110%) rotate(2deg); opacity: 0; }
+}
+
+/* Pulse ring emanation (radar / biometric reader) */
+@keyframes att-pulse-emanate {
+  0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0.85; }
+  100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
+}
+
+/* Punch-ticket reveal — slides in from right with peel */
+@keyframes att-ticket-arrive {
+  0%   { transform: translateX(20%) rotate(2deg); opacity: 0; }
+  60%  { transform: translateX(-2%) rotate(-0.5deg); opacity: 1; }
+  100% { transform: translateX(0) rotate(0); }
+}
+
+/* Sheen sweep across the active ticket */
+@keyframes att-ticket-sheen {
+  0%   { transform: translateX(-120%) skewX(-22deg); opacity: 0; }
+  40%  { opacity: 0.7; }
+  100% { transform: translateX(220%) skewX(-22deg); opacity: 0; }
+}
+
+/* Vertical scan beam — for the dock + cards */
+@keyframes att-dock-scan {
+  0%   { background-position: 0 -30%; }
+  100% { background-position: 0 130%; }
+}
+
+/* Slow drifting aurora for ambient layers (warm gold) */
+@keyframes att-warm-aurora {
+  0%, 100% { transform: translate(-3%, -2%) scale(1); }
+  50%      { transform: translate(4%, 3%) scale(1.06); }
+}
+
+/* Hour dial tick (every second snap) */
+@keyframes att-tick-snap {
+  0%   { transform: rotate(var(--tick-from, 0deg)); }
+  20%  { transform: rotate(calc(var(--tick-to, 6deg) + 1deg)); }
+  35%  { transform: rotate(calc(var(--tick-to, 6deg) - 0.4deg)); }
+  60%, 100% { transform: rotate(var(--tick-to, 6deg)); }
+}
+
+/* Heartbeat / biometric pulse line */
+@keyframes att-pulse-line {
+  0%, 100% { stroke-dashoffset: 0; }
+  50%      { stroke-dashoffset: -400; }
+}
+
+/* Subtle breathing for the hero clock core */
+@keyframes att-core-breathe {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(251, 191, 36, 0.35)); }
+  50%      { transform: scale(1.02); filter: drop-shadow(0 0 30px rgba(251, 146, 60, 0.45)); }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LIGHT THEME — warm cream surfaces, deeper saturated accents on cream
+   ════════════════════════════════════════════════════════════════════════════ */
+
+[data-theme="light"] {
+  /* Soft fills + borders — pivoted to warm gold/amber, deeper on cream */
+  --att-teal-soft:           rgba(217, 119, 6, 0.16);
+  --att-teal-soft-hi:        rgba(217, 119, 6, 0.28);
+  --att-teal-border-soft:    rgba(217, 119, 6, 0.34);
+  --att-yellow-soft:         rgba(202, 138, 4, 0.20);
+  --att-yellow-soft-hi:      rgba(202, 138, 4, 0.32);
+  --att-yellow-border-soft:  rgba(202, 138, 4, 0.40);
+  --att-orange-soft:         rgba(194, 65, 12, 0.20);
+  --att-orange-soft-hi:      rgba(194, 65, 12, 0.32);
+  --att-orange-border-soft:  rgba(194, 65, 12, 0.40);
+  --att-success-soft:        rgba(13, 148, 136, 0.16);
+  --att-success-border-soft: rgba(13, 148, 136, 0.36);
+
+  --att-glass:        rgba(255, 250, 240, 0.55);
+  --att-glass-hi:     rgba(255, 250, 240, 0.78);
+  --att-glass-deep:   rgba(255, 246, 226, 0.85);
+  --att-glass-stroke: 1px solid rgba(180, 83, 9, 0.20);
+  --att-glass-shadow: 0 22px 60px -32px rgba(40, 25, 10, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  --att-glass-shadow-hi: 0 32px 84px -34px rgba(180, 83, 9, 0.30), 0 0 0 1px rgba(180, 83, 9, 0.22);
+
+  --att-status-present-bg:  rgba(13, 148, 136, 0.16);
+  --att-status-present-fg:  #0d9488;
+  --att-status-late-bg:     rgba(202, 138, 4, 0.18);
+  --att-status-late-fg:     #854d0e;
+  --att-status-absent-bg:   rgba(194, 65, 12, 0.18);
+  --att-status-absent-fg:   #9a3412;
+  --att-status-wfh-bg:      rgba(2, 132, 199, 0.16);
+  --att-status-wfh-fg:      #0369a1;
+  --att-status-leave-bg:    rgba(124, 58, 237, 0.16);
+  --att-status-leave-fg:    #6d28d9;
+  --att-status-od-bg:       rgba(190, 24, 93, 0.16);
+  --att-status-od-fg:       #9d174d;
+  --att-status-holiday-bg:  rgba(220, 38, 38, 0.14);
+  --att-status-holiday-fg:  #b91c1c;
+  --att-status-weekoff-bg:  rgba(71, 85, 105, 0.14);
+  --att-status-weekoff-fg:  #475569;
+  --att-status-halfday-bg:  rgba(194, 65, 12, 0.16);
+  --att-status-halfday-fg:  #c2410c;
+  --att-status-remote-bg:   rgba(13, 148, 136, 0.14);
+  --att-status-remote-fg:   #0f766e;
+  --att-status-onduty-bg:   rgba(37, 99, 235, 0.16);
+  --att-status-onduty-fg:   #1d4ed8;
+
+  --att-heat-0: rgba(251, 191, 36, 0.10);
+  --att-heat-1: rgba(251, 191, 36, 0.24);
+  --att-heat-2: rgba(245, 158, 11, 0.42);
+  --att-heat-3: rgba(217, 119, 6, 0.58);
+  --att-heat-4: rgba(234, 88, 12, 0.72);
+  --att-heat-5: rgba(194, 65, 12, 0.85);
+  --att-heat-6: rgba(124, 45, 18, 1.00);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SHARED PATTERNS — section banner, modal, form fields, status pills
+   Used by every section so we don't duplicate 80 lines per file.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.att-workspace .att-section-banner,
+.ssa-page .att-section-banner {
+  position: relative; overflow: hidden;
+  padding: 22px 24px;
+  border-radius: 20px;
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(20, 184, 166, 0.14), transparent 65%),
+    var(--att-glass);
+  border: var(--att-glass-stroke);
+  backdrop-filter: var(--att-glass-blur);
+  display: grid; grid-template-columns: 1fr auto; gap: 18px;
+  align-items: center;
+}
+.att-workspace .att-section-banner.tone-warm,
+.ssa-page .att-section-banner.tone-warm {
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(234, 88, 12, 0.14), transparent 65%),
+    var(--att-glass);
+}
+.att-workspace .att-section-banner.tone-yellow,
+.ssa-page .att-section-banner.tone-yellow {
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(234, 179, 8, 0.16), transparent 65%),
+    var(--att-glass);
+}
+.att-workspace .att-section-banner.tone-purple,
+.ssa-page .att-section-banner.tone-purple {
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(167, 139, 250, 0.16), transparent 65%),
+    var(--att-glass);
+}
+.att-workspace .att-banner-glow {
+  position: absolute; inset: -40% -10% auto auto;
+  width: 50%; height: 200%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(20, 184, 166, 0.30), transparent 70%);
+  filter: blur(60px); animation: att-aurora 14s ease-in-out infinite; pointer-events: none;
+}
+.att-workspace .att-banner-text { display: flex; flex-direction: column; gap: 4px; }
+.att-workspace .att-banner-eyebrow,
+.ssa-page .att-banner-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 9.5px; font-weight: 800; letter-spacing: 1.8px;
+  text-transform: uppercase; color: var(--att-teal-100);
+}
+.att-workspace .att-banner-eyebrow-dot,
+.ssa-page .att-banner-eyebrow-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #fb923c; box-shadow: 0 0 8px rgba(251, 146, 60, 0.7);
+  animation: att-live-pulse 2.2s ease-in-out infinite;
+}
+.att-workspace .att-banner-title {
+  margin: 4px 0 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em;
+  background: var(--att-gradient-hero);
+  background-size: 200% 200%;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: att-title-shimmer 7s ease-in-out infinite;
+  display: inline-flex; gap: 8px; align-items: baseline; flex-wrap: wrap;
+}
+.att-workspace .att-banner-divider {
+  color: var(--hr-text-dim); -webkit-text-fill-color: var(--hr-text-dim); font-weight: 400;
+}
+.att-workspace .att-banner-sub {
+  margin: 6px 0 0; font-size: 12.5px; color: var(--hr-text-muted); line-height: 1.5;
+}
+.att-workspace .att-banner-aside { display: flex; gap: 8px; align-self: flex-start; flex-wrap: wrap; }
+
+[data-theme="light"] .att-workspace .att-section-banner {
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(13, 148, 136, 0.14), transparent 65%),
+    rgba(255, 250, 240, 0.85);
+  border-color: rgba(13, 148, 136, 0.28);
+  box-shadow: 0 22px 50px -28px rgba(40, 25, 10, 0.18);
+}
+[data-theme="light"] .att-workspace .att-section-banner.tone-warm {
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(194, 65, 12, 0.14), transparent 65%),
+    rgba(255, 250, 240, 0.85);
+}
+[data-theme="light"] .att-workspace .att-section-banner.tone-yellow {
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(202, 138, 4, 0.16), transparent 65%),
+    rgba(255, 250, 240, 0.85);
+}
+[data-theme="light"] .att-workspace .att-section-banner.tone-purple {
+  background:
+    radial-gradient(120% 100% at 100% 0%, rgba(124, 58, 237, 0.14), transparent 65%),
+    rgba(255, 250, 240, 0.85);
+}
+[data-theme="light"] .att-workspace .att-banner-eyebrow { color: var(--att-teal-500); }
+[data-theme="light"] .att-workspace .att-banner-title {
+  background: linear-gradient(110deg, var(--att-teal-400), var(--att-yellow-500), var(--att-orange-500));
+  -webkit-background-clip: text; background-clip: text;
+}
+
+/* Reusable card */
+.att-workspace .att-glass-card {
+  background:
+    radial-gradient(80% 60% at 100% 0%, rgba(20, 184, 166, 0.08), transparent 65%),
+    var(--att-glass);
+  border: var(--att-glass-stroke);
+  border-radius: 16px;
+  backdrop-filter: var(--att-glass-blur);
+  box-shadow: var(--att-glass-shadow);
+}
+[data-theme="light"] .att-workspace .att-glass-card {
+  background:
+    radial-gradient(80% 60% at 100% 0%, rgba(13, 148, 136, 0.08), transparent 65%),
+    rgba(255, 250, 240, 0.92);
+  border-color: rgba(13, 148, 136, 0.26);
+  box-shadow: 0 14px 36px -22px rgba(40, 25, 10, 0.18);
+}
+
+/* Empty state — ultra-modern, ambient aurora + animated halo */
+.att-workspace .att-empty,
+.att-workspace .geo-empty,
+.att-workspace .shifts-empty,
+.att-workspace .bio-empty,
+.att-workspace .wfh-empty,
+.att-workspace .daily-empty {
+  position: relative;
+  padding: 56px 32px;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  color: var(--hr-text-secondary);
+  border: 1px dashed rgba(251, 191, 36, 0.30);
+  border-radius: 22px;
+  background:
+    radial-gradient(80% 80% at 50% 20%, rgba(251, 191, 36, 0.10), transparent 60%),
+    rgba(20, 16, 14, 0.42);
+  backdrop-filter: blur(16px) saturate(160%);
+  overflow: hidden;
+  isolation: isolate;
+}
+.att-workspace .att-empty::before,
+.att-workspace .geo-empty::before,
+.att-workspace .shifts-empty::before,
+.att-workspace .bio-empty::before,
+.att-workspace .wfh-empty::before,
+.att-workspace .daily-empty::before {
+  content: ''; position: absolute; inset: -40%;
+  z-index: -1;
+  background:
+    radial-gradient(40% 30% at 50% 30%, rgba(251, 191, 36, 0.22), transparent 60%),
+    radial-gradient(35% 25% at 30% 70%, rgba(251, 146, 60, 0.18), transparent 60%),
+    radial-gradient(35% 25% at 70% 70%, rgba(20, 184, 166, 0.12), transparent 60%);
+  filter: blur(40px);
+  pointer-events: none;
+  animation: att-warm-aurora 20s ease-in-out infinite;
+}
+.att-workspace .att-empty::after,
+.att-workspace .geo-empty::after,
+.att-workspace .shifts-empty::after,
+.att-workspace .bio-empty::after,
+.att-workspace .wfh-empty::after,
+.att-workspace .daily-empty::after {
+  content: ''; position: absolute; left: 50%; top: 56px;
+  width: 110px; height: 110px;
+  transform: translate(-50%, -10%);
+  border-radius: 50%;
+  border: 1.4px solid rgba(251, 191, 36, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  animation: att-pulse-emanate 4s ease-out infinite;
+}
+.att-workspace .att-empty svg,
+.att-workspace .geo-empty svg,
+.att-workspace .shifts-empty svg,
+.att-workspace .bio-empty svg,
+.att-workspace .wfh-empty svg,
+.att-workspace .daily-empty svg {
+  color: var(--att-orange-200);
+  filter: drop-shadow(0 6px 14px rgba(234, 88, 12, 0.35));
+}
+.att-workspace .att-empty p,
+.att-workspace .geo-empty p,
+.att-workspace .shifts-empty p,
+.att-workspace .bio-empty p,
+.att-workspace .wfh-empty p,
+.att-workspace .daily-empty p {
+  margin: 4px 0 0;
+  font-size: 14.5px; font-weight: 800; letter-spacing: -0.005em;
+  color: var(--hr-text);
+}
+
+[data-theme="light"] .att-workspace .att-empty,
+[data-theme="light"] .att-workspace .geo-empty,
+[data-theme="light"] .att-workspace .shifts-empty,
+[data-theme="light"] .att-workspace .bio-empty,
+[data-theme="light"] .att-workspace .wfh-empty,
+[data-theme="light"] .att-workspace .daily-empty {
+  border-color: rgba(180, 83, 9, 0.32);
+  background:
+    radial-gradient(80% 80% at 50% 20%, rgba(217, 119, 6, 0.10), transparent 60%),
+    rgba(255, 250, 240, 0.85);
+  color: var(--hr-text-secondary);
+}
+[data-theme="light"] .att-workspace .att-empty::before,
+[data-theme="light"] .att-workspace .geo-empty::before,
+[data-theme="light"] .att-workspace .shifts-empty::before,
+[data-theme="light"] .att-workspace .bio-empty::before,
+[data-theme="light"] .att-workspace .wfh-empty::before,
+[data-theme="light"] .att-workspace .daily-empty::before {
+  background:
+    radial-gradient(40% 30% at 50% 30%, rgba(217, 119, 6, 0.18), transparent 60%),
+    radial-gradient(35% 25% at 30% 70%, rgba(234, 88, 12, 0.14), transparent 60%),
+    radial-gradient(35% 25% at 70% 70%, rgba(13, 148, 136, 0.10), transparent 60%);
+}
+[data-theme="light"] .att-workspace .att-empty::after,
+[data-theme="light"] .att-workspace .geo-empty::after,
+[data-theme="light"] .att-workspace .shifts-empty::after,
+[data-theme="light"] .att-workspace .bio-empty::after,
+[data-theme="light"] .att-workspace .wfh-empty::after,
+[data-theme="light"] .att-workspace .daily-empty::after {
+  border-color: rgba(180, 83, 9, 0.50);
+}
+[data-theme="light"] .att-workspace .att-empty svg,
+[data-theme="light"] .att-workspace .geo-empty svg,
+[data-theme="light"] .att-workspace .shifts-empty svg,
+[data-theme="light"] .att-workspace .bio-empty svg,
+[data-theme="light"] .att-workspace .wfh-empty svg,
+[data-theme="light"] .att-workspace .daily-empty svg {
+  color: var(--att-orange-500);
+  filter: drop-shadow(0 6px 14px rgba(180, 83, 9, 0.30));
+}
+[data-theme="light"] .att-workspace .att-empty p,
+[data-theme="light"] .att-workspace .geo-empty p,
+[data-theme="light"] .att-workspace .shifts-empty p,
+[data-theme="light"] .att-workspace .bio-empty p,
+[data-theme="light"] .att-workspace .wfh-empty p,
+[data-theme="light"] .att-workspace .daily-empty p {
+  color: var(--hr-text);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   MODAL FORM LAYOUT HELPERS — `.form-stack` and `.form-grid-*`
+   ────────────────────────────────────────────────────────────────────────────
+   These classes are used inside every attendance OnbModal body to space
+   OnbField rows. They used to be defined per-onboarding-section, which meant
+   they disappeared after a hard reload of an attendance route (the
+   onboarding section never mounted, so its scoped CSS never loaded). By
+   declaring them here, every attendance section that `@import`s this file
+   gets them scoped to its own data-v hash — and that hash also tags the
+   slot content teleported into OnbModal, so the gaps survive across
+   teleport and full-page reload.
+   ════════════════════════════════════════════════════════════════════════════ */
+.form-stack { display: flex; flex-direction: column; gap: 14px; }
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 540px) {
+  .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+}
+
+/* Defensive fallback if a section forgets to wrap fields in .form-stack — at
+   least sibling OnbFields inside an OnbModal body get vertical breathing
+   room. Targets the teleported overlay so it doesn't leak into other layouts. */
+.onb-modal-overlay .onb-modal-body > * + * { margin-top: 12px; }
+.onb-modal-overlay .form-stack > * + *,
+.onb-modal-overlay .form-grid-2 > *,
+.onb-modal-overlay .form-grid-3 > * { margin-top: 0; }
+
+/* OnbField visibility overrides inside OnbModal moved to the global
+   `attendance-modal-rescue.css` (loaded from main.js). Putting them in this
+   scoped file caused them to be tagged with each section's data-v hash,
+   which doesn't match OnbField's internal elements (those only carry
+   OnbField's own hash). Global, unscoped rules are the only way to pierce
+   that boundary. */
+
+/* ════════════════════════════════════════════════════════════════════════════
+   ULTRA-MODERN BUTTONS — module-local so we don't depend on onboarding-theme.css.
+   Targets .onb-btn-ghost, .onb-btn-primary anywhere inside .att-workspace
+   (or in any att-modal-overlay, since modals teleport to body).
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.att-workspace .onb-btn-primary,
+.att-modal-overlay .onb-btn-primary,
+.onb-modal-overlay .onb-btn-primary,
+.ssa-page .onb-btn-primary {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 11px;
+  background: linear-gradient(135deg, #fde68a 0%, #fbbf24 35%, #f59e0b 70%, #fb923c 100%);
+  background-size: 200% 200%;
+  color: #1f1408;
+  font: inherit; font-size: 12px; font-weight: 800; letter-spacing: 0.2px;
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  cursor: pointer;
+  box-shadow:
+    0 12px 26px -10px rgba(251, 146, 60, 0.55),
+    0 0 0 1px rgba(251, 191, 36, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.30);
+  transition: transform .22s var(--att-spring), box-shadow .25s, background-position .35s;
+}
+.att-workspace .onb-btn-primary::after,
+.att-modal-overlay .onb-btn-primary::after,
+.onb-modal-overlay .onb-btn-primary::after,
+.ssa-page .onb-btn-primary::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.30) 50%, transparent 65%);
+  transform: translateX(-120%);
+  pointer-events: none;
+  transition: transform .55s var(--att-ease-quint);
+}
+.att-workspace .onb-btn-primary:hover,
+.att-modal-overlay .onb-btn-primary:hover,
+.onb-modal-overlay .onb-btn-primary:hover,
+.ssa-page .onb-btn-primary:hover {
+  transform: translateY(-1px);
+  background-position: 100% 50%;
+  box-shadow:
+    0 18px 36px -10px rgba(251, 146, 60, 0.72),
+    0 0 0 1px rgba(251, 191, 36, 0.30),
+    inset 0 1px 0 rgba(255, 255, 255, 0.60);
+}
+.att-workspace .onb-btn-primary:hover::after,
+.att-modal-overlay .onb-btn-primary:hover::after,
+.onb-modal-overlay .onb-btn-primary:hover::after,
+.ssa-page .onb-btn-primary:hover::after { transform: translateX(120%); }
+.att-workspace .onb-btn-primary:active,
+.att-modal-overlay .onb-btn-primary:active,
+.onb-modal-overlay .onb-btn-primary:active,
+.ssa-page .onb-btn-primary:active { transform: translateY(0); }
+.att-workspace .onb-btn-primary:disabled,
+.att-workspace .onb-btn-primary[disabled],
+.att-modal-overlay .onb-btn-primary:disabled,
+.att-modal-overlay .onb-btn-primary[disabled],
+.onb-modal-overlay .onb-btn-primary:disabled,
+.onb-modal-overlay .onb-btn-primary[disabled] {
+  opacity: 0.55; cursor: not-allowed; transform: none;
+}
+
+.att-workspace .onb-btn-ghost,
+.att-modal-overlay .onb-btn-ghost,
+.onb-modal-overlay .onb-btn-ghost,
+.ssa-page .onb-btn-ghost {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 8px 14px; border-radius: 11px;
+  background:
+    linear-gradient(180deg, rgba(40, 30, 22, 0.55), rgba(28, 22, 18, 0.80));
+  color: var(--hr-text);
+  font: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.2px;
+  border: 1px solid rgba(251, 191, 36, 0.22);
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 6px 14px -10px rgba(0, 0, 0, 0.45);
+  transition:
+    border-color .22s var(--att-spring),
+    color .22s, transform .22s var(--att-spring),
+    box-shadow .25s, background .25s;
+}
+.att-workspace .onb-btn-ghost::before,
+.att-modal-overlay .onb-btn-ghost::before,
+.onb-modal-overlay .onb-btn-ghost::before,
+.ssa-page .onb-btn-ghost::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  background: radial-gradient(120% 100% at 0% 0%, rgba(251, 191, 36, 0), transparent 50%);
+  transition: background .28s var(--att-spring);
+  border-radius: inherit;
+}
+.att-workspace .onb-btn-ghost:hover,
+.att-modal-overlay .onb-btn-ghost:hover,
+.onb-modal-overlay .onb-btn-ghost:hover,
+.ssa-page .onb-btn-ghost:hover {
+  color: #fef3c7;
+  border-color: rgba(251, 146, 60, 0.55);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 12px 24px -10px rgba(251, 146, 60, 0.42);
+}
+.att-workspace .onb-btn-ghost:hover::before,
+.att-modal-overlay .onb-btn-ghost:hover::before,
+.onb-modal-overlay .onb-btn-ghost:hover::before,
+.ssa-page .onb-btn-ghost:hover::before {
+  background: radial-gradient(120% 100% at 0% 0%, rgba(251, 191, 36, 0.22), transparent 60%);
+}
+.att-workspace .onb-btn-ghost:active,
+.att-modal-overlay .onb-btn-ghost:active,
+.onb-modal-overlay .onb-btn-ghost:active,
+.ssa-page .onb-btn-ghost:active { transform: translateY(0); }
+.att-workspace .onb-btn-ghost:disabled,
+.att-workspace .onb-btn-ghost[disabled],
+.att-modal-overlay .onb-btn-ghost:disabled,
+.att-modal-overlay .onb-btn-ghost[disabled],
+.onb-modal-overlay .onb-btn-ghost:disabled,
+.onb-modal-overlay .onb-btn-ghost[disabled] {
+  opacity: 0.55; cursor: not-allowed; transform: none;
+}
+
+[data-theme="light"] .att-workspace .onb-btn-ghost,
+[data-theme="light"] .att-modal-overlay .onb-btn-ghost,
+[data-theme="light"] .onb-modal-overlay .onb-btn-ghost,
+[data-theme="light"] .ssa-page .onb-btn-ghost {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.78), rgba(255, 246, 226, 0.85));
+  color: var(--hr-text);
+  border-color: rgba(180, 83, 9, 0.26);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 4px 10px -6px rgba(120, 53, 15, 0.18);
+}
+[data-theme="light"] .att-workspace .onb-btn-ghost:hover,
+[data-theme="light"] .att-modal-overlay .onb-btn-ghost:hover,
+[data-theme="light"] .onb-modal-overlay .onb-btn-ghost:hover,
+[data-theme="light"] .ssa-page .onb-btn-ghost:hover {
+  color: var(--hr-text);
+  border-color: rgba(194, 65, 12, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.80),
+    0 12px 24px -10px rgba(180, 83, 9, 0.32);
+}
+[data-theme="light"] .att-workspace .onb-btn-ghost:hover::before,
+[data-theme="light"] .att-modal-overlay .onb-btn-ghost:hover::before,
+[data-theme="light"] .onb-modal-overlay .onb-btn-ghost:hover::before,
+[data-theme="light"] .ssa-page .onb-btn-ghost:hover::before {
+  background: radial-gradient(120% 100% at 0% 0%, rgba(217, 119, 6, 0.18), transparent 60%);
+}
+[data-theme="light"] .att-workspace .onb-btn-primary,
+[data-theme="light"] .att-modal-overlay .onb-btn-primary,
+[data-theme="light"] .onb-modal-overlay .onb-btn-primary,
+[data-theme="light"] .ssa-page .onb-btn-primary {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 40%, #ea580c 75%, #c2410c 100%);
+  background-size: 200% 200%;
+  color: #fff;
+  border-color: rgba(180, 83, 9, 0.55);
+  box-shadow:
+    0 14px 30px -12px rgba(180, 83, 9, 0.55),
+    0 0 0 1px rgba(180, 83, 9, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  text-shadow: 0 1px 0 rgba(120, 53, 15, 0.35);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SHARED MODAL — ultra-modern frosted glass with warm accents
+   Class names: .att-modal-overlay + .att-modal-card.
+   Components opt-in by wrapping their modal in <div class="att-modal-overlay">
+   and the card itself in <div class="att-modal-card">. Animation classes
+   (Motion / <transition>) are still owned by the caller.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+.att-modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: radial-gradient(80% 60% at 50% 30%, rgba(120, 53, 15, 0.42), rgba(0, 0, 0, 0.72));
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.att-modal-card {
+  position: relative;
+  width: 100%; max-width: 760px;
+  max-height: calc(100vh - 48px);
+  display: flex; flex-direction: column;
+  border-radius: 22px;
+  overflow: hidden;
+  background:
+    radial-gradient(140% 90% at 0% 0%,   rgba(251, 191, 36, 0.10), transparent 55%),
+    radial-gradient(120% 90% at 100% 0%, rgba(251, 146, 60, 0.08), transparent 60%),
+    linear-gradient(180deg, rgba(22, 16, 12, 0.96), rgba(14, 10, 8, 0.98));
+  border: 1px solid rgba(251, 191, 36, 0.30);
+  box-shadow:
+    0 50px 100px -30px rgba(0, 0, 0, 0.75),
+    0 0 0 1px rgba(251, 191, 36, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  isolation: isolate;
+}
+/* Ambient warm aurora drift behind the content (always running) */
+.att-modal-card::before {
+  content: ''; position: absolute; inset: -30%; pointer-events: none;
+  background:
+    radial-gradient(35% 25% at 30% 0%,  rgba(251, 191, 36, 0.18), transparent 60%),
+    radial-gradient(40% 25% at 80% 100%, rgba(251, 146, 60, 0.14), transparent 60%);
+  filter: blur(20px);
+  animation: att-warm-aurora 18s ease-in-out infinite;
+  z-index: 0;
+}
+/* perforated edge strip on the left — punch-card motif */
+.att-modal-card::after {
+  content: ''; position: absolute; left: 12px; top: 20px; bottom: 20px; width: 4px;
+  background:
+    radial-gradient(circle at 50% 5px, rgba(251, 191, 36, 0.55) 1.4px, transparent 1.8px),
+    radial-gradient(circle at 50% 13px, rgba(251, 191, 36, 0.55) 1.4px, transparent 1.8px),
+    radial-gradient(circle at 50% 21px, rgba(251, 191, 36, 0.55) 1.4px, transparent 1.8px),
+    radial-gradient(circle at 50% 29px, rgba(251, 191, 36, 0.55) 1.4px, transparent 1.8px);
+  background-repeat: repeat-y; background-size: 4px 14px;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 1;
+}
+/* a one-shot sheen sweeps across the top of the modal on mount */
+.att-modal-card .modal-sheen {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.10) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: att-ticket-sheen 1.6s var(--att-spring) 0.25s 1 forwards;
+  z-index: 1;
+}
+/* lift card contents above the aurora layer */
+.att-modal-head, .att-modal-body, .att-modal-foot { position: relative; z-index: 2; }
+.att-modal-head {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 22px 26px 18px;
+  border-bottom: 1px dashed rgba(251, 191, 36, 0.20);
+}
+.att-modal-head h3 {
+  margin: 4px 0 0; font-size: 18px; font-weight: 800;
+  color: var(--hr-text); letter-spacing: -0.01em;
+}
+.att-modal-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10px; font-weight: 800; letter-spacing: 1.4px;
+  text-transform: uppercase; color: var(--att-teal-100);
+}
+.att-modal-eyebrow-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--att-orange-200);
+  box-shadow: 0 0 6px var(--att-orange-200);
+  animation: att-live-pulse 2.2s ease-in-out infinite;
+}
+.att-modal-body { padding: 18px 26px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+.att-modal-foot {
+  display: flex; gap: 8px; justify-content: flex-end; align-items: center;
+  padding: 16px 26px; border-top: 1px dashed rgba(251, 191, 36, 0.20);
+}
+.att-modal-foot .foot-spacer { flex: 1; font-size: 10.5px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--hr-text-dim); }
+.att-modal-icon-btn {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--hr-text-muted); cursor: pointer;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.att-modal-icon-btn:hover { background: rgba(255, 255, 255, 0.10); color: var(--hr-text); border-color: rgba(251, 191, 36, 0.25); }
+
+[data-theme="light"] .att-modal-overlay {
+  background: radial-gradient(80% 60% at 50% 30%, rgba(217, 119, 6, 0.35), rgba(40, 25, 10, 0.55));
+}
+[data-theme="light"] .att-modal-card {
+  background:
+    radial-gradient(140% 90% at 0% 0%,   rgba(251, 191, 36, 0.18), transparent 55%),
+    radial-gradient(120% 90% at 100% 0%, rgba(251, 146, 60, 0.12), transparent 60%),
+    linear-gradient(180deg, rgba(255, 250, 240, 0.96), rgba(255, 245, 224, 0.98));
+  border-color: rgba(180, 83, 9, 0.32);
+  box-shadow:
+    0 50px 100px -30px rgba(40, 25, 10, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+[data-theme="light"] .att-modal-card::after {
+  background:
+    radial-gradient(circle at 50% 5px, rgba(180, 83, 9, 0.55) 1.4px, transparent 1.8px),
+    radial-gradient(circle at 50% 13px, rgba(180, 83, 9, 0.55) 1.4px, transparent 1.8px),
+    radial-gradient(circle at 50% 21px, rgba(180, 83, 9, 0.55) 1.4px, transparent 1.8px),
+    radial-gradient(circle at 50% 29px, rgba(180, 83, 9, 0.55) 1.4px, transparent 1.8px);
+  background-repeat: repeat-y; background-size: 4px 14px;
+}
+[data-theme="light"] .att-modal-head { border-bottom-color: rgba(180, 83, 9, 0.28); }
+[data-theme="light"] .att-modal-foot { border-top-color: rgba(180, 83, 9, 0.28); }
+[data-theme="light"] .att-modal-eyebrow { color: var(--att-teal-500); }
+[data-theme="light"] .att-modal-icon-btn { background: rgba(180, 83, 9, 0.08); color: var(--hr-text-secondary); border-color: rgba(180, 83, 9, 0.18); }
+[data-theme="light"] .att-modal-icon-btn:hover { background: rgba(180, 83, 9, 0.16); color: var(--hr-text); border-color: rgba(180, 83, 9, 0.40); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION — kill every loop globally for the attendance module
+   ════════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .att-workspace [class*="att-aurora"],
+  .att-workspace [class*="att-glow-drift"],
+  .att-workspace [class*="att-heatmap-pulse"],
+  .att-workspace [class*="att-ring-rotate"],
+  .att-workspace [class*="att-live-pulse"],
+  .att-workspace [class*="att-gradient-flow"],
+  .att-workspace [class*="att-aurora-slide"],
+  .att-workspace [class*="att-scan-beam"],
+  .att-workspace [class*="att-pulse-rings"],
+  .att-workspace [class*="att-title-shimmer"],
+  .att-workspace [class*="att-blink"],
+  .ssa-page [class*="att-aurora"],
+  .ssa-page [class*="att-scan-beam"],
+  .ssa-page [class*="att-pulse-rings"],
+  .ssa-page [class*="att-blink"],
+  .ssa-page [class*="att-aurora-slide"] {
+    animation: none !important;
+  }
+}

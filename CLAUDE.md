@@ -35,7 +35,9 @@ If a request would force a shortcut that breaks any of the above, flag it before
 | **Charts** | Chart.js 4 + vue-chartjs |
 | **Icons** | lucide-vue-next |
 | **Toast notifications** | vue-toastification (globally installed) |
-| **PDF export** | jspdf + jspdf-autotable |
+| **Client-side PDFs** | jspdf + jspdf-autotable (used by Documents Hub: SLA, Handover, DPR, expense receipts) |
+| **Server-side PDFs** | WeasyPrint (HTML/CSS → PDF, Pango/Cairo backend). Used for HR Attendance Reports — each report has a unique cover motif. See "Server-side reporting stack" below for the install dance on Windows. |
+| **Server-side Excel** | openpyxl (cell-level styling, conditional formats, formulas) + xlsxwriter (native charts, sparklines, data bars). Used side-by-side by HR Attendance Reports — pick xlsxwriter when you need an embedded chart, openpyxl otherwise. |
 | **3D / animation** | three, @tresjs/core, @tresjs/cientos, @theatre/core, @theatre/studio, gsap, motion-v, @vueuse/motion, @lottiefiles/dotlottie-vue. The bare `motion` package is also installed as a sibling — **do not import from it**; use `motion-v` (see Animations convention below). |
 | **Utilities** | lodash, @vueuse/core, country-state-city |
 | **Backend runtime** | Python 3.14 (path: `C:\Users\91700\AppData\Local\Programs\Python\Python314\`) |
@@ -83,6 +85,52 @@ cd C:\Projects\FourConnectService
 
 Backend API docs: http://localhost:8000/api/docs
 Backend Redoc: http://localhost:8000/api/redoc
+
+### Server-side reporting stack (WeasyPrint, openpyxl, xlsxwriter)
+**HR Attendance Reports** (`/admin/hr/attendance/reports`) are rendered on the **backend** using three Python libraries. New report-style features should reach for these first instead of inventing client-side PDF/Excel generation:
+
+| Library | Use it for | Don't use it for |
+|---|---|---|
+| **WeasyPrint** | Branded PDFs with magazine-style layouts, multi-page docs with running headers/footers, complex CSS (multi-column, gradients, custom fonts, `@page` rules). Write HTML+CSS once, render to PDF. | Plain receipts the user generates client-side from already-loaded data (jsPDF stays the right tool there — no backend roundtrip). |
+| **openpyxl** | Spreadsheet-feel exports with formulas, named cells, conditional formats (`ColorScaleRule`, `CellIsRule`), merged cells, traffic-light coloring, signature blocks. Stronger when the workbook is meant to be edited. | Embedded charts — openpyxl's chart support is limited and brittle. |
+| **xlsxwriter** | Workbooks with native charts, sparklines, data bars, autofilter, frozen panes, rich number formats (`0.00" h"`), per-cell styles. Stronger when you want a polished one-shot export. | Editing an existing workbook — xlsxwriter only writes new files, can't modify. |
+
+You can mix them in the same module — see [app/utils/hr/attendance_reports/excel.py](https://github.com) where `xlsxwriter` powers Monthly/Late/Overtime/Daily (which embed charts) and `openpyxl` powers WFH/Compliance/Anomalies (which need formula-friendly traffic-light formatting).
+
+**Public API** (always import from the package, never the submodules directly):
+```python
+from app.utils.hr.attendance_reports import (
+    REPORT_KEYS, fetch_rows, shape, shape_summary,
+    render_pdf, render_excel, render_csv, report_meta,
+)
+```
+
+**Imports must be lazy in modules that boot before GTK is set up.** WeasyPrint shells out to `libgobject` / `libpango` at *import time*, so a stray `import weasyprint` at module top-level will crash the backend on Windows machines that haven't run the GTK bootstrap yet. Always:
+```python
+# Inside the function that actually generates the PDF:
+from app.utils.gtk_bootstrap import ensure_gtk_runtime
+ensure_gtk_runtime()
+from weasyprint import HTML  # imported lazily after PATH is prepared
+```
+The bootstrap is already called once from [app/main.py](https://github.com), so by the time a request hits a handler the PATH is ready — but keep the lazy import anyway so unit tests and ad-hoc scripts don't have to remember the rule.
+
+#### Windows GTK setup (one-time)
+WeasyPrint on Windows needs Pango/GLib/Cairo DLLs. The repo includes a bootstrap that pulls a curated set of GTK3 binaries from the MSYS2 mirror into `vendor/gtk-runtime/bin/` so dev machines don't have to install the tschoonj runtime. From `C:\Projects\FourConnectService`:
+```powershell
+& "C:\Users\91700\AppData\Local\Programs\Python\Python314\python.exe" vendor\setup_gtk.py
+```
+The script is idempotent — re-running it skips DLLs already present. After that, every uvicorn launch calls `app.utils.gtk_bootstrap.ensure_gtk_runtime()` at startup, which prepends `vendor/gtk-runtime/bin/` to `PATH` and `os.add_dll_directory()`. On Linux/macOS the bootstrap is a no-op and the system's Pango/Cairo are used.
+
+If you see `OSError: cannot load library 'libgobject-2.0-0'` in `crash.log`, the bootstrap can't find DLLs — rerun `vendor\setup_gtk.py` (it may need to pull newer MSYS2 versions if the upstream rotated). The export endpoint surfaces this as a 503 with `"WeasyPrint can't find GTK DLLs"` so the frontend can show a clear message.
+
+#### Adding a new report design
+1. Add the data shape to [app/utils/hr/attendance_reports/data.py](https://github.com) — fetcher returns dicts, shaper returns the per-report view, `REPORT_META[key]` carries name/tagline/accent + a `motif` slug.
+2. PDF cover lives in [app/utils/hr/attendance_reports/pdf.py](https://github.com) — add a `_cover_<motif>(theme, summary, period)` function and register it in `COVER_RENDERERS`. The shared body table picks up your column descriptor from `_columns(key)`.
+3. Excel workbook lives in [app/utils/hr/attendance_reports/excel.py](https://github.com) — add `_excel_<key>(rows, summary, meta)` and register in `RENDERERS`. Pick xlsxwriter if you want a chart, openpyxl otherwise.
+4. CSV columns live in [app/utils/hr/attendance_reports/csv_export.py](https://github.com) — extend `_columns()`.
+5. Add the key to `REPORT_KEYS` in `data.py` and add the card metadata to `REPORTS` in [src/views/hr/attendance/sections/AttReportsSection.vue](https://github.com).
+
+The backend export URL is auto-derived: `GET /api/hr/attendance/reports/{report_key}/export?format=pdf|excel|csv&from=…&to=…&department_id=…`.
 
 ### Database migrations (from `C:\Projects\FourConnectService`)
 ```powershell
@@ -599,6 +647,8 @@ Several views read `currentUser` from `localStorage.getItem('user')`. That key i
 - **Returning soft-deleted records in list-shape responses** — soft delete is enforced at the *primary fetch* (e.g. `Project.is_deleted == False`), but several list endpoints serialize nested arrays (`team_members`, `attachments`, etc.) from the relationship without filtering by status. Past offender: `GET /api/team/projects` was including team members with `status='removed'` in each project's `team_members` array — so removed members kept appearing in row avatars and `team_count` even though the side-panel "Assigned Team" filter hid them. After a successful "Remove" this looked like the action had failed. **When serializing a relationship array in a list endpoint, filter out tombstoned rows** (`status='removed'`, `is_deleted=True`, etc.) before iterating — match what the detail view shows.
 - **Bare `npm install` (without `--legacy-peer-deps`)** — fails with `ERESOLVE` because `@vitejs/plugin-vue@^5` lists Vite 5/6 as peer but the project declares Vite 8. Always pass `--legacy-peer-deps` for installs in this repo until plugin-vue is bumped to v6+.
 - **Targeting a globally-styled class without `!important`** — [src/styles/theme-light-rescue.css](src/styles/theme-light-rescue.css) applies broad pattern overrides to generic class names like `.table-header`, `.glass-card`, `.modal-*`. If a specific page needs a *different* light-mode background for one of these classes (e.g., transparent instead of the rescue's faint overlay), the page's scoped CSS specificity ties with the rescue rule (both at 0,3,0 after the data-v attribute) and the cascade order is unreliable. Use `!important` only on the conflicting property and add a one-line comment naming the rescue rule that's being defeated — example: [DocumentDrivePage.vue](src/views/documents/DocumentDrivePage.vue) `.table-header` override.
+- **`import weasyprint` at module top-level** — WeasyPrint shells out to libgobject/libpango at *import* time, not call time. On Windows machines that haven't run `vendor/setup_gtk.py` yet, a top-level import crashes uvicorn at boot with `OSError: cannot load library 'libgobject-2.0-0'`. Always defer the import to the function that actually renders a PDF, and call `app.utils.gtk_bootstrap.ensure_gtk_runtime()` immediately before it (see [pdf.py](https://github.com) for the pattern). The bootstrap is also called once from main.py so PATH is ready by the time a request lands — but keep the lazy import anyway so ad-hoc scripts and tests don't have to remember the rule.
+- **Exceeding the backend's `limit` query cap on `/api/hr/attendance/today`** — the route declares `limit: int = Query(25, ge=1, le=200)`. Older frontend code (now fixed in [attendanceReportGenerator.js](src/utils/attendanceReportGenerator.js)) was passing `limit: 500`, which the backend rejected with 422. axios threw, the frontend swallowed it in a `try/catch`, the reports page showed `0` on every card with no visible error. **Always paginate on the caller side** with `page` / `limit ≤ 200`, or use the new `/api/hr/attendance/reports/preview` endpoint which aggregates server-side and avoids the per-day fanout entirely.
 
 ---
 

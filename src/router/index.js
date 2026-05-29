@@ -119,7 +119,7 @@ const routes = [
             { path: 'self-service/reimbursements', name: 'SelfServiceReimbursements', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Reimbursements', phase: 'Phase 3 — Payroll' }) },
             { path: 'self-service/training', name: 'SelfServiceTraining', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Training', phase: 'Phase 5 — Growth & Lifecycle' }) },
             { path: 'self-service/assets', name: 'SelfServiceAssets', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Assets', phase: 'Phase 5 — Growth & Lifecycle' }) },
-            { path: 'self-service/documents', name: 'SelfServiceDocuments', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Documents', phase: 'Phase 1 — Foundation' }) },
+            { path: 'self-service/documents', name: 'SelfServiceDocuments', component: () => import('../views/hr/SelfServiceDocumentsPage.vue') },
             { path: 'self-service/performance', name: 'SelfServicePerformance', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Performance Reviews', phase: 'Phase 5 — Growth & Lifecycle' }) },
             { path: 'self-service/:pathMatch(.*)*', name: 'SelfServiceCatchall', component: PlaceholderPage, props: () => ({ type: 'self-service' }) },
             { path: ':pathMatch(.*)*', name: 'DynamicPlaceholder', component: PlaceholderPage, props: route => ({ type: route.params.pathMatch[0] || 'dashboard' }) }
@@ -196,7 +196,12 @@ const routes = [
                 component: () => import('../views/hr/employees/EmployeeProfilePage.vue'),
                 props: true,
             },
-            { path: 'hr/employee-documents', name: 'HrEmployeeDocuments', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Employee Documents', phase: 'Phase 1 — Foundation' }) },
+            { path: 'hr/employee-documents', redirect: '/admin/hr/employee-documents/dashboard' },
+            {
+                path: 'hr/employee-documents/:tab(dashboard|kyc|contracts|certificates|salary-slips|experience-letters|id-proofs|education|compliance|verification|requests|expiry|templates|reports|archive)',
+                name: 'HrEmployeeDocumentsTab',
+                component: () => import('../views/hr/employee-documents/HrEmployeeDocumentsWorkspacePage.vue'),
+            },
             { path: 'hr/recruitment', redirect: '/admin/hr/recruitment/dashboard' },
             {
                 path: 'hr/recruitment/:tab(dashboard|requisitions|positions|candidates|applications|screening|interviews|panels|offers|pipeline|analytics)',
@@ -209,7 +214,12 @@ const routes = [
                 name: 'HrOnboardingTab',
                 component: () => import('../views/hr/onboarding/HrOnboardingWorkspacePage.vue'),
             },
-            { path: 'hr/attendance', name: 'HrAttendance', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Attendance', phase: 'Phase 2 — Time Management' }) },
+            { path: 'hr/attendance', redirect: '/admin/hr/attendance/dashboard' },
+            {
+              path: 'hr/attendance/:tab(dashboard|daily|corrections|shifts|wfh|half-day|excess-breaks|biometric|policies|late-rules|overtime|remote|geo|holidays|reports|logs|exceptions)',
+              name: 'HrAttendanceTab',
+              component: () => import('../views/hr/attendance/HrAttendanceWorkspacePage.vue'),
+            },
             { path: 'hr/leave', name: 'HrLeave', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Leave Management', phase: 'Phase 2 — Time Management' }) },
             { path: 'hr/shifts', name: 'HrShifts', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Shifts & Rosters', phase: 'Phase 2 — Time Management' }) },
             { path: 'hr/payroll', name: 'HrPayroll', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Payroll (India)', phase: 'Phase 3 — Pay & Benefits' }) },

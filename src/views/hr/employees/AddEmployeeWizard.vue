@@ -374,7 +374,28 @@
             </div>
 
             <div class="field-block">
-              <HrFieldLabel label="Monthly CTC (₹)" required :error="!!errors.monthly_ctc" />
+              <HrFieldLabel label="Annual CTC (₹)" required :error="!!errors.annual_ctc">
+                Annual CTC (₹)
+                <span v-if="form.annual_ctc" class="ctc-auto-chip">Monthly ≈ ₹{{ Number(form.annual_ctc / 12).toLocaleString('en-IN', { maximumFractionDigits: 0 }) }}</span>
+              </HrFieldLabel>
+              <HrNumberInput
+                v-model="form.annual_ctc"
+                :min="0"
+                :step-by="50000"
+                :error="!!errors.annual_ctc"
+                :error-text="errors.annual_ctc"
+              />
+            </div>
+            <div class="field-block">
+              <HrFieldLabel label="Monthly CTC (₹)" :error="!!errors.monthly_ctc">
+                Monthly CTC (₹)
+                <span class="ctc-auto-chip" v-if="autoAnnualCtc">
+                  <svg viewBox="0 0 14 14" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="2,8 6,11 12,3" />
+                  </svg>
+                  Auto · Annual ₹{{ autoAnnualCtcFormatted }}
+                </span>
+              </HrFieldLabel>
               <HrNumberInput
                 v-model="form.monthly_ctc"
                 :min="0"
@@ -383,26 +404,44 @@
                 :error-text="errors.monthly_ctc"
               />
             </div>
-            <div class="field-block">
-              <HrFieldLabel label="Annual CTC (₹)" required :error="!!errors.annual_ctc">
-                Annual CTC (₹)
-                <span class="ctc-auto-chip" v-if="autoAnnualCtc">
-                  <svg viewBox="0 0 14 14" width="10" height="10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="2,8 6,11 12,3" />
-                  </svg>
-                  Auto · ₹{{ autoAnnualCtcFormatted }}
-                </span>
-              </HrFieldLabel>
-              <HrNumberInput
-                v-model="form.annual_ctc"
-                :min="0"
-                :step-by="10000"
-                :error="!!errors.annual_ctc"
-                :error-text="errors.annual_ctc"
-              />
-            </div>
-            <div class="note phase-tag full">
-              Detailed salary structure (Basic / HRA / Special / Statutory) will land with Phase 3 — Payroll.
+
+            <!-- ════════ Indian Salary Structure Preview ════════ -->
+            <div v-if="salaryStructure" class="salary-structure full">
+              <div class="ss-head">
+                <div class="ss-title">
+                  <span class="ss-eyebrow">SALARY STRUCTURE · INDIAN STANDARD</span>
+                  <span class="ss-sub">Auto-derived from annual CTC. Read-only preview.</span>
+                </div>
+                <div class="ss-net">
+                  <span class="ss-net-label">Take-Home (Monthly)</span>
+                  <span class="ss-net-value">₹{{ salaryStructure.monthly.net.toLocaleString('en-IN') }}</span>
+                </div>
+              </div>
+              <table class="ss-table">
+                <thead>
+                  <tr><th>Component</th><th class="num">Monthly (₹)</th><th class="num">Annual (₹)</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>Basic</td><td class="num">{{ salaryStructure.monthly.basic.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.basic.toLocaleString('en-IN') }}</td></tr>
+                  <tr><td>HRA</td><td class="num">{{ salaryStructure.monthly.hra.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.hra.toLocaleString('en-IN') }}</td></tr>
+                  <tr><td>Special Allowance</td><td class="num">{{ salaryStructure.monthly.special.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.special.toLocaleString('en-IN') }}</td></tr>
+                  <tr><td>Conveyance</td><td class="num">{{ salaryStructure.monthly.conveyance.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.conveyance.toLocaleString('en-IN') }}</td></tr>
+                  <tr><td>Medical</td><td class="num">{{ salaryStructure.monthly.medical.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.medical.toLocaleString('en-IN') }}</td></tr>
+                  <tr><td>LTA</td><td class="num">{{ salaryStructure.monthly.lta.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.lta.toLocaleString('en-IN') }}</td></tr>
+                  <tr><td>Telephone / Internet</td><td class="num">{{ salaryStructure.monthly.telephone.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.telephone.toLocaleString('en-IN') }}</td></tr>
+                  <tr><td>Meal Allowance</td><td class="num">{{ salaryStructure.monthly.food.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.food.toLocaleString('en-IN') }}</td></tr>
+                  <tr class="ss-row-total"><td>Gross Salary (A)</td><td class="num">{{ salaryStructure.monthly.gross.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.gross.toLocaleString('en-IN') }}</td></tr>
+                  <tr><td>Employer PF</td><td class="num">{{ salaryStructure.monthly.employerPf.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.employerPf.toLocaleString('en-IN') }}</td></tr>
+                  <tr><td>Gratuity (accrual)</td><td class="num">{{ salaryStructure.monthly.gratuity.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.gratuity.toLocaleString('en-IN') }}</td></tr>
+                  <tr class="ss-row-grand"><td>Total Annual CTC</td><td class="num">—</td><td class="num">{{ salaryStructure.annualCtc.toLocaleString('en-IN') }}</td></tr>
+                  <tr class="ss-row-deduction"><td>Employee PF (-)</td><td class="num">{{ salaryStructure.monthly.employeePf.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.employeePf.toLocaleString('en-IN') }}</td></tr>
+                  <tr class="ss-row-deduction"><td>Professional Tax (-)</td><td class="num">{{ salaryStructure.monthly.profTax.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.profTax.toLocaleString('en-IN') }}</td></tr>
+                  <tr class="ss-row-net"><td>Net Take-Home (indicative)</td><td class="num">{{ salaryStructure.monthly.net.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.netAnnual.toLocaleString('en-IN') }}</td></tr>
+                </tbody>
+              </table>
+              <div class="ss-foot">
+                <span>* Indicative split as per typical Indian payroll convention (Basic 50%, HRA 40% of Basic, employer PF capped at ₹21,600/yr, Gratuity at 4.81% of Basic). Final payslip may vary based on tax declarations and Income Tax (TDS).</span>
+              </div>
             </div>
           </div>
         </section>
@@ -466,6 +505,7 @@ import { useSpotlight } from '../../../composables/useSpotlight'
 import { useMagnetic } from '../../../composables/useMagnetic'
 import axios from 'axios'
 import { API } from '@/utils/api'
+import { deriveSalaryStructure } from '@/utils/edocPdfGenerator'
 
 const props = defineProps({
   open: { type: Boolean, required: true },
@@ -942,12 +982,25 @@ const autoAnnualCtcFormatted = computed(() =>
   autoAnnualCtc.value ? autoAnnualCtc.value.toLocaleString('en-IN') : ''
 )
 
-// Annual CTC auto-compute
+// Annual CTC auto-compute (monthly → annual)
 watch(() => form.monthly_ctc, (v) => {
   if (v && (!form.annual_ctc || form.annual_ctc === v * 12 || form.annual_ctc === (Number(v) - 1) * 12)) {
     form.annual_ctc = Number(v) * 12
   }
 })
+// Annual CTC change → recompute monthly (so the schedule reflects user edits to the annual field).
+watch(() => form.annual_ctc, (v) => {
+  const a = Number(v)
+  if (!Number.isFinite(a) || a <= 0) return
+  const computedMonthly = Math.round(a / 12)
+  // Only overwrite monthly if it's empty or appears to be a stale auto-derived value.
+  if (!form.monthly_ctc || Math.abs(Number(form.monthly_ctc) * 12 - a) > 24) {
+    form.monthly_ctc = computedMonthly
+  }
+})
+
+// Live Indian salary structure preview. Returns null when CTC is not set.
+const salaryStructure = computed(() => deriveSalaryStructure(Number(form.annual_ctc) || 0))
 
 // ─── Step nav ───
 const goTo = (idx) => {
@@ -1244,6 +1297,112 @@ watch(() => props.open, async (v) => { if (v) await loadReferenceData() })
   color: var(--hr-accent-gold);
   flex-shrink: 0;
 }
+
+/* ════════ Indian salary structure preview ════════ */
+.salary-structure {
+  margin-top: 8px;
+  border-radius: 14px;
+  border: 1px solid var(--hr-accent-gold-border);
+  background:
+    linear-gradient(180deg, rgba(251,191,36,0.06), rgba(251,191,36,0.02));
+  overflow: hidden;
+}
+.ss-head {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--hr-accent-gold-border);
+}
+.ss-title { display: flex; flex-direction: column; gap: 2px; }
+.ss-eyebrow {
+  font-family: var(--hr-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--hr-accent-gold);
+}
+.ss-sub { font-size: 11.5px; color: var(--hr-text-muted); }
+.ss-net {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: var(--hr-accent-gold-soft);
+  border: 1px solid var(--hr-accent-gold-border);
+}
+.ss-net-label { font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--hr-accent-gold); }
+.ss-net-value { font-size: 18px; font-weight: 800; color: var(--hr-text); letter-spacing: -0.01em; }
+
+.ss-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  color: var(--hr-text);
+}
+.ss-table thead th {
+  text-align: left;
+  padding: 9px 16px;
+  font-family: var(--hr-mono);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--hr-accent-gold);
+  background: rgba(251,191,36,0.06);
+  border-bottom: 1px solid var(--hr-accent-gold-border);
+}
+.ss-table thead th.num { text-align: right; }
+.ss-table tbody td {
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--hr-border);
+  color: var(--hr-text-secondary);
+}
+.ss-table tbody td.num { text-align: right; font-family: var(--hr-mono); color: var(--hr-text); }
+.ss-table tr.ss-row-total td {
+  background: rgba(251,191,36,0.08);
+  font-weight: 700;
+  color: var(--hr-text);
+  border-top: 1px solid var(--hr-accent-gold-border);
+  border-bottom: 1px solid var(--hr-accent-gold-border);
+}
+.ss-table tr.ss-row-grand td {
+  background: linear-gradient(90deg, rgba(251,191,36,0.22), rgba(251,146,60,0.22));
+  color: var(--hr-text);
+  font-weight: 800;
+  font-size: 13.5px;
+  border-top: 1px solid var(--hr-accent-gold);
+}
+.ss-table tr.ss-row-deduction td { color: #f87171; }
+.ss-table tr.ss-row-deduction td.num { color: #f87171; }
+.ss-table tr.ss-row-net td {
+  background: rgba(52,211,153,0.08);
+  color: #10b981;
+  font-weight: 800;
+  font-size: 13.5px;
+  border-top: 1px solid rgba(52,211,153,0.4);
+}
+.ss-foot {
+  padding: 10px 16px 12px;
+  font-size: 10.5px; line-height: 1.55;
+  color: var(--hr-text-muted);
+  background: rgba(251,191,36,0.03);
+}
+
+[data-theme="light"] .salary-structure {
+  border-color: rgba(180,83,9,0.32);
+  background: linear-gradient(180deg, rgba(255,250,240,0.85), rgba(255,246,232,0.7));
+}
+[data-theme="light"] .ss-head { border-bottom-color: rgba(180,83,9,0.2); }
+[data-theme="light"] .ss-eyebrow { color: #b45309; }
+[data-theme="light"] .ss-sub { color: #6b5840; }
+[data-theme="light"] .ss-net { background: rgba(217,119,6,0.12); border-color: rgba(217,119,6,0.32); }
+[data-theme="light"] .ss-net-label { color: #b45309; }
+[data-theme="light"] .ss-net-value { color: #1a1410; }
+[data-theme="light"] .ss-table thead th {
+  background: rgba(217,119,6,0.10);
+  color: #b45309;
+  border-bottom-color: rgba(180,83,9,0.2);
+}
+[data-theme="light"] .ss-table tbody td { color: #44362a; border-bottom-color: rgba(40,25,10,0.08); }
+[data-theme="light"] .ss-table tbody td.num { color: #1a1410; }
+[data-theme="light"] .ss-table tr.ss-row-total td { background: rgba(217,119,6,0.12); color: #1a1410; border-color: rgba(180,83,9,0.32); }
+[data-theme="light"] .ss-table tr.ss-row-grand td { color: #1a1410; }
+[data-theme="light"] .ss-table tr.ss-row-deduction td,
+[data-theme="light"] .ss-table tr.ss-row-deduction td.num { color: #b91c1c; }
+[data-theme="light"] .ss-table tr.ss-row-net td { color: #047857; background: rgba(5,150,105,0.08); border-top-color: rgba(5,150,105,0.32); }
+[data-theme="light"] .ss-foot { color: #6b5840; background: rgba(217,119,6,0.05); }
 
 /* Footer */
 .wiz-footer {

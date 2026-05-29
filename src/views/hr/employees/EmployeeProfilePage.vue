@@ -400,12 +400,32 @@
                     <span class="ctc-value gold">{{ formatINR(emp.annual_ctc) || '—' }}</span>
                   </div>
                 </div>
-                <p class="muted-note">Detailed salary structure lands with Phase 3 — Payroll.</p>
+                <!-- Indian salary structure preview (read-only mode) -->
+                <div v-if="salaryStructure" class="ss-preview">
+                  <div class="ss-preview-head">
+                    <span class="ss-preview-eye">SALARY STRUCTURE · INDIAN STANDARD</span>
+                    <span class="ss-preview-net">Take-Home ≈ ₹{{ salaryStructure.monthly.net.toLocaleString('en-IN') }}/mo</span>
+                  </div>
+                  <table class="ss-mini">
+                    <thead><tr><th>Component</th><th class="num">Monthly</th><th class="num">Annual</th></tr></thead>
+                    <tbody>
+                      <tr><td>Basic</td><td class="num">{{ salaryStructure.monthly.basic.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.basic.toLocaleString('en-IN') }}</td></tr>
+                      <tr><td>HRA</td><td class="num">{{ salaryStructure.monthly.hra.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.hra.toLocaleString('en-IN') }}</td></tr>
+                      <tr><td>Special</td><td class="num">{{ salaryStructure.monthly.special.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.special.toLocaleString('en-IN') }}</td></tr>
+                      <tr><td>Conveyance + Medical + LTA + Telephone + Meal</td><td class="num">{{ (salaryStructure.monthly.conveyance + salaryStructure.monthly.medical + salaryStructure.monthly.lta + salaryStructure.monthly.telephone + salaryStructure.monthly.food).toLocaleString('en-IN') }}</td><td class="num">{{ (salaryStructure.conveyance + salaryStructure.medical + salaryStructure.lta + salaryStructure.telephone + salaryStructure.food).toLocaleString('en-IN') }}</td></tr>
+                      <tr class="r-total"><td>Gross Salary</td><td class="num">{{ salaryStructure.monthly.gross.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.gross.toLocaleString('en-IN') }}</td></tr>
+                      <tr><td>Employer PF + Gratuity</td><td class="num">{{ (salaryStructure.monthly.employerPf + salaryStructure.monthly.gratuity).toLocaleString('en-IN') }}</td><td class="num">{{ (salaryStructure.employerPf + salaryStructure.gratuity).toLocaleString('en-IN') }}</td></tr>
+                      <tr class="r-ded"><td>Employee PF + Professional Tax (-)</td><td class="num">{{ (salaryStructure.monthly.employeePf + salaryStructure.monthly.profTax).toLocaleString('en-IN') }}</td><td class="num">{{ (salaryStructure.employeePf + salaryStructure.profTax).toLocaleString('en-IN') }}</td></tr>
+                      <tr class="r-net"><td>Net Take-Home (indicative)</td><td class="num">{{ salaryStructure.monthly.net.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.netAnnual.toLocaleString('en-IN') }}</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="muted-note" v-else>Set the Annual CTC to see the auto-derived Indian salary structure.</p>
               </template>
               <template v-else>
                 <div class="edit-grid">
-                  <div class="field-block"><HrFieldLabel label="Monthly CTC (₹)" /><HrNumberInput v-model="form.monthly_ctc" :min="0" :step-by="1000" /></div>
-                  <div class="field-block"><HrFieldLabel label="Annual CTC (₹)" :helper="autoAnnual ? `Auto · ₹${autoAnnual}` : 'Editable'" /><HrNumberInput v-model="form.annual_ctc" :min="0" :step-by="10000" /></div>
+                  <div class="field-block"><HrFieldLabel label="Annual CTC (₹)" :helper="form.annual_ctc ? `Monthly ≈ ₹${Number(form.annual_ctc / 12).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : 'Required'" /><HrNumberInput v-model="form.annual_ctc" :min="0" :step-by="50000" /></div>
+                  <div class="field-block"><HrFieldLabel label="Monthly CTC (₹)" :helper="autoAnnual ? `Auto · Annual ₹${autoAnnual}` : 'Auto-derived'" /><HrNumberInput v-model="form.monthly_ctc" :min="0" :step-by="1000" /></div>
                 </div>
               </template>
             </ProfileCard>
@@ -536,6 +556,7 @@ import { useEmployees, useHrReference } from '../../../composables/useEmployees'
 import { useToast } from '../../../composables/useToast'
 import { useSpotlight } from '../../../composables/useSpotlight'
 import { API } from '@/utils/api'
+import { deriveSalaryStructure } from '@/utils/edocPdfGenerator'
 
 // ─── Small inline display components ───
 const DataPair = {
@@ -710,6 +731,12 @@ const formatINR = (n) => {
 const autoAnnual = computed(() => {
   const m = Number(form.monthly_ctc)
   return m > 0 ? (m * 12).toLocaleString('en-IN') : ''
+})
+
+// Live Indian salary structure — derived from the saved annual_ctc on the employee record.
+const salaryStructure = computed(() => {
+  const annual = Number(emp.value?.annual_ctc)
+  return Number.isFinite(annual) && annual > 0 ? deriveSalaryStructure(annual) : null
 })
 
 const maskedAccount = computed(() => emp.value?.account_number || '—')
@@ -1601,6 +1628,59 @@ onMounted(reload)
 }
 
 .muted-note { color: var(--hr-text-dim); font-size: 11.5px; margin: 2px 0 0; }
+
+/* ── Indian salary structure preview (read-only) ── */
+.ss-preview {
+  margin-top: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--hr-accent-gold-border);
+  background: linear-gradient(180deg, rgba(251,191,36,0.05), rgba(251,191,36,0.01));
+  overflow: hidden;
+}
+.ss-preview-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--hr-accent-gold-border);
+  background: rgba(251,191,36,0.04);
+}
+.ss-preview-eye {
+  font-family: var(--hr-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--hr-accent-gold);
+}
+.ss-preview-net {
+  font-size: 12px; font-weight: 700; color: #10b981;
+  padding: 3px 9px; border-radius: 999px;
+  background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3);
+}
+.ss-mini { width: 100%; border-collapse: collapse; font-size: 12px; }
+.ss-mini thead th {
+  text-align: left; padding: 7px 14px;
+  font-family: var(--hr-mono);
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--hr-text-muted);
+  border-bottom: 1px solid var(--hr-border);
+}
+.ss-mini thead th.num { text-align: right; }
+.ss-mini tbody td {
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--hr-border);
+  color: var(--hr-text-secondary);
+}
+.ss-mini tbody td.num { text-align: right; font-family: var(--hr-mono); color: var(--hr-text); }
+.ss-mini tr.r-total td { background: rgba(251,191,36,0.06); font-weight: 700; color: var(--hr-text); }
+.ss-mini tr.r-ded td, .ss-mini tr.r-ded td.num { color: #f87171; }
+.ss-mini tr.r-net td { background: rgba(52,211,153,0.06); color: #10b981; font-weight: 800; }
+
+[data-theme="light"] .ss-preview { border-color: rgba(180,83,9,0.3); background: linear-gradient(180deg, rgba(255,250,240,0.8), rgba(255,246,232,0.6)); }
+[data-theme="light"] .ss-preview-head { border-bottom-color: rgba(180,83,9,0.2); background: rgba(217,119,6,0.08); }
+[data-theme="light"] .ss-preview-eye { color: #b45309; }
+[data-theme="light"] .ss-preview-net { color: #047857; background: rgba(5,150,105,0.1); border-color: rgba(5,150,105,0.32); }
+[data-theme="light"] .ss-mini thead th { color: #8a6f4b; border-bottom-color: rgba(40,25,10,0.1); }
+[data-theme="light"] .ss-mini tbody td { color: #44362a; border-bottom-color: rgba(40,25,10,0.08); }
+[data-theme="light"] .ss-mini tbody td.num { color: #1a1410; }
+[data-theme="light"] .ss-mini tr.r-total td { background: rgba(217,119,6,0.12); color: #1a1410; }
+[data-theme="light"] .ss-mini tr.r-ded td, [data-theme="light"] .ss-mini tr.r-ded td.num { color: #b91c1c; }
+[data-theme="light"] .ss-mini tr.r-net td { color: #047857; background: rgba(5,150,105,0.08); }
 
 .reveal-row { display: flex; justify-content: flex-end; padding: 2px 0; }
 .ghost-mini {

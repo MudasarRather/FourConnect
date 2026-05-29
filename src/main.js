@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import './style.css'
 import './styles/theme.css'
 import './styles/theme-light-rescue.css'
+import './styles/attendance-modal-rescue.css'
 import App from './App.vue'
 import router from './router'
 

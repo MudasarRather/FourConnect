@@ -33,7 +33,11 @@
       "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:8000/health\" -TimeoutSec 5 -UseBasicParsing; \"Body: $\\($r.Content\\)  Server: $\\($r.Headers.Server\\)\" } catch { \"Err: $\\($_.Exception.Message\\)\" })",
       "PowerShell($f = \"C:\\\\Projects\\\\FourConnectService\\\\crash.log\"; if \\(Test-Path $f\\) { $info = Get-Item $f; \"Last modified: $\\($info.LastWriteTime\\)\"; \"Size: $\\($info.Length\\) bytes\" } else { \"No crash.log\" })",
       "PowerShell($env:PYTHONIOENCODING=\"utf-8\"; & \"C:\\\\Users\\\\91700\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe\" \"C:\\\\Projects\\\\FourConnectService\\\\test_archive_endpoint.py\"; Start-Sleep -Seconds 1; \"---  Last 30 crash log lines ---\"; Get-Content \"C:\\\\Projects\\\\FourConnectService\\\\crash.log\" -Tail 30)",
-      "PowerShell($env:PYTHONIOENCODING=\"utf-8\"; & \"C:\\\\Users\\\\91700\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe\" \"C:\\\\Projects\\\\FourConnectService\\\\check_users_schema.py\")"
+      "PowerShell($env:PYTHONIOENCODING=\"utf-8\"; & \"C:\\\\Users\\\\91700\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe\" \"C:\\\\Projects\\\\FourConnectService\\\\check_users_schema.py\")",
+      "PowerShell(Get-Process python -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }; Start-Sleep 4; Get-Process python -ErrorAction SilentlyContinue | Format-Table Id, WorkingSet)",
+      "Bash(C:/Users/91700/AppData/Local/Programs/Python/Python314/python.exe -c ' *)",
+      "Bash(findstr \":8000\")",
+      "Bash(tasklist /FI \"IMAGENAME eq python.exe\" /FO TABLE)"
     ]
   }
 }

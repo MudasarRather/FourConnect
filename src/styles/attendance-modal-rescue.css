@@ -1,0 +1,620 @@
+/* ════════════════════════════════════════════════════════════════════════════
+   ATTENDANCE-MODAL RESCUE — global, unscoped overrides.
+   ────────────────────────────────────────────────────────────────────────────
+   Why this file exists:
+
+   The attendance module renders its create/edit forms inside the shared
+   `OnbModal` from the onboarding folder, with `OnbField` rows for each
+   input. `OnbField`'s scoped CSS uses `--hr-input-bg` / `--hr-input-border`
+   tokens that are 3 % opacity in light mode — intentionally subtle on the
+   dark onboarding canvas, but on the cream attendance modal background the
+   borders become invisible after a fresh reload.
+
+   We can't put the contrast override in `attendance-theme.css` because that
+   file is `@import`-ed inside each section's `<style scoped>` block. The
+   scoping pipeline tags every rule with the section's `data-v` hash, but
+   `OnbField`'s internal `.onb-field-control` element only carries
+   `OnbField`'s own hash — so the override never matches.
+
+   Loading this stylesheet globally from `main.js` keeps the rules unscoped,
+   so they match `OnbField`'s internal elements regardless of which section
+   opened the modal or whether the page was hot-loaded vs. cold-reloaded.
+
+   The selectors are tightened to `.onb-modal-overlay …` so nothing leaks
+   into onboarding pages (where OnbField's default subtle look is desired)
+   or the rest of the app.
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════════════════
+   `.onb-btn-ghost` / `.onb-btn-primary` GLOBALLY when used inside any
+   attendance-module modal. Covers all three overlay classes the module uses:
+     - `.onb-modal-overlay` — shared OnbModal create/edit dialogs
+     - `.adm-overlay`       — AttDeleteModal (delete confirmation chrome)
+     - `.arm-overlay`       — AttRejectModal (reject-with-reason chrome)
+   Without this rule the Cancel button renders as a default UA button on
+   pages where the original component scope doesn't match.
+   ════════════════════════════════════════════════════════════════════════════ */
+.adm-overlay .onb-btn-ghost,
+.adm-overlay .onb-btn-primary,
+.arm-overlay .onb-btn-ghost,
+.arm-overlay .onb-btn-primary {
+  position: relative; isolation: isolate; overflow: hidden;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 11px;
+  font: inherit; font-size: 12px; font-weight: 800; letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: transform .22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow .25s, background .25s, border-color .22s, color .22s;
+}
+.adm-overlay .onb-btn-ghost,
+.arm-overlay .onb-btn-ghost {
+  background: linear-gradient(180deg, rgba(40, 30, 22, 0.55), rgba(28, 22, 18, 0.80));
+  color: #f1f5f9;
+  border: 1px solid rgba(251, 191, 36, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.adm-overlay .onb-btn-ghost:hover,
+.arm-overlay .onb-btn-ghost:hover {
+  transform: translateY(-1px);
+  color: #fef3c7;
+  border-color: rgba(251, 146, 60, 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 12px 24px -10px rgba(251, 146, 60, 0.42);
+}
+.adm-overlay .onb-btn-primary,
+.arm-overlay .onb-btn-primary {
+  background: linear-gradient(135deg, #fde68a 0%, #fbbf24 35%, #f59e0b 70%, #fb923c 100%);
+  color: #1f1408;
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  box-shadow:
+    0 12px 26px -10px rgba(251, 146, 60, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.50);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.30);
+}
+.adm-overlay .onb-btn-primary:hover,
+.arm-overlay .onb-btn-primary:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.adm-overlay .onb-btn-ghost:disabled,
+.adm-overlay .onb-btn-primary:disabled,
+.arm-overlay .onb-btn-ghost:disabled,
+.arm-overlay .onb-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+[data-theme="light"] .adm-overlay .onb-btn-ghost,
+[data-theme="light"] .arm-overlay .onb-btn-ghost {
+  background: linear-gradient(180deg, rgba(255, 250, 240, 0.78), rgba(255, 246, 226, 0.85));
+  color: #1f1408;
+  border-color: rgba(180, 83, 9, 0.30);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 4px 10px -6px rgba(120, 53, 15, 0.18);
+}
+[data-theme="light"] .adm-overlay .onb-btn-ghost:hover,
+[data-theme="light"] .arm-overlay .onb-btn-ghost:hover {
+  border-color: rgba(194, 65, 12, 0.55);
+  color: #1f1408;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.80),
+    0 12px 24px -10px rgba(180, 83, 9, 0.32);
+}
+[data-theme="light"] .adm-overlay .onb-btn-primary,
+[data-theme="light"] .arm-overlay .onb-btn-primary {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 40%, #ea580c 75%, #c2410c 100%);
+  color: #fff;
+  border-color: rgba(180, 83, 9, 0.55);
+  box-shadow:
+    0 14px 30px -12px rgba(180, 83, 9, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  text-shadow: 0 1px 0 rgba(120, 53, 15, 0.35);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   OnbModal CHROME — gold-edge bar + head spacing + footer
+   ────────────────────────────────────────────────────────────────────────────
+   OnbModal's own scoped CSS uses `var(--hr-gradient-hero)` for the top edge.
+   That token is defined in hr-theme.css. Whenever an attendance route is the
+   first thing to hit the document, the variable IS resolved (attendance-theme
+   imports hr-theme), but the gradient strip and head padding occasionally
+   render thinner than the "first time" path. We lock the chrome here so the
+   modal looks identical no matter how we got to it.
+   ════════════════════════════════════════════════════════════════════════════ */
+.onb-modal-overlay .onb-modal-edge {
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e0b 35%, #fb923c 65%, #ea580c 100%);
+  z-index: 4;
+}
+.onb-modal-overlay .onb-modal-head {
+  padding: 20px 24px 16px !important;
+  gap: 14px;
+}
+.onb-modal-overlay .onb-modal-head .head-icon {
+  width: 38px; height: 38px;
+  border-radius: 11px;
+  background: rgba(251, 191, 36, 0.14);
+  border: 1px solid rgba(251, 191, 36, 0.34);
+  color: #fbbf24;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+[data-theme="light"] .onb-modal-overlay .onb-modal-head .head-icon {
+  background: rgba(217, 119, 6, 0.16);
+  border-color: rgba(180, 83, 9, 0.36);
+  color: #b45309;
+}
+.onb-modal-overlay .onb-modal-head h3 {
+  margin: 0;
+  font-size: 17px; font-weight: 800; letter-spacing: -0.015em;
+  color: #f1f5f9;
+  line-height: 1.25;
+}
+[data-theme="light"] .onb-modal-overlay .onb-modal-head h3 { color: #1f1408; }
+.onb-modal-overlay .onb-modal-head p {
+  margin: 4px 0 0;
+  font-size: 12px; line-height: 1.45;
+  color: rgba(241, 245, 249, 0.65);
+}
+[data-theme="light"] .onb-modal-overlay .onb-modal-head p { color: #6b5840; }
+.onb-modal-overlay .onb-modal-body {
+  padding: 22px 24px !important;
+}
+.onb-modal-overlay .onb-modal-footer {
+  padding: 16px 24px !important;
+  gap: 10px;
+}
+
+/* ── OnbField LABEL: clear caps, breathing room above the control ─────────── */
+.onb-modal-overlay .onb-field-label {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #cbd5e1; /* dark mode default */
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 7px;
+}
+.onb-modal-overlay .onb-field-req {
+  color: #fb923c;
+  font-weight: 800;
+}
+
+/* ── OnbField CONTROL: opaque box, clear border, focus glow ───────────────── */
+.onb-modal-overlay .onb-field-control {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  background: rgba(20, 16, 14, 0.62);
+  border: 1px solid rgba(251, 191, 36, 0.30);
+  border-radius: 12px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  transition: border-color .22s cubic-bezier(0.22, 1, 0.36, 1),
+              background .22s,
+              box-shadow .25s;
+}
+.onb-modal-overlay .onb-field-control input,
+.onb-modal-overlay .onb-field-control textarea {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: none;
+  color: #f1f5f9;
+  font: inherit;
+  font-size: 13px;
+  padding: 11px 14px;
+}
+.onb-modal-overlay .onb-field-control textarea {
+  resize: vertical;
+  min-height: 88px;
+  line-height: 1.5;
+}
+.onb-modal-overlay .onb-field-control input::placeholder,
+.onb-modal-overlay .onb-field-control textarea::placeholder {
+  color: rgba(241, 245, 249, 0.42);
+}
+.onb-modal-overlay .onb-field.is-focused .onb-field-control {
+  border-color: rgba(251, 146, 60, 0.65);
+  background: rgba(28, 22, 18, 0.85);
+  box-shadow:
+    0 0 0 3px rgba(251, 191, 36, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.onb-modal-overlay .onb-field.is-error .onb-field-control {
+  border-color: rgba(248, 113, 113, 0.55);
+}
+
+/* ── Hint + error lines below the control ─────────────────────────────────── */
+.onb-modal-overlay .onb-field-hint {
+  display: block;
+  margin-top: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #cbd5e1;
+  font-style: italic;
+  background: rgba(251, 191, 36, 0.06);
+  border-left: 2px solid rgba(251, 191, 36, 0.45);
+  border-radius: 0 8px 8px 0;
+}
+.onb-modal-overlay .onb-field-error {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #fca5a5;
+  font-weight: 600;
+}
+
+/* ── Underline accent (animated focus indicator) ──────────────────────────── */
+.onb-modal-overlay .onb-field-underline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #fbbf24, #fb923c, #ea580c);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 380ms cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 2px;
+}
+.onb-modal-overlay .onb-field.is-focused .onb-field-underline { transform: scaleX(1); }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   LIGHT THEME — cream surfaces, deep amber accents, dark text
+   ════════════════════════════════════════════════════════════════════════════ */
+[data-theme="light"] .onb-modal-overlay .onb-field-label {
+  color: #6b5840;
+}
+[data-theme="light"] .onb-modal-overlay .onb-field-req {
+  color: #c2410c;
+}
+[data-theme="light"] .onb-modal-overlay .onb-field-control {
+  background: rgba(255, 250, 240, 0.96);
+  border: 1px solid rgba(180, 83, 9, 0.34);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 1px 3px rgba(120, 53, 15, 0.06);
+}
+[data-theme="light"] .onb-modal-overlay .onb-field-control input,
+[data-theme="light"] .onb-modal-overlay .onb-field-control textarea {
+  color: #1f1408;
+}
+[data-theme="light"] .onb-modal-overlay .onb-field-control input::placeholder,
+[data-theme="light"] .onb-modal-overlay .onb-field-control textarea::placeholder {
+  color: rgba(31, 20, 8, 0.42);
+}
+[data-theme="light"] .onb-modal-overlay .onb-field.is-focused .onb-field-control {
+  border-color: rgba(194, 65, 12, 0.65);
+  background: #fffaf0;
+  box-shadow:
+    0 0 0 3px rgba(217, 119, 6, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+[data-theme="light"] .onb-modal-overlay .onb-field-hint {
+  color: #8a7660;
+  background: rgba(217, 119, 6, 0.08);
+  border-left-color: rgba(194, 65, 12, 0.55);
+}
+[data-theme="light"] .onb-modal-overlay .onb-field-error {
+  color: #b91c1c;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   HrSelect + HrDatePicker TRIGGERS INSIDE OnbModal
+   ────────────────────────────────────────────────────────────────────────────
+   `OnbField type="select"` / `type="date"` render `HrSelect` / `HrDatePicker`
+   directly, WITHOUT wrapping them in `.onb-field-control`. Those components
+   ship their own triggers (`.hr-select-trigger`, `.hr-dp-trigger`) that read
+   `--hr-input-bg` / `--hr-input-border` — both of which are nearly
+   transparent in light mode (rgba(40,25,10,0.03)). The result on a cold
+   reload: the dropdown is just a floating word with a chevron, no visible
+   pill.
+
+   We give the triggers the same explicit cream-fill + amber-border as the
+   input pills above, plus matching focus / open state, in both themes.
+   ════════════════════════════════════════════════════════════════════════════ */
+.onb-modal-overlay .hr-select-trigger,
+.onb-modal-overlay .hr-dp-trigger {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 14px;
+  background: rgba(20, 16, 14, 0.62) !important;
+  border: 1px solid rgba(251, 191, 36, 0.30) !important;
+  border-radius: 12px !important;
+  color: #f1f5f9 !important;
+  font-size: 13px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-color .22s cubic-bezier(0.22, 1, 0.36, 1),
+              background .22s,
+              box-shadow .25s;
+}
+.onb-modal-overlay .hr-select-trigger:hover:not(:disabled),
+.onb-modal-overlay .hr-dp-trigger:hover:not(:disabled) {
+  background: rgba(28, 22, 18, 0.78) !important;
+  border-color: rgba(251, 146, 60, 0.50) !important;
+}
+.onb-modal-overlay .hr-select.open .hr-select-trigger,
+.onb-modal-overlay .hr-select.focused .hr-select-trigger,
+.onb-modal-overlay .hr-dp.open .hr-dp-trigger,
+.onb-modal-overlay .hr-dp.focused .hr-dp-trigger {
+  border-color: rgba(251, 146, 60, 0.65) !important;
+  background: rgba(28, 22, 18, 0.85) !important;
+  box-shadow:
+    0 0 0 3px rgba(251, 191, 36, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+}
+.onb-modal-overlay .hr-select-trigger .trig-value,
+.onb-modal-overlay .hr-dp-trigger .trig-value { color: #f1f5f9; }
+.onb-modal-overlay .hr-select-trigger .trig-value.placeholder,
+.onb-modal-overlay .hr-dp-trigger .trig-value.placeholder {
+  color: rgba(241, 245, 249, 0.42);
+}
+.onb-modal-overlay .hr-select-trigger .chevron,
+.onb-modal-overlay .hr-dp-trigger .trig-cal {
+  color: rgba(251, 191, 36, 0.85);
+}
+
+/* Light theme — cream fill, amber border, dark glyphs */
+[data-theme="light"] .onb-modal-overlay .hr-select-trigger,
+[data-theme="light"] .onb-modal-overlay .hr-dp-trigger {
+  background: rgba(255, 250, 240, 0.96) !important;
+  border-color: rgba(180, 83, 9, 0.34) !important;
+  color: #1f1408 !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    0 1px 3px rgba(120, 53, 15, 0.06) !important;
+}
+[data-theme="light"] .onb-modal-overlay .hr-select-trigger:hover:not(:disabled),
+[data-theme="light"] .onb-modal-overlay .hr-dp-trigger:hover:not(:disabled) {
+  background: #fffaf0 !important;
+  border-color: rgba(194, 65, 12, 0.50) !important;
+}
+[data-theme="light"] .onb-modal-overlay .hr-select.open .hr-select-trigger,
+[data-theme="light"] .onb-modal-overlay .hr-select.focused .hr-select-trigger,
+[data-theme="light"] .onb-modal-overlay .hr-dp.open .hr-dp-trigger,
+[data-theme="light"] .onb-modal-overlay .hr-dp.focused .hr-dp-trigger {
+  border-color: rgba(194, 65, 12, 0.65) !important;
+  background: #fffaf0 !important;
+  box-shadow:
+    0 0 0 3px rgba(217, 119, 6, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+}
+[data-theme="light"] .onb-modal-overlay .hr-select-trigger .trig-value,
+[data-theme="light"] .onb-modal-overlay .hr-dp-trigger .trig-value { color: #1f1408; }
+[data-theme="light"] .onb-modal-overlay .hr-select-trigger .trig-value.placeholder,
+[data-theme="light"] .onb-modal-overlay .hr-dp-trigger .trig-value.placeholder {
+  color: rgba(31, 20, 8, 0.42);
+}
+[data-theme="light"] .onb-modal-overlay .hr-select-trigger .chevron,
+[data-theme="light"] .onb-modal-overlay .hr-dp-trigger .trig-cal {
+  color: #b45309;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   HrSelect POPOVER + HrDatePicker CALENDAR
+   ────────────────────────────────────────────────────────────────────────────
+   Both popovers teleport to body. They use the same `--hr-input-*` tokens
+   for their surface so they read as washed-out in light mode unless we
+   give them an explicit theme. The calendar style here mirrors the
+   onboarding "Add Asset" date picker — cream surface, amber day cells,
+   solid gold "today" + "selected" treatments.
+   ════════════════════════════════════════════════════════════════════════════ */
+.hr-select-popover,
+.hr-dp-popover {
+  background: rgba(20, 16, 14, 0.96) !important;
+  border: 1px solid rgba(251, 191, 36, 0.32) !important;
+  border-radius: 14px !important;
+  box-shadow:
+    0 24px 60px -22px rgba(0, 0, 0, 0.65),
+    0 0 0 1px rgba(251, 191, 36, 0.08),
+    0 0 70px -12px rgba(251, 146, 60, 0.22) !important;
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  color: #f1f5f9;
+  z-index: 1500 !important;
+}
+[data-theme="light"] .hr-select-popover,
+[data-theme="light"] .hr-dp-popover {
+  background: rgba(255, 250, 240, 0.98) !important;
+  border-color: rgba(180, 83, 9, 0.32) !important;
+  color: #1f1408;
+  box-shadow:
+    0 24px 60px -22px rgba(40, 25, 10, 0.30),
+    0 0 0 1px rgba(180, 83, 9, 0.10),
+    0 0 70px -14px rgba(217, 119, 6, 0.22) !important;
+}
+
+/* HrSelect option list */
+[data-theme="light"] .hr-select-popover .pop-item { color: #1f1408; }
+[data-theme="light"] .hr-select-popover .pop-item:hover,
+[data-theme="light"] .hr-select-popover .pop-item.active {
+  background: rgba(217, 119, 6, 0.10);
+  color: #1f1408;
+}
+[data-theme="light"] .hr-select-popover .pop-item.selected {
+  background: rgba(217, 119, 6, 0.16);
+  color: #92400e;
+}
+[data-theme="light"] .hr-select-popover .pop-search-input {
+  color: #1f1408;
+  background: rgba(255, 250, 240, 0.92);
+  border-color: rgba(180, 83, 9, 0.28);
+}
+
+/* HrDatePicker calendar header / weekday strip / grid spacing — ensure the
+   layout matches Add Asset's polished look regardless of load order. */
+.hr-dp-popover {
+  padding: 14px !important;
+  min-width: 280px;
+}
+.hr-dp-popover .dp-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.hr-dp-popover .head-title {
+  font-size: 13px; font-weight: 800;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.hr-dp-popover .title-year { color: #fb923c; font-weight: 800; }
+[data-theme="light"] .hr-dp-popover .title-year { color: #c2410c; }
+.hr-dp-popover .nav-btn {
+  width: 28px; height: 28px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.24);
+  border-radius: 8px;
+}
+[data-theme="light"] .hr-dp-popover .nav-btn {
+  background: rgba(217, 119, 6, 0.10);
+  border-color: rgba(180, 83, 9, 0.28);
+}
+.hr-dp-popover .dp-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  font-size: 10.5px; font-weight: 800; letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(241, 245, 249, 0.45);
+  text-align: center;
+  padding: 6px 0;
+}
+[data-theme="light"] .hr-dp-popover .dp-weekdays { color: #8a7660; }
+.hr-dp-popover .dp-days {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+/* Day cells — mirror Add Asset's polished look */
+.hr-dp-popover .dp-day {
+  position: relative;
+  height: 34px;
+  border-radius: 9px;
+  transition: background .15s, color .15s, transform .15s;
+}
+
+/* The pulsing "today" ring — explicit definition so it always shows even when
+   HrDatePicker's scoped CSS happens to lose its global token resolution
+   after a fresh attendance-only reload. */
+.hr-dp-popover .dp-day-ring {
+  position: absolute;
+  inset: 3px;
+  border-radius: 7px;
+  border: 1.4px solid rgba(251, 191, 36, 0.65);
+  pointer-events: none;
+  animation: att-dp-today-pulse 2.4s ease-in-out infinite;
+}
+[data-theme="light"] .hr-dp-popover .dp-day-ring {
+  border-color: rgba(194, 65, 12, 0.65);
+}
+@keyframes att-dp-today-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.45); opacity: 1; }
+  50%      { box-shadow: 0 0 0 4px rgba(251, 146, 60, 0); opacity: 0.75; }
+}
+.hr-dp-popover .dp-day:hover:not(.disabled) {
+  background: rgba(251, 191, 36, 0.18);
+  color: #fde68a;
+}
+.hr-dp-popover .dp-day.selected {
+  background: linear-gradient(135deg, #fbbf24, #fb923c 60%, #ea580c) !important;
+  color: #1f1408 !important;
+  font-weight: 800;
+  box-shadow: 0 6px 16px -6px rgba(234, 88, 12, 0.55);
+}
+.hr-dp-popover .dp-day.today:not(.selected) {
+  color: #fbbf24;
+  font-weight: 700;
+}
+.hr-dp-popover .dp-day.other { color: rgba(241, 245, 249, 0.32); }
+.hr-dp-popover .dp-day.disabled { color: rgba(241, 245, 249, 0.20); cursor: not-allowed; }
+.hr-dp-popover .nav-btn,
+.hr-dp-popover .title-btn,
+.hr-dp-popover .foot-btn {
+  color: #f1f5f9;
+  border-radius: 8px;
+  transition: background .18s;
+}
+.hr-dp-popover .nav-btn:hover,
+.hr-dp-popover .title-btn:hover {
+  background: rgba(251, 191, 36, 0.14);
+  color: #fde68a;
+}
+.hr-dp-popover .foot-btn.primary {
+  background: linear-gradient(135deg, #fbbf24, #fb923c 60%, #ea580c) !important;
+  color: #1f1408 !important;
+  font-weight: 800;
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  box-shadow: 0 6px 16px -6px rgba(234, 88, 12, 0.55);
+}
+
+[data-theme="light"] .hr-dp-popover .dp-day { color: #1f1408; }
+[data-theme="light"] .hr-dp-popover .dp-day:hover:not(.disabled) {
+  background: rgba(217, 119, 6, 0.14);
+  color: #1f1408;
+}
+[data-theme="light"] .hr-dp-popover .dp-day.selected {
+  background: linear-gradient(135deg, #f59e0b, #ea580c 60%, #c2410c) !important;
+  color: #fff !important;
+  text-shadow: 0 1px 0 rgba(120, 53, 15, 0.45);
+  box-shadow: 0 6px 16px -6px rgba(180, 83, 9, 0.55);
+}
+[data-theme="light"] .hr-dp-popover .dp-day.today:not(.selected) {
+  color: #b45309;
+  font-weight: 800;
+}
+[data-theme="light"] .hr-dp-popover .dp-day.other { color: rgba(31, 20, 8, 0.32); }
+[data-theme="light"] .hr-dp-popover .dp-day.disabled { color: rgba(31, 20, 8, 0.22); }
+[data-theme="light"] .hr-dp-popover .dp-weekdays { color: #8a7660; }
+[data-theme="light"] .hr-dp-popover .nav-btn,
+[data-theme="light"] .hr-dp-popover .title-btn,
+[data-theme="light"] .hr-dp-popover .foot-btn { color: #1f1408; }
+[data-theme="light"] .hr-dp-popover .nav-btn:hover,
+[data-theme="light"] .hr-dp-popover .title-btn:hover {
+  background: rgba(217, 119, 6, 0.16);
+  color: #92400e;
+}
+[data-theme="light"] .hr-dp-popover .foot-btn:not(.primary):hover {
+  background: rgba(217, 119, 6, 0.10);
+}
+[data-theme="light"] .hr-dp-popover .foot-btn.primary {
+  background: linear-gradient(135deg, #f59e0b, #ea580c 60%, #c2410c) !important;
+  color: #fff !important;
+  border-color: rgba(180, 83, 9, 0.55);
+  text-shadow: 0 1px 0 rgba(120, 53, 15, 0.45);
+  box-shadow: 0 6px 16px -6px rgba(180, 83, 9, 0.55);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   FORM LAYOUT HELPERS (.form-stack, .form-grid-2, .form-grid-3) — global,
+   so they survive a hard reload of any attendance route. Previously only
+   defined per-onboarding-section, which is why sibling OnbFields collapsed
+   on top of one another after Ctrl+R.
+   ════════════════════════════════════════════════════════════════════════════ */
+.onb-modal-overlay .form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.onb-modal-overlay .form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.onb-modal-overlay .form-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+@media (max-width: 540px) {
+  .onb-modal-overlay .form-grid-2,
+  .onb-modal-overlay .form-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Defensive: even without .form-stack, sibling fields inside an OnbModal body
+   get a vertical rhythm. */
+.onb-modal-overlay .onb-modal-body > * + * { margin-top: 14px; }
+.onb-modal-overlay .form-stack > * + *,
+.onb-modal-overlay .form-grid-2 > *,
+.onb-modal-overlay .form-grid-3 > * { margin-top: 0; }

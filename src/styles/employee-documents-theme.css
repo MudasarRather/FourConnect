@@ -1,0 +1,273 @@
+/* ════════════════════════════════════════════════════════════════════════
+   Employee Documents — "The Records Vault"
+   A distinct, archival visual identity that stays consistent with the HR
+   module by building on --hr-* tokens (gold / amber / orange).
+   Imported per-view by HrEmployeeDocumentsWorkspacePage.vue — NOT global.
+   ════════════════════════════════════════════════════════════════════════ */
+@import './hr-theme.css';
+
+:root {
+  /* Document status ramp (uploaded → verified, plus expiry/danger) */
+  --edoc-pending:    #fbbf24;
+  --edoc-verified:   #34d399;
+  --edoc-rejected:   #f87171;
+  --edoc-resubmit:   #fb923c;
+  --edoc-expired:    #ef4444;
+
+  --edoc-pending-soft:   rgba(251, 191, 36, 0.14);
+  --edoc-verified-soft:  rgba(52, 211, 153, 0.14);
+  --edoc-rejected-soft:  rgba(248, 113, 113, 0.14);
+  --edoc-resubmit-soft:  rgba(251, 146, 60, 0.14);
+  --edoc-expired-soft:   rgba(239, 68, 68, 0.14);
+
+  /* Surfaces (slightly deeper / more "vault" than the rest of HR) */
+  --edoc-surface:        rgba(18, 17, 20, 0.72);
+  --edoc-surface-2:      rgba(26, 24, 28, 0.78);
+  --edoc-vault-glow:     radial-gradient(120% 120% at 50% -10%, rgba(251,191,36,0.10), transparent 60%);
+  --edoc-grid-line:      rgba(255, 255, 255, 0.04);
+
+  --edoc-spring:   cubic-bezier(0.16, 1, 0.3, 1);
+  --edoc-ease:     cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ───────────────────────── Keyframes ───────────────────────── */
+@keyframes edoc-scanline {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(220%); opacity: 0; }
+}
+@keyframes edoc-expire-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
+  50%      { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+@keyframes edoc-shimmer {
+  0%   { background-position: -260% 0; }
+  100% { background-position: 260% 0; }
+}
+@keyframes edoc-float {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50%      { transform: translateY(-7px) rotate(var(--r, 0deg)); }
+}
+@keyframes edoc-aurora-drift {
+  0%   { transform: translate(-4%, -2%) scale(1); }
+  50%  { transform: translate(4%, 3%) scale(1.06); }
+  100% { transform: translate(-4%, -2%) scale(1); }
+}
+@keyframes edoc-ring-rotate { to { transform: rotate(360deg); } }
+@keyframes edoc-count-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* ───────────────────────── Layout root ───────────────────────── */
+.edoc-root {
+  position: relative;
+  color: var(--hr-text);
+  min-height: calc(100vh - 100px);
+}
+.edoc-section { display: flex; flex-direction: column; gap: 16px; }
+.edoc-mono { font-family: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.02em; }
+
+/* ───────────────────────── Surfaces / cards ───────────────────────── */
+.edoc-card {
+  position: relative;
+  background: var(--edoc-surface);
+  border: 1px solid var(--hr-border);
+  border-radius: 16px;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  transition: border-color 240ms var(--edoc-spring), box-shadow 240ms var(--edoc-spring),
+              transform 240ms var(--edoc-spring);
+}
+.edoc-card.is-hoverable:hover {
+  border-color: var(--hr-border-warm);
+  box-shadow: 0 18px 40px -20px rgba(0,0,0,0.55), 0 0 26px -8px rgba(251,191,36,0.2);
+}
+.edoc-glass {
+  background: var(--edoc-surface-2);
+  border: 1px solid var(--hr-border);
+  border-radius: 14px;
+}
+
+/* ───────────────────────── Buttons ───────────────────────── */
+.edoc-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 38px; padding: 0 16px; border-radius: 10px;
+  font-size: 12.5px; font-weight: 700; cursor: pointer;
+  border: 1px solid var(--hr-border-strong);
+  background: transparent; color: var(--hr-text-secondary);
+  transition: all 0.2s var(--edoc-spring);
+  white-space: nowrap;
+}
+.edoc-btn:hover { background: rgba(255,255,255,0.05); color: var(--hr-text); }
+.edoc-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.edoc-btn-sm { height: 32px; padding: 0 12px; font-size: 12px; border-radius: 9px; }
+.edoc-btn-primary {
+  background: var(--hr-gradient-rail-active);
+  border-color: var(--hr-accent-gold);
+  color: #1a1a1c;
+  box-shadow: 0 6px 18px -6px rgba(251, 146, 60, 0.5);
+}
+.edoc-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 10px 26px -6px rgba(251, 146, 60, 0.7), 0 0 30px rgba(251, 191, 36, 0.32);
+  color: #1a1a1c;
+}
+.edoc-btn-danger {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  border-color: #ef4444; color: #fff;
+  box-shadow: 0 6px 18px -6px rgba(239, 68, 68, 0.5);
+}
+.edoc-btn-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-color: #10b981; color: #fff;
+  box-shadow: 0 6px 18px -6px rgba(16, 185, 129, 0.5);
+}
+
+/* ───────────────────────── Toolbar / search / pills ───────────────────────── */
+.edoc-toolbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--edoc-surface);
+  border: 1px solid var(--hr-border);
+  border-radius: 14px;
+}
+.edoc-search {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 38px; padding: 0 12px; min-width: 220px; flex: 1;
+  background: var(--hr-input-bg); border: 1px solid var(--hr-border);
+  border-radius: 10px; color: var(--hr-text);
+}
+.edoc-search input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--hr-text); font-size: 13px;
+}
+.edoc-search input::placeholder { color: var(--hr-text-muted); }
+.edoc-search .ic { color: var(--hr-text-muted); }
+
+.edoc-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  height: 34px; padding: 0 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; cursor: pointer;
+  background: rgba(255,255,255,0.03); border: 1px solid var(--hr-border);
+  color: var(--hr-text-muted); transition: all 0.2s var(--edoc-spring);
+}
+.edoc-pill:hover { color: var(--hr-text-secondary); border-color: var(--hr-border-warm); }
+.edoc-pill.is-active {
+  background: var(--hr-accent-gold-soft); border-color: var(--hr-accent-gold);
+  color: var(--hr-accent-gold);
+}
+
+/* ───────────────────────── Typography helpers ───────────────────────── */
+.edoc-eyebrow {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--hr-accent-gold);
+}
+.edoc-title { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; color: var(--hr-text); }
+.edoc-subtle { font-size: 12.5px; color: var(--hr-text-muted); }
+
+/* ───────────────────────── Status chip ───────────────────────── */
+.edoc-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+.edoc-chip .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
+.edoc-chip[data-s="PENDING"]           { color: var(--edoc-pending); background: var(--edoc-pending-soft); }
+.edoc-chip[data-s="VERIFIED"]          { color: var(--edoc-verified); background: var(--edoc-verified-soft); }
+.edoc-chip[data-s="REJECTED"]          { color: var(--edoc-rejected); background: var(--edoc-rejected-soft); }
+.edoc-chip[data-s="RESUBMIT_REQUIRED"] { color: var(--edoc-resubmit); background: var(--edoc-resubmit-soft); }
+.edoc-chip[data-s="EXPIRED"]           { color: var(--edoc-expired); background: var(--edoc-expired-soft); }
+
+/* ───────────────────────── Skeleton ───────────────────────── */
+.edoc-skel {
+  position: relative; overflow: hidden;
+  background: rgba(255,255,255,0.04); border-radius: 12px;
+}
+.edoc-skel::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  background-size: 200% 100%;
+  animation: edoc-shimmer 1.6s linear infinite;
+}
+
+/* ───────────────────────── Empty state ───────────────────────── */
+.edoc-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; padding: 56px 24px; text-align: center;
+  border: 1px dashed var(--hr-border-strong); border-radius: 18px;
+  background: var(--edoc-vault-glow);
+}
+
+/* ───────────────────────── v2 motion primitives ───────────────────────── */
+@keyframes edoc-sheen-sweep {
+  0%   { transform: translateX(-120%) skewX(-18deg); opacity: 0; }
+  40%  { opacity: 0.5; }
+  100% { transform: translateX(220%) skewX(-18deg); opacity: 0; }
+}
+@keyframes edoc-rise-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.985); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes edoc-pop-in {
+  0% { opacity: 0; transform: scale(0.7); }
+  60% { opacity: 1; transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+@keyframes edoc-capsule-flow { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+@keyframes edoc-glow-breathe {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0); }
+  50% { box-shadow: 0 0 22px -2px rgba(251,191,36,0.5); }
+}
+@keyframes edoc-bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Hoverable cards get a light sheen that sweeps across on hover. */
+.edoc-card.is-hoverable { overflow: hidden; }
+.edoc-card.is-hoverable::before {
+  content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 55%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.16), transparent);
+  transform: translateX(-130%) skewX(-18deg); opacity: 0; pointer-events: none; z-index: 1;
+}
+.edoc-card.is-hoverable:hover::before { animation: edoc-sheen-sweep 0.9s var(--edoc-ease); }
+[data-theme="light"] .edoc-card.is-hoverable::before { background: linear-gradient(100deg, transparent, rgba(255,255,255,0.55), transparent); }
+
+/* Tactile press helper for interactive surfaces. */
+.edoc-press { transition: transform 0.16s var(--edoc-spring); }
+.edoc-press:active { transform: scale(0.97); }
+
+/* ════════════════════════════ LIGHT THEME ════════════════════════════ */
+[data-theme="light"] {
+  --edoc-surface:   rgba(255, 250, 240, 0.72);
+  --edoc-surface-2: rgba(255, 248, 235, 0.82);
+  --edoc-grid-line: rgba(40, 25, 10, 0.06);
+  --edoc-vault-glow: radial-gradient(120% 120% at 50% -10%, rgba(217,119,6,0.10), transparent 60%);
+
+  --edoc-pending-soft:  rgba(217, 119, 6, 0.16);
+  --edoc-verified-soft: rgba(5, 150, 105, 0.16);
+  --edoc-rejected-soft: rgba(220, 38, 38, 0.12);
+  --edoc-resubmit-soft: rgba(234, 88, 12, 0.14);
+  --edoc-expired-soft:  rgba(220, 38, 38, 0.14);
+}
+[data-theme="light"] .edoc-card,
+[data-theme="light"] .edoc-toolbar { border-color: rgba(40, 25, 10, 0.12); }
+[data-theme="light"] .edoc-btn { color: #6b5840; border-color: rgba(40, 25, 10, 0.16); }
+[data-theme="light"] .edoc-btn:hover { background: rgba(40, 25, 10, 0.05); color: #1a1410; }
+[data-theme="light"] .edoc-btn-primary { color: #fff; }
+[data-theme="light"] .edoc-search { background: rgba(255, 255, 255, 0.6); border-color: rgba(40,25,10,0.14); color: #1a1410; }
+[data-theme="light"] .edoc-search input { color: #1a1410; }
+[data-theme="light"] .edoc-search input::placeholder { color: #a08862; }
+[data-theme="light"] .edoc-pill { background: rgba(255,250,240,0.6); border-color: rgba(40,25,10,0.14); color: #6b5840; }
+[data-theme="light"] .edoc-pill.is-active { background: rgba(217,119,6,0.12); border-color: #d97706; color: #b45309; }
+[data-theme="light"] .edoc-eyebrow { color: #b45309; }
+[data-theme="light"] .edoc-title { color: #1a1410; }
+[data-theme="light"] .edoc-subtle { color: #6b5840; }
+[data-theme="light"] .edoc-chip[data-s="PENDING"]  { color: #b45309; }
+[data-theme="light"] .edoc-chip[data-s="VERIFIED"] { color: #047857; }
+[data-theme="light"] .edoc-chip[data-s="REJECTED"] { color: #b91c1c; }
+[data-theme="light"] .edoc-chip[data-s="RESUBMIT_REQUIRED"] { color: #c2410c; }
+[data-theme="light"] .edoc-chip[data-s="EXPIRED"] { color: #b91c1c; }
+[data-theme="light"] .edoc-skel { background: rgba(40,25,10,0.06); }
+[data-theme="light"] .edoc-skel::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); background-size: 200% 100%; }
+[data-theme="light"] .edoc-empty { border-color: rgba(40,25,10,0.18); }

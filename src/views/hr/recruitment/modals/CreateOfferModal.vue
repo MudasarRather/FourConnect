@@ -20,8 +20,13 @@
           <HrInput v-model="form.designation" placeholder="e.g. Senior Backend Engineer" />
         </div>
         <div class="field-block">
-          <HrFieldLabel label="Offered Salary" required :error="!!errors.offered_salary" />
-          <HrNumberInput v-model="form.offered_salary" :step-by="10000" :min="1"
+          <HrFieldLabel label="Offered Annual CTC (₹)" required :error="!!errors.offered_salary">
+            Offered Annual CTC (₹)
+            <span v-if="offeredMonthlyPreview" class="ctc-helper">
+              Monthly ≈ ₹{{ offeredMonthlyPreview }}
+            </span>
+          </HrFieldLabel>
+          <HrNumberInput v-model="form.offered_salary" :step-by="50000" :min="1"
             :error="!!errors.offered_salary" :error-text="errors.offered_salary" />
         </div>
         <div class="field-block">
@@ -110,11 +115,26 @@ watch(() => props.open, (v) => {
   }
 })
 
+// Live "Monthly ≈" preview so the user can sanity-check that they entered
+// the ANNUAL amount, not the monthly. The Add Employee wizard treats the
+// offered_salary value as annual CTC, so a small (< 60K) value is almost
+// certainly a mistake.
+const offeredMonthlyPreview = computed(() => {
+  const v = Number(form.value.offered_salary)
+  if (!Number.isFinite(v) || v <= 0) return ''
+  return Math.round(v / 12).toLocaleString('en-IN')
+})
+
 const onSubmit = () => {
   Object.keys(errors).forEach(k => delete errors[k])
   if (!form.value.application_id) errors.application_id = 'Pick an application'
-  if (!form.value.offered_salary || form.value.offered_salary <= 0) {
-    errors.offered_salary = 'Offered salary required'
+  const offered = Number(form.value.offered_salary)
+  if (!offered || offered <= 0) {
+    errors.offered_salary = 'Offered annual CTC required'
+  } else if (offered < 60000) {
+    // 60K/year is well below any plausible Indian full-time CTC. This usually
+    // means the user typed a monthly figure. Flag instead of silently saving.
+    errors.offered_salary = 'Enter the ANNUAL CTC, not monthly. ₹60K appears too low.'
   }
   if (Object.keys(errors).length) return
 
@@ -130,6 +150,21 @@ const onSubmit = () => {
 .form { display: flex; flex-direction: column; gap: 12px; }
 .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .field-block { display: flex; flex-direction: column; gap: 2px; }
+.ctc-helper {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 10.5px; font-weight: 600;
+  background: var(--hr-accent-gold-soft);
+  color: var(--hr-accent-gold);
+  border: 1px solid var(--hr-accent-gold-border);
+  border-radius: 999px;
+}
+[data-theme="light"] .ctc-helper {
+  background: rgba(217,119,6,0.12);
+  color: #b45309;
+  border-color: rgba(217,119,6,0.32);
+}
 
 .note {
   background: rgba(251, 191, 36, 0.06);

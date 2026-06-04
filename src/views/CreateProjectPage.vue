@@ -510,8 +510,16 @@ const suggestCode = async () => {
 }
 
 // ---- File upload (same flow as legacy form) ----
-const handleFileUpload = async (file) => {
+// FileUpload emits `file-selected` with a payload object: { file, setUploading,
+// setError } — NOT the raw File. Destructure it; appending the wrapper object
+// to FormData coerces it to "[object Object]" and the backend rejects the
+// non-file part with 422.
+const handleFileUpload = async (payload) => {
+  const file = payload?.file
+  const setUploading = payload?.setUploading
+  const setError = payload?.setError
   if (!file) return
+  setUploading?.(true)
   try {
     if (form.project_order_path) {
       const oldFilename = form.project_order_path.split('/').pop()
@@ -531,8 +539,12 @@ const handleFileUpload = async (file) => {
       toast.success('Order document uploaded')
     }
   } catch (e) {
-    errors.value.project_order = e.response?.data?.detail || 'Upload failed'
-    toast.error(errors.value.project_order)
+    const msg = e.response?.data?.detail || 'Upload failed'
+    errors.value.project_order = msg
+    setError?.(msg)
+    toast.error(msg)
+  } finally {
+    setUploading?.(false)
   }
 }
 const handleFileRemove = async () => {

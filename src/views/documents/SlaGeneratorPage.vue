@@ -1716,8 +1716,11 @@ watch(form, (newVal) => {
   box-shadow:
     0 0 0 3px rgba(217, 119, 6, 0.20),
     0 4px 12px rgba(180, 83, 9, 0.45);
+  animation-name: indicatorPulseLight;
 }
-[data-theme="light"] @keyframes indicatorPulse {
+/* A selector cannot prefix @keyframes — the light variant is its own named
+   keyframe, switched in via animation-name on the light-mode selector above. */
+@keyframes indicatorPulseLight {
   0%, 100% {
     box-shadow:
       0 0 0 3px rgba(217, 119, 6, 0.20),

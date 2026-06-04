@@ -132,21 +132,54 @@
             <div class="early-banner">
               <span class="punch-icon-wrap calm"><Hourglass :size="22" /></span>
               <div class="punch-body">
-                <span class="punch-label">Shift hasn't started yet</span>
+                <span class="punch-label">
+                  {{ todayData?.is_half_day
+                    ? (todayData.half_day_which === 'FIRST' ? 'Half-day · second half hasn\'t started yet' : 'Shift hasn\'t started yet')
+                    : 'Shift hasn\'t started yet' }}
+                </span>
                 <span class="punch-sub">
                   Clock-in opens at <b class="onb-mono">{{ todayData?.clock_in_opens_at }}</b>
                   · {{ formatCountdown(todayData?.minutes_until_clock_in_opens) }} to go
-                  · shift {{ shortTime(todayData?.shift?.start_time) }} → {{ shortTime(todayData?.shift?.end_time) }}
+                  · {{ todayData?.is_half_day ? 'working window' : 'shift' }}
+                  {{ todayData?.effective_shift_start || shortTime(todayData?.shift?.start_time) }}
+                  → {{ todayData?.effective_shift_end || shortTime(todayData?.shift?.end_time) }}
                 </span>
               </div>
             </div>
             <div class="early-meta">
-              <span class="early-pill"><Clock :size="11" />{{ todayData?.minutes_until_shift_start }} min until shift start</span>
+              <span class="early-pill"><Clock :size="11" />{{ todayData?.minutes_until_shift_start }} min until {{ todayData?.is_half_day ? 'half-day' : 'shift' }} start</span>
+            </div>
+          </div>
+
+          <!-- REST DAY — approved leave / weekly-off / holiday: no self clock-in -->
+          <div v-else-if="state === 'NOT_STARTED' && (todayData?.is_on_leave || ((todayData?.is_week_off || todayData?.is_holiday) && !todayData?.wfh_approved))"
+            key="rest-day" class="punch-btn early-shell">
+            <div class="early-banner">
+              <span class="punch-icon-wrap calm">
+                <Plane v-if="todayData?.is_on_leave" :size="22" />
+                <Sparkles v-else-if="todayData?.is_holiday" :size="22" />
+                <Coffee v-else :size="22" />
+              </span>
+              <div class="punch-body">
+                <span class="punch-label">
+                  {{ todayData?.is_on_leave
+                    ? `On approved ${(todayData?.leave_type || '').replace(/_/g, ' ').toLowerCase()} leave`
+                    : todayData?.is_holiday ? (todayData?.holiday_name || 'Company holiday') : 'Weekly off' }}
+                </span>
+                <span class="punch-sub">{{ blockReason }}</span>
+              </div>
+            </div>
+            <div class="early-meta">
+              <span class="early-pill">
+                <ShieldCheck v-if="todayData?.is_on_leave" :size="11" />
+                <Coffee v-else :size="11" />
+                {{ todayData?.is_on_leave ? 'Clock-in needs admin permission' : 'No clock-in expected · enjoy the day' }}
+              </span>
             </div>
           </div>
 
           <!-- CLOCK IN -->
-          <Motion v-else-if="state === 'NOT_STARTED' && !todayData?.requires_late_approval" key="clock-in" as="button"
+          <Motion v-else-if="state === 'NOT_STARTED' && !todayData?.requires_late_approval && todayData?.next_action !== 'late_window_closed'" key="clock-in" as="button"
             type="button" class="punch-btn punch-in"
             :whileHover="reduced ? {} : { y: -3, scale: 1.02 }"
             :whileTap="reduced ? {} : { scale: 0.95 }"
@@ -167,7 +200,10 @@
             <div class="late-banner">
               <span class="punch-icon-wrap warn"><Siren :size="22" /></span>
               <div class="punch-body">
-                <span class="punch-label">You're {{ todayData?.late_minutes_now }} minutes late</span>
+                <span class="punch-label">
+                  You're {{ todayData?.late_minutes_now }} minutes late
+                  <span v-if="todayData?.is_half_day" class="onb-mono">· half-day · start {{ todayData?.effective_shift_start }}</span>
+                </span>
                 <span class="punch-sub">Self-punch is locked beyond {{ lateLockMinutes }} min past start. Request approval and your punch lands once admin says yes.</span>
               </div>
             </div>
@@ -181,6 +217,25 @@
               >
                 <ShieldCheck :size="14" /> Request late-punch approval
               </Motion>
+            </div>
+          </div>
+
+          <!-- LATE WINDOW CLOSED — past the 2h cutoff or the shift has ended.
+               No self late-punch here; the day needs admin regularization. -->
+          <div v-else-if="state === 'NOT_STARTED' && todayData?.next_action === 'late_window_closed'" key="late-closed" class="punch-btn late-shell closed-shell">
+            <div class="late-banner">
+              <span class="punch-icon-wrap warn"><Siren :size="22" /></span>
+              <div class="punch-body">
+                <span class="punch-label">Late-punch window closed</span>
+                <span class="punch-sub">
+                  You're {{ todayData?.late_minutes_now }} minutes late
+                  (cap {{ todayData?.late_punch_cutoff_minutes || lateLockMinutes }} min){{ (todayData?.minutes_until_shift_end ?? 1) <= 0 ? ' and your shift has ended' : '' }}.
+                  Self clock-in is no longer available — contact HR to regularize today's attendance.
+                </span>
+              </div>
+            </div>
+            <div v-if="todayData?.pending_late_request_id" class="late-actions">
+              <div class="late-pending"><Hourglass :size="13" /> A request is on file — admin notified.</div>
             </div>
           </div>
 
@@ -367,10 +422,10 @@
               <span class="tile-aura" />
               <span class="tile-icon"><Flame :size="16" /></span>
               <span class="tile-value onb-mono">
-                {{ overtimeMinutes > 0 ? '+' + (overtimeMinutes >= 60 ? (overtimeMinutes / 60).toFixed(1) + 'h' : overtimeMinutes + 'm') : '0m' }}
+                {{ overtimeTileDisplay }}
               </span>
               <span class="tile-label">Overtime</span>
-              <span class="tile-foot">{{ overtimeMinutes > 0 ? 'past shift end — auto-tracked' : 'live · resets daily' }}</span>
+              <span class="tile-foot">{{ overtimeTileFoot }}</span>
             </Motion>
           </div>
         </Motion>
@@ -780,7 +835,7 @@
 
       <!-- HISTORY TAPE — animated tiles for each tracked day -->
       <div class="ins-tape">
-        <Motion v-for="(d, i) in history" :key="d.date" as="button" type="button"
+        <Motion v-for="(d, i) in tapeDays" :key="d.date" as="button" type="button"
           :class="['itape-card', `status-${d.status}`]"
           :data-status="d.status"
           :initial="{ opacity: 0, y: 16, rotateX: 14 }" :animate="{ opacity: 1, y: 0, rotateX: 0 }"
@@ -947,7 +1002,8 @@
       @close="showCorrection = false"
     >
       <div class="form-stack">
-        <OnbField v-model="correctionForm.attendance_date" type="date" label="Date" required />
+        <OnbField v-model="correctionForm.attendance_date" type="date" label="Date" required
+          :error="correctionDateError" hint="The day you need fixed — today or earlier." />
         <div class="form-grid-2">
           <OnbField v-model="correctionForm.in_time" type="time" label="Clock-in time" placeholder="HH:MM" />
           <OnbField v-model="correctionForm.out_time" type="time" label="Clock-out time" placeholder="HH:MM" />
@@ -984,8 +1040,10 @@
     >
       <div class="form-stack">
         <div class="form-grid-2">
-          <OnbField v-model="wfhForm.wfh_date" type="date" label="From" required />
-          <OnbField v-model="wfhForm.wfh_date_until" type="date" label="Until (optional)" />
+          <OnbField v-model="wfhForm.wfh_date" type="date" label="From" required
+            :error="wfhDateError" hint="Today or a future date." />
+          <OnbField v-model="wfhForm.wfh_date_until" type="date" label="Until (optional)"
+            :error="wfhUntilError" />
         </div>
         <OnbField v-model="wfhForm.request_type" type="select" label="Type" required :options="wfhTypeOptions" />
         <OnbField
@@ -1017,7 +1075,8 @@
       @close="showHalfDay = false"
     >
       <div class="form-stack">
-        <OnbField v-model="hdForm.half_day_date" type="date" label="Date" required hint="Today or any future date." />
+        <OnbField v-model="hdForm.half_day_date" type="date" label="Date" required
+          :error="hdDateError" hint="Today or any future date." />
 
         <Motion v-if="hdDateConflict.type"
           class="hd-conflict-banner"
@@ -1096,7 +1155,8 @@
     >
       <div class="form-stack">
         <div class="form-grid-2">
-          <OnbField v-model="otForm.date" type="date" label="Date" required hint="Up to 14 days back or 30 days ahead." />
+          <OnbField v-model="otForm.date" type="date" label="Date" required
+            :error="otDateError" hint="Up to 14 days back or 30 days ahead." />
           <OnbField
             v-model.number="otForm.ot_hours"
             type="number"
@@ -1148,7 +1208,9 @@
     <OnbModal
       :open="showLateRequest"
       title="Request late clock-in"
-      :subtitle="`You are ${todayData?.late_minutes_now ?? 0} minutes late · self-punch locks beyond ${lateLockMinutes} min. Tell admin what happened — the punch lands once approved.`"
+      :subtitle="todayData?.is_half_day
+        ? `You are ${todayData?.late_minutes_now ?? 0} minutes late · half-day · ${todayData?.half_day_which === 'FIRST' ? 'second-half' : 'morning'} starts ${todayData?.effective_shift_start} · self-punch locks beyond ${lateLockMinutes} min. Tell admin what happened — the punch lands once approved.`
+        : `You are ${todayData?.late_minutes_now ?? 0} minutes late · self-punch locks beyond ${lateLockMinutes} min. Tell admin what happened — the punch lands once approved.`"
       :icon="Siren"
       :width="540"
       @close="showLateRequest = false"
@@ -1272,6 +1334,15 @@
             <div v-if="reportDay.is_auto_closed" class="rep-auto-pill">
               <AlertTriangle :size="11" /> Auto-closed — you forgot to clock out. <button class="rep-link" type="button" @click="prefillCorrectionFromReport">Submit a correction</button>
             </div>
+            <div v-if="(reportDay.lop_days || 0) > 0" class="rep-lwp-pill" :data-tone="reportDay.status === 'ABSENT' ? 'danger' : 'warn'">
+              <Info :size="11" />
+              <span v-if="reportDay.status === 'ABSENT'">
+                No clock-in — counted <strong>absent</strong>. LWP balance couldn't cover the {{ reportDay.lop_days }} unpaid day.
+              </span>
+              <span v-else>
+                No clock-in for <strong>{{ reportDay.lop_days }}</strong> day — debited to <strong>LWP</strong> (Leave Without Pay) from your balance.
+              </span>
+            </div>
           </div>
           <div class="rep-summary-grid">
             <div class="rep-stat">
@@ -1374,7 +1445,7 @@ import {
   Building2, Navigation, Flame, TrendingUp, Award, Target, Zap, Globe2,
   FileText, LogIn, AlertTriangle, ChevronLeft, ChevronRight,
   SunMedium, Heart, HeartPulse, Briefcase, Users, XCircle,
-  PartyPopper, TimerReset,
+  PartyPopper, TimerReset, Plane,
 } from 'lucide-vue-next'
 import AttStatusPill from './attendance/components/AttStatusPill.vue'
 import HrDatePicker from '@/components/hr/forms/HrDatePicker.vue'
@@ -1402,6 +1473,11 @@ import {
 const toast = useToast()
 const prefersReduced = usePreferredReducedMotion()
 const reduced = computed(() => prefersReduced.value === 'reduce')
+
+// Local-calendar ISO (YYYY-MM-DD). NEVER use `new Date().toISOString()` for
+// "today" — that's UTC, and in IST (UTC+5:30) it rolls back to *yesterday*
+// between 00:00–05:29 local. Defined up here so every caller below can use it.
+const toLocalISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 // ─────── live clock ───────
 const liveTime = ref('--:--:--')
@@ -1446,6 +1522,8 @@ const state = computed(() => {
 })
 
 const isBlocked = computed(() => {
+  // Full-day approved leave outranks everything — you're officially off.
+  if (todayData.value?.is_on_leave) return true
   if (todayData.value?.is_holiday || todayData.value?.is_week_off) return true
   // WFH-approved users skip the geo-fence check entirely.
   if (todayData.value?.wfh_approved) return false
@@ -1454,6 +1532,11 @@ const isBlocked = computed(() => {
   return false
 })
 const blockReason = computed(() => {
+  if (todayData.value?.is_on_leave) {
+    const lt = (todayData.value.leave_type || '').replace(/_/g, ' ').toLowerCase()
+    const ref = todayData.value.leave_reference_no ? ` (${todayData.value.leave_reference_no})` : ''
+    return `You're on approved ${lt || ''} leave today${ref} — clock-in needs admin permission.`
+  }
   if (todayData.value?.is_holiday) return `Today is a holiday (${todayData.value.holiday_name || ''}) — clock-in disabled.`
   if (todayData.value?.is_week_off) return `Today is your week-off — clock-in disabled.`
   if (todayData.value?.wfh_approved) return ''
@@ -1467,7 +1550,13 @@ const blockReason = computed(() => {
 const lateLockMinutes = computed(() => {
   const s = todayData.value?.shift
   if (!s) return 0
-  return (s.grace_minutes || 0) + (s.late_self_punch_threshold_minutes || 0)
+  // When a half-day is approved for today, the backend swaps the grace to
+  // `half_day_grace_minutes` — mirror that here so the on-screen "locks
+  // beyond N min" matches what the punch endpoint actually enforces.
+  const effGrace = todayData.value?.is_half_day
+    ? (todayData.value?.effective_grace_minutes ?? s.half_day_grace_minutes ?? s.grace_minutes ?? 0)
+    : (s.grace_minutes || 0)
+  return effGrace + (s.late_self_punch_threshold_minutes || 0)
 })
 
 // Ultra-modern break countdown — recomputes every second while on break.
@@ -1530,6 +1619,50 @@ const overtimeMinutes = computed(() => {
   return Math.max(0, Math.floor(pastEndMs / 60000))
 })
 
+// 14-day approved overtime — sums OvertimeRequest rows the admin has approved
+// over the trailing two weeks. The Pulse panel header says "LAST 14 DAYS", so
+// this tile should mirror that window the way Streak / Avg / On-time do, not
+// be a live-today readout. Live overtime is still surfaced elsewhere on the
+// page (shift card + journey bubble).
+const approvedOvertime14d = computed(() => {
+  const list = myOtList.value || []
+  const cutoff = new Date(); cutoff.setHours(0, 0, 0, 0); cutoff.setDate(cutoff.getDate() - 14)
+  let totalHours = 0
+  let entries = 0
+  for (const o of list) {
+    if (String(o.status || '').toUpperCase() !== 'APPROVED') continue
+    const isoDate = String(o.date || o.created_at || '').slice(0, 10)
+    if (!isoDate) continue
+    const d = new Date(isoDate)
+    if (isNaN(d.getTime()) || d < cutoff) continue
+    totalHours += Number(o.ot_hours || 0)
+    entries += 1
+  }
+  return { hours: totalHours, entries }
+})
+
+// Pulse tile shows the 14-day approved OT total; if there's also live OT in
+// progress right now (clocked-in past shift end), add it visibly so the
+// number doesn't lag the live state.
+const overtimeTileDisplay = computed(() => {
+  const approvedH = approvedOvertime14d.value.hours
+  const liveH = overtimeMinutes.value / 60
+  const total = approvedH + liveH
+  if (total <= 0) return '0h'
+  if (total >= 1) return `+${total.toFixed(total >= 10 ? 1 : 2)}h`
+  // Sub-hour totals (e.g. just live minutes early on) — show minutes.
+  return `+${Math.round(total * 60)}m`
+})
+
+const overtimeTileFoot = computed(() => {
+  const { hours, entries } = approvedOvertime14d.value
+  const liveM = overtimeMinutes.value
+  if (entries > 0 && liveM > 0) return `+${liveM}m live · ${entries} approved · 14d`
+  if (entries > 0) return `${entries} approved · last 14 days`
+  if (liveM > 0) return 'past shift end — auto-tracked'
+  return 'no approved OT in 14 days'
+})
+
 const shiftProgress = computed(() => {
   const s = todayData.value?.shift
   if (!s) return 0
@@ -1570,8 +1703,24 @@ const coreSub = computed(() => {
 const contextPill = computed(() => {
   if (todayData.value?.is_holiday) return { tone: 'warn', icon: Sparkles, label: 'Holiday', detail: todayData.value.holiday_name || 'Enjoy your day off' }
   if (todayData.value?.is_week_off) return { tone: 'neutral', icon: Coffee, label: 'Week-off', detail: 'No clock-in expected today' }
-  if (todayData.value?.wfh_approved) return { tone: 'good', icon: Home, label: 'WFH approved', detail: 'Location check waived for today' }
-  if (todayData.value?.requires_late_approval) return { tone: 'warn', icon: Siren, label: 'Late lock', detail: `${todayData.value.late_minutes_now}m past shift start · approval needed` }
+  if (todayData.value?.wfh_approved) {
+    const isRemote = todayData.value?.wfh_request_type === 'REMOTE'
+    return { tone: 'good', icon: isRemote ? Globe2 : Home, label: isRemote ? 'Remote approved' : 'WFH approved', detail: 'Location check waived for today' }
+  }
+  if (todayData.value?.next_action === 'late_window_closed') {
+    return { tone: 'warn', icon: Siren, label: 'Window closed', detail: `${todayData.value.late_minutes_now}m late · past cap · regularize with HR` }
+  }
+  if (todayData.value?.is_half_day) {
+    const which = todayData.value.half_day_which === 'FIRST' ? 'First half off' : 'Second half off'
+    const starts = todayData.value.effective_shift_start
+    const ends = todayData.value.effective_shift_end
+    return { tone: 'good', icon: Sparkles, label: which, detail: `working window ${starts} → ${ends}` }
+  }
+  if (todayData.value?.requires_late_approval) {
+    const halfDay = todayData.value?.is_half_day
+    const start = todayData.value?.effective_shift_start || shortTime(todayData.value?.shift?.start_time)
+    return { tone: 'warn', icon: Siren, label: 'Late lock', detail: `${todayData.value.late_minutes_now}m past ${halfDay ? 'half-day' : 'shift'} start (${start}) · approval needed` }
+  }
   if (state.value === 'CLOCKED_IN') return { tone: 'good', icon: Activity, label: 'On the clock', detail: `since ${formatTime(todayData.value?.attendance?.check_in_time)}` }
   if (state.value === 'ON_BREAK') return { tone: 'warn', icon: Coffee, label: 'On break', detail: `running for ${formatDuration(breakElapsedSeconds.value)}` }
   if (state.value === 'CLOCKED_OUT') return { tone: 'good', icon: Check, label: 'Day complete', detail: `total ${formatDuration(elapsedSeconds.value)}` }
@@ -1948,7 +2097,7 @@ const pulseData = computed(() => {
   // admin lock), then ALWAYS re-inject today using the live todayData fields.
   // This guarantees `is_late === true` on the dashboard immediately becomes a
   // less-than-100% on-time pulse instead of waiting on next-day rollup.
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = toLocalISO(new Date())
   const histWork = items
     .filter(d => !['WEEK_OFF', 'HOLIDAY'].includes(d.status))
     .filter(d => String(d.date).slice(0, 10) !== todayStr)
@@ -1960,7 +2109,7 @@ const pulseData = computed(() => {
   )
   const todayIsLate = !!todayData.value?.is_late || todayLateNow > 0
   const todayHasPunch = !!todayData.value?.attendance?.check_in_time
-  const todayIsWorkDay = !todayData.value?.is_holiday && !todayData.value?.is_week_off
+  const todayIsWorkDay = !todayData.value?.is_holiday && !todayData.value?.is_week_off && !todayData.value?.is_on_leave
 
   const work = [...histWork]
   if (todayIsWorkDay && (todayHasPunch || todayIsLate)) {
@@ -2054,12 +2203,21 @@ const summary = computed(() => {
   if (!history.value.length) return { attendancePct: 0, presentDays: 0, lateDays: 0, absentDays: 0, wfhDays: 0 }
   let present = 0, late = 0, absent = 0, wfh = 0, workdays = 0
   for (const d of history.value) {
-    if (['WEEK_OFF', 'HOLIDAY'].includes(d.status)) continue
+    // Non-working days — they neither help nor hurt attendance, so keep them
+    // out of the present/absent maths entirely. LEAVE is included here so the
+    // "attended?" gate below can't misread approved leave (no punch, 0h) as an
+    // absence.
+    if (['WEEK_OFF', 'HOLIDAY', 'LEAVE'].includes(d.status)) continue
     workdays++
-    if (d.status === 'PRESENT' || d.status === 'HALF_DAY' || d.status === 'ON_DUTY') present++
+    // A day only counts as PRESENT when there's real attendance evidence — an
+    // actual punch or logged hours. An approved HALF_DAY / WFH / REMOTE the
+    // employee never logged into (no check-in, 0h) is a no-show, so it must
+    // count as absent rather than inflate the present total / attendance ring.
+    const attended = !!d.check_in_time || Number(d.working_hours || 0) > 0
+    if (!attended) { absent++; continue }
     if (d.status === 'LATE') { late++; present++ }
-    if (d.status === 'ABSENT') absent++
-    if (d.status === 'WFH' || d.status === 'REMOTE') { wfh++; present++ }
+    else if (d.status === 'WFH' || d.status === 'REMOTE') { wfh++; present++ }
+    else present++   // PRESENT / HALF_DAY / ON_DUTY — any attended working day
   }
   const pct = workdays ? Math.round((present / workdays) * 100) : 0
   return { attendancePct: pct, presentDays: present, lateDays: late, absentDays: absent, wfhDays: wfh }
@@ -2128,17 +2286,26 @@ const loadMonth = async () => {
     const start = new Date(now.getFullYear(), now.getMonth(), 1)
     const dayCount = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
     monthBlanks.value = start.getDay()
-    const todayStr = new Date().toISOString().slice(0, 10)
+    const todayStr = toLocalISO(new Date())
     monthDots.value = []
     for (let d = 1; d <= dayCount; d++) {
-      const iso = new Date(now.getFullYear(), now.getMonth(), d).toISOString().slice(0, 10)
+      // Build the ISO from LOCAL date parts — `new Date(y, m, d).toISOString()`
+      // converts to UTC, which in IST (UTC+5:30) rolls every date back a day
+      // (so May 31 would render as "05-30" and the 31st would vanish).
+      const iso = toLocalISO(new Date(now.getFullYear(), now.getMonth(), d))
       const c = map.get(iso) || {}
       const future = iso > todayStr
       // Merge admin-configured holiday calendar so even months the backend
       // didn't populate still show ★ markers on official days.
       const hol = holidayMap.value.get(iso) || null
       const isHol = !!c.is_holiday || !!hol
-      const rawStatus = future ? 'FUTURE' : (c.status || (isHol ? 'HOLIDAY' : 'WEEK_OFF'))
+      // Past days without a backend status are treated as ABSENT (a no-show),
+      // NOT week-off — the shift-end finalizer stamps real WEEK_OFF/HOLIDAY/
+      // LEAVE rows, so a missing past row means the day simply wasn't worked.
+      // (Today, which has no row until its shift ends, is handled separately.)
+      const rawStatus = future
+        ? 'FUTURE'
+        : (c.status || (isHol ? 'HOLIDAY' : (iso === todayStr ? 'TODAY' : 'ABSENT')))
       monthDots.value.push({
         date: iso,
         status: rawStatus,
@@ -2180,31 +2347,77 @@ const showCellTip = (e, c) => {
 const hideCellTip = () => { tip.show = false }
 
 // ─────── modals ───────
+// Date-window helpers for request validation. Rules mirror the backend so a
+// request the user can submit is always one the admin can actually act on:
+//   • Correction  — today or PAST only (you can't correct a day that hasn't
+//                   happened). Backend links to an existing attendance row.
+//   • WFH / Remote — today or FUTURE only. Backend create has no floor, but the
+//                    approve handler rejects wfh_date < today, so a past-date
+//                    request can never be approved — block it up front.
+//   • Half-day     — today or FUTURE only (backend returns 422 otherwise).
+//   • Overtime     — within [today-14, today+30] (backend 422 outside that).
+// ISO yyyy-mm-dd strings are fixed-width + zero-padded, so plain `<`/`>`
+// lexical comparison is a correct date comparison.
+const todayISO = computed(() => toLocalISO(new Date()))
+const isoOffsetDays = (n) => {
+  const d = new Date()
+  d.setDate(d.getDate() + n)
+  return toLocalISO(d)
+}
+
 const showCorrection = ref(false)
 const correctionForm = reactive({
-  attendance_date: new Date().toISOString().slice(0, 10),
+  attendance_date: toLocalISO(new Date()),
   in_time: '', out_time: '', reason: '',
 })
-const correctionValid = computed(() => !!(correctionForm.attendance_date && correctionForm.reason.trim().length >= 4))
+const correctionDateError = computed(() => {
+  if (!correctionForm.attendance_date) return ''
+  if (correctionForm.attendance_date > todayISO.value)
+    return "Corrections are for days that already happened — pick today or a past date."
+  return ''
+})
+const correctionValid = computed(() => !!(
+  correctionForm.attendance_date
+  && !correctionDateError.value
+  && correctionForm.reason.trim().length >= 4
+))
 
 const showWfh = ref(false)
 const wfhForm = reactive({
   request_type: 'WFH',
-  wfh_date: new Date().toISOString().slice(0, 10),
+  wfh_date: toLocalISO(new Date()),
   wfh_date_until: '', reason: '',
 })
 const wfhTypeOptions = [
   { label: 'Work from home', value: 'WFH' },
   { label: 'Remote / on-site', value: 'REMOTE' },
 ]
-const wfhValid = computed(() => !!(wfhForm.wfh_date && wfhForm.reason.trim().length >= 4))
+const wfhKind = computed(() => (wfhForm.request_type === 'REMOTE' ? 'remote day' : 'WFH'))
+const wfhDateError = computed(() => {
+  if (!wfhForm.wfh_date) return ''
+  if (wfhForm.wfh_date < todayISO.value)
+    return `Pick today or a future date — a ${wfhKind.value} can't be requested for a past day.`
+  return ''
+})
+const wfhUntilError = computed(() => {
+  if (!wfhForm.wfh_date_until) return ''
+  if (wfhForm.wfh_date_until < wfhForm.wfh_date)
+    return "The end date can't be before the start date."
+  return ''
+})
+const wfhValid = computed(() => !!(
+  wfhForm.wfh_date
+  && !wfhDateError.value
+  && !wfhUntilError.value
+  && wfhForm.reason.trim().length >= 4
+))
 
 // Pre-select the request type when opening from a dedicated quick-action
 // (WFH vs REMOTE) so the user lands on the right context without having to
 // flip the Type dropdown manually.
 const openWfhRequest = (type = 'WFH') => {
   wfhForm.request_type = type
-  wfhForm.wfh_date = new Date().toISOString().slice(0, 10)
+  wfhForm.wfh_date = toLocalISO(new Date())
   wfhForm.wfh_date_until = ''
   wfhForm.reason = ''
   showWfh.value = true
@@ -2213,7 +2426,7 @@ const openWfhRequest = (type = 'WFH') => {
 // ─────── half-day request ───────
 const showHalfDay = ref(false)
 const hdForm = reactive({
-  half_day_date: new Date().toISOString().slice(0, 10),
+  half_day_date: toLocalISO(new Date()),
   which_half: 'SECOND',
   reason_type: 'PERSONAL',
   reason: '',
@@ -2250,8 +2463,15 @@ const hdDateConflict = computed(() => {
   return { type: null, label: '' }
 })
 
+const hdDateError = computed(() => {
+  if (!hdForm.half_day_date) return ''
+  if (hdForm.half_day_date < todayISO.value)
+    return 'Half-day must be for today or a future date.'
+  return ''
+})
 const hdValid = computed(() =>
   !!(hdForm.half_day_date
+     && !hdDateError.value
      && hdForm.reason.trim().length >= 4
      && !hdDateConflict.value.type)
 )
@@ -2267,7 +2487,7 @@ const HD_REASON_TYPES = [
   { value: 'OTHER',    label: 'Other',    icon: Sparkles,   tone: 'gray' },
 ]
 const openHalfDayRequest = () => {
-  hdForm.half_day_date = new Date().toISOString().slice(0, 10)
+  hdForm.half_day_date = toLocalISO(new Date())
   hdForm.which_half = 'SECOND'
   hdForm.reason_type = 'PERSONAL'
   hdForm.reason = ''
@@ -2306,14 +2526,23 @@ const otTypeOptions = [
   { value: 'HOLIDAY',   label: 'Holiday' },
   { value: 'EMERGENCY', label: 'Emergency' },
 ]
+const otDateError = computed(() => {
+  if (!otForm.date) return ''
+  if (otForm.date < isoOffsetDays(-14))
+    return 'OT can be claimed for at most 14 days back. Contact your manager for older claims.'
+  if (otForm.date > isoOffsetDays(30))
+    return 'OT can be requested up to 30 days ahead.'
+  return ''
+})
 const otValid = computed(() =>
   !!otForm.date &&
+  !otDateError.value &&
   Number(otForm.ot_hours) > 0 && Number(otForm.ot_hours) <= 12 &&
   otForm.reason.trim().length >= 4
 )
 const openOtRequest = () => {
   // Default to today, mid-shift planning typical
-  otForm.date = new Date().toISOString().slice(0, 10)
+  otForm.date = toLocalISO(new Date())
   otForm.ot_hours = 1
   otForm.ot_type = 'WEEKDAY'
   otForm.reason = ''
@@ -2443,12 +2672,6 @@ const reportDay = ref(null)
 const reportLoading = ref(false)
 const reportStripRef = ref(null)
 
-// Always format dates using the LOCAL (IST) calendar — `toISOString()` would
-// convert to UTC and silently shift the day by one for any time window where
-// UTC and IST disagree (00:00–05:30 IST). That bug made the report default to
-// yesterday's date when opened just after midnight IST.
-const toLocalISO = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-
 // Strip = last 14 days, newest on the right. Cross-references `history` so
 // each chip can be coloured by its computed status (PRESENT / LATE / etc)
 // AND show a tiny hours-worked mini bar.
@@ -2469,6 +2692,7 @@ const reportStripDays = computed(() => {
     if (iso === todayIso && todayData.value) {
       if (todayData.value.is_holiday) status = 'HOLIDAY'
       else if (todayData.value.is_week_off) status = 'WEEK_OFF'
+      else if (todayData.value.is_on_leave) status = 'LEAVE'
       else if (todayData.value.attendance?.status) status = todayData.value.attendance.status
       else if (state.value === 'CLOCKED_IN' || state.value === 'ON_BREAK') status = 'PRESENT'
     }
@@ -2483,6 +2707,34 @@ const reportStripDays = computed(() => {
       hours,
       barPct: Math.min(100, (hours / 10) * 100),
     })
+  }
+  return out
+})
+
+// History tape = full last-14-day window, NEWEST FIRST (today on the left).
+// Built as a complete calendar — `history` from the API only carries days that
+// have a rolled-up attendance row, so it can stop a couple of days short of
+// today (e.g. before the daily rollup runs). We fill every gap and let today
+// reflect the live in-progress shift, so the tape always leads with today.
+const tapeDays = computed(() => {
+  const out = []
+  const today = new Date()
+  const todayIso = toLocalISO(today)
+  const histMap = new Map((history.value || []).map(d => [String(d.date).slice(0, 10), d]))
+  for (let i = 0; i <= 13; i++) {
+    const d = new Date(today); d.setDate(today.getDate() - i)
+    const iso = toLocalISO(d)
+    const histRow = histMap.get(iso)
+    let status = histRow?.status
+    if (!status) status = (iso === todayIso) ? 'TODAY' : 'ABSENT'
+    if (iso === todayIso && todayData.value) {
+      if (todayData.value.is_holiday) status = 'HOLIDAY'
+      else if (todayData.value.is_week_off) status = 'WEEK_OFF'
+      else if (todayData.value.is_on_leave) status = 'LEAVE'
+      else if (todayData.value.attendance?.status) status = todayData.value.attendance.status
+      else if (state.value === 'CLOCKED_IN' || state.value === 'ON_BREAK') status = 'PRESENT'
+    }
+    out.push({ date: iso, status, working_hours: Number(histRow?.working_hours || 0) })
   }
   return out
 })
@@ -2504,22 +2756,11 @@ const selectReportDay = async (iso) => {
 }
 const openReport = async () => {
   showReport.value = true
-  // Default landing day — prefer the most recent day with a check-in. Looks
-  // at history (already covers the past 14 days) and falls back to today if
-  // nothing matches. This means at 00:35 IST May 29, the user lands on
-  // May 28 (the day they actually worked) instead of an empty May 29.
-  const todayIso = toLocalISO(new Date())
-  const todayHasPunch = !!todayData.value?.attendance?.check_in_time
-  let target = todayIso
-  if (!todayHasPunch) {
-    const lastWorked = (history.value || []).find(d => d.check_in_time)
-    if (lastWorked) target = String(lastWorked.date).slice(0, 10)
-    else {
-      const y = new Date(); y.setDate(y.getDate() - 1)
-      target = toLocalISO(y)
-    }
-  }
-  await selectReportDay(target)
+  // Always land on the CURRENT day by default (even if there's no punch yet —
+  // it then shows today's live/absent state). Previously this fell back to the
+  // last worked day / yesterday when today had no punch, which made the report
+  // open on the previous day.
+  await selectReportDay(toLocalISO(new Date()))
 }
 
 const punchLabel = (t) => {
@@ -2585,6 +2826,13 @@ const handlePolicyError = (e) => {
 }
 
 const doClockIn = async () => {
+  // Non-working day guard — approved leave / weekly-off / holiday has no self
+  // clock-in. Backend enforces the same rule (423); this avoids a pointless
+  // round-trip and gives instant feedback if the button is ever reached.
+  if (isBlocked.value && (todayData.value?.is_on_leave || todayData.value?.is_week_off || todayData.value?.is_holiday)) {
+    toast.warning(blockReason.value || 'Clock-in is disabled today.')
+    return
+  }
   // Frontend-guard the early-clock-in case so users get an immediate response
   // instead of a 423 round-trip. Backend still enforces the same rule.
   if (todayData.value?.is_too_early_to_punch) {
@@ -6579,6 +6827,17 @@ const dayNum = (iso) => String(new Date(iso).getDate()).padStart(2, '0')
 }
 .rep-link { background: none; border: 0; color: #fbbf24; cursor: pointer; text-decoration: underline; font-weight: 700; padding: 0; }
 .rep-link:hover { color: #fde68a; }
+
+.rep-lwp-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 6px; padding: 6px 10px; border-radius: 10px;
+  font-size: 11px; font-weight: 600; line-height: 1.4;
+  background: rgba(180, 83, 9, 0.14); border: 1px solid rgba(180, 83, 9, 0.34); color: #d97706;
+}
+.rep-lwp-pill[data-tone="danger"] { background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.35); color: #ef4444; }
+.rep-lwp-pill strong { font-weight: 800; }
+[data-theme="light"] .rep-lwp-pill { background: rgba(180, 83, 9, 0.1); border-color: rgba(180, 83, 9, 0.34); color: #92400e; }
+[data-theme="light"] .rep-lwp-pill[data-tone="danger"] { background: rgba(185, 28, 28, 0.1); border-color: rgba(185, 28, 28, 0.35); color: #b91c1c; }
 
 .rep-summary-grid {
   display: grid;

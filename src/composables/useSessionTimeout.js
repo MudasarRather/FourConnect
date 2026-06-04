@@ -6,7 +6,11 @@ const SESSION_TIMEOUT_MS = 10 * 60 * 1000 // 10 minutes
 // the cursor around (without typing or scrolling) was treated as idle and
 // got logged out mid-task. `mousemove` is throttled below so it doesn't
 // thrash the timer on every pixel.
-const ACTIVITY_EVENTS = ['mousedown', 'click', 'keydown', 'scroll', 'wheel', 'touchstart', 'mousemove']
+// `fc:activity` is a synthetic keep-alive signal a long-running page (e.g. the
+// 15-step handover wizard) can dispatch on `document` to keep an actively-open,
+// visible tab from being logged out for "inactivity" while the user reads or
+// gathers info between steps. See useSessionTimeout consumers / HandoverWizardPage.
+const ACTIVITY_EVENTS = ['mousedown', 'click', 'keydown', 'scroll', 'wheel', 'touchstart', 'mousemove', 'fc:activity']
 
 let timeoutId = null
 let lastActivity = Date.now()

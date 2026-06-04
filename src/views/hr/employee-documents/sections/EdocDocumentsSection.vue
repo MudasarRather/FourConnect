@@ -5,6 +5,10 @@
         <Search :size="14" class="ic" />
         <input v-model="api.filters.value.q" placeholder="Search title or type…" @keyup.enter="reload" />
       </div>
+      <EdocEmployeeFilter
+        v-model="api.filters.value.employee_id"
+        @update:modelValue="reload"
+      />
       <div class="status-pills">
         <button v-for="s in STATUS" :key="s.key" class="edoc-pill" :class="{ 'is-active': api.filters.value.status === s.key }" @click="setStatus(s.key)">
           {{ s.label }}
@@ -51,6 +55,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { Search, Plus, ChevronLeft, ChevronRight, IdCard, FileSignature, Award, ReceiptIndianRupee, ScrollText, Fingerprint, GraduationCap, ShieldCheck, FileText } from 'lucide-vue-next'
 import EdocDocumentCard from '../components/EdocDocumentCard.vue'
+import EdocEmployeeFilter from '../components/EdocEmployeeFilter.vue'
 import EdocEmptyState from '../components/EdocEmptyState.vue'
 import EdocDocumentDrawer from '../drawers/EdocDocumentDrawer.vue'
 import EdocUploadModal from '../modals/EdocUploadModal.vue'

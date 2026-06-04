@@ -63,6 +63,11 @@
         </select>
       </div>
 
+      <div class="filter-cluster">
+        <span class="filter-label"><User :size="11" />Employee</span>
+        <EdocEmployeeFilter v-model="filters.employee_id" @update:modelValue="onEmployeeChange" />
+      </div>
+
       <div class="filter-cluster grow">
         <span class="filter-label"><Search :size="11" />Search</span>
         <div class="search-wrap">
@@ -219,13 +224,14 @@ import {
   Filter, Layers, Search, X, RefreshCcw, Inbox, Clock, Target, StickyNote,
   Mail, FileSignature, Award, Briefcase, Wallet, Shield, FileText, MapPin, Plane, Stamp,
   PlayCircle, CheckCircle2, XCircle, Lock,
-  Send, AlertCircle, ClipboardCheck, Hourglass,
+  Send, AlertCircle, ClipboardCheck, Hourglass, User,
 } from 'lucide-vue-next'
 import {
   fetchAdminRequests, REQUEST_TYPE_META, REQUEST_STATUS_META,
 } from '@/composables/useEmployeeDocuments'
 import { useToast } from '@/composables/useToast'
 import EdocDecideRequestModal from '../modals/EdocDecideRequestModal.vue'
+import EdocEmployeeFilter from '../components/EdocEmployeeFilter.vue'
 
 const { success, error } = useToast()
 
@@ -238,6 +244,7 @@ const searchQ = ref('')
 const filters = reactive({
   status: 'PENDING',
   request_type: '',
+  employee_id: null,
   q: '',
   page: 1,
   limit: 50,
@@ -304,6 +311,7 @@ async function refresh() {
     const data = await fetchAdminRequests({
       status: filters.status || undefined,
       request_type: filters.request_type || undefined,
+      employee_id: filters.employee_id || undefined,
       q: filters.q || undefined,
       page: filters.page,
       limit: filters.limit,
@@ -321,6 +329,11 @@ async function refresh() {
 
 function setStatus(s) {
   filters.status = s
+  filters.page = 1
+  refresh()
+}
+
+function onEmployeeChange() {
   filters.page = 1
   refresh()
 }
@@ -511,10 +524,10 @@ onMounted(refresh)
    TOOLBAR
    ════════════════════════════════════════════════════════════════════════ */
 .req-toolbar {
-  display: grid;
-  grid-template-columns: auto auto 1fr auto;
+  display: flex;
+  flex-wrap: wrap;
   gap: 18px;
-  align-items: end;
+  align-items: flex-end;
   padding: 16px 20px;
   border-radius: 18px;
   background:
@@ -529,10 +542,10 @@ onMounted(refresh)
     rgba(255, 250, 240, 0.96);
   border-color: rgba(180, 83, 9, 0.22);
 }
-@media (max-width: 1100px) { .req-toolbar { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .filter-cluster { flex: 1 1 100%; } }
 
-.filter-cluster { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.filter-cluster.grow { min-width: 220px; }
+.filter-cluster { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 0 1 auto; }
+.filter-cluster.grow { flex: 1 1 240px; min-width: 220px; }
 .filter-label {
   display: inline-flex; align-items: center; gap: 5px;
   font-size: 9px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase;
@@ -644,7 +657,8 @@ onMounted(refresh)
 .search-clear:hover { background: rgba(251, 191, 36, 0.28); }
 
 .refresh-btn {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  flex: 1 0 100%;
   padding: 10px 18px;
   border-radius: 11px;
   font: inherit; font-size: 12px; font-weight: 800; letter-spacing: 0.4px;

@@ -6,6 +6,7 @@
         <span>Verification Queue</span>
         <span class="vq-count edoc-mono">{{ api.total.value }}</span>
       </div>
+      <EdocEmployeeFilter v-model="api.filters.value.employee_id" @update:modelValue="reload" />
       <div style="flex:1" />
       <button v-if="selected.size" class="edoc-btn" @click="clearSel">Clear ({{ selected.size }})</button>
       <Motion v-if="selected.size" as="button" class="edoc-btn edoc-btn-success"
@@ -37,6 +38,7 @@ import { Motion } from 'motion-v'
 import { ClipboardCheck, CheckCircle2, Loader2 } from 'lucide-vue-next'
 import EdocDocumentCard from '../components/EdocDocumentCard.vue'
 import EdocEmptyState from '../components/EdocEmptyState.vue'
+import EdocEmployeeFilter from '../components/EdocEmployeeFilter.vue'
 import EdocDocumentDrawer from '../drawers/EdocDocumentDrawer.vue'
 import { useEmployeeDocuments } from '@/composables/useEmployeeDocuments'
 import { useToast } from '@/composables/useToast'

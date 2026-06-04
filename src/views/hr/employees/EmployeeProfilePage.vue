@@ -143,16 +143,18 @@
                 <DataPair label="Religion" :value="emp.religion" />
               </template>
               <template v-else>
-                <!-- Employee ID + Code are auto-generated; shown as read-only.
-                     Full Name + Email live on the linked User and are mutable
-                     via the PATCH endpoint's extended whitelist. -->
+                <!-- Employee ID is auto-generated (locked). Employee Code is
+                     a manual external identifier (payroll/biometric/etc.) and
+                     is editable. Full Name + Email + employee_code live on
+                     the linked User; backend mirrors employee_code to the
+                     Employee row for fast queries. -->
                 <div class="readonly-strip">
                   <div class="ro-cell"><span class="ro-label">Employee ID</span><span class="ro-value mono">{{ emp.employee_id }}</span></div>
-                  <div class="ro-cell" v-if="emp.employee_code"><span class="ro-label">Employee Code</span><span class="ro-value mono">{{ emp.employee_code }}</span></div>
                 </div>
                 <div class="edit-grid">
+                  <div class="field-block"><HrFieldLabel label="Employee Code" helper="Optional external code — must be unique across employees" /><HrInput v-model="form.employee_code" mono placeholder="e.g. PAY-4421" /></div>
+                  <div class="field-block"><HrFieldLabel label="Email" required /><HrInput v-model="form.email" type="email" placeholder="employee@company.com" /></div>
                   <div class="field-block full"><HrFieldLabel label="Full Name" required /><HrInput v-model="form.full_name" placeholder="As per official records" /></div>
-                  <div class="field-block full"><HrFieldLabel label="Email" required /><HrInput v-model="form.email" type="email" placeholder="employee@company.com" /></div>
                   <div class="field-block"><HrFieldLabel label="Gender" /><HrSelect v-model="form.gender" :options="genderOpts" placeholder="—" /></div>
                   <div class="field-block"><HrFieldLabel label="Date of Birth" /><HrDatePicker v-model="form.dob" /></div>
                   <div class="field-block"><HrFieldLabel label="Marital Status" /><HrSelect v-model="form.marital_status" :options="maritalOpts" placeholder="—" /></div>
@@ -759,8 +761,9 @@ const positionUnderline = () => {
 
 // Edit
 const SECTION_FIELDS = {
-  // Identity now also patches the linked User's full_name + email.
-  basic: ['full_name','email','gender','dob','marital_status','blood_group','nationality','religion'],
+  // Identity now also patches the linked User's full_name + email +
+  // employee_code (backend mirrors employee_code to the Employee row).
+  basic: ['full_name','email','employee_code','gender','dob','marital_status','blood_group','nationality','religion'],
   // aadhaar_full is the on-screen field — we extract last-4 on save below.
   basic_ids: ['aadhaar_full','pan','passport_number','passport_expiry','driving_license'],
   contact: ['mobile'],
@@ -783,6 +786,7 @@ const collectFormFromEmp = () => {
   Object.assign(form, {
     full_name: emp.value.user?.full_name || '',
     email: emp.value.user?.email || '',
+    employee_code: emp.value.employee_code || emp.value.user?.employee_code || '',
     gender: emp.value.gender || '',
     dob: emp.value.dob || '',
     marital_status: emp.value.marital_status || '',

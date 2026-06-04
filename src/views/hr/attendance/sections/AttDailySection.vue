@@ -65,6 +65,13 @@
             title="Clock out (on behalf)"
           ><LogOut :size="11" /> Punch out</button>
           <button v-else class="row-btn ghost" disabled>—</button>
+          <button v-if="r.status === 'LATE'"
+            class="row-btn condone"
+            :class="{ active: r.late_condoned }"
+            :disabled="condoningId === r.id"
+            @click="doCondoneLate(r)"
+            :title="r.late_condoned ? 'Late mark condoned — click to reinstate' : 'Condone this late mark (waive monthly penalty)'"
+          ><ShieldCheck :size="11" /> {{ r.late_condoned ? 'Condoned' : 'Condone' }}</button>
         </div>
       </Motion>
       <AttEmptyState
@@ -88,13 +95,13 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { Motion } from 'motion-v'
-import { RefreshCw, MapPin, Fingerprint, MousePointer2, Smartphone, Globe, Server, LogOut } from 'lucide-vue-next'
+import { RefreshCw, MapPin, Fingerprint, MousePointer2, Smartphone, Globe, Server, LogOut, ShieldCheck } from 'lucide-vue-next'
 import AttStatusPill from '../components/AttStatusPill.vue'
 import AttEmptyState from '../components/AttEmptyState.vue'
 import AttBreakAnomaliesBanner from '../components/AttBreakAnomaliesBanner.vue'
 import CompactDatePicker from '@/components/ui/CompactDatePicker.vue'
 import { fetchTodayAttendance } from '../composables/useAttendance'
-import { adminPunchOnBehalf } from '../composables/useAttendance'
+import { adminPunchOnBehalf, condoneLate } from '../composables/useAttendance'
 import { useToast } from 'vue-toastification'
 
 const emit = defineEmits(['refresh-stats'])
@@ -125,6 +132,24 @@ const adminPunch = async (row, type) => {
     toast.error(e?.response?.data?.detail || 'Punch failed')
   } finally {
     punchingId.value = null
+  }
+}
+
+const condoningId = ref(null)
+const doCondoneLate = async (row) => {
+  const next = !row.late_condoned
+  condoningId.value = row.id
+  try {
+    await condoneLate(row.employee_id, filterDate.value, next)
+    toast.success(next
+      ? `Late mark condoned for ${row.employee_name || ''} — penalty waived`
+      : `Condone removed for ${row.employee_name || ''} — late mark reinstated`)
+    await reload()
+    emit('refresh-stats')
+  } catch (e) {
+    toast.error(e?.response?.data?.detail || 'Could not condone late mark')
+  } finally {
+    condoningId.value = null
   }
 }
 
@@ -327,6 +352,10 @@ const iconForSource = (s) => ({
 }
 .row-btn.punch-out:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 22px -8px rgba(234, 88, 12, 0.75); filter: brightness(1.05); }
 .row-btn.ghost { background: rgba(148, 163, 184, 0.10); color: var(--hr-text-dim); border-color: rgba(148, 163, 184, 0.16); }
+.row-btn.condone { background: rgba(180, 83, 9, 0.12); color: #d97706; border-color: rgba(180, 83, 9, 0.35); }
+.row-btn.condone:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 10px 22px -8px rgba(217, 119, 6, 0.55); }
+.row-btn.condone.active { background: linear-gradient(135deg, #fde68a, #fbbf24 60%, #fb923c); color: #1f1408; border-color: rgba(180, 83, 9, 0.6); }
+[data-theme="light"] .row-btn.condone { background: rgba(180, 83, 9, 0.1); color: #92400e; border-color: rgba(180, 83, 9, 0.32); }
 
 .daily-pager {
   display: flex; gap: 10px; justify-content: center; align-items: center;

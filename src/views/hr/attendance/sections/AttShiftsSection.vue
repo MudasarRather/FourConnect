@@ -212,6 +212,27 @@
                 <p class="hint">
                   Employee can self-punch within <b>grace + threshold</b> of shift start. Beyond that, the clock-in button is replaced with "Request approval" — the punch lands only after admin approves it.
                 </p>
+
+                <div class="field-row tri">
+                  <label class="field">
+                    <span>Half-day grace (min)</span>
+                    <input v-model.number="form.half_day_grace_minutes" type="number" min="0" class="att-input" />
+                  </label>
+                  <label class="field">
+                    <span>Effective lock on half-days</span>
+                    <div class="readout">{{ (form.half_day_grace_minutes ?? 0) + (form.late_punch_requires_approval ? form.late_self_punch_threshold_minutes : 0) }} min<br><em>past half-day start</em></div>
+                  </label>
+                  <label class="field">
+                    <span>Applies to</span>
+                    <div class="readout" style="font-size: 11px; line-height: 1.4;">
+                      FIRST off → start mid-shift<br>
+                      SECOND off → end mid-shift
+                    </div>
+                  </label>
+                </div>
+                <p class="hint">
+                  When an APPROVED half-day exists for a date, late / early-exit checks run against the mid-shift instead of the nominal start/end and this grace replaces the regular one. Keeps a FIRST-half-off employee from being flagged hours late at midday.
+                </p>
               </fieldset>
 
               <!-- BREAK CONFIG -->
@@ -457,7 +478,7 @@ const DOW_LABELS = ['M','T','W','Th','F','Sa','Su']
 const blankForm = () => ({
   code: '', name: '', shift_type: 'GENERAL',
   start_time: '09:00', end_time: '18:00',
-  break_minutes: 60, grace_minutes: 10,
+  break_minutes: 60, grace_minutes: 10, half_day_grace_minutes: 10,
   half_day_hours: 4, full_day_hours: 8,
   weekly_off_days: [5, 6],
   night_allowance: false,
@@ -487,6 +508,7 @@ const openEdit = (s) => {
     end_time: (s.end_time || '').slice(0, 5),
     break_minutes: s.break_minutes ?? 60,
     grace_minutes: s.grace_minutes ?? 10,
+    half_day_grace_minutes: s.half_day_grace_minutes ?? 10,
     half_day_hours: Number(s.half_day_hours ?? 4),
     full_day_hours: Number(s.full_day_hours ?? 8),
     weekly_off_days: Array.isArray(s.weekly_off_days) ? [...s.weekly_off_days] : [5, 6],
@@ -518,6 +540,7 @@ const buildPayload = () => ({
   end_time: form.end_time,
   break_minutes: Number(form.break_minutes) || 0,
   grace_minutes: Number(form.grace_minutes) || 0,
+  half_day_grace_minutes: Number(form.half_day_grace_minutes) || 0,
   half_day_hours: Number(form.half_day_hours) || 0,
   full_day_hours: Number(form.full_day_hours) || 0,
   weekly_off_days: [...form.weekly_off_days],

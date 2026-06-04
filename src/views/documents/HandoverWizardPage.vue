@@ -931,12 +931,21 @@ onMounted(() => {
   if (route.query.edit) {
     loadExistingDpr(route.query.edit)
   } else {
-    // Restore draft from local storage if available
+    // Restore draft from local storage if available. New drafts are stored as
+    // { form, step }; older drafts were the bare form object — handle both so a
+    // pre-existing draft isn't lost.
     const savedData = localStorage.getItem(LOCAL_STORAGE_KEY)
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData)
-        form.value = { ...form.value, ...parsed }
+        const savedForm = parsed && parsed.form ? parsed.form : parsed
+        if (savedForm && typeof savedForm === 'object') {
+          form.value = { ...form.value, ...savedForm }
+        }
+        // Resume at the exact step the user left off on (not back at step 0).
+        if (parsed && Number.isInteger(parsed.step)) {
+          currentStep.value = Math.max(0, Math.min(parsed.step, steps.length - 1))
+        }
       } catch (e) {
         console.error("Failed to parse saved draft")
       }
@@ -944,14 +953,36 @@ onMounted(() => {
   }
 })
 
-// Auto-save to local storage on any change
-import { watch } from 'vue'
+// Auto-save to local storage on any change — persist BOTH the form and the
+// current step so a session timeout / refresh / accidental nav loses nothing
+// and resumes exactly where the user was.
+import { watch, onBeforeUnmount } from 'vue'
 import { API } from '@/utils/api'
-watch(form, (newVal) => {
-  if (!route.query.edit) { // Don't auto-save to local storage if editing existing DB record
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newVal))
+const persistDraft = () => {
+  if (route.query.edit) return // editing an existing DB record → don't shadow it
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+    form: form.value,
+    step: currentStep.value,
+  }))
+}
+watch(form, persistDraft, { deep: true })
+watch(currentStep, persistDraft)
+
+// ── Keep an actively-open, visible wizard from being logged out for idle ──
+// The 15-step handover often involves pauses (reading, fetching info) with no
+// mouse/keyboard events, which would otherwise trip the 10-min idle logout and
+// boot the user mid-task. While this page is mounted and the tab is visible we
+// emit a keep-alive signal that useSessionTimeout treats as activity. A hidden/
+// backgrounded tab is NOT kept alive, so the security timeout still applies.
+const KEEPALIVE_MS = 4 * 60 * 1000
+let keepAliveTimer = null
+const pingActivity = () => {
+  if (document.visibilityState === 'visible') {
+    document.dispatchEvent(new Event('fc:activity'))
   }
-}, { deep: true })
+}
+onMounted(() => { keepAliveTimer = setInterval(pingActivity, KEEPALIVE_MS) })
+onBeforeUnmount(() => { if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null } })
 </script>
 
 <style scoped>

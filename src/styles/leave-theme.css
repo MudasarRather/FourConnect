@@ -1,0 +1,433 @@
+/* ════════════════════════════════════════════════════════════════════════
+   Leave & Absence — design tokens, palette, keyframes (Phase 4 rebrand)
+   ────────────────────────────────────────────────────────────────────────
+   ONLY warm shades — orange / golden / yellow / amber / sunset. No greens,
+   blues, purples, or pinks anywhere in the leave module. ~50 named shades
+   in the warm spectrum drive status, type, gradients, shadows, hover states.
+   Imported per-view by HrLeaveWorkspacePage.vue + SelfServiceLeavePage.vue.
+   Do NOT promote to global.
+   ════════════════════════════════════════════════════════════════════════ */
+
+@import './hr-theme.css';
+
+:root {
+  /* ───── 50 warm shades — the source of truth ─────
+     Conventions:
+       *-50  → lightest / cream
+       *-500 → mid / brand
+       *-900 → deepest / ember
+     Use these directly in components. The status + type tokens below
+     are just convenient aliases mapped to one of these.
+  */
+
+  /* Yellow family — 12 shades */
+  --w-yellow-50:  #fffbea;
+  --w-yellow-100: #fef3c7;
+  --w-yellow-150: #fde9a3;
+  --w-yellow-200: #fde047;
+  --w-yellow-300: #facc15;
+  --w-yellow-400: #eab308;
+  --w-yellow-500: #ca8a04;
+  --w-yellow-600: #a16207;
+  --w-yellow-700: #854d0e;
+  --w-yellow-800: #713f12;
+  --w-yellow-850: #5a3408;
+  --w-yellow-900: #422006;
+
+  /* Gold family — 12 shades */
+  --w-gold-50:    #fef7e0;
+  --w-gold-100:   #fdebb8;
+  --w-gold-200:   #fcd34d;
+  --w-gold-300:   #fbbf24;
+  --w-gold-400:   #f59e0b;
+  --w-gold-500:   #d97706;
+  --w-gold-550:   #c2660a;
+  --w-gold-600:   #b45309;
+  --w-gold-700:   #92400e;
+  --w-gold-800:   #78350f;
+  --w-gold-850:   #5c280b;
+  --w-gold-900:   #451a03;
+
+  /* Orange family — 13 shades */
+  --w-orange-50:  #fff7ed;
+  --w-orange-100: #ffedd5;
+  --w-orange-150: #fed7aa;
+  --w-orange-200: #fdba74;
+  --w-orange-300: #fb923c;
+  --w-orange-400: #f97316;
+  --w-orange-500: #ea580c;
+  --w-orange-600: #c2410c;
+  --w-orange-700: #9a3412;
+  --w-orange-750: #862e10;
+  --w-orange-800: #7c2d12;
+  --w-orange-850: #5c1a0a;
+  --w-orange-900: #431407;
+
+  /* Ember / sunset / sienna — 13 shades for accents + danger semantics */
+  --w-ember-50:   #fff1eb;
+  --w-ember-100:  #ffe0d0;
+  --w-ember-150:  #ffc7a8;
+  --w-ember-200:  #ffb088;
+  --w-ember-300:  #ff8a4c;
+  --w-ember-400:  #f97316;
+  --w-ember-500:  #e34a0a;
+  --w-ember-550:  #d2400a;
+  --w-ember-600:  #b13408;
+  --w-ember-700:  #8b2906;
+  --w-ember-750:  #6f2105;
+  --w-ember-800:  #531805;
+  --w-ember-850:  #3a1004;
+  --w-ember-900:  #210803;
+
+  /* ───── Brand / hero accents ───── */
+  --leave-brand:        var(--w-gold-300);   /* #fbbf24 — primary brand gold */
+  --leave-brand-bright: var(--w-gold-200);   /* #fcd34d */
+  --leave-brand-deep:   var(--w-gold-500);   /* #d97706 */
+  --leave-brand-night:  var(--w-gold-800);
+
+  /* ───── Status ramp — all warm ───── */
+  --leave-draft:           var(--w-yellow-200);   /* pale-yellow */
+  --leave-pending-mgr:     var(--w-gold-400);     /* amber */
+  --leave-pending-hr:      var(--w-gold-500);     /* deep gold */
+  --leave-approved:        var(--w-gold-300);     /* honey-gold (the "success" warm) */
+  --leave-rejected:        var(--w-ember-550);    /* ember-red — danger but in palette */
+  --leave-mgr-rejected:    var(--w-ember-500);    /* slightly lighter ember */
+  --leave-cancelled:       var(--w-yellow-700);   /* muted dark-yellow */
+  --leave-withdrawn:       var(--w-orange-700);   /* muted dark-orange */
+
+  --leave-draft-soft:        rgba(253, 224, 71, 0.16);
+  --leave-pending-mgr-soft:  rgba(245, 158, 11, 0.16);
+  --leave-pending-hr-soft:   rgba(217, 119, 6, 0.18);
+  --leave-approved-soft:     rgba(251, 191, 36, 0.20);
+  --leave-rejected-soft:     rgba(227, 74, 10, 0.16);
+  --leave-mgr-rejected-soft: rgba(234, 88, 12, 0.16);
+  --leave-cancelled-soft:    rgba(133, 77, 14, 0.16);
+  --leave-withdrawn-soft:    rgba(154, 52, 18, 0.16);
+
+  /* ───── Per-leave-type accents — all warm, all distinguishable ───── */
+  --leave-casual:      var(--w-yellow-200);   /* #fde047 */
+  --leave-sick:        var(--w-ember-500);    /* #e34a0a */
+  --leave-earned:      var(--w-gold-400);     /* #f59e0b */
+  --leave-maternity:   var(--w-orange-200);   /* #fdba74 */
+  --leave-paternity:   var(--w-gold-600);     /* #b45309 */
+  --leave-bereavement: var(--w-yellow-700);   /* #854d0e — muted */
+  --leave-compoff:     var(--w-orange-400);   /* #f97316 */
+  --leave-lwp:         var(--w-orange-500);   /* #ea580c */
+  --leave-study:       var(--w-yellow-500);   /* #ca8a04 */
+  --leave-special:     var(--w-orange-300);   /* #fb923c */
+
+  /* ───── Gradients / shadow / surface ───── */
+  --leave-grad-hero:
+    radial-gradient(120% 80% at 0% 0%, rgba(251, 191, 36, 0.22), transparent 55%),
+    radial-gradient(80% 60% at 100% 100%, rgba(234, 88, 12, 0.20), transparent 60%),
+    linear-gradient(135deg, rgba(14, 10, 6, 0.94), rgba(20, 14, 8, 0.94));
+  --leave-grad-rail:
+    linear-gradient(180deg, rgba(251, 191, 36, 0.22), rgba(234, 88, 12, 0.08));
+  --leave-grad-cta:
+    linear-gradient(135deg, #fde047 0%, #fbbf24 35%, #f97316 75%, #ea580c 100%);
+  --leave-grad-ember:
+    linear-gradient(135deg, #b45309 0%, #ea580c 50%, #c2410c 100%);
+  --leave-grad-honey:
+    linear-gradient(135deg, #fff7ed 0%, #fef3c7 50%, #fde047 100%);
+  --leave-grad-spotlight:
+    radial-gradient(circle at top, rgba(251, 191, 36, 0.16), transparent 60%);
+
+  --leave-surface:      rgba(20, 14, 8, 0.62);
+  --leave-surface-2:    rgba(28, 18, 10, 0.78);
+  --leave-surface-3:    rgba(36, 24, 14, 0.88);
+  --leave-surface-glass: rgba(36, 24, 14, 0.55);
+
+  --leave-shadow-card:   0 24px 60px -32px rgba(0, 0, 0, 0.78);
+  --leave-shadow-lift:   0 30px 70px -28px rgba(0, 0, 0, 0.88), 0 0 30px -8px rgba(251, 191, 36, 0.24);
+  --leave-shadow-glow:   0 0 32px -8px var(--leave-brand);
+  --leave-shadow-ember:  0 0 36px -10px var(--w-ember-500);
+  --leave-grid-line:     rgba(251, 191, 36, 0.05);
+
+  /* ───── Borders & dividers — warm only ───── */
+  --leave-border:        rgba(251, 191, 36, 0.16);
+  --leave-border-strong: rgba(251, 191, 36, 0.32);
+  --leave-border-soft:   rgba(251, 191, 36, 0.08);
+  --leave-border-ember:  rgba(234, 88, 12, 0.32);
+
+  /* ───── Text shades — warm-tinted neutrals ───── */
+  --leave-text:           #fef3c7;
+  --leave-text-secondary: #fde68a;
+  --leave-text-muted:     #b08a4a;
+  --leave-text-placeholder: #7c5c2a;
+
+  /* ───── Easings ───── */
+  --leave-ease:    cubic-bezier(0.16, 1, 0.3, 1);
+  --leave-ease-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --leave-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --leave-ease-snap: cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+/* ───── Light theme overrides — cream + amber instead of dark + gold ───── */
+[data-theme="light"] {
+  --leave-draft:           var(--w-yellow-500);
+  --leave-pending-mgr:     var(--w-gold-500);
+  --leave-pending-hr:      var(--w-gold-600);
+  --leave-approved:        var(--w-gold-500);
+  --leave-rejected:        var(--w-ember-600);
+  --leave-mgr-rejected:    var(--w-ember-500);
+  --leave-cancelled:       var(--w-yellow-700);
+  --leave-withdrawn:       var(--w-orange-700);
+
+  --leave-draft-soft:        rgba(234, 179, 8, 0.14);
+  --leave-pending-mgr-soft:  rgba(217, 119, 6, 0.14);
+  --leave-pending-hr-soft:   rgba(180, 83, 9, 0.16);
+  --leave-approved-soft:     rgba(217, 119, 6, 0.14);
+  --leave-rejected-soft:     rgba(177, 52, 8, 0.14);
+  --leave-mgr-rejected-soft: rgba(227, 74, 10, 0.14);
+  --leave-cancelled-soft:    rgba(133, 77, 14, 0.10);
+  --leave-withdrawn-soft:    rgba(154, 52, 18, 0.10);
+
+  --leave-grad-hero:
+    radial-gradient(120% 80% at 0% 0%, rgba(251, 191, 36, 0.16), transparent 55%),
+    radial-gradient(80% 60% at 100% 100%, rgba(234, 88, 12, 0.12), transparent 60%),
+    linear-gradient(180deg, #fffdf5, #fff8e7);
+  --leave-grad-rail:
+    linear-gradient(180deg, rgba(251, 191, 36, 0.20), rgba(234, 88, 12, 0.10));
+  --leave-grad-cta:
+    linear-gradient(135deg, #fde047 0%, #f59e0b 50%, #ea580c 100%);
+  --leave-grad-honey:
+    linear-gradient(135deg, #fffdf5 0%, #fef3c7 60%, #fde047 100%);
+  --leave-grad-spotlight:
+    radial-gradient(circle at top, rgba(251, 191, 36, 0.20), transparent 60%);
+
+  --leave-surface:       rgba(255, 250, 235, 0.92);
+  --leave-surface-2:     rgba(255, 248, 225, 0.96);
+  --leave-surface-3:     rgba(255, 244, 210, 0.98);
+  --leave-surface-glass: rgba(255, 250, 235, 0.70);
+
+  --leave-shadow-card:   0 18px 38px -28px rgba(124, 45, 18, 0.28);
+  --leave-shadow-lift:   0 22px 50px -28px rgba(124, 45, 18, 0.36), 0 0 24px -10px rgba(251, 191, 36, 0.30);
+  --leave-shadow-glow:   0 0 28px -8px var(--w-gold-500);
+  --leave-shadow-ember:  0 0 32px -10px var(--w-ember-600);
+  --leave-grid-line:     rgba(180, 83, 9, 0.08);
+
+  --leave-border:        rgba(180, 83, 9, 0.18);
+  --leave-border-strong: rgba(180, 83, 9, 0.34);
+  --leave-border-soft:   rgba(180, 83, 9, 0.10);
+  --leave-border-ember:  rgba(177, 52, 8, 0.30);
+
+  --leave-text:            #3a1f0b;
+  --leave-text-secondary:  #6b3d12;
+  --leave-text-muted:      #92651f;
+  --leave-text-placeholder:#b08a4a;
+}
+
+/* ─────────────────────── Keyframes ─────────────────────── */
+@keyframes leave-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes leave-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 0.85; }
+  50%      { box-shadow: 0 0 0 10px transparent; opacity: 1; }
+}
+@keyframes leave-accrue-pop {
+  0%   { transform: translateY(0) scale(0.6);  opacity: 0; }
+  25%  { opacity: 1; }
+  100% { transform: translateY(-28px) scale(1); opacity: 0; }
+}
+@keyframes leave-stamp-in {
+  0%   { transform: rotate(-30deg) scale(2);   opacity: 0; }
+  60%  { transform: rotate(-8deg)  scale(1.05); opacity: 1; }
+  100% { transform: rotate(-10deg) scale(1);   opacity: 1; }
+}
+@keyframes leave-plane-fly {
+  0%   { transform: translate(-22px, 4px) rotate(-10deg); opacity: 0.6; }
+  50%  { transform: translate(0,    -2px) rotate(0deg);   opacity: 1;   }
+  100% { transform: translate(22px,  4px) rotate(8deg);   opacity: 0.6; }
+}
+@keyframes leave-orb-spin   { to { transform: rotate(360deg); } }
+@keyframes leave-orb-spin-r { to { transform: rotate(-360deg); } }
+@keyframes leave-glow-breathe {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.10); }
+}
+@keyframes leave-eyebrow-pulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.30); }
+}
+@keyframes leave-bar-grow {
+  0%   { transform: scaleX(0); }
+  100% { transform: scaleX(1); }
+}
+@keyframes leave-row-slide-in {
+  0%   { opacity: 0; transform: translateX(-12px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes leave-ember-flicker {
+  0%, 100% { box-shadow: 0 0 14px 0 rgba(251, 191, 36, 0.40), inset 0 0 0 1px rgba(251, 191, 36, 0.20); }
+  50%      { box-shadow: 0 0 24px 4px rgba(251, 191, 36, 0.60), inset 0 0 0 1px rgba(251, 191, 36, 0.42); }
+}
+@keyframes leave-gradient-pan {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes leave-dot-orbit {
+  0%   { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(2px, -1px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+@keyframes leave-rise {
+  0%   { opacity: 0; transform: translateY(18px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes leave-ember-sweep {
+  0%   { transform: translateX(-100%) skewX(-12deg); opacity: 0; }
+  40%  { opacity: 0.4; }
+  100% { transform: translateX(220%) skewX(-12deg); opacity: 0; }
+}
+
+/* ─────────────────────── Atoms ─────────────────────── */
+.leave-mono { font-family: 'SF Mono', 'JetBrains Mono', ui-monospace, monospace; letter-spacing: 0.02em; }
+
+.leave-section { display: flex; flex-direction: column; gap: 16px; }
+
+.leave-card {
+  position: relative;
+  background: var(--leave-surface);
+  border: 1px solid var(--leave-border);
+  border-radius: 16px;
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  transition: border-color 240ms var(--leave-ease),
+              box-shadow 240ms var(--leave-ease),
+              transform 240ms var(--leave-ease);
+}
+.leave-card.is-hoverable:hover {
+  border-color: var(--leave-border-strong);
+  box-shadow: var(--leave-shadow-lift);
+}
+
+/* Status pill (.leave-chip + status modifier) */
+.leave-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 9px; border-radius: 999px;
+  font-size: 10.5px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border: 1px solid currentColor;
+  background: currentColor;
+  isolation: isolate;
+}
+.leave-chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.leave-chip > .chip-label {
+  color: var(--chip-fg, var(--leave-text));
+}
+.leave-chip.draft         { color: var(--leave-draft);         background: var(--leave-draft-soft); }
+.leave-chip.pending-mgr   { color: var(--leave-pending-mgr);   background: var(--leave-pending-mgr-soft); }
+.leave-chip.pending-hr    { color: var(--leave-pending-hr);    background: var(--leave-pending-hr-soft); }
+.leave-chip.approved      { color: var(--leave-approved);      background: var(--leave-approved-soft); }
+.leave-chip.rejected      { color: var(--leave-rejected);      background: var(--leave-rejected-soft); }
+.leave-chip.mgr-rejected  { color: var(--leave-mgr-rejected);  background: var(--leave-mgr-rejected-soft); }
+.leave-chip.cancelled     { color: var(--leave-cancelled);     background: var(--leave-cancelled-soft); }
+.leave-chip.withdrawn     { color: var(--leave-withdrawn);     background: var(--leave-withdrawn-soft); }
+
+/* Skeleton placeholders — warm shimmer */
+.leave-skel {
+  background: linear-gradient(
+    110deg,
+    rgba(251, 191, 36, 0.04) 0%, rgba(251, 191, 36, 0.04) 35%,
+    rgba(251, 191, 36, 0.18)  50%,
+    rgba(251, 191, 36, 0.04) 65%, rgba(251, 191, 36, 0.04) 100%
+  );
+  background-size: 280% 100%;
+  animation: leave-shimmer 1.6s linear infinite;
+  border-radius: 10px;
+}
+[data-theme="light"] .leave-skel {
+  background: linear-gradient(
+    110deg,
+    rgba(255, 244, 210, 0.55) 0%, rgba(255, 244, 210, 0.55) 35%,
+    rgba(217, 119, 6, 0.18)  50%,
+    rgba(255, 244, 210, 0.55) 65%, rgba(255, 244, 210, 0.55) 100%
+  );
+}
+
+/* Buttons */
+.leave-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 38px; padding: 0 16px; border-radius: 10px;
+  font-size: 12.5px; font-weight: 700; cursor: pointer;
+  border: 1px solid var(--leave-border-strong);
+  background: transparent; color: var(--leave-text-secondary);
+  transition: background .22s var(--leave-ease), border-color .22s,
+              color .22s, transform .22s, box-shadow .22s;
+}
+.leave-btn:hover:not(:disabled) {
+  background: rgba(251, 191, 36, 0.10);
+  border-color: var(--leave-brand);
+  color: var(--leave-text);
+  transform: translateY(-1px);
+}
+.leave-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.leave-btn-sm { height: 30px; padding: 0 11px; font-size: 11.5px; border-radius: 8px; }
+.leave-btn-xs { height: 24px; padding: 0 8px; font-size: 10.5px; border-radius: 6px; }
+
+.leave-btn-primary {
+  background: var(--leave-grad-cta);
+  background-size: 240% 100%;
+  background-position: 0% 50%;
+  color: #2a1100;
+  border-color: rgba(251, 146, 60, 0.45);
+  box-shadow:
+    0 12px 32px -10px rgba(234, 88, 12, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  font-weight: 800;
+}
+.leave-btn-primary:hover:not(:disabled) {
+  background-position: 100% 50%;
+  color: #1a0a00;
+  box-shadow: 0 18px 44px -10px rgba(234, 88, 12, 0.78);
+  transform: translateY(-2px);
+}
+.leave-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+.leave-btn-danger {
+  background: var(--leave-rejected-soft);
+  border-color: var(--leave-border-ember);
+  color: var(--w-ember-150);
+}
+.leave-btn-danger:hover:not(:disabled) {
+  background: rgba(234, 88, 12, 0.20);
+  border-color: var(--w-ember-500);
+  color: var(--w-ember-100);
+}
+[data-theme="light"] .leave-btn-danger { color: var(--w-ember-700); }
+[data-theme="light"] .leave-btn-danger:hover:not(:disabled) { color: var(--w-ember-800); }
+
+/* Generic empty-state shell */
+.leave-empty {
+  display: grid; place-items: center;
+  padding: 56px 24px;
+  border-radius: 18px;
+  text-align: center;
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(251, 191, 36, 0.10), transparent 60%),
+    linear-gradient(180deg, rgba(36, 24, 14, 0.30), rgba(20, 14, 8, 0.20));
+  border: 1px dashed var(--leave-border);
+  color: var(--leave-text-muted);
+  gap: 10px;
+}
+[data-theme="light"] .leave-empty {
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(251, 191, 36, 0.16), transparent 60%),
+    linear-gradient(180deg, rgba(255, 250, 235, 0.7), rgba(255, 244, 210, 0.6));
+  border-color: var(--leave-border);
+  color: var(--leave-text-secondary);
+}
+
+/* Reduced motion — always honour the user preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+    scroll-behavior: auto !important;
+  }
+}

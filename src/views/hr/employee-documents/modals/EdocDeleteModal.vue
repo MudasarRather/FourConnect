@@ -22,6 +22,9 @@
           <div class="del-grid" aria-hidden="true" />
           <div class="del-scan" aria-hidden="true" />
 
+          <!-- Inner body holds all scrolling content so the scrollbar
+               is clipped by the outer modal's rounded corners. -->
+          <div class="del-body">
           <!-- ═════════════════════════════════════════════════════════════
                HERO — danger badge + headline
                ═════════════════════════════════════════════════════════════ -->
@@ -216,6 +219,7 @@
               <span class="armed-flare" v-if="canConfirm && !busy" aria-hidden="true" />
             </Motion>
           </footer>
+          </div>
         </Motion>
       </div>
     </transition>
@@ -409,25 +413,63 @@ const particleStyle = (n) => {
 .edoc-del-modal {
   position: relative;
   width: 560px; max-width: calc(100vw - 32px); max-height: calc(100vh - 48px);
-  display: flex; flex-direction: column; gap: 18px;
-  padding: 28px 28px 22px;
+  display: flex; flex-direction: column;
   border-radius: 24px;
   background:
+    /* ── Left rail — solid danger-red gradient bonded to the element, doesn't scroll with content ── */
+    linear-gradient(180deg,
+      #fca5a5 0%,
+      #f87171 18%,
+      #ef4444 40%,
+      #dc2626 62%,
+      #b91c1c 82%,
+      #7f1d1d 100%)
+    left top / 6px 100% no-repeat,
+    /* Rail bloom — soft inner glow rising off the rail */
+    radial-gradient(70% 110% at 0% 50%, rgba(239, 68, 68, 0.22), transparent 55%),
     radial-gradient(120% 70% at 0% 0%, rgba(239, 68, 68, 0.10), transparent 55%),
     radial-gradient(90% 60% at 100% 100%, rgba(127, 29, 29, 0.18), transparent 60%),
     linear-gradient(180deg, rgba(20, 12, 12, 0.96), rgba(14, 10, 10, 0.96));
   border: 1px solid rgba(248, 113, 113, 0.28);
+  border-left: none;
   box-shadow:
     0 60px 120px -40px rgba(0, 0, 0, 0.95),
     0 0 0 1px rgba(248, 113, 113, 0.04),
+    /* Inner rail glow — bleeds the red across the first ~30px of content area */
+    inset 14px 0 32px -14px rgba(239, 68, 68, 0.55),
+    inset 6px 0 0 -5px rgba(248, 113, 113, 0.85),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  overflow: hidden auto;
+  /* overflow:hidden + border-radius clips children (incl. inner scrollbar)
+     to the rounded shape — both corners now render the same. */
+  overflow: hidden;
   isolation: isolate;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(248, 113, 113, 0.3) transparent;
 }
-.edoc-del-modal::-webkit-scrollbar { width: 6px; }
-.edoc-del-modal::-webkit-scrollbar-thumb { background: rgba(248, 113, 113, 0.28); border-radius: 3px; }
+
+/* Inner scroll container. Lives inside the rounded shell, so when its
+   scrollbar appears, the curve at the top/bottom corners hides the
+   thumb's tips — no more "sharp" right edge. */
+.del-body {
+  flex: 1;
+  min-height: 0;
+  display: flex; flex-direction: column; gap: 18px;
+  padding: 28px 28px 22px 40px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+  z-index: 2;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(248, 113, 113, 0.28) transparent;
+}
+.del-body::-webkit-scrollbar { width: 5px; }
+.del-body::-webkit-scrollbar-track { background: transparent; }
+.del-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(248, 113, 113, 0.25), rgba(220, 38, 38, 0.40));
+  border-radius: 3px;
+  transition: background .25s;
+}
+.del-body:hover::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(248, 113, 113, 0.50), rgba(220, 38, 38, 0.65));
+}
 
 /* Crimson aurora */
 .del-aurora { position: absolute; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
@@ -887,7 +929,7 @@ const particleStyle = (n) => {
    RESPONSIVE
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 640px) {
-  .edoc-del-modal { padding: 22px 18px 18px; }
+  .del-body { padding: 22px 18px 18px 28px; }
   .reason-grid { grid-template-columns: 1fr; }
   .del-title { font-size: 19px; }
 }
@@ -902,13 +944,25 @@ const particleStyle = (n) => {
 }
 [data-theme="light"] .edoc-del-modal {
   background:
+    /* Left rail — stronger gradient against cream */
+    linear-gradient(180deg,
+      #f87171 0%,
+      #ef4444 25%,
+      #dc2626 55%,
+      #991b1b 85%,
+      #7f1d1d 100%)
+    left top / 6px 100% no-repeat,
+    radial-gradient(70% 110% at 0% 50%, rgba(239, 68, 68, 0.14), transparent 55%),
     radial-gradient(120% 70% at 0% 0%, rgba(239, 68, 68, 0.10), transparent 55%),
     radial-gradient(90% 60% at 100% 100%, rgba(220, 38, 38, 0.10), transparent 60%),
     rgba(255, 250, 240, 0.97);
   border-color: rgba(220, 38, 38, 0.30);
+  border-left: none;
   box-shadow:
     0 60px 120px -40px rgba(127, 29, 29, 0.40),
     0 0 0 1px rgba(220, 38, 38, 0.06),
+    inset 14px 0 28px -14px rgba(220, 38, 38, 0.32),
+    inset 6px 0 0 -5px rgba(220, 38, 38, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 [data-theme="light"] .del-aurora .aurora-orb { opacity: 0.32; }

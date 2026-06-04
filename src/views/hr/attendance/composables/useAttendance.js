@@ -30,6 +30,14 @@ export async function recomputeAttendance(employee_id, on_date) {
     {}, { headers: authHeader(), params: { employee_id, on_date } })
   return data
 }
+// Waive (or un-waive) a LATE mark so it no longer counts toward the monthly
+// late-accumulation penalty. The punch + LATE status stay; only the penalty
+// is reconciled (server recomputes the month).
+export async function condoneLate(employee_id, on_date, condoned = true) {
+  const { data } = await axios.post(`${API}/hr/attendance/condone-late`,
+    {}, { headers: authHeader(), params: { employee_id, on_date, condoned } })
+  return data
+}
 export async function patchAttendance(id, payload, force = false) {
   const { data } = await axios.patch(`${API}/hr/attendance/${id}`, payload,
     { headers: authHeader(), params: { force } })

@@ -156,6 +156,11 @@
                 <span v-if="!h.is_active" class="hri-draft-pill" title="Awaiting admin activation — does not affect payroll yet">
                   <Hourglass :size="9" /> DRAFT
                 </span>
+                <span v-if="h.source && h.source !== 'manual'" class="hri-imported-pill"
+                  :title="`Imported via ${h.source}${h.source_ref ? ' (' + h.source_ref + ')' : ''} — exempts this date from leave deduction when active`"
+                >
+                  <Download :size="9" /> IMPORTED
+                </span>
                 <span class="hri-weekday">{{ formatWeekday(h.date) }}</span>
               </div>
               <h3 class="hri-name">{{ h.name }}</h3>
@@ -1343,6 +1348,25 @@ const holidayCellTitle = (iso) => {
   border: 1px solid rgba(251, 191, 36, 0.42);
   flex-shrink: 0;
   margin-left: auto;
+}
+
+/* Imported pill — sits next to (or in place of) DRAFT to show provenance
+   even after the admin activates the row. Slate tone so it doesn't compete
+   visually with the warning-amber DRAFT pill. */
+.hri-imported-pill {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 1px 6px; border-radius: 999px;
+  font-size: 8.5px; font-weight: 800; letter-spacing: 0.8px;
+  background: rgba(148, 163, 184, 0.18);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  flex-shrink: 0;
+}
+.hri-imported-pill + .hri-draft-pill { margin-left: 0; }
+[data-theme="light"] .hri-imported-pill {
+  background: rgba(100, 116, 139, 0.10);
+  color: #475569;
+  border-color: rgba(100, 116, 139, 0.32);
 }
 
 /* Quick-activate button on draft rows */

@@ -482,7 +482,8 @@ const rawMenuItems = [
       ]},
       { title: 'Time', items: [
          { label: 'My Attendance', to: '/dashboard/self-service/attendance', icon: Fingerprint },
-         { label: 'My Leave', to: '/dashboard/self-service/leave', icon: CalendarOff }
+         { label: 'My Leave', to: '/dashboard/self-service/leave', icon: CalendarOff },
+         { label: 'Team Approvals', to: '/dashboard/self-service/team-approvals', icon: UserCheck }
       ]}
     ], [
       { title: 'Pay', items: [

@@ -17,8 +17,13 @@
           <span class="rep-sub">{{ rows.length }} record{{ rows.length === 1 ? '' : 's' }}</span>
         </div>
         <div class="rep-actions">
-          <button class="edoc-btn edoc-btn-sm" :disabled="!rows.length" @click="exportCsv"><Download :size="13" /> CSV</button>
-          <button class="edoc-btn edoc-btn-sm" :disabled="!rows.length" @click="exportPdf"><FileDown :size="13" /> PDF</button>
+          <button class="edoc-btn edoc-btn-sm" :disabled="!rows.length || !!downloading" @click="exportReport('csv')">
+            <component :is="downloading === 'csv' ? Loader2 : Download" :size="13" :class="{ spin: downloading === 'csv' }" /> CSV
+          </button>
+          <button class="edoc-btn edoc-btn-sm edoc-btn-primary" :disabled="!rows.length || !!downloading" @click="exportReport('pdf')">
+            <component :is="downloading === 'pdf' ? Loader2 : FileDown" :size="13" :class="{ spin: downloading === 'pdf' }" />
+            {{ downloading === 'pdf' ? 'Generating…' : 'PDF' }}
+          </button>
         </div>
       </div>
 
@@ -44,14 +49,14 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { Motion } from 'motion-v'
-import { jsPDF } from 'jspdf'
-import autoTable from 'jspdf-autotable'
-import { FileX2, ClipboardCheck, CalendarClock, ShieldAlert, Layers, ShieldCheck, Download, FileDown } from 'lucide-vue-next'
+import { useToast } from 'vue-toastification'
+import { FileX2, ClipboardCheck, CalendarClock, ShieldAlert, Layers, ShieldCheck, Download, FileDown, Loader2 } from 'lucide-vue-next'
 import EdocEmptyState from '../components/EdocEmptyState.vue'
 import EdocStatusChip from '../components/EdocStatusChip.vue'
-import { useEmployeeDocuments, fetchEdocDashboard } from '@/composables/useEmployeeDocuments'
+import { useEmployeeDocuments, fetchEdocDashboard, downloadEdocReport } from '@/composables/useEmployeeDocuments'
 
 const EASE = [0.16, 1, 0.3, 1]
+const toast = useToast()
 const api = useEmployeeDocuments()
 
 const DOC_COLS = [
@@ -93,29 +98,27 @@ const format = (row, c) => {
   return v ?? '—'
 }
 
-const exportCsv = () => {
-  const cols = current.value.columns
-  const head = cols.map(c => c.label).join(',')
-  const body = rows.value.map(r => cols.map(c => `"${String(format(r, c)).replace(/"/g, '""')}"`).join(',')).join('\n')
-  const blob = new Blob([`${head}\n${body}`], { type: 'text/csv' })
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `${active.value}-report.csv`; a.click(); URL.revokeObjectURL(a.href)
-}
-const exportPdf = () => {
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' })
-  doc.setFillColor(245, 158, 11); doc.rect(0, 0, doc.internal.pageSize.getWidth(), 6, 'F')
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(26, 20, 16)
-  doc.text(current.value.label, 40, 44)
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 108, 92)
-  doc.text(`Fourreck · ${new Date().toLocaleString('en-IN')} · ${rows.value.length} records`, 40, 60)
-  autoTable(doc, {
-    startY: 78,
-    head: [current.value.columns.map(c => c.label)],
-    body: rows.value.map(r => current.value.columns.map(c => format(r, c))),
-    styles: { fontSize: 9, cellPadding: 6 },
-    headStyles: { fillColor: [26, 20, 16], textColor: [255, 255, 255] },
-    alternateRowStyles: { fillColor: [250, 246, 238] },
-  })
-  doc.save(`${active.value}-report.pdf`)
+// Reports are rendered SERVER-SIDE with WeasyPrint (ultra-modern branded PDF)
+// + CSV. We hit GET /hr/employee-documents/reports/{key}/export — the on-screen
+// table above is just a live preview; the download is the polished artefact.
+const downloading = ref('')
+const exportReport = async (format) => {
+  if (downloading.value) return
+  downloading.value = format
+  try {
+    await downloadEdocReport(active.value, { format })
+    toast.success(`${current.value.label} ${format.toUpperCase()} downloaded`)
+  } catch (e) {
+    // Blob error bodies must be read as text before we can surface `detail`.
+    let msg = `Could not generate ${format.toUpperCase()}`
+    try {
+      const txt = await e?.response?.data?.text?.()
+      if (txt) msg = JSON.parse(txt).detail || msg
+    } catch { /* keep default */ }
+    toast.error(msg)
+  } finally {
+    downloading.value = ''
+  }
 }
 
 onMounted(load)
@@ -143,4 +146,6 @@ onMounted(load)
 .rt-cell { font-size: 12.5px; color: var(--hr-text-secondary); text-transform: capitalize; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 [data-theme="light"] .rep-title { color: #1a1410; }
 [data-theme="light"] .rt-row:hover { background: rgba(217,119,6,0.06); }
+.spin { animation: rep-spin 0.9s linear infinite; }
+@keyframes rep-spin { to { transform: rotate(360deg); } }
 </style>

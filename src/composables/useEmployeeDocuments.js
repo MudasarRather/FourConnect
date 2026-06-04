@@ -40,7 +40,7 @@ export function useEmployeeDocuments() {
   const total = ref(0)
   const loading = ref(false)
   const error = ref('')
-  const filters = ref({ page: 1, limit: 20, q: '', status: null, category: null, archived: false })
+  const filters = ref({ page: 1, limit: 20, q: '', status: null, category: null, archived: false, employee_id: null })
 
   const totalPages = computed(() => Math.max(1, Math.ceil(total.value / filters.value.limit)))
 
@@ -73,7 +73,9 @@ export function useEmployeeDocuments() {
   const fetchQueue = async (page = 1, limit = 20) => {
     loading.value = true
     try {
-      const res = await axios.get(`${BASE}/queue`, { headers: authHeader(), params: { page, limit } })
+      const params = { page, limit }
+      if (filters.value.employee_id) params.employee_id = filters.value.employee_id
+      const res = await axios.get(`${BASE}/queue`, { headers: authHeader(), params })
       items.value = res.data.items || []; total.value = res.data.total || 0
     } catch (e) { error.value = e?.response?.data?.detail || 'Failed to load queue'; items.value = [] }
     finally { loading.value = false }
@@ -82,7 +84,9 @@ export function useEmployeeDocuments() {
   const fetchExpiring = async (within = 90) => {
     loading.value = true
     try {
-      const res = await axios.get(`${BASE}/expiring`, { headers: authHeader(), params: { within, limit: 200 } })
+      const params = { within, limit: 200 }
+      if (filters.value.employee_id) params.employee_id = filters.value.employee_id
+      const res = await axios.get(`${BASE}/expiring`, { headers: authHeader(), params })
       items.value = res.data.items || []; total.value = res.data.total || 0
     } catch (e) { error.value = e?.response?.data?.detail || 'Failed to load expiring docs'; items.value = [] }
     finally { loading.value = false }
@@ -178,6 +182,30 @@ export async function decideAdminRequest(reqId, payload) {
 export async function fetchEdocDashboard() {
   const res = await axios.get(`${BASE}/dashboard`, { headers: authHeader() })
   return res.data
+}
+
+// ─── Server-side reports (ultra-modern WeasyPrint PDF + CSV) ────────────────
+// reportKey ∈ expired | pending | expiring | compliance | verification | category
+export async function fetchEdocReportPreview(departmentId = null) {
+  const params = departmentId ? { department_id: departmentId } : {}
+  const res = await axios.get(`${BASE}/reports/preview`, { headers: authHeader(), params })
+  return res.data
+}
+
+export async function downloadEdocReport(reportKey, { format = 'pdf', departmentId = null } = {}) {
+  const params = new URLSearchParams({ format })
+  if (departmentId) params.set('department_id', departmentId)
+  const res = await axios.get(`${BASE}/reports/${reportKey}/export?${params.toString()}`, {
+    headers: authHeader(), responseType: 'blob',
+  })
+  const mime = format === 'pdf' ? 'application/pdf' : 'text/csv'
+  const ext = format === 'pdf' ? 'pdf' : 'csv'
+  const url = URL.createObjectURL(new Blob([res.data], { type: mime }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `fourreck-${reportKey}-report.${ext}`
+  document.body.appendChild(a); a.click(); a.remove()
+  URL.revokeObjectURL(url)
 }
 
 export const TEMPLATE_TYPES = [

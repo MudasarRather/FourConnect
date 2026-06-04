@@ -16,7 +16,7 @@ const props = defineProps({
 const labels = {
   PRESENT: 'Present', ABSENT: 'Absent', LATE: 'Late', HALF_DAY: 'Half-day',
   LEAVE: 'Leave', WFH: 'WFH', REMOTE: 'Remote', HOLIDAY: 'Holiday',
-  WEEK_OFF: 'Week-off', ON_DUTY: 'On duty',
+  WEEK_OFF: 'Week-off', ON_DUTY: 'On duty', LWP: 'LWP',
 }
 const label = computed(() => labels[props.status] || props.status)
 </script>
@@ -49,4 +49,8 @@ const label = computed(() => labels[props.status] || props.status)
 .att-status-pill[data-status="HOLIDAY"]   { background: var(--att-status-holiday-bg);   color: var(--att-status-holiday-fg); }
 .att-status-pill[data-status="WEEK_OFF"]  { background: var(--att-status-weekoff-bg);   color: var(--att-status-weekoff-fg); }
 .att-status-pill[data-status="ON_DUTY"]   { background: var(--att-status-onduty-bg);    color: var(--att-status-onduty-fg); }
+/* LWP — authorised unpaid leave (no clock-in, covered by LWP balance). A
+   caution amber distinct from LATE so it reads as "absent-but-accounted". */
+.att-status-pill[data-status="LWP"]       { background: rgba(180, 83, 9, 0.16);          color: #b45309; }
+[data-theme="light"] .att-status-pill[data-status="LWP"] { background: rgba(180, 83, 9, 0.14); color: #92400e; }
 </style>

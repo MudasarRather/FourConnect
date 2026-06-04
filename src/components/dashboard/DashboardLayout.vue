@@ -33,24 +33,21 @@ const layoutClass = computed(() => {
 .dashboard-layout {
   min-height: 100vh;
   padding-top: 52px; /* Offset for fixed TopNav */
-  transition: background-color 0.3s ease;
+  background: transparent;
 }
 
-.user-layout {
-  background: var(--bg-color, #000000);
-  color: var(--text-primary, #f5f5f7);
-}
-
-.admin-layout {
-  background: var(--bg-color, #000000);
-  color: var(--text-primary, #f8fafc);
-}
+/* Layout wrappers no longer paint a background — html/body in style.css
+   already owns var(--bg-color) for both dark and light, so the page bg is
+   the single source of truth. Wrappers only contribute text color. */
+.user-layout  { color: var(--text-primary, #f5f5f7); }
+.admin-layout { color: var(--text-primary, #f8fafc); }
 
 /* Main Content */
 .main-content {
   display: flex;
   flex-direction: column;
   min-height: calc(100vh - 52px);
+  background: transparent;
 }
 
 .content-area {

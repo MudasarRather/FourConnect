@@ -633,10 +633,18 @@ onMounted(async () => {
 .hs-num {
   font-size: 24px; font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--rep-text);
+  /* Explicit high-contrast color per theme — was inheriting `--hr-text` which
+     blended into the yellow-tinted hero background and made the numbers
+     near-invisible. */
+  color: #fef3c7;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
   font-variant-numeric: tabular-nums;
 }
-.hs-num small { font-size: 13px; margin-left: 2px; opacity: 0.75; }
+[data-theme="light"] .hs-num {
+  color: #1a1410;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.hs-num small { font-size: 13px; margin-left: 2px; opacity: 0.85; }
 .hs-lab {
   font-size: 9px;
   letter-spacing: 1.2px;
@@ -645,10 +653,18 @@ onMounted(async () => {
   color: var(--rep-muted);
 }
 [data-theme="light"] .hs-lab { color: #6b5840; }
+/* Accent tile — was a gold gradient on a gold background (invisible).
+   Solid deep-amber reads cleanly against the yellow tile in both themes
+   and avoids the gradient-clipped child element going transparent. */
 .hs-tile-accent .hs-num {
-  background: var(--att-gradient-hero);
-  -webkit-background-clip: text; background-clip: text;
-  -webkit-text-fill-color: transparent;
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: #7c2d12;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+[data-theme="light"] .hs-tile-accent .hs-num {
+  color: #7c2d12;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
 /* ════════════════════ FILTER BAR ════════════════════ */

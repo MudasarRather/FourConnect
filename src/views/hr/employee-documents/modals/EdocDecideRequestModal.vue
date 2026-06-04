@@ -73,6 +73,11 @@
             <label class="form-label">
               <FileSignature :size="11" />
               Link to issued document (optional)
+              <span class="docs-hint">
+                <template v-if="empDocs.length">
+                  {{ empDocs.length }} on file for {{ request.employee_name }}<template v-if="matchCount"> · {{ matchCount }} match this request</template>
+                </template>
+              </span>
             </label>
             <div v-if="loadingDocs" class="docs-loading">Loading employee documents…</div>
             <div v-else-if="!empDocs.length" class="docs-empty">
@@ -81,12 +86,17 @@
             </div>
             <div v-else class="docs-list">
               <button v-for="d in empDocs" :key="d.id"
-                class="doc-row" :class="{ selected: fulfilledDocId === d.id }"
+                class="doc-row" :class="['match-' + matchKind(d), { selected: fulfilledDocId === d.id }]"
                 @click="fulfilledDocId = fulfilledDocId === d.id ? null : d.id"
               >
                 <span class="doc-thumb"><FileText :size="13" /></span>
                 <span class="doc-text">
-                  <strong>{{ d.title }}</strong>
+                  <strong>
+                    {{ d.title }}
+                    <span v-if="matchKind(d) === 'exact'" class="doc-badge match">Best match</span>
+                    <span v-else-if="matchKind(d) === 'category'" class="doc-badge related">Related</span>
+                    <span v-if="!d.has_file" class="doc-badge nofile">No file</span>
+                  </strong>
                   <span>{{ d.category.replace(/_/g, ' ') }} · {{ d.doc_type.replace(/_/g, ' ') }}</span>
                 </span>
                 <span class="doc-pick">
@@ -236,14 +246,54 @@ function relTime(d) {
   return `${Math.floor(h / 24)}d`
 }
 
+// Map request_type → expected document doc_type/category so the
+// link picker can spotlight what HR most likely just issued.
+const REQUEST_TYPE_DOC_MAP = {
+  EXPERIENCE_LETTER:   { doc_type: 'EXPERIENCE_LETTER',   category: 'EXPERIENCE_LETTER' },
+  RELIEVING_LETTER:    { doc_type: 'RELIEVING_LETTER',    category: 'EXPERIENCE_LETTER' },
+  CONFIRMATION_LETTER: { doc_type: 'CONFIRMATION_LETTER', category: 'EXPERIENCE_LETTER' },
+  APPOINTMENT_LETTER:  { doc_type: 'EMPLOYMENT_CONTRACT', category: 'CONTRACT' },
+  SALARY_CERTIFICATE:  { doc_type: 'PAYSLIP',             category: 'SALARY_SLIP' },
+  NDA:                 { doc_type: 'NDA',                 category: 'CONTRACT' },
+  OFFER_LETTER:        { doc_type: 'OFFER_LETTER',        category: 'CONTRACT' },
+  ADDRESS_PROOF:       { doc_type: null,                  category: 'KYC' },
+  NO_OBJECTION:        { doc_type: null,                  category: null },
+  CUSTOM:              { doc_type: null,                  category: null },
+}
+const expectedDoc = computed(() => REQUEST_TYPE_DOC_MAP[props.request.request_type] || null)
+
+function classifyDoc(d) {
+  const exp = expectedDoc.value
+  if (!exp) return 'other'
+  if (exp.doc_type && d.doc_type === exp.doc_type) return 'exact'
+  if (exp.category && d.category === exp.category) return 'category'
+  return 'other'
+}
+const matchKind = (d) => classifyDoc(d)
+
+const matchCount = computed(
+  () => empDocs.value.filter(d => classifyDoc(d) !== 'other').length
+)
+
 // Lazy-load the employee's documents only when fulfilling (to populate the link picker)
 watch(action, async (a) => {
   if (a === 'FULFILLED' && !empDocs.value.length && !loadingDocs.value && props.request.employee_id) {
     loadingDocs.value = true
     try {
       const docs = await byEmployee(props.request.employee_id)
-      // Only show non-archived, file-bearing docs (most useful for linking)
-      empDocs.value = (docs || []).filter(d => !d.is_archived && d.has_file)
+      // Show all non-archived docs for this employee; smart-sort puts the
+      // one that matches the request type on top.
+      const order = { exact: 0, category: 1, other: 2 }
+      empDocs.value = (docs || [])
+        .filter(d => !d.is_archived)
+        .sort((a, b) => {
+          const sa = order[classifyDoc(a)]
+          const sb = order[classifyDoc(b)]
+          if (sa !== sb) return sa - sb
+          // Within the same bucket, newest first
+          return new Date(b.uploaded_at || b.created_at || 0) -
+                 new Date(a.uploaded_at || a.created_at || 0)
+        })
     } catch {
       empDocs.value = []
     } finally {
@@ -506,7 +556,73 @@ textarea:focus { outline: none; border-color: rgba(251, 146, 60, 0.55); backgrou
   background: linear-gradient(135deg, rgba(13, 148, 136, 0.18), rgba(13, 148, 136, 0.08));
   border-color: rgba(13, 148, 136, 0.55);
 }
+/* Subtle left accent on the exact-match row so the eye lands on it. */
+.doc-row.match-exact:not(.selected) {
+  background: linear-gradient(90deg, rgba(13, 148, 136, 0.10), transparent 40%);
+  border-color: rgba(13, 148, 136, 0.32);
+}
+.doc-row.match-exact:not(.selected):hover {
+  background: linear-gradient(90deg, rgba(13, 148, 136, 0.18), rgba(251, 191, 36, 0.08));
+  border-color: rgba(13, 148, 136, 0.55);
+}
 [data-theme="light"] .doc-row:hover { background: rgba(180, 83, 9, 0.08); }
+[data-theme="light"] .doc-row.match-exact:not(.selected) {
+  background: linear-gradient(90deg, rgba(13, 148, 136, 0.12), transparent 40%);
+  border-color: rgba(13, 148, 136, 0.30);
+}
+
+/* Match badges */
+.doc-text strong {
+  display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  white-space: normal;
+}
+.doc-badge {
+  display: inline-flex; align-items: center;
+  padding: 2px 6px; border-radius: 999px;
+  font-size: 8.5px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase;
+  line-height: 1;
+  border: 1px solid;
+}
+.doc-badge.match {
+  color: #34d399;
+  background: rgba(13, 148, 136, 0.16);
+  border-color: rgba(52, 211, 153, 0.42);
+}
+.doc-badge.related {
+  color: #fde68a;
+  background: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.38);
+}
+.doc-badge.nofile {
+  color: #cbd5e1;
+  background: rgba(148, 163, 184, 0.14);
+  border-color: rgba(148, 163, 184, 0.32);
+}
+[data-theme="light"] .doc-badge.match {
+  color: #047857;
+  background: rgba(16, 185, 129, 0.16);
+  border-color: rgba(16, 185, 129, 0.42);
+}
+[data-theme="light"] .doc-badge.related {
+  color: #92400e;
+  background: rgba(251, 191, 36, 0.20);
+  border-color: rgba(180, 83, 9, 0.36);
+}
+[data-theme="light"] .doc-badge.nofile {
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.10);
+  border-color: rgba(100, 116, 139, 0.28);
+}
+
+/* Inline hint on the form label ("N on file · M match this request") */
+.docs-hint {
+  margin-left: auto;
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px;
+  color: var(--hr-text-muted);
+  text-transform: none;
+}
+[data-theme="light"] .docs-hint { color: #6b5840; }
+.form-label { display: flex; align-items: center; gap: 5px; }
 .doc-thumb {
   width: 30px; height: 30px;
   border-radius: 8px;

@@ -3,6 +3,7 @@
     <div class="edoc-toolbar">
       <div class="vq-title"><CalendarClock :size="16" /> <span>Expiry Tracking</span></div>
       <div style="flex:1" />
+      <EdocEmployeeFilter v-model="api.filters.value.employee_id" @update:modelValue="reload" />
       <div class="status-pills">
         <button v-for="w in WINDOWS" :key="w" class="edoc-pill" :class="{ 'is-active': within === w }" @click="setWindow(w)">{{ w }}d</button>
       </div>
@@ -35,6 +36,7 @@ import { ref, computed, onMounted } from 'vue'
 import { CalendarClock } from 'lucide-vue-next'
 import EdocDocumentCard from '../components/EdocDocumentCard.vue'
 import EdocEmptyState from '../components/EdocEmptyState.vue'
+import EdocEmployeeFilter from '../components/EdocEmployeeFilter.vue'
 import EdocDocumentDrawer from '../drawers/EdocDocumentDrawer.vue'
 import { useEmployeeDocuments } from '@/composables/useEmployeeDocuments'
 

@@ -85,10 +85,15 @@
     >
       <div class="eb-toolbar-row">
         <div class="eb-toolbar-left">
-          <label class="eb-date">
-            <Calendar :size="11" />
-            <input type="date" v-model="filterDate" @change="reload" class="eb-date-input" />
-          </label>
+          <div class="date-cell">
+            <span class="date-cell-tag">Date</span>
+            <HrDatePicker
+              v-model="filterDate"
+              :max="today"
+              :clearable="false"
+              placeholder="Pick a date"
+            />
+          </div>
 
           <div class="eb-toolbar-divider" />
 
@@ -310,10 +315,11 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { Motion } from 'motion-v'
 import {
-  Coffee, RefreshCw, TrendingUp, Hourglass, Filter, Calendar, Search,
+  Coffee, RefreshCw, TrendingUp, Hourglass, Filter, Search,
   Zap, Clock, Pause, Eye, Check, X, AlertTriangle, Flame, ShieldCheck,
 } from 'lucide-vue-next'
 import { fetchBreakAnomalies, recomputeAttendance, fetchTodayAttendance } from '../composables/useAttendance'
+import HrDatePicker from '@/components/hr/forms/HrDatePicker.vue'
 import { useToast } from 'vue-toastification'
 
 defineEmits(['refresh-stats'])
@@ -848,27 +854,81 @@ const severityLabel = (s) => {
 }
 [data-theme="light"] .eb-toolbar-divider { background: rgba(180, 83, 9, 0.32); }
 
-.eb-date {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 6px 12px;
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.22);
-  border: 1px solid rgba(251, 146, 60, 0.40);
+/* ─── Date picker (mirrors Reports section pattern) ─── */
+.date-cell {
+  position: relative;
+  min-width: 200px;
+  display: flex; flex-direction: column; gap: 4px;
+  isolation: isolate;
+}
+.date-cell-tag {
+  position: absolute;
+  top: -7px; left: 12px;
+  z-index: 2;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fde68a, #fbbf24);
+  color: #1f1408;
+  font-size: 8.5px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase;
+  box-shadow: 0 4px 10px -4px rgba(251, 146, 60, 0.55);
+  pointer-events: none;
+}
+[data-theme="light"] .date-cell-tag {
+  background: linear-gradient(135deg, #f59e0b, #ea580c);
+  color: #fff;
+  box-shadow: 0 4px 10px -4px rgba(194, 65, 12, 0.45);
+}
+.date-cell :deep(.hr-dp-trigger) {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 11px;
+  border: 1px solid rgba(251, 191, 36, 0.48);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--hr-text);
-  font: inherit; font-size: 11.5px; font-weight: 700;
-  cursor: pointer;
-}
-.eb-date svg { color: #fcd34d; }
-[data-theme="light"] .eb-date { background: rgba(255, 250, 240, 0.85); border-color: rgba(194, 65, 12, 0.40); color: var(--hr-text); }
-[data-theme="light"] .eb-date svg { color: #b45309; }
-.eb-date-input {
-  border: 0; background: transparent;
-  color: inherit; font: inherit;
-  color-scheme: dark;
-  outline: none;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.15px;
   font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: border-color .22s var(--att-spring), background .22s var(--att-spring),
+              box-shadow .25s var(--att-spring), transform .18s var(--att-spring);
 }
-[data-theme="light"] .eb-date-input { color-scheme: light; }
+[data-theme="light"] .date-cell :deep(.hr-dp-trigger) {
+  background: rgba(255, 250, 240, 0.92);
+  border-color: rgba(180, 83, 9, 0.48);
+  color: var(--hr-text);
+}
+.date-cell :deep(.hr-dp-trigger:hover:not(:disabled)) {
+  border-color: rgba(251, 146, 60, 0.78);
+  background: rgba(251, 191, 36, 0.08);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px -14px rgba(251, 146, 60, 0.55);
+}
+[data-theme="light"] .date-cell :deep(.hr-dp-trigger:hover:not(:disabled)) {
+  border-color: rgba(194, 65, 12, 0.72);
+  background: rgba(255, 246, 226, 0.96);
+  box-shadow: 0 10px 22px -14px rgba(194, 65, 12, 0.40);
+}
+.date-cell :deep(.hr-dp.open .hr-dp-trigger),
+.date-cell :deep(.hr-dp.focused .hr-dp-trigger) {
+  border-color: rgba(251, 146, 60, 0.85);
+  background: rgba(251, 191, 36, 0.10);
+  box-shadow:
+    0 0 0 3px rgba(251, 146, 60, 0.16),
+    0 12px 26px -14px rgba(251, 146, 60, 0.60);
+}
+[data-theme="light"] .date-cell :deep(.hr-dp.open .hr-dp-trigger),
+[data-theme="light"] .date-cell :deep(.hr-dp.focused .hr-dp-trigger) {
+  border-color: rgba(194, 65, 12, 0.80);
+  background: rgba(255, 248, 232, 0.98);
+  box-shadow:
+    0 0 0 3px rgba(194, 65, 12, 0.14),
+    0 12px 26px -14px rgba(194, 65, 12, 0.45);
+}
+.date-cell :deep(.hr-dp-trigger .trig-cal) {
+  color: #fbbf24;
+  transition: transform .35s var(--att-spring), color .25s;
+}
+[data-theme="light"] .date-cell :deep(.hr-dp-trigger .trig-cal) { color: #b45309; }
 
 /* Toggle switch */
 .eb-toggle {

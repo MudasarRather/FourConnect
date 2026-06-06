@@ -27,242 +27,166 @@
       </div>
     </header>
 
-    <!-- ═══════════ DASHBOARD TAB (CoinVex Layout) ═══════════ -->
-    <main class="dash-main slide-up" v-if="activeTab === 'dashboard'" :key="'dash'">
+    <!-- ═══════════ DASHBOARD TAB — "Handover Command" ═══════════ -->
+    <main class="hd-dash" v-if="activeTab === 'dashboard'" :key="'dash'">
 
-      <!-- Title Row -->
-      <div class="cv-title-row">
-        <div class="cv-title-left">
-          <h1 class="cv-h1">Dashboard</h1>
-          <p class="cv-date">{{ todayFormatted }}</p>
+      <!-- HERO -->
+      <section class="hd-hero" v-motion v-bind="mo(0)">
+        <div class="hd-hero-text">
+          <div class="hd-eyebrow"><span class="hd-live-dot"></span>{{ todayFormatted }}</div>
+          <h1 class="hd-title">Handover Command</h1>
+          <p class="hd-sub">Welcome back<template v-if="userProfile.full_name">, <strong>{{ userProfile.full_name }}</strong></template> — here's your delivery pipeline at a glance.</p>
         </div>
-      </div>
+        <router-link :to="newLink" class="hd-hero-cta" v-motion v-bind="mo(1)">
+          <span class="hd-cta-ico"><Plus :size="18" /></span>
+          <span>New Handover</span>
+          <ArrowRight :size="16" class="hd-cta-arrow" />
+        </router-link>
+      </section>
 
-      <!-- 3-Column CoinVex Grid -->
-      <div class="cv-grid">
-
-        <!-- ══ LEFT COLUMN ══ -->
-        <div class="cv-col-left">
-
-          <!-- Portfolio Card -->
-          <div class="cv-card cv-portfolio ani-1">
-            <h3 class="cv-card-title">Your Handovers</h3>
-            
-            <!-- Health Metrics instead of toggles -->
-            <div class="cv-health-metrics">
-              <div class="cv-health-item">
-                <div class="cv-hi-icon"><CheckCircle :size="14" color="#a3e635"/></div>
-                <span>Systems Sync</span>
-              </div>
-              <div class="cv-health-item">
-                <div class="cv-hi-icon"><Activity :size="14" color="#38bdf8"/></div>
-                <span>Monitoring Active</span>
-              </div>
-            </div>
-
-            <!-- Action Circles -->
-            <div class="cv-actions">
-              <router-link :to="isAdmin ? '/admin/documents/handover/new' : '/user/documents/handover/new'" class="cv-action-circle">
-                <div class="cv-ac-icon"><Plus :size="18" /></div>
-                <span>New DPR</span>
-              </router-link>
-              <div class="cv-action-circle" @click="setTab('draft')">
-                <div class="cv-ac-icon"><Activity :size="18" /></div>
-                <span>In Progress</span>
-              </div>
-              <div class="cv-action-circle" @click="setTab('approved')">
-                <div class="cv-ac-icon"><Layers :size="18" /></div>
-                <span>Completed</span>
-              </div>
-            </div>
-
-            <!-- Balance Bar -->
-            <div class="cv-balance-section">
-              <div class="cv-bal-header">
-                <span class="cv-bal-title">Completion Rate</span>
-                <PieChart :size="14" class="cv-bal-icon" />
-              </div>
-              <div class="cv-bal-row">
-                <div class="cv-bal-item"><span class="cv-bal-label">Drafts:</span> <strong><AnimatedNumber :value="stats.drafts" /></strong></div>
-                <div class="cv-bal-item"><span class="cv-bal-label">Approved:</span> <strong><AnimatedNumber :value="stats.approved" /></strong></div>
-              </div>
-              <div class="cv-progress-track"><div class="cv-progress-fill" :style="{ width: `${stats.total > 0 ? (stats.approved / stats.total) * 100 : 0}%` }"></div></div>
-            </div>
-          </div>
-
-          <!-- Status Cards (Green + Purple) -->
-          <div class="cv-card cv-status-card green ani-2" @click="setTab('draft')">
-            <div class="cv-sc-top">
-              <div class="cv-sc-icon"><FileText :size="18" /></div>
-              <span class="cv-sc-type">Draft Handover</span>
-              <button class="cv-dots">⋮</button>
-            </div>
-            <div class="cv-sc-val">₹<AnimatedNumber :value="totalDraftValue" /></div>
-            <div class="cv-sc-bottom">
-              <span class="cv-sc-change"><TrendingUp :size="12" /> {{ stats.drafts }} items</span>
-              <span class="cv-sc-tag">*{{ stats.drafts }}</span>
-            </div>
-          </div>
-
-          <div class="cv-card cv-status-card purple ani-3" @click="setTab('approved')">
-            <div class="cv-sc-top">
-              <div class="cv-sc-icon"><CheckCircle :size="18" /></div>
-              <span class="cv-sc-type">Approved Handover</span>
-              <button class="cv-dots">⋮</button>
-            </div>
-            <div class="cv-sc-val">₹<AnimatedNumber :value="totalApprovedValue" /></div>
-            <div class="cv-sc-bottom">
-              <span class="cv-sc-change"><TrendingUp :size="12" /> {{ stats.approved }} items</span>
-              <span class="cv-sc-tag">*{{ stats.approved }}</span>
-            </div>
-          </div>
+      <!-- KPI BAND -->
+      <section class="hd-kpis">
+        <div class="hd-kpi k-gold" v-motion v-bind="mo(1)">
+          <div class="hd-kpi-head"><span class="hd-kpi-ico"><Layers :size="16" /></span><span class="hd-kpi-chip">Portfolio</span></div>
+          <div class="hd-kpi-val">₹<AnimatedNumber :value="totalProjectValue" /></div>
+          <div class="hd-kpi-lbl">Total Transitioned Value</div>
+          <div class="hd-kpi-spark"><i v-for="(d, i) in weeklyActivity" :key="i" :style="{ height: `${6 + d.h1 + d.h2}px`, animationDelay: `${0.4 + i * 0.06}s` }"></i></div>
         </div>
+        <div class="hd-kpi k-emerald clickable" @click="setTab('approved')" v-motion v-bind="mo(2)">
+          <div class="hd-kpi-head"><span class="hd-kpi-ico"><CheckCircle :size="16" /></span><span class="hd-kpi-chip">{{ stats.approved }} docs</span></div>
+          <div class="hd-kpi-val">₹<AnimatedNumber :value="totalApprovedValue" /></div>
+          <div class="hd-kpi-lbl">Approved &amp; Delivered</div>
+        </div>
+        <div class="hd-kpi k-amber clickable" @click="setTab('draft')" v-motion v-bind="mo(3)">
+          <div class="hd-kpi-head"><span class="hd-kpi-ico"><FileText :size="16" /></span><span class="hd-kpi-chip">{{ stats.drafts }} docs</span></div>
+          <div class="hd-kpi-val">₹<AnimatedNumber :value="totalDraftValue" /></div>
+          <div class="hd-kpi-lbl">Drafts In Progress</div>
+        </div>
+        <div class="hd-kpi k-rate" v-motion v-bind="mo(4)">
+          <div class="hd-kpi-head"><span class="hd-kpi-ico"><PieChart :size="16" /></span><span class="hd-kpi-chip">{{ stats.pending }} pending</span></div>
+          <div class="hd-kpi-val"><AnimatedNumber :value="approvalRate.rate" />%</div>
+          <div class="hd-kpi-lbl">Approval Rate</div>
+          <div class="hd-kpi-bar"><span :style="{ width: `${approvalRate.rate}%` }"></span></div>
+        </div>
+      </section>
 
-        <!-- ══ CENTER COLUMN ══ -->
-        <div class="cv-col-center">
-
-          <!-- Cashflow / Progress Card -> Transitioned Value -->
-          <div class="cv-card cv-cashflow ani-2 enhanced-cashflow" :class="latestDprStatusClass">
-            <div :class="'cv-bg-glow-' + latestDprStatusClass"></div>
-            <div class="cv-cf-header">
-              <div>
-                <h3 class="cv-card-title">Transitioned Value</h3>
-                <p class="cv-cf-sub">Total Infrastructure Assets</p>
-                <div class="cv-cf-amount">₹{{ formatCurrency(totalProjectValue) }}</div>
-              </div>
+      <!-- TELEMETRY SPLIT -->
+      <section class="hd-split">
+        <div class="hd-panel hd-telemetry" v-motion v-bind="mo(2)">
+          <div class="hd-panel-head">
+            <div><h3>Transition Telemetry</h3><p>Cumulative value by status · last 7 days</p></div>
+            <div class="hd-tele-meta">
+              <div class="hd-tele-amount">₹{{ formatCurrency(totalProjectValue) }}</div>
+              <div class="hd-tele-chip"><TrendingUp :size="11" /> {{ approvalRate.rate }}% approved</div>
             </div>
-            <!-- SVG Area Chart -->
-            <div class="cv-area-chart-wrap">
-              <svg class="cv-area-chart" viewBox="0 0 400 120" preserveAspectRatio="none">
+          </div>
+
+          <div class="hd-chart-stage">
+            <div class="hd-yaxis">
+              <span>₹{{ formatCompact(chartMax) }}</span>
+              <span>₹{{ formatCompact(chartMax / 2) }}</span>
+              <span>₹0</span>
+            </div>
+            <div class="hd-chart-wrap">
+              <div class="hd-grid"><span></span><span></span><span></span><span></span></div>
+              <svg class="hd-chart" viewBox="0 0 400 120" preserveAspectRatio="none">
                 <defs>
-                  <linearGradient id="areaG1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#4ade80" stop-opacity="0.4"/>
-                    <stop offset="100%" stop-color="#4ade80" stop-opacity="0"/>
-                  </linearGradient>
-                  <linearGradient id="areaG2" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.3"/>
-                    <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
-                  </linearGradient>
-                  <linearGradient id="areaG3" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.2"/>
-                    <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
-                  </linearGradient>
+                  <linearGradient id="hdG1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#34d399" stop-opacity="0.45"/><stop offset="100%" stop-color="#34d399" stop-opacity="0"/></linearGradient>
+                  <linearGradient id="hdG2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fbbf24" stop-opacity="0.30"/><stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/></linearGradient>
+                  <linearGradient id="hdG3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fb923c" stop-opacity="0.22"/><stop offset="100%" stop-color="#fb923c" stop-opacity="0"/></linearGradient>
+                  <linearGradient id="hdLine1" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#6ee7b7"/></linearGradient>
                 </defs>
-                <path :d="areaPath1" fill="url(#areaG1)" class="area-anim"/>
-                <path :d="areaLine1" stroke="#4ade80" stroke-width="2" fill="none" class="line-anim"/>
-                <path :d="areaPath2" fill="url(#areaG2)" class="area-anim d2"/>
-                <path :d="areaLine2" stroke="#a78bfa" stroke-width="1.5" fill="none" class="line-anim d2"/>
-                <path :d="areaPath3" fill="url(#areaG3)" class="area-anim d3"/>
-                <path :d="areaLine3" stroke="#fbbf24" stroke-width="1.5" fill="none" class="line-anim d3"/>
-                <!-- Y-axis labels -->
-                <text x="2" y="18" class="cv-chart-label">₹{{ formatCompact(totalProjectValue) }}</text>
-                <text x="2" y="110" class="cv-chart-label">₹0</text>
+                <path :d="areaPath3" fill="url(#hdG3)" class="area-anim d3"/>
+                <path :d="areaLine3" stroke="#fb923c" stroke-width="1.6" fill="none" vector-effect="non-scaling-stroke" class="line-anim d3"/>
+                <path :d="areaPath2" fill="url(#hdG2)" class="area-anim d2"/>
+                <path :d="areaLine2" stroke="#fbbf24" stroke-width="1.8" fill="none" vector-effect="non-scaling-stroke" class="line-anim d2"/>
+                <path :d="areaPath1" fill="url(#hdG1)" class="area-anim"/>
+                <path :d="areaLine1" stroke="url(#hdLine1)" stroke-width="2.6" fill="none" vector-effect="non-scaling-stroke" class="line-anim hd-line-glow"/>
               </svg>
-              <!-- Legend -->
-              <div class="cv-chart-legend">
-                <span class="cv-leg"><span class="cv-leg-dot" style="background:#4ade80"></span>Approved</span>
-                <span class="cv-leg"><span class="cv-leg-dot" style="background:#a78bfa"></span>Drafts</span>
-                <span class="cv-leg"><span class="cv-leg-dot" style="background:#fbbf24"></span>Pending</span>
-              </div>
+              <div class="hd-scan"></div>
+              <div class="hd-end-dot" :style="endDot1"><span class="hd-end-core"></span><span class="hd-end-ring"></span></div>
             </div>
           </div>
 
-          <!-- Analytics Bar Grid -->
-          <div class="cv-card cv-analytics ani-4">
-            <div class="cv-cf-header">
-              <div>
-                <h3 class="cv-card-title">Handover Velocity</h3>
-                <p class="cv-cf-sub">{{ analyticsDateRange }}</p>
-              </div>
-              <div class="velocity-stats" style="text-align: right;">
-                <div style="font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.05em;">Weekly Avg</div>
-                <div style="font-size: 16px; font-weight: 700; color: #fff; font-family: 'SF Mono', monospace;">{{ Math.round((stats.drafts + stats.approved) / 7 * 10) / 10 }} <span style="font-size: 11px; color: rgba(255,255,255,0.3);">/day</span></div>
-              </div>
-            </div>
-            
-            <div style="display: flex; gap: 8px; margin-bottom: 16px; font-size: 11px;">
-              <div style="flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px;">
-                <div style="color: rgba(255,255,255,0.4); margin-bottom: 4px;">Pending Docs</div>
-                <div style="font-size: 14px; font-weight: 600; color: #fbbf24;">{{ stats.pending }}</div>
-              </div>
-              <div style="flex: 1; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 10px;">
-                <div style="color: rgba(255,255,255,0.4); margin-bottom: 4px;">Approved Docs</div>
-                <div style="font-size: 14px; font-weight: 600; color: #4ade80;">{{ stats.approved }}</div>
-              </div>
-            </div>
+          <div class="hd-xaxis">
+            <span v-for="(d, i) in weeklyActivity" :key="i" :class="{ on: d.highlight }">{{ d.dayName }}</span>
+          </div>
 
-            <div class="cv-bar-grid">
-              <div class="cv-bar-col" v-for="(day, i) in weeklyActivity" :key="i">
-                <div class="cv-bar-stack">
-                  <div class="cv-bar-block b1" :style="{ height: `${day.h1}px`, animationDelay: `${0.8 + i * 0.07}s` }"><span class="cv-bv" v-if="day.h1 > 16">{{ day.v1 }}</span></div>
-                  <div class="cv-bar-block b2" :style="{ height: `${day.h2}px`, animationDelay: `${0.9 + i * 0.07}s` }"><span class="cv-bv" v-if="day.h2 > 16">{{ day.v2 }}</span></div>
+          <div class="hd-legend">
+            <span class="hd-leg-pill"><i style="background:#34d399"></i>Approved · {{ stats.approved }}</span>
+            <span class="hd-leg-pill"><i style="background:#fbbf24"></i>Drafts · {{ stats.drafts }}</span>
+            <span class="hd-leg-pill"><i style="background:#fb923c"></i>Pending · {{ stats.pending }}</span>
+          </div>
+        </div>
+
+        <div class="hd-side">
+          <div class="hd-panel hd-ring" v-motion v-bind="mo(3)">
+            <div class="hd-panel-head sm"><h3>Approval Rate</h3></div>
+            <div class="hd-ring-wrap">
+              <svg viewBox="0 0 160 160" class="hd-ring-svg">
+                <defs><linearGradient id="ringG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#34d399"/></linearGradient></defs>
+                <circle cx="80" cy="80" r="64" class="ring-bg"/>
+                <circle cx="80" cy="80" r="64" class="ring-fg" :style="{ strokeDasharray: 402.1, strokeDashoffset: 402.1 * (1 - approvalRate.fraction) }"/>
+              </svg>
+              <div class="hd-ring-center"><span class="hd-ring-val">{{ approvalRate.rate }}%</span><span class="hd-ring-lbl">approved</span></div>
+            </div>
+          </div>
+          <div class="hd-panel hd-velocity" v-motion v-bind="mo(4)">
+            <div class="hd-panel-head sm"><h3>Velocity</h3><span class="hd-vel-avg">{{ Math.round((stats.drafts + stats.approved) / 7 * 10) / 10 }}<small>/day</small></span></div>
+            <div class="hd-vbars">
+              <div class="hd-vcol" v-for="(day, i) in weeklyActivity" :key="i">
+                <div class="hd-vstack">
+                  <span class="hd-vb b-amber" :style="{ height: `${day.h1}px`, animationDelay: `${0.6 + i * 0.06}s` }"></span>
+                  <span class="hd-vb b-emerald" :style="{ height: `${day.h2}px`, animationDelay: `${0.7 + i * 0.06}s` }"></span>
                 </div>
-                <span class="cv-bar-day" :class="{ active: day.highlight }">{{ day.dayName }}</span>
+                <span class="hd-vday" :class="{ on: day.highlight }">{{ day.dayName[0] }}</span>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- ══ RIGHT COLUMN ══ -->
-        <div class="cv-col-right">
-
-          <!-- Promo CTA Card -->
-          <div class="cv-card cv-promo ani-2">
-            <div class="cv-promo-mesh"></div>
-            <h3 class="cv-promo-title">Create & Deliver</h3>
-            <p class="cv-promo-sub">Start a new project handover document and deliver excellence.</p>
-            <router-link :to="isAdmin ? '/admin/documents/handover/new' : '/user/documents/handover/new'" class="cv-start-btn">
-              START <ArrowRight :size="14" />
-            </router-link>
+      <!-- ACTIVITY ROW -->
+      <section class="hd-bottom">
+        <div class="hd-panel hd-recent" v-motion v-bind="mo(3)">
+          <div class="hd-panel-head">
+            <div><h3>Recent Handovers</h3><p>Latest activity across your pipeline</p></div>
+            <button class="hd-ghost" @click="setTab('approved')">View all <ArrowRight :size="13" /></button>
           </div>
-
-          <!-- Quick Creators -->
-          <div class="cv-card cv-quick ani-3" style="position: relative; overflow: hidden;">
-            <div class="cv-q-bg-glow"></div>
-            <div class="cv-q-header">
-              <span>Recent Creators</span>
-              <button class="cv-plus-btn pulse-glow" @click="router.push(isAdmin ? '/admin/documents/handover/new' : '/user/documents/handover/new')"><Plus :size="14" /></button>
-            </div>
-            <div class="cv-avatars">
-              <div class="cv-av float-anim" v-for="(creator, i) in recentCreators" :key="i" :title="creator.name" :style="{ animationDelay: `${1.0 + i * 0.15}s` }">{{ creator.initials }}</div>
-            </div>
-            <!-- Recent Items -->
-            <div class="cv-recent-items">
-              <div class="cv-ri modern-ri" v-for="(item, i) in recentAll.slice(0, 3)" :key="i" @click="openItem(item)" :style="{ animationDelay: `${1.2 + i * 0.1}s` }">
-                <div class="cv-ri-avatar"><FileText :size="14" /></div>
-                <div class="cv-ri-info">
-                  <span class="cv-ri-name">{{ item.project_name || 'Untitled' }}</span>
-                  <span class="cv-ri-sub">{{ item.status }}</span>
-                </div>
-                <div class="cv-ri-action-glow"><ArrowRight :size="13" /></div>
+          <div class="hd-rlist">
+            <div class="hd-row" v-for="(item, i) in recentAll" :key="item.id || i" @click="openItem(item)" v-motion v-bind="lift(i)">
+              <div class="hd-row-ico"><FileText :size="15" /></div>
+              <div class="hd-row-main">
+                <span class="hd-row-name">{{ item.project_name || 'Untitled Handover' }}</span>
+                <span class="hd-row-sub">{{ item.client_organization || '—' }} · {{ formatDate(item.created_at) }}</span>
               </div>
+              <span class="hd-row-val">₹{{ formatCompact(item.total_project_value || 0) }}</span>
+              <span class="hd-pill" :class="statusClass(item.status)">{{ item.status }}</span>
+              <ArrowRight :size="15" class="hd-row-arrow" />
             </div>
-          </div>
-
-          <!-- Transfer / Latest Handover -> Latest Draft Handover -->
-          <div class="cv-card cv-transfer ani-5" v-if="latestDraft">
-            <div class="cv-tf-top">
-              <span class="cv-tf-ref">{{ latestDraft.project_code || 'DPR' }}</span>
-              <span class="cv-tf-type">· Latest Draft</span>
-              <button class="cv-pill-btn" @click="selectedDraftId = latestDraft.id">Details</button>
-            </div>
-            <div class="cv-tf-amount-row enhanced-tf-row">
-              <div class="tf-stat-box">
-                <span class="cv-tf-label">Asset Value</span>
-                <div class="cv-tf-amount">₹{{ formatCurrency(latestDraft.total_project_value || 0) }}</div>
-              </div>
-              <div class="tf-stat-box from-box">
-                <span class="cv-tf-label">Project Target</span>
-                <span class="cv-tf-tag-main">{{ latestDraft.project_name || 'Untitled' }}</span>
-              </div>
-            </div>
-            <router-link :to="(isAdmin ? '/admin' : '/user') + '/documents/handover/new?edit=' + latestDraft.id" class="cv-transfer-btn glow-btn">
-              Complete Handover Draft <ArrowRight :size="16" /> 
-            </router-link>
+            <div v-if="recentAll.length === 0" class="hd-empty">No handovers yet — start your first one.</div>
           </div>
         </div>
 
-      </div>
+        <div class="hd-side2">
+          <div class="hd-panel hd-promo" v-motion v-bind="mo(4)">
+            <div class="hd-promo-glow"></div>
+            <h3>Create &amp; Deliver</h3>
+            <p>Spin up a fresh project handover and close it out with a signed, branded PDF.</p>
+            <router-link :to="newLink" class="hd-promo-btn">Start now <ArrowRight :size="15" /></router-link>
+          </div>
+          <div class="hd-panel hd-resume" v-if="latestDraft" v-motion v-bind="mo(5)">
+            <div class="hd-resume-top">
+              <span class="hd-resume-ref">{{ latestDraft.project_code || 'DRAFT' }}</span>
+              <button class="hd-ghost sm" @click="selectedDraftId = latestDraft.id">Details</button>
+            </div>
+            <div class="hd-resume-label">Latest draft</div>
+            <div class="hd-resume-name">{{ latestDraft.project_name || 'Untitled' }}</div>
+            <div class="hd-resume-val">₹{{ formatCurrency(latestDraft.total_project_value || 0) }}</div>
+            <router-link :to="(isAdmin ? '/admin' : '/user') + '/documents/handover/new?edit=' + latestDraft.id" class="hd-resume-btn">Resume draft <ArrowRight :size="15" /></router-link>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- ═══════════ DRAFT TAB ═══════════ -->
@@ -512,9 +436,25 @@ import {
 import AnimatedNumber from '../../components/ui/AnimatedNumber.vue'
 import HandoverDetailsDrawer from '../../components/documents/HandoverDetailsDrawer.vue'
 import RejectionModal from '../../components/documents/RejectionModal.vue'
-import { generateHandoverPdf } from '../../utils/handoverPdfGenerator'
 import { API } from '@/utils/api'
 import { useToast } from 'vue-toastification'
+
+// Cinematic motion language (via the globally-registered @vueuse/motion v-motion
+// directive — applied on existing elements so there's no closing-tag churn and no
+// CSS-transform conflict, since .cv-card's transform transition was removed).
+// `mo(i)` = staggered cinematic entrance + hover lift + tap press. `lift(i)` is a
+// lighter variant for list rows.
+const EASE = [0.16, 1, 0.3, 1]
+const mo = (i = 0) => ({
+  initial: { opacity: 0, y: 28, scale: 0.985 },
+  enter: { opacity: 1, y: 0, scale: 1, transition: { delay: 60 + i * 85, duration: 620, ease: EASE } },
+  hovered: { y: -6, scale: 1.012, transition: { duration: 320, ease: EASE } },
+  tapped: { scale: 0.985, transition: { duration: 120 } },
+})
+const lift = (i = 0) => ({
+  initial: { opacity: 0, x: -14 },
+  enter: { opacity: 1, x: 0, transition: { delay: 80 + i * 55, duration: 480, ease: EASE } },
+})
 
 const toast = useToast()
 
@@ -577,6 +517,13 @@ const filteredRejected = computed(() => {
 })
 
 const formatDate = (d) => { if (!d) return '—'; return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) }
+const newLink = computed(() => isAdmin.value ? '/admin/documents/handover/new' : '/user/documents/handover/new')
+const statusClass = (s) => {
+  if (s === 'Approved') return 'ok'
+  if (s === 'Rejected') return 'bad'
+  if (s === 'Internal Review') return 'warn'
+  return 'neutral'
+}
 const todayFormatted = computed(() => new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }))
 
 const formatCurrency = (n) => { if (n == null || isNaN(n)) return '0.00'; return Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
@@ -654,24 +601,51 @@ const areaChartData = computed(() => {
   })
 })
 
-const makePath = (vals, maxVal, w, h) => {
-  if (vals.length === 0) return { line: '', area: '' }
-  const mx = maxVal || 1
-  const points = vals.map((v, i) => ({ x: (i / (vals.length - 1)) * w, y: h - (v / mx) * (h - 10) }))
-  const line = 'M' + points.map(p => `${p.x},${p.y}`).join(' L')
-  const area = line + ` L${w},${h} L0,${h} Z`
-  return { line, area }
+// ── Telemetry chart geometry ──
+const CW = 400, CH = 120
+const chartPoints = (vals, maxVal) => {
+  const mx = maxVal || 1, n = vals.length
+  return vals.map((v, i) => ({ x: n > 1 ? (i / (n - 1)) * CW : 0, y: +(CH - 4 - (v / mx) * (CH - 16)).toFixed(2) }))
+}
+// Catmull-Rom → cubic-bézier smoothing so the series read as elegant curves
+// instead of jagged straight segments.
+const smoothD = (pts) => {
+  if (!pts.length) return ''
+  if (pts.length === 1) return `M${pts[0].x},${pts[0].y}`
+  let d = `M${pts[0].x},${pts[0].y}`
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2
+    const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6
+    const c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6
+    d += ` C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`
+  }
+  return d
+}
+const makePath = (vals, maxVal) => {
+  const pts = chartPoints(vals, maxVal)
+  if (!pts.length) return { line: '', area: '' }
+  const line = smoothD(pts)
+  return { line, area: `${line} L${CW},${CH} L0,${CH} Z` }
 }
 
 const chartMax = computed(() => {
-  let m = 1; areaChartData.value.forEach(d => { m = Math.max(m, d.approved, d.draft, d.pending) }); return m * 1.2
+  let m = 1; areaChartData.value.forEach(d => { m = Math.max(m, d.approved, d.draft, d.pending) }); return m * 1.25
 })
-const areaPath1 = computed(() => makePath(areaChartData.value.map(d => d.approved), chartMax.value, 400, 120).area)
-const areaLine1 = computed(() => makePath(areaChartData.value.map(d => d.approved), chartMax.value, 400, 120).line)
-const areaPath2 = computed(() => makePath(areaChartData.value.map(d => d.draft), chartMax.value, 400, 120).area)
-const areaLine2 = computed(() => makePath(areaChartData.value.map(d => d.draft), chartMax.value, 400, 120).line)
-const areaPath3 = computed(() => makePath(areaChartData.value.map(d => d.pending), chartMax.value, 400, 120).area)
-const areaLine3 = computed(() => makePath(areaChartData.value.map(d => d.pending), chartMax.value, 400, 120).line)
+const seriesApproved = computed(() => makePath(areaChartData.value.map(d => d.approved), chartMax.value))
+const seriesDraft = computed(() => makePath(areaChartData.value.map(d => d.draft), chartMax.value))
+const seriesPending = computed(() => makePath(areaChartData.value.map(d => d.pending), chartMax.value))
+const areaPath1 = computed(() => seriesApproved.value.area)
+const areaLine1 = computed(() => seriesApproved.value.line)
+const areaPath2 = computed(() => seriesDraft.value.area)
+const areaLine2 = computed(() => seriesDraft.value.line)
+const areaPath3 = computed(() => seriesPending.value.area)
+const areaLine3 = computed(() => seriesPending.value.line)
+// Endpoint of the primary (approved) series, as % for a crisp (undistorted) marker.
+const endDot1 = computed(() => {
+  const pts = chartPoints(areaChartData.value.map(d => d.approved), chartMax.value)
+  const p = pts.length ? pts[pts.length - 1] : { x: CW, y: CH }
+  return { left: `${(p.x / CW) * 100}%`, top: `${(p.y / CH) * 100}%` }
+})
 
 // Weekly Activity for analytics bars
 const weeklyActivity = computed(() => {
@@ -737,16 +711,31 @@ const handleRejectionConfirm = async (reason) => {
     dprToReject.value = null
   }
 }
+// Download the server-rendered (WeasyPrint) handover PDF. The backend owns the
+// design now — the client just streams the blob and triggers a save.
+const generatingId = ref(null)
 const generatePdf = async (dpr) => {
+  if (!dpr?.id || generatingId.value) return
+  generatingId.value = dpr.id
   try {
-    const token = isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
-    const res = await axios.get(`${API}/handover/${dpr.id}`, {
-      headers: { Authorization: `Bearer ${token}` }
+    const res = await axios.get(`${API}/handover/${dpr.id}/export`, {
+      headers: { Authorization: `Bearer ${getToken()}` },
+      responseType: 'blob'
     })
-    generateHandoverPdf(res.data)
+    let filename = `Handover_${(dpr.project_name || 'Document').replace(/\s+/g, '_')}.pdf`
+    const cd = res.headers['content-disposition']
+    const match = cd && /filename="?([^"]+)"?/.exec(cd)
+    if (match) filename = match[1]
+    const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+    const a = document.createElement('a')
+    a.href = url; a.download = filename
+    document.body.appendChild(a); a.click(); a.remove()
+    window.URL.revokeObjectURL(url)
   } catch (e) {
-    console.error('Failed to fetch full Handover. Falling back to basic list data.', e)
-    generateHandoverPdf(dpr)
+    console.error('Failed to generate handover PDF', e)
+    toast.error('Could not generate the PDF. Please try again.')
+  } finally {
+    generatingId.value = null
   }
 }
 const updateStatus = async (id, status, reason = null) => {
@@ -772,26 +761,52 @@ const updateStatus = async (id, status, reason = null) => {
   }
 }
 
+// The list endpoint returns a JSON array, but defend against any non-array body
+// (an empty/garbled 200 under the single-connection backend, an error envelope,
+// or a future paginated {items:[]} shape) so the financial-total computeds
+// (.reduce / .find / .sort) can never throw and white-screen the dashboard.
+const asArray = (d) => Array.isArray(d) ? d : (Array.isArray(d?.items) ? d.items : [])
+
+// Single in-flight guard: under the backend's single-connection (StaticPool) model,
+// overlapping polls queue up and stall the UI. Never start a fetch while one is
+// running — this was a major cause of the page feeling slow under the old 3s poll.
+let fetchInFlight = false
 const fetchData = async () => {
-  const token = getToken(); if (!token) return
-  await Promise.allSettled([
-    axios.get(`${API}/handover/?status_filter=Draft`, { headers: { Authorization: `Bearer ${token}` } }).then(r => draftDprs.value = r.data).catch(() => {}),
-    axios.get(`${API}/handover/?status_filter=Approved`, { headers: { Authorization: `Bearer ${token}` } }).then(r => approvedDprs.value = r.data).catch(() => {}),
-    axios.get(`${API}/handover/?status_filter=Rejected`, { headers: { Authorization: `Bearer ${token}` } }).then(r => rejectedDprs.value = r.data).catch(() => {}),
-    axios.get(`${API}/handover/?status_filter=Internal Review`, { headers: { Authorization: `Bearer ${token}` } }).then(r => pendingDprs.value = r.data).catch(() => {})
-  ])
+  const token = getToken(); if (!token || fetchInFlight) return
+  fetchInFlight = true
+  try {
+    await Promise.allSettled([
+      axios.get(`${API}/handover/?status_filter=Draft`, { headers: { Authorization: `Bearer ${token}` } }).then(r => draftDprs.value = asArray(r.data)).catch(() => {}),
+      axios.get(`${API}/handover/?status_filter=Approved`, { headers: { Authorization: `Bearer ${token}` } }).then(r => approvedDprs.value = asArray(r.data)).catch(() => {}),
+      axios.get(`${API}/handover/?status_filter=Rejected`, { headers: { Authorization: `Bearer ${token}` } }).then(r => rejectedDprs.value = asArray(r.data)).catch(() => {}),
+      axios.get(`${API}/handover/?status_filter=Internal Review`, { headers: { Authorization: `Bearer ${token}` } }).then(r => pendingDprs.value = asArray(r.data)).catch(() => {})
+    ])
+  } finally {
+    fetchInFlight = false
+  }
 }
 
+// Poll every 20s and ONLY while the tab is visible — the old 3s always-on poll
+// hammered four endpoints + re-ran the whole chart computed-chain ~20×/min even in
+// a background tab, which is what made the page feel heavy. Coming back to the tab
+// refetches immediately so data is never stale on focus.
 let poll = null
+const POLL_MS = 20000
+const tick = () => { if (document.visibilityState === 'visible') fetchData() }
+const onVisible = () => { if (document.visibilityState === 'visible') fetchData() }
 onMounted(async () => {
   const token = getToken()
   if (token) {
     try { const res = await axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } }); userProfile.value = res.data } catch (e) {}
     await fetchData()
-    poll = setInterval(fetchData, 3000)
+    poll = setInterval(tick, POLL_MS)
+    document.addEventListener('visibilitychange', onVisible)
   }
 })
-onUnmounted(() => { if (poll) clearInterval(poll) })
+onUnmounted(() => {
+  if (poll) clearInterval(poll)
+  document.removeEventListener('visibilitychange', onVisible)
+})
 </script>
 
 <style scoped>
@@ -806,6 +821,37 @@ onUnmounted(() => { if (poll) clearInterval(poll) })
   background: transparent;
   color: #fff;
   font-family: 'Inter', -apple-system, sans-serif;
+  position: relative;
+  isolation: isolate;
+}
+/* Cinematic ambient aura — slow-drifting warm light pools behind everything.
+   Pure CSS, GPU-friendly (transform/opacity only), respects reduced-motion. */
+.dpr-page::before {
+  content: '';
+  position: fixed;
+  inset: -20vmax;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38vmax 38vmax at 18% 12%, rgba(245, 158, 11, 0.12), transparent 60%),
+    radial-gradient(32vmax 32vmax at 86% 22%, rgba(251, 146, 60, 0.10), transparent 60%),
+    radial-gradient(40vmax 40vmax at 70% 96%, rgba(74, 222, 128, 0.06), transparent 62%);
+  filter: blur(8px);
+  animation: auraDrift 26s ease-in-out infinite alternate;
+}
+@keyframes auraDrift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(2.5%, -2%, 0) scale(1.06); }
+  100% { transform: translate3d(-2%, 2.5%, 0) scale(1.02); }
+}
+[data-theme="light"] .dpr-page::before {
+  background:
+    radial-gradient(38vmax 38vmax at 18% 12%, rgba(245, 158, 11, 0.16), transparent 60%),
+    radial-gradient(32vmax 32vmax at 86% 22%, rgba(251, 146, 60, 0.14), transparent 60%),
+    radial-gradient(40vmax 40vmax at 70% 96%, rgba(217, 119, 6, 0.08), transparent 62%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .dpr-page::before { animation: none; }
 }
 
 /* ─── HEADER & PRIMARY TABS ─── */
@@ -859,9 +905,9 @@ onUnmounted(() => { if (poll) clearInterval(poll) })
   padding: 24px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s;
+  transition: box-shadow 0.3s, border-color 0.3s;
 }
-.cv-card:hover { border-color: rgba(255,255,255,0.1); transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
+.cv-card:hover { border-color: rgba(255,255,255,0.1); box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
 
 .ani-1 { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.1s; }
 .ani-2 { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.2s; }
@@ -869,6 +915,239 @@ onUnmounted(() => { if (poll) clearInterval(poll) })
 .ani-4 { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.4s; }
 .ani-5 { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: 0.5s; }
 @keyframes cardIn { 0% { opacity: 0; transform: translateY(16px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* ════════════════════════════════════════════════════════════════════
+   "HANDOVER COMMAND" — new dashboard layout (hd-*). Dark-first + light.
+   Motion is owned by the v-motion directive; CSS here is layout + skin.
+   ════════════════════════════════════════════════════════════════════ */
+.hd-dash { display: flex; flex-direction: column; gap: 22px; padding-top: 4px; }
+
+/* shared panel skin */
+.hd-panel {
+  background: rgba(20, 20, 23, 0.72);
+  backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 22px; padding: 22px; position: relative; overflow: hidden;
+  transition: box-shadow .4s ease, border-color .4s ease;
+}
+.hd-panel:hover { border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 22px 48px rgba(0,0,0,0.45); }
+.hd-panel-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+.hd-panel-head.sm { margin-bottom: 12px; }
+.hd-panel-head h3 { font-size: 16px; font-weight: 700; color: #fff; margin: 0; letter-spacing: -0.01em; }
+.hd-panel-head p { font-size: 12px; color: rgba(255,255,255,0.45); margin: 4px 0 0; }
+
+/* HERO */
+.hd-hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+.hd-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: #d8a23a; margin-bottom: 10px; }
+.hd-live-dot { width: 7px; height: 7px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 0 rgba(52,211,153,0.6); animation: hdPulse 2.2s infinite; }
+@keyframes hdPulse { 0% { box-shadow: 0 0 0 0 rgba(52,211,153,0.55); } 70% { box-shadow: 0 0 0 8px rgba(52,211,153,0); } 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0); } }
+.hd-title { font-size: 40px; line-height: 1.05; font-weight: 800; letter-spacing: -0.03em; margin: 0;
+  background: linear-gradient(120deg, #fff 30%, #f7c873 120%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.hd-sub { font-size: 14px; color: rgba(255,255,255,0.55); margin: 10px 0 0; max-width: 520px; }
+.hd-sub strong { color: #fff; font-weight: 600; }
+.hd-hero-cta { display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px 13px 14px;
+  border-radius: 16px; text-decoration: none; font-weight: 700; font-size: 14px; color: #1a1410;
+  background: linear-gradient(135deg, #fcd34d, #f59e0b); box-shadow: 0 10px 26px rgba(245,158,11,0.32);
+  transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s; }
+.hd-hero-cta:hover { transform: translateY(-3px); box-shadow: 0 16px 38px rgba(245,158,11,0.45); }
+.hd-hero-cta .hd-cta-ico { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 10px; background: rgba(0,0,0,0.14); }
+.hd-hero-cta .hd-cta-arrow { transition: transform .3s; }
+.hd-hero-cta:hover .hd-cta-arrow { transform: translateX(4px); }
+
+/* KPI BAND */
+.hd-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.hd-kpi { position: relative; overflow: hidden; border-radius: 20px; padding: 20px;
+  background: rgba(20,20,23,0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06); transition: transform .35s cubic-bezier(.16,1,.3,1), border-color .35s, box-shadow .35s; }
+.hd-kpi::after { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; opacity: .9; }
+.hd-kpi.k-gold::after { background: linear-gradient(90deg, #fcd34d, #f59e0b); }
+.hd-kpi.k-emerald::after { background: linear-gradient(90deg, #6ee7b7, #34d399); }
+.hd-kpi.k-amber::after { background: linear-gradient(90deg, #fdba74, #fb923c); }
+.hd-kpi.k-rate::after { background: linear-gradient(90deg, #fbbf24, #34d399); }
+.hd-kpi.clickable { cursor: pointer; }
+.hd-kpi:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.14); box-shadow: 0 18px 40px rgba(0,0,0,0.4); }
+.hd-kpi-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.hd-kpi-ico { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; color: #1a1410; }
+.k-gold .hd-kpi-ico { background: linear-gradient(135deg, #fcd34d, #f59e0b); }
+.k-emerald .hd-kpi-ico { background: linear-gradient(135deg, #6ee7b7, #34d399); }
+.k-amber .hd-kpi-ico { background: linear-gradient(135deg, #fdba74, #fb923c); }
+.k-rate .hd-kpi-ico { background: linear-gradient(135deg, #fbbf24, #34d399); }
+.hd-kpi-chip { font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 4px 9px; border-radius: 20px; background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.65); }
+.hd-kpi-val { font-size: 27px; font-weight: 800; color: #fff; letter-spacing: -0.02em; font-family: 'SF Mono', 'Inter', monospace; line-height: 1; }
+.hd-kpi-lbl { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 8px; }
+.hd-kpi-spark { display: flex; align-items: flex-end; gap: 3px; height: 26px; margin-top: 12px; }
+.hd-kpi-spark i { flex: 1; min-height: 4px; border-radius: 3px 3px 0 0; background: linear-gradient(180deg, rgba(245,158,11,0.9), rgba(245,158,11,0.25));
+  transform-origin: bottom; animation: barPop .6s cubic-bezier(.16,1,.3,1) both; }
+.hd-kpi-bar { height: 6px; border-radius: 6px; background: rgba(255,255,255,0.08); margin-top: 14px; overflow: hidden; }
+.hd-kpi-bar span { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, #fbbf24, #34d399); transition: width 1.1s cubic-bezier(.16,1,.3,1) .3s; }
+
+/* TELEMETRY SPLIT */
+.hd-split { display: grid; grid-template-columns: 1.9fr 1fr; gap: 16px; align-items: stretch; }
+.hd-side { display: flex; flex-direction: column; gap: 16px; }
+.hd-tele-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.hd-tele-amount { font-size: 20px; font-weight: 800; color: #fff; font-family: 'SF Mono', monospace; letter-spacing: -0.02em; }
+.hd-tele-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: #34d399;
+  background: rgba(52, 211, 153, 0.13); padding: 4px 9px; border-radius: 20px; }
+
+.hd-chart-stage { display: flex; gap: 12px; }
+.hd-yaxis { display: flex; flex-direction: column; justify-content: space-between; height: 180px; padding: 1px 0;
+  font-family: 'SF Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.34); text-align: right; min-width: 34px; }
+.hd-chart-wrap { position: relative; flex: 1; height: 180px; }
+.hd-grid { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+.hd-grid span { display: block; height: 1px; background: rgba(255, 255, 255, 0.06); }
+.hd-telemetry .hd-chart { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hd-line-glow { filter: drop-shadow(0 3px 9px rgba(52, 211, 153, 0.5)); }
+
+/* sweeping highlight + pulsing data endpoint = "highly animated" */
+.hd-scan { position: absolute; top: 0; bottom: 0; left: 0; width: 88px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+  animation: hdScan 4.8s ease-in-out infinite; }
+@keyframes hdScan { 0% { transform: translateX(-110px); opacity: 0; } 18% { opacity: 1; } 82% { opacity: 1; } 100% { transform: translateX(640px); opacity: 0; } }
+.hd-end-dot { position: absolute; transform: translate(-50%, -50%); width: 0; height: 0; z-index: 2; }
+.hd-end-core, .hd-end-ring { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); border-radius: 50%; }
+.hd-end-core { width: 9px; height: 9px; background: #6ee7b7; box-shadow: 0 0 12px rgba(110, 231, 183, 0.95); }
+.hd-end-ring { width: 9px; height: 9px; border: 2px solid rgba(110, 231, 183, 0.75); animation: hdPing 2.1s cubic-bezier(0, 0, 0.2, 1) infinite; }
+@keyframes hdPing { 0% { width: 9px; height: 9px; opacity: 0.85; } 100% { width: 38px; height: 38px; opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .hd-scan, .hd-end-ring { animation: none; } }
+
+.hd-xaxis { display: flex; justify-content: space-between; margin: 9px 0 0 46px; }
+.hd-xaxis span { font-size: 10px; color: rgba(255, 255, 255, 0.34); font-weight: 600; }
+.hd-xaxis span.on { color: #34d399; }
+
+.hd-legend { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.hd-leg-pill { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: rgba(255, 255, 255, 0.72); font-weight: 600;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.07); padding: 5px 11px; border-radius: 20px; }
+.hd-leg-pill i { width: 9px; height: 9px; border-radius: 3px; }
+
+/* RING */
+.hd-ring { display: flex; flex-direction: column; }
+.hd-ring-wrap { position: relative; width: 160px; height: 160px; margin: 6px auto 0; }
+.hd-ring-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.hd-ring-svg .ring-bg { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 14; }
+.hd-ring-svg .ring-fg { fill: none; stroke: url(#ringG); stroke-width: 14; stroke-linecap: round; transition: stroke-dashoffset 1.4s cubic-bezier(.65,0,.35,1) .4s; }
+.hd-ring-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.hd-ring-val { font-size: 30px; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+.hd-ring-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+/* VELOCITY */
+.hd-velocity { flex: 1; }
+.hd-vel-avg { font-size: 16px; font-weight: 800; color: #fff; font-family: 'SF Mono', monospace; }
+.hd-vel-avg small { font-size: 11px; color: rgba(255,255,255,0.35); font-weight: 500; }
+.hd-vbars { display: flex; align-items: flex-end; justify-content: space-between; gap: 6px; height: 86px; }
+.hd-vcol { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; height: 100%; }
+.hd-vstack { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; width: 100%; }
+.hd-vb { width: 70%; max-width: 14px; min-height: 3px; border-radius: 4px; transform-origin: bottom; animation: barPop .6s cubic-bezier(.16,1,.3,1) both; }
+.hd-vb.b-amber { background: linear-gradient(180deg, #fdba74, #fb923c); }
+.hd-vb.b-emerald { background: linear-gradient(180deg, #6ee7b7, #34d399); }
+.hd-vday { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 600; }
+.hd-vday.on { color: #fbbf24; }
+
+/* ACTIVITY ROW */
+.hd-bottom { display: grid; grid-template-columns: 1.9fr 1fr; gap: 16px; align-items: start; }
+.hd-side2 { display: flex; flex-direction: column; gap: 16px; }
+.hd-ghost { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: 10px; cursor: pointer; transition: all .25s; }
+.hd-ghost:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.hd-ghost.sm { padding: 5px 10px; font-size: 11px; }
+.hd-rlist { display: flex; flex-direction: column; gap: 6px; }
+.hd-row { display: grid; grid-template-columns: 36px 1fr auto auto 18px; align-items: center; gap: 14px;
+  padding: 11px 12px; border-radius: 14px; cursor: pointer; transition: background .25s, transform .25s; }
+.hd-row:hover { background: rgba(255,255,255,0.04); transform: translateX(3px); }
+.hd-row-ico { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; background: rgba(245,158,11,0.14); color: #f5b942; }
+.hd-row-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hd-row-name { font-size: 13.5px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hd-row-sub { font-size: 11.5px; color: rgba(255,255,255,0.42); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hd-row-val { font-size: 13px; font-weight: 700; color: #e8e0d2; font-family: 'SF Mono', monospace; }
+.hd-row-arrow { color: rgba(255,255,255,0.3); transition: transform .25s, color .25s; }
+.hd-row:hover .hd-row-arrow { color: #f5b942; transform: translateX(3px); }
+.hd-pill { font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+.hd-pill.ok { background: rgba(52,211,153,0.14); color: #34d399; }
+.hd-pill.warn { background: rgba(251,191,36,0.14); color: #fbbf24; }
+.hd-pill.bad { background: rgba(248,113,113,0.14); color: #f87171; }
+.hd-pill.neutral { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
+.hd-empty { padding: 28px; text-align: center; color: rgba(255,255,255,0.4); font-size: 13px; }
+
+/* PROMO + RESUME */
+.hd-promo { background: linear-gradient(150deg, rgba(245,158,11,0.16), rgba(20,20,23,0.7) 65%); }
+.hd-promo-glow { position: absolute; top: -30%; right: -20%; width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(245,158,11,0.4), transparent 70%); filter: blur(10px); }
+.hd-promo h3 { font-size: 19px; font-weight: 800; color: #fff; margin: 0 0 8px; position: relative; }
+.hd-promo p { font-size: 12.5px; color: rgba(255,255,255,0.6); margin: 0 0 18px; line-height: 1.55; position: relative; }
+.hd-promo-btn, .hd-resume-btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 700; font-size: 13px;
+  padding: 11px 18px; border-radius: 13px; transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s; }
+.hd-promo-btn { color: #1a1410; background: linear-gradient(135deg, #fcd34d, #f59e0b); box-shadow: 0 8px 22px rgba(245,158,11,0.3); position: relative; }
+.hd-promo-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(245,158,11,0.42); }
+.hd-resume-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.hd-resume-ref { font-size: 11px; font-family: 'SF Mono', monospace; font-weight: 700; color: #f5b942; letter-spacing: 0.04em; }
+.hd-resume-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); }
+.hd-resume-name { font-size: 15px; font-weight: 700; color: #fff; margin: 4px 0 10px; line-height: 1.3; }
+.hd-resume-val { font-size: 22px; font-weight: 800; color: #fff; font-family: 'SF Mono', monospace; margin-bottom: 16px; letter-spacing: -0.02em; }
+.hd-resume-btn { color: #fff; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); width: 100%; justify-content: center; }
+.hd-resume-btn:hover { transform: translateY(-2px); background: rgba(245,158,11,0.16); border-color: rgba(245,158,11,0.4); }
+
+@media (max-width: 1100px) {
+  .hd-kpis { grid-template-columns: repeat(2, 1fr); }
+  .hd-split, .hd-bottom { grid-template-columns: 1fr; }
+}
+
+/* ── LIGHT THEME for hd-* ── */
+[data-theme="light"] .hd-panel,
+[data-theme="light"] .hd-kpi { background: rgba(255, 250, 240, 0.72); border-color: rgba(217, 119, 6, 0.16); }
+[data-theme="light"] .hd-panel:hover,
+[data-theme="light"] .hd-kpi:hover { border-color: rgba(217, 119, 6, 0.4); box-shadow: 0 20px 44px rgba(180, 110, 30, 0.18); }
+[data-theme="light"] .hd-panel-head h3,
+[data-theme="light"] .hd-title { color: #1a1410; }
+[data-theme="light"] .hd-title { background: linear-gradient(120deg, #1a1410 30%, #b45309 130%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+[data-theme="light"] .hd-panel-head p,
+[data-theme="light"] .hd-sub { color: #6b5840; }
+[data-theme="light"] .hd-sub strong { color: #1a1410; }
+[data-theme="light"] .hd-eyebrow { color: #b45309; }
+[data-theme="light"] .hd-kpi-chip { background: rgba(217,119,6,0.1); color: #92610a; }
+[data-theme="light"] .hd-kpi-val,
+[data-theme="light"] .hd-tele-amount,
+[data-theme="light"] .hd-ring-val,
+[data-theme="light"] .hd-vel-avg,
+[data-theme="light"] .hd-row-name,
+[data-theme="light"] .hd-resume-name,
+[data-theme="light"] .hd-resume-val,
+[data-theme="light"] .hd-promo h3 { color: #1a1410; }
+[data-theme="light"] .hd-kpi-lbl,
+[data-theme="light"] .hd-legend span,
+[data-theme="light"] .hd-ring-lbl,
+[data-theme="light"] .hd-row-sub,
+[data-theme="light"] .hd-promo p { color: #6b5840; }
+[data-theme="light"] .hd-row-val { color: #3d2f1c; }
+[data-theme="light"] .hd-ring-svg .ring-bg { stroke: rgba(120,53,15,0.12); }
+[data-theme="light"] .hd-kpi-bar { background: rgba(120,53,15,0.1); }
+[data-theme="light"] .hd-row:hover { background: rgba(217,119,6,0.08); }
+[data-theme="light"] .hd-ghost { background: rgba(217,119,6,0.08); border-color: rgba(217,119,6,0.22); color: #78350f; }
+[data-theme="light"] .hd-ghost:hover { background: rgba(245,158,11,0.16); color: #92400e; }
+[data-theme="light"] .hd-resume-btn { background: rgba(217,119,6,0.08); border-color: rgba(217,119,6,0.25); color: #78350f; }
+[data-theme="light"] .hd-row-ico { background: rgba(217,119,6,0.12); color: #b45309; }
+[data-theme="light"] .hd-vday.on { color: #b45309; }
+[data-theme="light"] .hd-resume-ref { color: #b45309; }
+/* Status pills — dark-theme variants used white text/near-transparent fills that
+   vanished on cream. Re-skin for light so every status (esp. "Draft"/neutral) reads. */
+[data-theme="light"] .hd-pill.ok { background: rgba(34, 134, 58, 0.13); color: #15803d; }
+[data-theme="light"] .hd-pill.warn { background: rgba(217, 119, 6, 0.16); color: #b45309; }
+[data-theme="light"] .hd-pill.bad { background: rgba(185, 28, 28, 0.13); color: #b91c1c; }
+[data-theme="light"] .hd-pill.neutral { background: rgba(120, 53, 15, 0.12); color: #78350f; }
+/* KPI accent chips also lean on theme color */
+[data-theme="light"] .hd-row-arrow { color: rgba(120, 53, 15, 0.4); }
+/* Faint grey labels that disappeared on cream */
+[data-theme="light"] .hd-vday { color: #8a6d3b; }
+[data-theme="light"] .hd-resume-label { color: #8a6d3b; }
+[data-theme="light"] .hd-empty { color: #8a6d3b; }
+/* Redesigned telemetry — light skin */
+[data-theme="light"] .hd-grid span { background: rgba(120, 53, 15, 0.10); }
+[data-theme="light"] .hd-yaxis,
+[data-theme="light"] .hd-xaxis span { color: #8a6d3b; }
+[data-theme="light"] .hd-xaxis span.on { color: #15803d; }
+[data-theme="light"] .hd-tele-chip { background: rgba(34, 134, 58, 0.13); color: #15803d; }
+[data-theme="light"] .hd-leg-pill { background: rgba(120, 53, 15, 0.05); border-color: rgba(217, 119, 6, 0.16); color: #6b5840; }
+[data-theme="light"] .hd-scan { background: linear-gradient(90deg, transparent, rgba(180, 110, 30, 0.10), transparent); }
 
 /* ─── TITLE ROW ─── */
 .cv-title-row {
@@ -931,10 +1210,9 @@ onUnmounted(() => { if (poll) clearInterval(poll) })
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.06);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, border-color 0.4s ease;
+  transition: box-shadow 0.4s ease, border-color 0.4s ease;
 }
 .cv-card:hover {
-  transform: translateY(-4px);
   box-shadow: 0 20px 40px rgba(0,0,0,0.5);
   border-color: rgba(255,255,255,0.12);
 }
@@ -1400,7 +1678,6 @@ onUnmounted(() => { if (poll) clearInterval(poll) })
 [data-theme="light"] .cv-card:hover {
   border-color: rgba(217, 119, 6, 0.55);
   box-shadow: 0 20px 44px rgba(180, 110, 30, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.65);
-  transform: translateY(-5px);
 }
 
 /* ─── Catch-all sweep: ANY remaining inline `color:#fff`, `color:rgba(255,255,255,X)`

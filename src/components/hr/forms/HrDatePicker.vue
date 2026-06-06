@@ -325,7 +325,11 @@ onBeforeUnmount(() => {
 
 /* Popover */
 .hr-dp-popover {
-  z-index: 1400;
+  /* Teleported to <body>, so it competes as a sibling with modal/drawer
+     overlays (which sit at z-index: 4000). Must outrank them so the calendar
+     never renders behind a modal/drawer it was opened from — while staying
+     below the toast portal (~9999). */
+  z-index: 5000;
   background: var(--hr-surface-deep);
   border: 1px solid var(--hr-border-strong);
   border-radius: 14px;

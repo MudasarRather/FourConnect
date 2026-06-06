@@ -37,7 +37,9 @@
       "PowerShell(Get-Process python -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue }; Start-Sleep 4; Get-Process python -ErrorAction SilentlyContinue | Format-Table Id, WorkingSet)",
       "Bash(C:/Users/91700/AppData/Local/Programs/Python/Python314/python.exe -c ' *)",
       "Bash(findstr \":8000\")",
-      "Bash(tasklist /FI \"IMAGENAME eq python.exe\" /FO TABLE)"
+      "Bash(tasklist /FI \"IMAGENAME eq python.exe\" /FO TABLE)",
+      "Skill(deep-research)",
+      "Skill(deep-research:*)"
     ]
   }
 }

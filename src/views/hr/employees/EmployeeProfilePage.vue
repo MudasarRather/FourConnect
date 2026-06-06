@@ -402,10 +402,28 @@
                     <span class="ctc-value gold">{{ formatINR(emp.annual_ctc) || '—' }}</span>
                   </div>
                 </div>
-                <!-- Indian salary structure preview (read-only mode) -->
-                <div v-if="salaryStructure" class="ss-preview">
+                <!-- Real payroll structure (authoritative — matches Payroll → Compensation) -->
+                <div v-if="payrollStructure" class="ss-preview">
                   <div class="ss-preview-head">
-                    <span class="ss-preview-eye">SALARY STRUCTURE · INDIAN STANDARD</span>
+                    <span class="ss-preview-eye">SALARY STRUCTURE · {{ payrollStructure.structureName }} · {{ payrollStructure.regime }} REGIME</span>
+                    <span class="ss-preview-net">Take-Home ≈ ₹{{ payrollStructure.netMonthly.toLocaleString('en-IN') }}/mo</span>
+                  </div>
+                  <table class="ss-mini">
+                    <thead><tr><th>Component</th><th class="num">Monthly</th><th class="num">Annual</th></tr></thead>
+                    <tbody>
+                      <tr v-for="r in payrollStructure.earnings" :key="'e'+r.code"><td>{{ r.name }}</td><td class="num">{{ r.monthly.toLocaleString('en-IN') }}</td><td class="num">{{ r.annual.toLocaleString('en-IN') }}</td></tr>
+                      <tr class="r-total"><td>Gross Salary</td><td class="num">{{ payrollStructure.grossMonthly.toLocaleString('en-IN') }}</td><td class="num">{{ payrollStructure.grossAnnual.toLocaleString('en-IN') }}</td></tr>
+                      <tr v-for="r in payrollStructure.employer" :key="'r'+r.code"><td>{{ r.name }}</td><td class="num">{{ r.monthly.toLocaleString('en-IN') }}</td><td class="num">{{ r.annual.toLocaleString('en-IN') }}</td></tr>
+                      <tr v-for="r in payrollStructure.deductions" :key="'d'+r.code" class="r-ded"><td>{{ r.name }} (-)</td><td class="num">{{ r.monthly.toLocaleString('en-IN') }}</td><td class="num">{{ r.annual.toLocaleString('en-IN') }}</td></tr>
+                      <tr class="r-net"><td>Net Take-Home</td><td class="num">{{ payrollStructure.netMonthly.toLocaleString('en-IN') }}</td><td class="num">{{ payrollStructure.netAnnual.toLocaleString('en-IN') }}</td></tr>
+                    </tbody>
+                  </table>
+                  <p class="muted-note ss-source">Computed from the assigned payroll structure — matches Payroll → Compensation.</p>
+                </div>
+                <!-- Indicative estimate — only when no payroll compensation is assigned yet -->
+                <div v-else-if="salaryStructure" class="ss-preview">
+                  <div class="ss-preview-head">
+                    <span class="ss-preview-eye">SALARY STRUCTURE · INDICATIVE ESTIMATE</span>
                     <span class="ss-preview-net">Take-Home ≈ ₹{{ salaryStructure.monthly.net.toLocaleString('en-IN') }}/mo</span>
                   </div>
                   <table class="ss-mini">
@@ -421,6 +439,7 @@
                       <tr class="r-net"><td>Net Take-Home (indicative)</td><td class="num">{{ salaryStructure.monthly.net.toLocaleString('en-IN') }}</td><td class="num">{{ salaryStructure.netAnnual.toLocaleString('en-IN') }}</td></tr>
                     </tbody>
                   </table>
+                  <p class="muted-note ss-source">Indicative only — assign a structure in Payroll → Compensation for exact, statutory-accurate figures.</p>
                 </div>
                 <p class="muted-note" v-else>Set the Annual CTC to see the auto-derived Indian salary structure.</p>
               </template>
@@ -559,6 +578,7 @@ import { useToast } from '../../../composables/useToast'
 import { useSpotlight } from '../../../composables/useSpotlight'
 import { API } from '@/utils/api'
 import { deriveSalaryStructure } from '@/utils/edocPdfGenerator'
+import { fetchCurrentComp, previewStructure } from '@/composables/usePayroll'
 
 // ─── Small inline display components ───
 const DataPair = {
@@ -735,7 +755,54 @@ const autoAnnual = computed(() => {
   return m > 0 ? (m * 12).toLocaleString('en-IN') : ''
 })
 
-// Live Indian salary structure — derived from the saved annual_ctc on the employee record.
+// ── Real payroll structure (authoritative) ──
+// Computed by the SAME engine the Payroll → Compensation drawer uses, so the
+// figures here match Payroll exactly. Falls back to the indicative estimate
+// below only when the employee has no active payroll compensation.
+const payComp = ref(null)        // active EmployeeCompensation (current)
+const payPreview = ref(null)     // previewStructure() result for that comp
+
+const loadPayroll = async () => {
+  payComp.value = null
+  payPreview.value = null
+  const id = props.id || route.params.id
+  if (!id) return
+  try {
+    const c = await fetchCurrentComp(id)   // null when no active compensation
+    if (!c) return
+    payComp.value = c
+    if (c.structure_id && c.monthly_ctc) {
+      payPreview.value = await previewStructure({
+        structure_id: c.structure_id,
+        monthly_ctc: c.monthly_ctc,
+        regime: c.tax_regime || 'NEW',
+      })
+    }
+  } catch { /* leave null → indicative fallback renders */ }
+}
+
+const payrollStructure = computed(() => {
+  const p = payPreview.value
+  if (!p) return null
+  const lines = p.lines || []
+  const n = (v) => Math.round(Number(v || 0))
+  const isEmployer = (l) => l.is_employer_cost || l.component_type === 'EMPLOYER_CONTRIBUTION'
+  const map = (arr) => arr.map(l => ({ name: l.component_name, code: l.component_code, note: l.calc_note,
+    monthly: n(l.amount), annual: n(Number(l.amount) * 12) }))
+  return {
+    structureName: payComp.value?.structure_name || 'Salary structure',
+    regime: String(payComp.value?.tax_regime || 'NEW').toUpperCase(),
+    earnings: map(lines.filter(l => ['EARNING', 'REIMBURSEMENT'].includes(l.component_type) && !isEmployer(l))),
+    employer: map(lines.filter(isEmployer)),
+    deductions: map(lines.filter(l => ['DEDUCTION', 'STATUTORY_DEDUCTION'].includes(l.component_type) && !isEmployer(l))),
+    grossMonthly: n(p.gross_earnings), grossAnnual: n(Number(p.gross_earnings) * 12),
+    netMonthly: n(p.net_pay), netAnnual: n(Number(p.net_pay) * 12),
+    ctcMonthly: n(p.ctc_value), ctcAnnual: n(Number(p.ctc_value) * 12),
+  }
+})
+
+// Indicative estimate (frontend-only) — shown ONLY when there is no payroll
+// compensation assigned yet. NOT used once a payroll structure is in place.
 const salaryStructure = computed(() => {
   const annual = Number(emp.value?.annual_ctc)
   return Number.isFinite(annual) && annual > 0 ? deriveSalaryStructure(annual) : null
@@ -1049,6 +1116,7 @@ const reload = async () => {
     await loadReferenceData()
     const data = await getOne(id)
     emp.value = data
+    loadPayroll()
     if (activeTab.value === 'history') await loadHistoryRows()
   } catch {
     emp.value = null

@@ -7,7 +7,7 @@
       @keydown.esc="onCancel"
       tabindex="-1"
     >
-      <div class="lc-modal-card hr-spotlight" ref="cardRef">
+      <div class="lc-modal-card hr-spotlight" :class="{ 'is-wide': isPromote }" ref="cardRef">
         <div class="aurora" aria-hidden="true" />
 
         <!-- Header -->
@@ -26,7 +26,8 @@
 
         <p v-if="template.desc" class="lc-modal-desc">{{ template.desc }}</p>
 
-        <!-- Form -->
+        <!-- Form + (promote) live salary impact -->
+        <div class="lc-modal-scroll" :class="{ split: isPromote }">
         <div class="lc-modal-fields">
           <div
             v-for="f in template.fields"
@@ -92,6 +93,64 @@
           </div>
         </div>
 
+        <!-- Promotion: live new-salary impact (uses the payroll engine) -->
+        <transition name="promo-fade">
+          <aside v-if="isPromote" class="lc-impact">
+            <div class="imp-eye">
+              <Sparkles :size="12" /> NEW SALARY IMPACT
+              <span v-if="promoStructureName" class="imp-sub">· {{ promoStructureName }} · {{ promoRegime }}</span>
+            </div>
+
+            <!-- hero take-home -->
+            <div v-if="promoPreview" class="imp-hero">
+              <span class="imp-hero-label">Monthly take-home</span>
+              <span class="imp-hero-val" :key="promoPreview.net_pay">{{ inrFmt(promoPreview.net_pay) }}</span>
+              <span v-if="promoDelta" class="imp-delta" :class="promoDelta.up ? 'up' : 'down'">
+                <component :is="promoDelta.up ? ArrowUp : ArrowDown" :size="12" />
+                {{ promoDelta.up ? '+' : '−' }}{{ inrFmt(Math.abs(promoDelta.diff)) }}/yr CTC · {{ promoDelta.pct >= 0 ? '+' : '' }}{{ promoDelta.pct.toFixed(1) }}%
+              </span>
+            </div>
+
+            <!-- gross composition bar -->
+            <template v-if="promoPreview">
+              <div class="imp-bar">
+                <span class="imp-bar-seg net" :style="{ flexGrow: Math.max(0.001, Number(promoPreview.net_pay)) }" />
+                <span class="imp-bar-seg ded" :style="{ flexGrow: Math.max(0.001, Number(promoPreview.total_deductions)) }" />
+              </div>
+              <div class="imp-legend">
+                <span><i class="dot net" /> Net</span>
+                <span><i class="dot ded" /> Deductions</span>
+                <span class="imp-legend-gross">Gross {{ inrFmt(promoPreview.gross_earnings) }}/mo</span>
+              </div>
+            </template>
+
+            <p v-if="promoPreviewing" class="imp-msg"><Loader2 class="spin" :size="13" /> Computing the new structure…</p>
+            <p v-else-if="promoNote" class="imp-msg warn">{{ promoNote }}</p>
+            <p v-else-if="!promoPreview" class="imp-msg">Enter a new <b>Monthly CTC</b> to preview the salary split this promotion creates.</p>
+
+            <div v-else class="imp-rows">
+              <div v-for="(l, i) in promoLines.earnings" :key="'e'+l.component_code" class="imp-row" :style="{ '--i': i }">
+                <span class="irl">{{ l.component_name }}<em v-if="l.calc_note"> · {{ l.calc_note }}</em></span>
+                <span class="irv">{{ inrFmt(l.amount) }}</span>
+              </div>
+              <div v-for="(l, i) in promoLines.deductions" :key="'d'+l.component_code" class="imp-row ded" :style="{ '--i': promoLines.earnings.length + i }">
+                <span class="irl">{{ l.component_name }} <em>(−)</em></span>
+                <span class="irv">{{ inrFmt(l.amount) }}</span>
+              </div>
+            </div>
+
+            <div v-if="promoPreview" class="imp-totals">
+              <div><span>Gross</span><b>{{ inrFmt(promoPreview.gross_earnings) }}</b></div>
+              <div><span>Deductions</span><b class="d">{{ inrFmt(promoPreview.total_deductions) }}</b></div>
+              <div><span>Employer</span><b>{{ inrFmt(promoPreview.employer_contributions) }}</b></div>
+              <div class="ctc"><span>Annual CTC</span><b>{{ inrFmt(Number(promoPreview.ctc_value) * 12) }}</b></div>
+            </div>
+
+            <p class="imp-hint"><ArrowUp :size="12" /> Confirming creates an active <b>Promotion</b> revision in Payroll → Compensation.</p>
+          </aside>
+        </transition>
+        </div>
+
         <!-- Footer -->
         <footer class="lc-modal-foot">
           <button class="ghost" @click="onCancel">Cancel</button>
@@ -116,8 +175,8 @@ import { ref, reactive, computed, watch } from 'vue'
 import axios from 'axios'
 import {
   X, Loader2,
-  CheckCircle, ArrowUp, ArrowRight, Pause, Play, Briefcase, LogOut, Archive,
-  Undo2, Gauge,
+  CheckCircle, ArrowUp, ArrowDown, ArrowRight, Pause, Play, Briefcase, LogOut, Archive,
+  Undo2, Gauge, Sparkles,
 } from 'lucide-vue-next'
 
 import HrFieldLabel from './forms/HrFieldLabel.vue'
@@ -130,6 +189,7 @@ import HrRadio from './forms/HrRadio.vue'
 import HrSearchCombobox from './forms/HrSearchCombobox.vue'
 import { useSpotlight } from '../../composables/useSpotlight'
 import { API } from '@/utils/api'
+import { previewStructure, fetchCurrentComp, fetchStructures, inr } from '@/composables/usePayroll'
 
 const props = defineProps({
   open: { type: Boolean, required: true },
@@ -337,6 +397,93 @@ const onUserPicked = (key, user) => {
   values[`__${key}_label`] = user ? (user.full_name || user.email || '') : ''
 }
 
+/* ─── Promotion: live salary-structure preview for the NEW CTC ───────────────
+   Uses the SAME payroll engine (previewStructure) the Compensation drawer uses,
+   so what the manager sees on promote == what the activated revision will be. */
+const isPromote = computed(() => props.action === 'promote')
+const promoStructureId = ref(null)
+const promoStructureName = ref('')
+const promoRegime = ref('NEW')
+const promoPreview = ref(null)
+const promoPreviewing = ref(false)
+const promoNote = ref('')
+let promoTimer = null
+
+const inrFmt = (v) => inr(Math.round(Number(v || 0)))
+
+const promoDelta = computed(() => {
+  const cur = Number(props.employee?.annual_ctc) || 0
+  const next = (Number(values.new_monthly_ctc) || 0) * 12
+  if (!cur || !next || next === cur) return null
+  const diff = next - cur
+  return { cur, next, diff, pct: (diff / cur) * 100, up: diff >= 0 }
+})
+
+const promoLines = computed(() => {
+  const p = promoPreview.value
+  if (!p) return { earnings: [], deductions: [] }
+  const isEmployer = (l) => l.is_employer_cost || l.component_type === 'EMPLOYER_CONTRIBUTION'
+  return {
+    earnings: (p.lines || []).filter(l => ['EARNING', 'REIMBURSEMENT'].includes(l.component_type) && !isEmployer(l)),
+    deductions: (p.lines || []).filter(l => ['DEDUCTION', 'STATUTORY_DEDUCTION'].includes(l.component_type) && !isEmployer(l)),
+  }
+})
+
+const resolvePromoStructure = async () => {
+  promoStructureId.value = null
+  promoStructureName.value = ''
+  promoRegime.value = String(props.employee?.tax_regime || 'NEW').toUpperCase()
+  if (!props.employee?.id) return
+  try {
+    const c = await fetchCurrentComp(props.employee.id)
+    if (c && c.structure_id) {
+      promoStructureId.value = c.structure_id
+      promoStructureName.value = c.structure_name || 'Salary structure'
+      promoRegime.value = String(c.tax_regime || promoRegime.value).toUpperCase()
+      return
+    }
+  } catch { /* fall through to default */ }
+  if (props.employee?.salary_structure_id) { promoStructureId.value = props.employee.salary_structure_id }
+  try {
+    const list = (await fetchStructures({ limit: 100 })).items || []
+    const def = list.find(s => s.is_default) || (promoStructureId.value && list.find(s => s.id === promoStructureId.value))
+    if (def) { promoStructureId.value = promoStructureId.value || def.id; promoStructureName.value = (list.find(s => s.id === promoStructureId.value) || def).name }
+  } catch { /* no list */ }
+}
+
+const runPromoPreview = async () => {
+  const ctc = Number(values.new_monthly_ctc)
+  promoNote.value = ''
+  if (!isPromote.value || !ctc || ctc <= 0) { promoPreview.value = null; return }
+  if (!promoStructureId.value) {
+    promoPreview.value = null
+    promoNote.value = 'No salary structure resolves for this employee — assign one in Payroll → Compensation to preview take-home.'
+    return
+  }
+  promoPreviewing.value = true
+  try {
+    promoPreview.value = await previewStructure({
+      structure_id: promoStructureId.value,
+      monthly_ctc: ctc,
+      regime: promoRegime.value,
+    })
+  } catch (e) {
+    promoPreview.value = null
+    promoNote.value = e?.response?.data?.detail || 'Could not compute take-home for this structure.'
+  } finally { promoPreviewing.value = false }
+}
+
+watch(() => props.open && isPromote.value, (on) => {
+  promoPreview.value = null; promoNote.value = ''
+  if (on) resolvePromoStructure()
+}, { immediate: true })
+
+watch(() => values.new_monthly_ctc, () => {
+  if (!isPromote.value) return
+  if (promoTimer) clearTimeout(promoTimer)
+  promoTimer = setTimeout(runPromoPreview, 450)
+})
+
 const validate = () => {
   Object.keys(fieldErrors).forEach(k => delete fieldErrors[k])
   if (!template.value) return false
@@ -398,6 +545,7 @@ const onConfirm = () => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: max-width 380ms var(--hr-spring);
   background: linear-gradient(180deg, rgba(28, 28, 32, 0.96), rgba(18, 18, 22, 0.96));
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
@@ -482,14 +630,28 @@ const onConfirm = () => {
   color: var(--hr-text-secondary);
   line-height: 1.55;
 }
+/* Wide, two-column layout when promoting (form left · live impact right) */
+.lc-modal-card.is-wide { max-width: 920px; }
+.lc-modal-scroll { position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.lc-modal-scroll.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(0, 0.96fr);
+  overflow: hidden; align-items: stretch;
+}
 .lc-modal-fields {
   position: relative;
   padding: 14px 22px 18px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
-  overflow-y: auto;
 }
+.lc-modal-scroll.split .lc-modal-fields {
+  grid-template-columns: 1fr;
+  overflow-y: auto; min-height: 0;
+  align-content: start;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+}
+.lc-modal-scroll.split .modal-field.full { grid-column: span 1; }
 .modal-field { display: flex; flex-direction: column; gap: 2px; }
 .modal-field.full { grid-column: span 2; }
 
@@ -558,6 +720,76 @@ const onConfirm = () => {
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
+/* ─── Promotion live salary impact (right column) ─── */
+.lc-impact {
+  position: relative; overflow-y: auto; min-height: 0;
+  padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 11px;
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.08), rgba(251, 146, 60, 0.02));
+}
+.lc-impact::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--hr-accent-gold), transparent);
+  opacity: 0.6;
+}
+.imp-eye { display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hr-accent-gold); }
+.imp-eye svg { animation: imp-spark 3s ease-in-out infinite; }
+.imp-sub { font-weight: 700; letter-spacing: 0.04em; color: var(--hr-text-muted); }
+.imp-hero { display: flex; flex-direction: column; gap: 1px; }
+.imp-hero-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--hr-text-muted); }
+.imp-hero-val { font-family: var(--hr-mono); font-size: 26px; font-weight: 800; line-height: 1.05; color: var(--hr-active);
+  animation: imp-pop 0.5s var(--hr-spring); }
+.imp-delta { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; margin-top: 5px;
+  font-size: 11px; font-weight: 700; font-family: var(--hr-mono); padding: 2px 9px; border-radius: 999px; }
+.imp-delta.up { color: var(--hr-active); background: rgba(52, 211, 153, 0.14); }
+.imp-delta.down { color: var(--hr-orange); background: rgba(251, 146, 60, 0.14); }
+.imp-bar { display: flex; height: 9px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, 0.07); margin-top: 2px; }
+.imp-bar-seg { display: block; min-width: 2px; }
+.imp-bar-seg.net { background: linear-gradient(90deg, #34d399, #10b981); animation: imp-grow 0.7s var(--hr-spring); transform-origin: left; }
+.imp-bar-seg.ded { background: linear-gradient(90deg, #fb923c, #ea580c); }
+.imp-legend { display: flex; align-items: center; gap: 14px; font-size: 10px; color: var(--hr-text-muted); }
+.imp-legend .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 4px; vertical-align: middle; }
+.imp-legend .dot.net { background: #34d399; }
+.imp-legend .dot.ded { background: #fb923c; }
+.imp-legend-gross { margin-left: auto; font-family: var(--hr-mono); }
+.imp-msg { display: flex; align-items: center; gap: 6px; margin: 6px 0; font-size: 12px; color: var(--hr-text-muted); line-height: 1.5; }
+.imp-msg.warn { color: var(--hr-orange); }
+.imp-msg b { color: var(--hr-text); }
+.imp-rows { display: flex; flex-direction: column; gap: 5px; }
+.imp-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 12px;
+  animation: imp-row-in 0.4s var(--hr-spring) both; animation-delay: calc(var(--i, 0) * 45ms); }
+.imp-row .irl { color: var(--hr-text-secondary); min-width: 0; }
+.imp-row .irl em { font-style: normal; color: var(--hr-text-muted); font-size: 10px; font-family: var(--hr-mono); }
+.imp-row .irv { font-family: var(--hr-mono); color: var(--hr-text); font-weight: 600; white-space: nowrap; }
+.imp-row.ded .irv { color: var(--hr-orange); }
+.imp-totals { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px;
+  border-top: 1px dashed var(--hr-border-strong); padding-top: 12px; }
+.imp-totals > div { display: flex; flex-direction: column; gap: 2px;
+  background: rgba(0, 0, 0, 0.18); border-radius: 10px; padding: 8px 10px; }
+.imp-totals span { font-size: 9px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--hr-text-muted); }
+.imp-totals b { font-family: var(--hr-mono); font-size: 13px; color: var(--hr-text); }
+.imp-totals b.d { color: var(--hr-orange); }
+.imp-totals .ctc { grid-column: span 2; border: 1px solid var(--hr-accent-gold-border); background: rgba(251, 191, 36, 0.09); }
+.imp-totals .ctc b { color: var(--hr-accent-gold); font-size: 15px; }
+.imp-hint { display: flex; gap: 6px; align-items: flex-start; margin: 2px 0 0; font-size: 10.5px; color: var(--hr-text-muted); line-height: 1.5; }
+.imp-hint svg { color: var(--hr-accent-gold); flex-shrink: 0; margin-top: 1px; }
+.imp-hint b { color: var(--hr-accent-gold); }
+@keyframes imp-pop { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes imp-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes imp-row-in { from { opacity: 0; transform: translateX(8px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes imp-spark { 0%, 100% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.15); } }
+.promo-fade-enter-active, .promo-fade-leave-active { transition: opacity 240ms var(--hr-spring); }
+.promo-fade-enter-from, .promo-fade-leave-to { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .imp-hero-val, .imp-bar-seg.net, .imp-row, .imp-eye svg { animation: none; }
+}
+[data-theme="light"] .lc-impact { background: linear-gradient(180deg, rgba(245, 158, 11, 0.10), rgba(249, 115, 22, 0.03)); }
+[data-theme="light"] .lc-modal-scroll.split .lc-modal-fields { border-right-color: rgba(40, 25, 10, 0.10); }
+[data-theme="light"] .imp-hero-val { color: #047857; }
+[data-theme="light"] .imp-delta.up { color: #047857; background: rgba(4, 120, 87, 0.10); }
+[data-theme="light"] .imp-bar { background: rgba(40, 25, 10, 0.08); }
+[data-theme="light"] .imp-totals > div { background: rgba(40, 25, 10, 0.04); }
+
 /* Enter / leave */
 .lc-modal-enter-active, .lc-modal-leave-active {
   transition: opacity 240ms var(--hr-spring);
@@ -573,6 +805,12 @@ const onConfirm = () => {
   transform: translateY(12px) scale(0.96);
 }
 
+/* Stack the promote split (form over impact) on narrower screens */
+@media (max-width: 780px) {
+  .lc-modal-scroll.split { display: block; overflow-y: auto; }
+  .lc-modal-scroll.split .lc-modal-fields { overflow: visible; border-right: none; }
+  .lc-impact { border-top: 1px solid rgba(255, 255, 255, 0.06); }
+}
 @media (max-width: 600px) {
   .lc-modal-fields { grid-template-columns: 1fr; }
   .modal-field.full { grid-column: span 1; }

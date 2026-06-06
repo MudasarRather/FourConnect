@@ -564,7 +564,6 @@ import AnimatedNumber from '../../components/ui/AnimatedNumber.vue'
 import SlaDetailsDrawer from '../../components/documents/SlaDetailsDrawer.vue'
 import EditSlaModal from '../../components/documents/EditSlaModal.vue'
 import RejectionModal from '../../components/documents/RejectionModal.vue'
-import { generateSlaPdf } from '../../utils/slaPdfGenerator'
 import axios from 'axios'
 import { API } from '@/utils/api'
 const route = useRoute()
@@ -802,9 +801,38 @@ const openEditModal = (sla) => {
   showEditModal.value = true
 }
 
-const generatePdf = (sla) => {
-   // Simple wrapper for now
-   generateSlaPdf(sla)
+// Download the server-rendered (WeasyPrint) SLA PDF. The backend owns the design
+// now — the client just streams the blob and triggers a save.
+const generatingId = ref(null)
+const generatePdf = async (sla) => {
+  if (!sla?.id || generatingId.value) return
+  generatingId.value = sla.id
+  const token = isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
+  try {
+    const res = await axios.get(`${API}/sla/${sla.id}/export`, {
+      headers: { Authorization: `Bearer ${token}` },
+      responseType: 'blob'
+    })
+
+    // Prefer the filename the backend sets in Content-Disposition.
+    let filename = `SLA_${(sla.client_organization_name || 'Agreement').replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
+    const cd = res.headers['content-disposition']
+    const match = cd && /filename="?([^"]+)"?/.exec(cd)
+    if (match) filename = match[1]
+
+    const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (e) {
+    console.error('Failed to generate SLA PDF', e)
+  } finally {
+    generatingId.value = null
+  }
 }
 
 const fetchData = async () => {
@@ -850,6 +878,17 @@ const handleRejectionConfirm = async (reason) => {
     isRejecting.value = false
     slaToReject.value = null
   }
+}
+
+// Approve a pending SLA. The drawer's Approve button emits `approve` with the SLA;
+// this was previously bound to an UNDEFINED handler, so the click did nothing.
+// Mirrors the reject flow: flip status → Approved, refresh lists, close the drawer
+// (the item then appears under the Approved tab).
+const approveSla = async (sla) => {
+  const target = sla || pendingSlahs.value.find(d => d.id === selectedPendingId.value)
+  if (!target) return
+  await updateSlaStatus(target.id, 'Approved')
+  selectedPendingId.value = null
 }
 
 const updateSlaStatus = async (id, status, reason = null) => {

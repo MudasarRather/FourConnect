@@ -23,6 +23,12 @@
             placeholder="Select Project..."
           />
         </div>
+        <span v-if="autoSaveState !== 'idle'" class="cmd-autosave" :class="autoSaveState" :title="lastSavedLabel">
+          <Loader2 v-if="autoSaveState === 'saving'" :size="13" class="as-spin" />
+          <Check v-else-if="autoSaveState === 'saved'" :size="13" />
+          <CloudOff v-else :size="13" />
+          <span>{{ autoSaveState === 'saving' ? 'Saving…' : autoSaveState === 'saved' ? 'Auto-saved' : 'Saved on device' }}</span>
+        </span>
         <button v-if="!isInitialLoading && form.status !== 'Approved' && !(isAdmin && form.status === 'Internal Review')" class="cmd-btn cmd-save" @click="saveDraft">
           <Save :size="15" /> Save Draft
         </button>
@@ -63,7 +69,14 @@
             <h2>{{ steps[currentStep].title }}</h2>
           </div>
           <div class="shb-right">
-            <span class="shb-progress">{{ Math.round(((currentStep + 1) / steps.length) * 100) }}% Complete</span>
+            <div class="shb-ring" :title="`${progressPct}% complete`">
+              <svg viewBox="0 0 44 44">
+                <circle class="r-bg" cx="22" cy="22" r="18" />
+                <circle class="r-fg" cx="22" cy="22" r="18" :style="{ strokeDasharray: 113.1, strokeDashoffset: 113.1 * (1 - progressPct / 100) }" />
+              </svg>
+              <span>{{ progressPct }}%</span>
+            </div>
+            <span class="shb-progress">Complete</span>
           </div>
         </div>
 
@@ -98,6 +111,7 @@
                   <CompactDatePicker v-model="form.completion_date" />
                 </div>
                 <div class="field-group"><label>Project Manager (Optional)</label><input v-model="form.project_manager" placeholder="Manager Name (Optional)" /></div>
+                <div class="field-group"><label>Official Reseller (Optional)</label><input v-model="form.system_vendor" placeholder="Official reseller / integrator who delivered the system" /></div>
                 <div class="field-group"><label>Duration</label><input :value="computedDuration" disabled class="computed-field" /></div>
               </div>
               <div class="field-group full"><label>Project Summary (Optional)</label><textarea v-model="form.project_summary" rows="4" placeholder="Describe the project scope, objectives, and key deliverables..."></textarea></div>
@@ -344,8 +358,8 @@
               </div>
             </div>
 
-            <!-- ====== STEP 14: SIGN-OFF ====== -->
-            <div v-if="currentStep === 13" class="step-panel">
+            <!-- ====== STEP 15: SIGN-OFF ====== -->
+            <div v-if="currentStep === 14" class="step-panel">
               <div class="dpr-table-section">
                 <div class="dts-header">
                   <h3 :class="{ 'error-label': errors.approvals }">Digital Execution & Sign-off <span v-if="errors.approvals" class="error-msg">- Required</span></h3>
@@ -366,8 +380,44 @@
               </div>
             </div>
 
-            <!-- ====== STEP 15: REVIEW & GENERATE ====== -->
-            <div v-if="currentStep === 14" class="step-panel review-panel">
+            <!-- ====== STEP 14: CLIENT REMARKS & ACCEPTANCE ====== -->
+            <div v-if="currentStep === 13" class="step-panel">
+              <div class="remarks-intro">
+                <Sparkles :size="16" />
+                <span>Curate the list of items being handed over. The client completes the full ratings, feedback survey and signed acceptance <strong>by hand on the downloaded / printed PDF</strong> — you don't fill the ratings here.</span>
+              </div>
+
+              <div class="dpr-table-section">
+                <div class="dts-header">
+                  <h3>Delivered Items <span class="sub-req">({{ form.deliverables.length }} item{{ form.deliverables.length === 1 ? '' : 's' }})</span></h3>
+                  <div style="display:flex; gap:8px;">
+                    <button class="add-row-btn ghost" @click="seedDeliverables(true)"><Sparkles :size="14" /> Pull from Delivered Scope</button>
+                    <button class="add-row-btn" @click="addDeliverable"><Plus :size="14" /> Add</button>
+                  </div>
+                </div>
+                <div class="dpr-table grid-deliverables">
+                  <div class="dt-header-row"><span>Delivered Item *</span><span>Category</span><span>Status</span><span></span></div>
+                  <div class="dt-row" v-for="(d, i) in form.deliverables" :key="i">
+                    <input v-model="d.item_name" placeholder="Item handed over" />
+                    <SlaSelect v-model="d.category" :options="['Module', 'Asset', 'Document', 'Server', 'Credential', 'Other']" />
+                    <SlaSelect v-model="d.status" :options="['Delivered', 'Partial', 'Pending']" />
+                    <button class="rm-btn" @click="form.deliverables.splice(i, 1)"><X :size="12" /></button>
+                  </div>
+                  <div v-if="form.deliverables.length === 0" class="dt-empty">No delivered items yet — click “Pull from Delivered Scope” to auto-fill from your modules.</div>
+                </div>
+              </div>
+
+              <div class="acceptance-preview">
+                <ClipboardList :size="18" />
+                <div>
+                  <strong>Client Acceptance &amp; Feedback Form</strong>
+                  <p>A corporate satisfaction survey (rating matrix, recommendation, open feedback) and a signed acceptance block are printed on the PDF for the client to complete and sign.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- ====== STEP 16: REVIEW & GENERATE ====== -->
+            <div v-if="currentStep === 15" class="step-panel review-panel">
               <div class="review-grid">
                 <div class="review-card"><div class="rc-label">Project</div><div class="rc-val">{{ form.project_name || '—' }}</div></div>
                 <div class="review-card"><div class="rc-label">Client</div><div class="rc-val">{{ form.client_organization || '—' }}</div></div>
@@ -380,10 +430,15 @@
                 <div class="review-card"><div class="rc-label">Training</div><div class="rc-val">{{ form.training.length }}</div></div>
                 <div class="review-card highlight"><div class="rc-label">Financial</div><div class="rc-val">{{ form.currency }} {{ Number(form.total_project_value || 0).toLocaleString('en-IN') }}</div></div>
                 <div class="review-card"><div class="rc-label">Issues</div><div class="rc-val">{{ form.issues.length }}</div></div>
+                <div class="review-card"><div class="rc-label">Delivered Items</div><div class="rc-val">{{ form.deliverables.length }}</div></div>
                 <div class="review-card"><div class="rc-label">Approvals</div><div class="rc-val">{{ form.approvals.filter(a => a.has_signed).length }}/{{ form.approvals.length }}</div></div>
               </div>
               <div class="review-actions" v-if="!isInitialLoading">
                 <button v-if="form.status !== 'Approved' && !(isAdmin && form.status === 'Internal Review')" class="cmd-btn cmd-save" @click="saveDraft"><Save :size="15" /> Save Draft</button>
+                <button v-if="handoverId" class="cmd-btn cmd-download" @click="downloadPdf" :disabled="isDownloading">
+                  <Loader2 v-if="isDownloading" :size="15" class="spin" />
+                  <span v-else style="display:flex;align-items:center;gap:8px;"><Download :size="15" /> Download PDF</span>
+                </button>
                 <button class="cmd-btn cmd-submit" @click="submitHandover" :disabled="isSubmitting">
                   <Loader2 v-if="isSubmitting" :size="15" class="spin" />
                   <span v-else style="display:flex;align-items:center;gap:8px;">
@@ -432,7 +487,7 @@
                 <div class="dib-row"><span class="dib-l">Status:</span> <span class="dib-v status-pill" :class="existingHandover.status.toLowerCase().replace(' ', '-')">{{ existingHandover.status }}</span></div>
               </div>
 
-              <p class="nano-modal-subtext">Creating a new document will start a fresh 15-step protocol. Any existing drafts for this project will not be merged or imported.</p>
+              <p class="nano-modal-subtext">Creating a new document will start a fresh 16-step protocol. Any existing drafts for this project will not be merged or imported.</p>
             </div>
             <div class="nano-modal-actions">
               <button class="nano-btn secondary" @click="duplicateHandoverWarning = false">Cancel & Change Project</button>
@@ -452,7 +507,8 @@ import axios from 'axios'
 import {
   ArrowLeft, Save, Layers, Plus, X, ChevronLeft, ChevronRight, FileText, Loader2,
   ShieldAlert, ClipboardList, Users, Package, Cpu, Server, HardDrive, KeyRound,
-  BookOpen, Settings, Link2, GraduationCap, DollarSign, AlertTriangle, PenTool, Eye
+  BookOpen, Settings, Link2, GraduationCap, DollarSign, AlertTriangle, PenTool, Eye,
+  Check, CloudOff, MessageSquare, Download, Sparkles
 } from 'lucide-vue-next'
 import SlaSelect from '../../components/ui/SlaSelect.vue'
 import CompactDatePicker from '../../components/ui/CompactDatePicker.vue'
@@ -464,6 +520,13 @@ const { success: toastSuccess, error: toastError } = useToast()
 const isAdmin = computed(() => route.path.startsWith('/admin'))
 const currentStep = ref(0)
 const isSubmitting = ref(false)
+const isDownloading = ref(false)
+// Autosave status (shown in the header). 'idle' | 'saving' | 'saved' | 'error'.
+const autoSaveState = ref('idle')
+const lastSavedAt = ref(null)
+const lastSavedLabel = computed(() => lastSavedAt.value
+  ? `Last auto-saved at ${new Date(lastSavedAt.value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}`
+  : 'Your draft is saved on this device')
 const isInitialLoading = ref(!!route.query.edit)
 const transitionDirection = ref('slide-left')
 const errors = ref({})
@@ -485,11 +548,12 @@ const steps = [
   { title: 'Training', icon: GraduationCap },
   { title: 'Financial Closure', icon: DollarSign },
   { title: 'Risks / Pending', icon: AlertTriangle },
+  { title: 'Client Remarks & Acceptance', icon: MessageSquare },
   { title: 'Final Sign-off', icon: PenTool },
   { title: 'Review & Generate', icon: Eye },
 ]
 
-const stakeholderRoles = ['Client IT Head', 'Operations Manager', 'System Admin', 'Vendor Contact', 'Support Team', 'Other']
+const stakeholderRoles = ['Client IT Head', 'Operations Manager', 'System Admin', 'Vendor Contact', 'Support Team', 'Librarian', 'Other']
 
 const projects = ref([])
 const slaList = ref([])
@@ -504,15 +568,16 @@ const slaOptions = computed(() => {
 
 const form = ref({
   project_id: '', project_name: '', project_code: '', client_organization: '', department: '',
-  start_date: '', completion_date: '', project_manager: '', project_summary: '',
+  start_date: '', completion_date: '', project_manager: '', system_vendor: '', project_summary: '',
   architecture_description: '', tech_stack_backend: '', tech_stack_frontend: '', tech_stack_database: '', architecture_diagram_url: '',
   backup_frequency: 'Daily', backup_location: '', backup_type: 'Full', monitoring_tools: '', alert_system: '', dashboard_url: '',
   maintenance_schedule: '', patch_management_plan: '',
   sla_id: '', support_start_date: '', support_end_date: '', support_type: 'Business Hours',
   total_project_value: null, amount_received: 0, pending_amount: 0, currency: 'INR',
+  client_remarks: '',
   status: 'Draft', version: 'v1.0',
   stakeholders: [], modules: [], assets: [], servers: [], credentials: [],
-  documents: [], training: [], financial_invoices: [], issues: [], approvals: [],
+  documents: [], training: [], financial_invoices: [], issues: [], approvals: [], deliverables: [], feedback: [],
 })
 
 const computedDuration = computed(() => {
@@ -526,6 +591,8 @@ const computedDuration = computed(() => {
 const computedPending = computed(() => {
   return ((form.value.total_project_value || 0) - (form.value.amount_received || 0)).toFixed(2)
 })
+
+const progressPct = computed(() => Math.round(((currentStep.value + 1) / steps.length) * 100))
 
 const goBack = () => router.back()
 
@@ -618,9 +685,9 @@ const validateStep = (stepIndex) => {
     // Step 12: Financial Closure
     check('total_project_value', 'Total Project Value')
     check('amount_received', 'Amount Received')
-  } else if (stepIndex === 13) {
-    // Step 14: Approvals / Sign-off
-    if (f.approvals.length < 2) { 
+  } else if (stepIndex === 14) {
+    // Step 15: Approvals / Sign-off
+    if (f.approvals.length < 2) {
       toastError('Minimum 2 signatories are required to proceed.')
       missing.push('Signatories (Min 2)') 
       newErrs.approvals = true
@@ -686,6 +753,45 @@ const addTraining = () => form.value.training.push({ topic: '', trainer: '', tra
 const addInvoice = () => form.value.financial_invoices.push({ invoice_no: '', invoice_date: '', amount: 0, status: 'Pending' })
 const addIssue = () => form.value.issues.push({ issue_type: 'Pending Deliverable', issue_desc: '', impact: 'Medium', owner: '', expected_resolution: '' })
 const addApproval = () => form.value.approvals.push({ party: 'Project Manager', name: '', designation: '', signature_date: '', has_signed: false })
+const addDeliverable = () => form.value.deliverables.push({ item_name: '', category: 'Other', status: 'Delivered', client_remark: '' })
+
+// Auto-aggregate delivered items from the Delivered Scope (modules) the user already
+// entered, so the client only has to add remarks — not retype everything.
+// `replace=true` (button) rebuilds the list; the auto-seed on first entry only fills
+// when empty so it never clobbers remarks the client already wrote.
+const seedDeliverables = (replace = false) => {
+  const seeded = []
+  ;(form.value.modules || []).forEach(m => {
+    if (m.module_name?.trim()) seeded.push({ item_name: m.module_name, category: 'Module', status: m.status || 'Delivered', client_remark: '' })
+  })
+  if (replace) {
+    // Preserve any remarks already written for matching item names.
+    const prev = new Map((form.value.deliverables || []).map(d => [d.item_name, d.client_remark]))
+    seeded.forEach(s => { if (prev.get(s.item_name)) s.client_remark = prev.get(s.item_name) })
+    form.value.deliverables = seeded
+    if (seeded.length) toastSuccess(`Pulled ${seeded.length} item${seeded.length === 1 ? '' : 's'} from Delivered Scope.`)
+    else toastError('Nothing to pull yet — add modules in the Delivered Scope step first.')
+  } else if (form.value.deliverables.length === 0) {
+    form.value.deliverables = seeded
+  }
+}
+
+const addFeedback = () => form.value.feedback.push({ criterion: '', rating: 'Good', comment: '' })
+
+// Pre-load the standard corporate acceptance criteria the first time the client
+// opens this step (only when empty, so it never clobbers existing input).
+const DEFAULT_FEEDBACK = [
+  'Installation & Commissioning',
+  'Service & Support Quality',
+  'Training & Knowledge Transfer',
+  'Documentation Quality',
+  'Timeliness of Delivery',
+]
+const seedFeedback = () => {
+  if (form.value.feedback.length === 0) {
+    form.value.feedback = DEFAULT_FEEDBACK.map(c => ({ criterion: c, rating: '', comment: '' }))
+  }
+}
 
 const getToken = () => isAdmin.value ? localStorage.getItem('admin_token') : localStorage.getItem('user_token')
 
@@ -789,7 +895,7 @@ const cleanPayload = (rawForm) => {
   // Clean empty string fields on all nested arrays (dates, required strings)
   const dateFields = ['delivery_date', 'training_date', 'invoice_date', 'signature_date']
   const nestedKeys = ['stakeholders', 'modules', 'assets', 'servers', 'credentials',
-    'documents', 'training', 'financial_invoices', 'issues', 'approvals']
+    'documents', 'training', 'financial_invoices', 'issues', 'approvals', 'deliverables', 'feedback']
 
   for (const arrKey of nestedKeys) {
     if (Array.isArray(payload[arrKey])) {
@@ -875,6 +981,33 @@ const submitHandover = async () => {
   }
 }
 
+// Download the server-rendered (WeasyPrint) handover PDF. Requires the draft to
+// be persisted (handoverId set) — saving happens automatically via autosave.
+const downloadPdf = async () => {
+  if (!handoverId.value || isDownloading.value) return
+  isDownloading.value = true
+  try {
+    const res = await axios.get(`${API}/handover/${handoverId.value}/export`, {
+      headers: { Authorization: `Bearer ${getToken()}` },
+      responseType: 'blob'
+    })
+    let filename = `Handover_${(form.value.project_name || 'Document').replace(/\s+/g, '_')}.pdf`
+    const cd = res.headers['content-disposition']
+    const match = cd && /filename="?([^"]+)"?/.exec(cd)
+    if (match) filename = match[1]
+    const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+    const a = document.createElement('a')
+    a.href = url; a.download = filename
+    document.body.appendChild(a); a.click(); a.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (e) {
+    console.error('Failed to download handover PDF', e)
+    toastError('Could not generate the PDF. Save the draft and try again.')
+  } finally {
+    isDownloading.value = false
+  }
+}
+
 const fetchProjects = async () => {
   try {
     const res = await axios.get(`${API}/projects/?limit=100`, { headers: { Authorization: `Bearer ${getToken()}` } })
@@ -904,7 +1037,7 @@ const loadExistingDpr = async (id) => {
     })
 
     const nestedKeys = ['stakeholders', 'modules', 'assets', 'servers', 'credentials',
-                        'documents', 'training', 'financial_invoices', 'issues', 'approvals']
+                        'documents', 'training', 'financial_invoices', 'issues', 'approvals', 'deliverables', 'feedback']
     nestedKeys.forEach(k => {
       if (Array.isArray(data[k])) {
         form.value[k] = [...data[k]]
@@ -946,6 +1079,14 @@ onMounted(() => {
         if (parsed && Number.isInteger(parsed.step)) {
           currentStep.value = Math.max(0, Math.min(parsed.step, steps.length - 1))
         }
+        // Reuse the server draft this cache was last saved to, so resuming after a
+        // refresh/logout UPDATES that draft instead of creating a duplicate.
+        if (parsed && parsed.handoverId) handoverId.value = parsed.handoverId
+        // Let the user know nothing was lost.
+        if (savedForm && (savedForm.project_id || savedForm.project_summary)) {
+          autoSaveState.value = 'saved'
+          toastSuccess('Recovered your in-progress draft — pick up where you left off.')
+        }
       } catch (e) {
         console.error("Failed to parse saved draft")
       }
@@ -958,31 +1099,105 @@ onMounted(() => {
 // and resumes exactly where the user was.
 import { watch, onBeforeUnmount } from 'vue'
 import { API } from '@/utils/api'
-const persistDraft = () => {
-  if (route.query.edit) return // editing an existing DB record → don't shadow it
-  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
-    form: form.value,
-    step: currentStep.value,
-  }))
-}
-watch(form, persistDraft, { deep: true })
-watch(currentStep, persistDraft)
 
-// ── Keep an actively-open, visible wizard from being logged out for idle ──
-// The 15-step handover often involves pauses (reading, fetching info) with no
-// mouse/keyboard events, which would otherwise trip the 10-min idle logout and
-// boot the user mid-task. While this page is mounted and the tab is visible we
-// emit a keep-alive signal that useSessionTimeout treats as activity. A hidden/
-// backgrounded tab is NOT kept alive, so the security timeout still applies.
-const KEEPALIVE_MS = 4 * 60 * 1000
-let keepAliveTimer = null
-const pingActivity = () => {
-  if (document.visibilityState === 'visible') {
-    document.dispatchEvent(new Event('fc:activity'))
+// ════════ Draft persistence — two layers so nothing is ever lost ════════
+// 1. localStorage: written on EVERY keystroke (instant, offline, and survives a
+//    session-timeout logout since logout only clears the token, never the draft).
+//    Restored on mount.
+// 2. Server draft: a DEBOUNCED, silent POST/PUT so the work becomes a real DB
+//    record that outlives a cleared browser or a different device. The first save
+//    creates the Draft and pins handoverId; later saves update it — so resuming
+//    never spawns a duplicate. Failures are non-fatal: the local cache still holds
+//    everything.
+const persistLocal = () => {
+  if (route.query.edit) return // editing an existing DB record → don't shadow it into the /new cache
+  try {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({
+      form: form.value, step: currentStep.value, handoverId: handoverId.value,
+    }))
+  } catch (e) { /* quota / serialise — the server layer is the durable fallback */ }
+}
+
+const isEditableDraft = computed(() =>
+  form.value.status !== 'Approved' && !(isAdmin.value && form.value.status === 'Internal Review'))
+
+let serverSaveTimer = null
+let serverSaveInFlight = false
+const SERVER_AUTOSAVE_MS = 3500
+const autoSaveToServer = async () => {
+  // Silent, NEVER-submitting save. Needs the one mandatory field (project) and an
+  // editable Draft. A fresh server draft is always created as Draft.
+  if (!isEditableDraft.value || !form.value.project_id || serverSaveInFlight) return
+  if (form.value.status && form.value.status !== 'Draft' && !route.query.edit) return
+  serverSaveInFlight = true
+  autoSaveState.value = 'saving'
+  try {
+    const payload = cleanPayload(form.value)
+    if (!handoverId.value) payload.status = 'Draft'
+    const headers = { Authorization: `Bearer ${getToken()}` }
+    if (handoverId.value) {
+      await axios.put(`${API}/handover/${handoverId.value}`, payload, { headers })
+    } else {
+      const res = await axios.post(`${API}/handover/`, payload, { headers })
+      handoverId.value = res.data.id
+    }
+    autoSaveState.value = 'saved'
+    lastSavedAt.value = Date.now()
+    persistLocal() // pin the new handoverId locally so a resume updates, never duplicates
+  } catch (e) {
+    autoSaveState.value = 'error' // local cache still holds the data
+  } finally {
+    serverSaveInFlight = false
   }
 }
-onMounted(() => { keepAliveTimer = setInterval(pingActivity, KEEPALIVE_MS) })
-onBeforeUnmount(() => { if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null } })
+const scheduleServerSave = () => {
+  if (serverSaveTimer) clearTimeout(serverSaveTimer)
+  serverSaveTimer = setTimeout(autoSaveToServer, SERVER_AUTOSAVE_MS)
+}
+
+// Persist on EVERY change — local instantly, server debounced.
+const persistDraft = () => { persistLocal(); scheduleServerSave() }
+watch(form, persistDraft, { deep: true })
+watch(currentStep, persistDraft)
+// First time the client-remarks step opens, auto-fill delivered items from Delivered Scope.
+watch(currentStep, (v) => { if (v === 13 && form.value.deliverables.length === 0) seedDeliverables() })
+
+// Flush the latest keystroke immediately on tab-hide / close so the debounce
+// window can never swallow the final edit.
+const flushDraft = () => {
+  persistLocal()
+  if (serverSaveTimer) { clearTimeout(serverSaveTimer); serverSaveTimer = null }
+  autoSaveToServer()
+}
+
+// ── Keep an actively-open, VISIBLE wizard from being logged out for idle ──
+// The 15-step handover involves pauses (reading, fetching info) with no mouse/key
+// events, which would otherwise trip the 10-min idle logout mid-task. While this
+// page is mounted and the tab is visible we emit a keep-alive signal every 60s
+// that useSessionTimeout treats as activity; returning to the tab pings at once.
+// A hidden/backgrounded tab is NOT kept alive (security) — but the autosave above
+// guarantees nothing is lost even if it does time out.
+const KEEPALIVE_MS = 60 * 1000
+let keepAliveTimer = null
+const pingActivity = () => {
+  if (document.visibilityState === 'visible') document.dispatchEvent(new Event('fc:activity'))
+}
+const onVisibility = () => {
+  if (document.visibilityState === 'hidden') flushDraft()
+  else pingActivity()
+}
+onMounted(() => {
+  keepAliveTimer = setInterval(pingActivity, KEEPALIVE_MS)
+  pingActivity()
+  document.addEventListener('visibilitychange', onVisibility)
+  window.addEventListener('beforeunload', persistLocal)
+})
+onBeforeUnmount(() => {
+  if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null }
+  if (serverSaveTimer) { clearTimeout(serverSaveTimer); serverSaveTimer = null }
+  document.removeEventListener('visibilitychange', onVisibility)
+  window.removeEventListener('beforeunload', persistLocal)
+})
 </script>
 
 <style scoped>
@@ -1126,11 +1341,24 @@ onBeforeUnmount(() => { if (keepAliveTimer) { clearInterval(keepAliveTimer); kee
   color: #fff;
   border: 1px solid rgba(255,255,255,0.1);
 }
-.cmd-save:hover { 
-  background: rgba(255,255,255,0.15); 
-  transform: translateY(-1px); 
+.cmd-save:hover {
+  background: rgba(255,255,255,0.15);
+  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
+/* autosave status chip */
+.cmd-autosave {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 11px; border-radius: 9px; font-size: 12px; font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.1); white-space: nowrap; user-select: none;
+}
+.cmd-autosave.saving { color: #fcd34d; background: rgba(252,211,77,0.10); border-color: rgba(252,211,77,0.22); }
+.cmd-autosave.saved  { color: #34d399; background: rgba(52,211,153,0.10); border-color: rgba(52,211,153,0.22); }
+.cmd-autosave.error  { color: #fbbf24; background: rgba(251,191,36,0.10); border-color: rgba(251,191,36,0.22); }
+.cmd-autosave .as-spin { animation: spin 0.9s linear infinite; }
+[data-theme="light"] .cmd-autosave.saving { color: #b45309; background: rgba(245,158,11,0.12); }
+[data-theme="light"] .cmd-autosave.saved  { color: #047857; background: rgba(5,150,105,0.12); }
+[data-theme="light"] .cmd-autosave.error  { color: #b45309; background: rgba(245,158,11,0.12); }
 .cmd-submit {
   background: linear-gradient(135deg, #f59e0b, #fb923c);
   color: #000;
@@ -1198,6 +1426,17 @@ onBeforeUnmount(() => { if (keepAliveTimer) { clearInterval(keepAliveTimer); kee
   box-shadow: 0 0 16px rgba(245,158,11,0.5);
   transform: scale(1.15);
 }
+/* pulsing aura on the active node */
+.tl-node.active .tl-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid rgba(245, 158, 11, 0.6);
+  animation: tlPing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes tlPing { 0% { transform: scale(0.85); opacity: 0.8; } 100% { transform: scale(1.8); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .tl-node.active .tl-dot::after { animation: none; } }
 .tl-node.completed .tl-dot {
   background: rgba(245,158,11,0.2);
   border-color: #f59e0b;
@@ -1246,6 +1485,7 @@ onBeforeUnmount(() => { if (keepAliveTimer) { clearInterval(keepAliveTimer); kee
   border: 1px solid rgba(245,158,11,0.3);
 }
 .shb-left h2 { font-size: 24px; font-weight: 600; margin: 0; letter-spacing: -0.5px; }
+.shb-right { display: flex; align-items: center; gap: 12px; }
 .shb-progress {
   font-size: 13px;
   font-weight: 600;
@@ -1255,25 +1495,67 @@ onBeforeUnmount(() => { if (keepAliveTimer) { clearInterval(keepAliveTimer); kee
   border-radius: 8px;
   border: 1px solid rgba(255,255,255,0.08);
 }
+/* animated progress ring */
+.shb-ring { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
+.shb-ring svg { width: 44px; height: 44px; transform: rotate(-90deg); }
+.shb-ring .r-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 4; }
+.shb-ring .r-fg { fill: none; stroke: #f59e0b; stroke-width: 4; stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(245,158,11,0.5)); transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.shb-ring span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; color: #f59e0b; font-variant-numeric: tabular-nums; }
 
 /* === STEP CONTENT === */
 .step-content-area { flex: 1; display: flex; flex-direction: column; }
-.step-panel { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; flex: 1; }
+.step-panel { flex: 1; }
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Transitions */
+/* Cinematic step transition — slide + subtle depth */
 .slide-left-enter-active, .slide-left-leave-active,
 .slide-right-enter-active, .slide-right-leave-active {
-  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
 }
-.slide-left-enter-from { opacity: 0; transform: translateX(40px); }
-.slide-left-leave-to { opacity: 0; transform: translateX(-40px); }
-.slide-right-enter-from { opacity: 0; transform: translateX(-40px); }
-.slide-right-leave-to { opacity: 0; transform: translateX(40px); }
+.slide-left-enter-from { opacity: 0; transform: translateX(54px) scale(0.985); }
+.slide-left-leave-to { opacity: 0; transform: translateX(-54px) scale(0.985); }
+.slide-right-enter-from { opacity: 0; transform: translateX(-54px) scale(0.985); }
+.slide-right-leave-to { opacity: 0; transform: translateX(54px) scale(0.985); }
+
+/* ── Staggered cascade: fields / rows / cards rise in on every step ── */
+@keyframes fieldRise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.step-panel .field-grid > .field-group,
+.step-panel > .field-group,
+.step-panel > .field-group.full,
+.step-panel .dpr-table-section,
+.step-panel .secure-notice,
+.step-panel .remarks-intro,
+.step-panel .section-sub-title,
+.step-panel .review-card,
+.step-panel .review-actions,
+.step-panel .dt-row {
+  animation: fieldRise 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* per-index delays (shared across field-groups, rows and review cards) */
+.step-panel .field-grid > .field-group:nth-child(1), .step-panel .dt-row:nth-child(1), .step-panel .review-card:nth-child(1) { animation-delay: 0.02s; }
+.step-panel .field-grid > .field-group:nth-child(2), .step-panel .dt-row:nth-child(2), .step-panel .review-card:nth-child(2) { animation-delay: 0.06s; }
+.step-panel .field-grid > .field-group:nth-child(3), .step-panel .dt-row:nth-child(3), .step-panel .review-card:nth-child(3) { animation-delay: 0.10s; }
+.step-panel .field-grid > .field-group:nth-child(4), .step-panel .dt-row:nth-child(4), .step-panel .review-card:nth-child(4) { animation-delay: 0.14s; }
+.step-panel .field-grid > .field-group:nth-child(5), .step-panel .dt-row:nth-child(5), .step-panel .review-card:nth-child(5) { animation-delay: 0.18s; }
+.step-panel .field-grid > .field-group:nth-child(6), .step-panel .dt-row:nth-child(6), .step-panel .review-card:nth-child(6) { animation-delay: 0.22s; }
+.step-panel .field-grid > .field-group:nth-child(7), .step-panel .dt-row:nth-child(7), .step-panel .review-card:nth-child(7) { animation-delay: 0.26s; }
+.step-panel .field-grid > .field-group:nth-child(8), .step-panel .dt-row:nth-child(8), .step-panel .review-card:nth-child(8) { animation-delay: 0.30s; }
+.step-panel .dt-row:nth-child(9), .step-panel .review-card:nth-child(9) { animation-delay: 0.34s; }
+.step-panel .dt-row:nth-child(10), .step-panel .review-card:nth-child(10) { animation-delay: 0.38s; }
+.step-panel .review-card:nth-child(11) { animation-delay: 0.42s; }
+.step-panel .review-card:nth-child(12) { animation-delay: 0.46s; }
+.step-panel .review-card:nth-child(13) { animation-delay: 0.50s; }
+@media (prefers-reduced-motion: reduce) {
+  .step-panel .field-grid > .field-group, .step-panel .dpr-table-section,
+  .step-panel .dt-row, .step-panel .review-card, .step-panel > .field-group { animation: none; }
+}
 
 /* === FORM FIELDS === */
 .field-grid { display: grid; gap: 20px; margin-bottom: 24px; }
@@ -1511,6 +1793,55 @@ onBeforeUnmount(() => { if (keepAliveTimer) { clearInterval(keepAliveTimer); kee
 /* Step 14: Approvals — 5 cols + delete */
 .grid-approvals .dt-header-row,
 .grid-approvals .dt-row { grid-template-columns: 1.5fr 2fr 1.5fr 1.5fr 1.2fr 36px; }
+
+/* Step 14: Delivered Items — item + category + status + delete */
+.grid-deliverables .dt-header-row,
+.grid-deliverables .dt-row { grid-template-columns: 2.6fr 1.4fr 1.4fr 36px; }
+
+/* Step 14: acceptance-form preview banner */
+.acceptance-preview {
+  display: flex; align-items: flex-start; gap: 14px; margin-top: 24px;
+  padding: 16px 18px; border-radius: 14px;
+  background: rgba(34, 197, 94, 0.06); border: 1px dashed rgba(34, 197, 94, 0.35);
+}
+.acceptance-preview svg { color: #22c55e; flex-shrink: 0; margin-top: 2px; }
+.acceptance-preview strong { font-size: 14px; color: #86efac; }
+.acceptance-preview p { margin: 4px 0 0; font-size: 12.5px; color: rgba(255,255,255,0.55); line-height: 1.55; }
+[data-theme="light"] .acceptance-preview {
+  background: rgba(22, 163, 74, 0.08); border-color: rgba(22, 163, 74, 0.3);
+}
+[data-theme="light"] .acceptance-preview svg { color: #16a34a; }
+[data-theme="light"] .acceptance-preview strong { color: #15803d; }
+[data-theme="light"] .acceptance-preview p { color: #6b5840; }
+
+/* Step 15 intro banner + ghost pull button + download CTA */
+.remarks-intro {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; margin-bottom: 18px; border-radius: 12px;
+  background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.22);
+  color: #86efac; font-size: 13px; line-height: 1.5;
+}
+.remarks-intro svg { color: #22c55e; flex-shrink: 0; }
+.add-row-btn.ghost {
+  background: transparent; border: 1px dashed rgba(245, 158, 11, 0.5); color: #f59e0b;
+}
+.add-row-btn.ghost:hover { background: rgba(245, 158, 11, 0.1); border-style: solid; }
+.cmd-download {
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); color: #fff;
+}
+.cmd-download:hover:not(:disabled) { background: rgba(255,255,255,0.12); transform: translateY(-1px); }
+.cmd-download:disabled { opacity: 0.5; cursor: not-allowed; }
+
+[data-theme="light"] .remarks-intro {
+  background: rgba(22, 163, 74, 0.10); border-color: rgba(22, 163, 74, 0.28); color: #15803d;
+}
+[data-theme="light"] .remarks-intro svg { color: #16a34a; }
+[data-theme="light"] .add-row-btn.ghost { border-color: rgba(217,119,6,0.5); color: #b45309; }
+[data-theme="light"] .add-row-btn.ghost:hover { background: rgba(245,158,11,0.12); }
+[data-theme="light"] .cmd-download {
+  background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.25); color: #78350f;
+}
+[data-theme="light"] .cmd-download:hover:not(:disabled) { background: rgba(245,158,11,0.16); }
 
 /* Remove number arrows */
 input[type="number"]::-webkit-inner-spin-button,
@@ -1892,6 +2223,9 @@ input[type="number"] {
   border-color: rgba(245, 158, 11, 0.4);
 }
 [data-theme="light"] .shb-left h2 { color: var(--text-primary); }
+[data-theme="light"] .shb-ring .r-bg { stroke: rgba(180, 110, 30, 0.18); }
+[data-theme="light"] .shb-ring .r-fg { stroke: #ea580c; }
+[data-theme="light"] .shb-ring span { color: #c2410c; }
 [data-theme="light"] .shb-progress {
   background: rgba(245, 158, 11, 0.1);
   color: #b45309;

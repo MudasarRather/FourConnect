@@ -93,40 +93,49 @@ export const generateSlaPdf = (data, user = {}) => {
     yPos += 14
   }
 
+  const LINE_H = 4.5
   const addParagraph = (text) => {
     if (!text) return
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9)
     doc.setTextColor(...colors.secondary)
-    
+
     // Split by explicit newlines to preserve user's paragraphs
     const paragraphs = text.split(/\r?\n/)
-    
+
+    let blankRun = 0
     paragraphs.forEach(para => {
       const pText = para.trim()
       if (!pText) {
-         yPos += 3 // small gap for empty lines
+         // Collapse runs of blank lines so a pasted clause with many empty lines
+         // can't open a large vertical gap; one blank line of spacing, max.
+         if (blankRun === 0) yPos += 3
+         blankRun++
          return
       }
-      
+      blankRun = 0
+
       // Detect if it's a bullet point or numbered list
       const isListItem = /^[•\-\*]\s|^[A-Za-z0-9]+\.\s/i.test(pText)
       const renderX = isListItem ? leftMargin + 5 : leftMargin
       const renderWidth = isListItem ? contentWidth - 5 : contentWidth
-      
+
+      // Render LINE BY LINE so a long paragraph FLOWS onto the next page (filling
+      // the current one) instead of jumping wholesale and leaving a big blank gap.
       const lines = doc.splitTextToSize(pText, renderWidth)
-      checkPageBreak(lines.length * 4.5 + 4)
-      
-      if (isListItem) {
-         // Render list item normally (no justification)
-         doc.text(lines, renderX, yPos)
-      } else {
-         // Justify normal block paragraphs
-         // Passing the string with maxWidth uses jsPDF's native justify support
-         doc.text(pText, renderX, yPos, { maxWidth: renderWidth, align: 'justify' })
-      }
-      
-      yPos += lines.length * 4.5 + 3
+      lines.forEach((ln, i) => {
+        checkPageBreak(LINE_H + 2)
+        const isLast = i === lines.length - 1
+        if (!isListItem && !isLast) {
+          // Justify every line except the paragraph's last (a short last line
+          // stretched to full width looks broken).
+          doc.text(ln, renderX, yPos, { maxWidth: renderWidth, align: 'justify' })
+        } else {
+          doc.text(ln, renderX, yPos)
+        }
+        yPos += LINE_H
+      })
+      yPos += 3
     })
   }
 
@@ -483,7 +492,9 @@ export const generateSlaPdf = (data, user = {}) => {
 
   // --- 9. DIGITAL EXECUTION ---
   if (data.signatories && data.signatories.length > 0) {
-    checkPageBreak(50)
+    // Reserve room for the WHOLE section (header + intro + both signature blocks)
+    // so it never splits, leaving the signatures orphaned on a near-empty page.
+    checkPageBreak(72)
     addSectionHeader('9. Digital Execution Authorization')
 
     addParagraph("This agreement has been digitally authorized. The signatures below serve as binding acceptance of all terms, conditions, and service levels outlined in this document.")

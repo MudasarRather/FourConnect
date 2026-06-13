@@ -9,8 +9,25 @@
 //   import { API, API_BASE, authHeader } from '@/utils/api'
 //   axios.get(`${API}/projects/`, { headers: authHeader() })
 //   imageUrl = `${API_BASE}${doc.file_url}`
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-// export const API_BASE = import.meta.env.VITE_API_URL || 'https://apifc.fourreck.com'
+// Resolution order:
+//   1. VITE_API_URL (build/dev override from .env) — wins if set.
+//   2. Otherwise the per-mode default below.
+//
+// The production default MUST be the hosted backend, not localhost.
+// `.env*` is gitignored, so the DigitalOcean build never sees a local .env —
+// previously the build fell back to `http://localhost:8000`, which made the
+// deployed crm.fourreck.com bundle tell every visitor's browser to call
+// THEIR OWN machine. It only worked for whoever happened to be running the
+// backend locally (Chrome exempts http://localhost from mixed-content
+// blocking); every other laptop/phone got connection-refused and couldn't log in.
+//
+// Keying the fallback on import.meta.env.PROD keeps `npm run dev` on localhost
+// while making production builds correct by default, with VITE_API_URL still
+// available as an explicit override for staging/other backends.
+const DEFAULT_API_BASE = import.meta.env.PROD
+  ? 'https://apifc.fourreck.com'
+  : 'http://localhost:8000'
+export const API_BASE = import.meta.env.VITE_API_URL || DEFAULT_API_BASE
 export const API = `${API_BASE}/api`
 
 /**

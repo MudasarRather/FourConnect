@@ -31,10 +31,6 @@
               v-else-if="activeTab === 'corrections'"
               @refresh-stats="loadDashboard"
             />
-            <AttShiftsSection
-              v-else-if="activeTab === 'shifts'"
-              @refresh-stats="loadDashboard"
-            />
             <AttWfhSection
               v-else-if="activeTab === 'wfh'"
               @refresh-stats="loadDashboard"
@@ -70,7 +66,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { usePreferredReducedMotion } from '@vueuse/core'
 import { useToast } from 'vue-toastification'
 import {
-  LayoutDashboard, Fingerprint, Pencil, CalendarClock, Home,
+  LayoutDashboard, Fingerprint, Pencil, Home,
   ScanFace, BookOpenCheck, Clock4, TimerReset, Globe,
   MapPin, PartyPopper, BarChart3, ScrollText, AlertTriangle,
   Users, Package, CheckCircle2, FileText, Gauge, ArrowUpRight,
@@ -82,7 +78,6 @@ import AttTabBar from './components/AttTabBar.vue'
 import AttDashboardSection from './sections/AttDashboardSection.vue'
 import AttDailySection from './sections/AttDailySection.vue'
 import AttCorrectionsSection from './sections/AttCorrectionsSection.vue'
-import AttShiftsSection from './sections/AttShiftsSection.vue'
 import AttWfhSection from './sections/AttWfhSection.vue'
 import AttHalfDaySection from './sections/AttHalfDaySection.vue'
 import AttExcessBreaksSection from './sections/AttExcessBreaksSection.vue'
@@ -113,7 +108,6 @@ const TABS = [
   { key: 'dashboard',   label: 'Dashboard',     icon: LayoutDashboard, type: 'full' },
   { key: 'daily',       label: 'Daily',         icon: Fingerprint,     type: 'full' },
   { key: 'corrections', label: 'Corrections',   icon: Pencil,          type: 'full' },
-  { key: 'shifts',      label: 'Shifts',        icon: CalendarClock,   type: 'full' },
   { key: 'wfh',         label: 'WFH',           icon: Home,            type: 'full' },
   { key: 'half-day',    label: 'Half-Day',      icon: SunMedium,       type: 'full' },
   { key: 'excess-breaks', label: 'Excess Breaks', icon: Coffee,        type: 'full' },

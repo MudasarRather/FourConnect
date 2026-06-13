@@ -1,0 +1,142 @@
+/* ════════════════════════════════════════════════════════════════════════
+   Shifts & Rosters — "Control Tower" design tokens (Phase 2.5)
+   ────────────────────────────────────────────────────────────────────────
+   An operations command-center spine that differentiates Shifts from the
+   other HR modules WITHIN the warm brand. Cool graphite canvas (distinct from
+   payroll's antique-gold-brown), amber/gold instrumentation, monospace clocks,
+   a live radial "now" sweep, scanlines and tick-rain. Emerald = covered/OK,
+   red = understaffed/conflict. NO blue/purple/teal.
+   Imported per-view (workspace + sections); do NOT promote to global.
+   ════════════════════════════════════════════════════════════════════════ */
+
+@import './hr-theme.css';
+
+:root {
+  /* ── instrument ramp ── */
+  --shift-amber:        #fbbf24;
+  --shift-amber-bright: #fde68a;
+  --shift-amber-strong: #f59e0b;
+  --shift-ember:        #fb923c;
+  --shift-ember-strong: #ea580c;
+
+  /* ── operational semantics ── */
+  --shift-ok:        #34d399;   /* covered / on-duty (allowed success) */
+  --shift-ok-soft:   rgba(52, 211, 153, 0.12);
+  --shift-ok-strong: #10b981;
+  --shift-warn:      #fb923c;   /* under-staffed warning (amber) */
+  --shift-warn-soft: rgba(251, 146, 60, 0.14);
+  --shift-alert:     #ef4444;   /* critical shortfall / conflict */
+  --shift-alert-soft: rgba(239, 68, 68, 0.13);
+  --shift-night:     #a78bfa00; /* (reserved — unused; night uses amber to honour brand) */
+
+  /* ── surfaces / text (cool graphite, not warm brown) ── */
+  --shift-canvas:    #07080a;
+  --shift-surface:   rgba(18, 20, 24, 0.66);
+  --shift-surface-2: rgba(26, 29, 34, 0.86);
+  --shift-glass:     rgba(16, 18, 22, 0.58);
+  --shift-glass-blur: blur(22px) saturate(150%);
+  --shift-border:    rgba(251, 191, 36, 0.13);
+  --shift-border-soft: rgba(255, 255, 255, 0.06);
+  --shift-grid-line: rgba(148, 163, 184, 0.10);
+  --shift-text:      #f4f6fa;
+  --shift-text-2:    #c2c8d2;
+  --shift-text-muted:#8a91a0;
+  --shift-text-dim:  #5f6675;
+  --shift-mono:      ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+
+  /* ── shift-type accents (within warm brand) ── */
+  --shift-general:   #fbbf24;
+  --shift-evening:   #fb923c;
+  --shift-nightt:    #f59e0b;
+  --shift-flex:      #fde68a;
+  --shift-rotational:#ea580c;
+
+  /* ── gradients ── */
+  --shift-grad-dial:  conic-gradient(from -90deg, #fde68a, #f59e0b 35%, #ea580c 60%, #fde68a);
+  --shift-grad-hero:  radial-gradient(130% 130% at 50% -10%, rgba(251,191,36,0.16), transparent 62%);
+  --shift-grad-cta:   linear-gradient(135deg, #fbbf24 0%, #f59e0b 52%, #ea580c 100%);
+  --shift-grad-rail:  linear-gradient(180deg, #fde68a 0%, #f59e0b 100%);
+  --shift-grad-sweep: conic-gradient(from 0deg, transparent 0deg, rgba(251,191,36,0.0) 280deg, rgba(251,191,36,0.55) 350deg, rgba(253,230,138,0.9) 360deg);
+
+  /* ── motion ── */
+  --shift-ease:   cubic-bezier(0.16, 1, 0.3, 1);
+  --shift-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── Reduced-motion guard ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .shift-sweep,
+  .shift-scanline,
+  .shift-tick-rain > *,
+  .shift-ring-pulse,
+  .shift-dial-rot {
+    animation: none !important;
+  }
+}
+
+/* ─── Signature keyframes ───────────────────────────────────────────────── */
+@keyframes shift-sweep {           /* radial now-line rotation */
+  to { transform: rotate(360deg); }
+}
+@keyframes shift-dial-rot {        /* slow instrument ring spin */
+  to { transform: rotate(360deg); }
+}
+@keyframes shift-scanline {        /* console scanline drift */
+  0%   { transform: translateY(-100%); opacity: 0; }
+  10%  { opacity: 0.5; }
+  90%  { opacity: 0.5; }
+  100% { transform: translateY(100%); opacity: 0; }
+}
+@keyframes shift-tick-fall {       /* clock-tick rain down the rail */
+  0%   { transform: translateY(-16px); opacity: 0; }
+  12%  { opacity: 0.6; }
+  88%  { opacity: 0.6; }
+  100% { transform: translateY(120px); opacity: 0; }
+}
+@keyframes shift-ring-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.45); }
+  50%      { box-shadow: 0 0 0 9px rgba(251, 191, 36, 0); }
+}
+@keyframes shift-grid-pan {
+  0%   { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+@keyframes shift-bar-grow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+@keyframes shift-draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes shift-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Shared utility ────────────────────────────────────────────────────── */
+.shift-mono { font-family: var(--shift-mono); }
+.shift-spin :deep(svg), .shift-spin svg { animation: shift-spin 0.9s linear infinite; }
+
+/* ════════════════════════════════════════════════════════════════════════
+   LIGHT THEME OVERRIDES — cool cream console
+   Graphite inverts to a cool paper; amber instrumentation stays vivid.
+   ════════════════════════════════════════════════════════════════════════ */
+:root[data-theme="light"] {
+  --shift-canvas:    #f6f4ef;
+  --shift-surface:   rgba(255, 252, 246, 0.78);
+  --shift-surface-2: rgba(255, 250, 240, 0.94);
+  --shift-glass:     rgba(252, 248, 240, 0.7);
+  --shift-glass-blur: blur(16px) saturate(130%);
+  --shift-border:    rgba(217, 119, 6, 0.22);
+  --shift-border-soft: rgba(40, 32, 20, 0.10);
+  --shift-grid-line: rgba(40, 32, 20, 0.08);
+  --shift-text:      #161a20;
+  --shift-text-2:    #3c4350;
+  --shift-text-muted:#6a7282;
+  --shift-text-dim:  #94a0b0;
+
+  --shift-ok:        #059669;
+  --shift-alert:     #dc2626;
+  --shift-ok-soft:   rgba(5, 150, 105, 0.16);
+  --shift-warn-soft: rgba(234, 88, 12, 0.16);
+  --shift-alert-soft: rgba(220, 38, 38, 0.14);
+}

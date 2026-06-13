@@ -216,8 +216,10 @@ const routes = [
                 component: () => import('../views/hr/onboarding/HrOnboardingWorkspacePage.vue'),
             },
             { path: 'hr/attendance', redirect: '/admin/hr/attendance/dashboard' },
+            // Shift template CRUD + assignment moved to the Shifts & Rosters workspace.
+            { path: 'hr/attendance/shifts', redirect: '/admin/hr/shifts/management' },
             {
-              path: 'hr/attendance/:tab(dashboard|daily|corrections|shifts|wfh|half-day|excess-breaks|biometric|policies|late-rules|overtime|remote|geo|holidays|reports|logs|exceptions)',
+              path: 'hr/attendance/:tab(dashboard|daily|corrections|wfh|half-day|excess-breaks|biometric|policies|late-rules|overtime|remote|geo|holidays|reports|logs|exceptions)',
               name: 'HrAttendanceTab',
               component: () => import('../views/hr/attendance/HrAttendanceWorkspacePage.vue'),
             },
@@ -227,7 +229,12 @@ const routes = [
               name: 'HrLeaveTab',
               component: () => import('../views/hr/leave/HrLeaveWorkspacePage.vue'),
             },
-            { path: 'hr/shifts', name: 'HrShifts', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Shifts & Rosters', phase: 'Phase 2 — Time Management' }) },
+            { path: 'hr/shifts', redirect: '/admin/hr/shifts/dashboard' },
+            {
+              path: 'hr/shifts/:tab(dashboard|management|assignment|rotation|rosters|calendar|coverage|swap|workforce|night|holidays|overtime-rules|reports|audit-logs)',
+              name: 'HrShiftsTab',
+              component: () => import('../views/hr/shifts/HrShiftsWorkspacePage.vue'),
+            },
             { path: 'hr/payroll', redirect: '/admin/hr/payroll/dashboard' },
             {
                 path: 'hr/payroll/:tab(dashboard|structures|components|compensation|processing|monthly|approval|payslips|revisions|arrears|bonus|incentives|variable-pay|tax|tds|statutory|bank-files|reports|audit-logs)',

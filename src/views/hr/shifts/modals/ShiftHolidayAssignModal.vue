@@ -5,13 +5,13 @@
     <div class="hm-stack" v-if="holiday">
       <div class="hm-row">
         <label class="hm-field"><span>Compensation</span>
-          <select v-model="form.compensation" class="hm-input" @change="syncMult">
-            <option v-for="c in HOLIDAY_COMP_TYPES" :key="c.key" :value="c.key">{{ c.label }}</option>
-          </select>
+          <HrSelect :model-value="form.compensation" :options="compOptions"
+            @update:model-value="v => { form.compensation = v; syncMult() }" />
         </label>
         <label class="hm-field"><span>Multiplier (×)</span><input v-model.number="form.pay_multiplier" type="number" min="0" step="0.25" class="hm-input" /></label>
         <label class="hm-field grow"><span>Shift (optional)</span>
-          <select v-model="form.shift_id" class="hm-input"><option value="">—</option><option v-for="s in shifts" :key="s.id" :value="s.id">{{ s.code }} — {{ s.name }}</option></select>
+          <HrSelect :model-value="form.shift_id" :options="shiftOptions" placeholder="Any shift"
+            @update:model-value="v => form.shift_id = v" />
         </label>
       </div>
       <div class="hm-search"><Search :size="13" /><input v-model="search" placeholder="Search employees…" @input="onSearch" /><span v-if="form.employee_ids.length" class="hm-count">{{ form.employee_ids.length }} selected</span></div>
@@ -39,6 +39,7 @@ import { reactive, ref, computed, watch } from 'vue'
 import { Palmtree, Search, Check, CheckCircle2, Loader2 } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 import OnbModal from '../../onboarding/components/OnbModal.vue'
+import HrSelect from '@/components/hr/forms/HrSelect.vue'
 import { HOLIDAY_COMP_TYPES, compMeta, fetchEmployeesLite, fetchShifts, bulkHolidayShift } from '@/composables/useShifts'
 
 const props = defineProps({ open: Boolean, holiday: { type: Object, default: null } })
@@ -50,6 +51,9 @@ const loadingEmps = ref(false)
 const saving = ref(false)
 const search = ref('')
 const form = reactive({ employee_ids: [], compensation: 'DOUBLE_PAY', pay_multiplier: 2.0, shift_id: '' })
+
+const compOptions = HOLIDAY_COMP_TYPES.map(c => ({ value: c.key, label: c.label }))
+const shiftOptions = computed(() => [{ value: '', label: 'Any shift' }, ...shifts.value.map(s => ({ value: s.id, label: `${s.code} — ${s.name}` }))])
 
 watch(() => props.open, async (o) => {
   if (!o || !props.holiday) return

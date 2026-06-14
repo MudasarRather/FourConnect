@@ -5,19 +5,25 @@
     <div class="dm-grid" v-if="open">
       <div class="dm-row">
         <label class="dm-field grow"><span>Shift <em>*</em></span>
-          <select v-model="form.shift_id" class="dm-input"><option value="">Select…</option><option v-for="s in shifts" :key="s.id" :value="s.id">{{ s.code }} — {{ s.name }}</option></select>
+          <HrSelect :model-value="form.shift_id" :options="shiftOptions" placeholder="Select a shift…"
+            @update:model-value="v => form.shift_id = v" />
         </label>
         <label class="dm-field"><span>Required (heads)</span><input v-model.number="form.required_headcount" type="number" min="0" class="dm-input" /></label>
       </div>
       <div class="dm-row">
         <label class="dm-field grow"><span>Department (optional)</span>
-          <select v-model="form.department_id" class="dm-input"><option value="">All departments</option><option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option></select>
+          <HrSelect :model-value="form.department_id" :options="deptOptions" placeholder="All departments"
+            @update:model-value="v => form.department_id = v" />
         </label>
         <label class="dm-field"><span>Skill (optional)</span><input v-model="form.skill" placeholder="e.g. Ops" class="dm-input" /></label>
       </div>
       <div class="dm-row">
-        <label class="dm-field"><span>Valid from <em>*</em></span><input v-model="form.valid_from" type="date" class="dm-input" /></label>
-        <label class="dm-field"><span>Valid to</span><input v-model="form.valid_to" type="date" class="dm-input" placeholder="open-ended" /></label>
+        <label class="dm-field"><span>Valid from <em>*</em></span>
+          <HrDatePicker :model-value="form.valid_from" :clearable="false" @update:model-value="v => form.valid_from = v" />
+        </label>
+        <label class="dm-field"><span>Valid to</span>
+          <HrDatePicker :model-value="form.valid_to" :min="form.valid_from" placeholder="open-ended" @update:model-value="v => form.valid_to = v" />
+        </label>
         <label class="dm-field grow"><span>Notes</span><input v-model="form.notes" placeholder="Optional" class="dm-input" /></label>
       </div>
     </div>
@@ -36,6 +42,8 @@ import { reactive, computed, ref, watch } from 'vue'
 import { TrendingUp, CheckCircle2, Loader2 } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 import OnbModal from '../../onboarding/components/OnbModal.vue'
+import HrSelect from '@/components/hr/forms/HrSelect.vue'
+import HrDatePicker from '@/components/hr/forms/HrDatePicker.vue'
 import { fetchShifts, fetchDepartments, createWorkforceDemand, updateWorkforceDemand, todayIso } from '@/composables/useShifts'
 
 const props = defineProps({ open: Boolean, demand: { type: Object, default: null } })
@@ -56,6 +64,9 @@ watch(() => props.open, async (o) => {
   } else { Object.assign(form, blank()) }
   try { [shifts.value, departments.value] = await Promise.all([fetchShifts({ limit: 100 }).then(d => d.items || []), fetchDepartments()]) } catch { /* */ }
 })
+
+const shiftOptions = computed(() => shifts.value.map(s => ({ value: s.id, label: `${s.code} — ${s.name}` })))
+const deptOptions = computed(() => [{ value: '', label: 'All departments' }, ...departments.value.map(d => ({ value: d.id, label: d.name }))])
 
 const valid = computed(() => form.shift_id && form.valid_from && form.required_headcount >= 0)
 

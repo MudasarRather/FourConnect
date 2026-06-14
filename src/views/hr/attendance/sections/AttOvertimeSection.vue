@@ -81,6 +81,10 @@
         </button>
       </div>
       <div class="ot-toolbar-right">
+        <router-link class="ot-rates-link" to="/admin/hr/shifts/overtime-rules"
+          title="Configure the multipliers & caps these hours are paid at">
+          <SlidersHorizontal :size="13" />Rate rules<ArrowUpRight :size="12" />
+        </router-link>
         <span class="ot-toolbar-meta">
           <Hourglass :size="11" />
           <span>{{ rows.length }} {{ rows.length === 1 ? 'entry' : 'entries' }} · {{ visibleHours.toFixed(1) }}h total</span>
@@ -224,6 +228,7 @@ import { Motion } from 'motion-v'
 import {
   RefreshCw, TimerReset, CheckCircle2, XCircle, Quote, Hourglass,
   Zap, Moon, Sun, CalendarDays, Banknote, Clock, AlertCircle, Wallet,
+  SlidersHorizontal, ArrowUpRight,
 } from 'lucide-vue-next'
 import { fetchOvertime, decideOvertime } from '../composables/useAttendance'
 import OnbAnimatedNumber from '../../onboarding/components/OnbAnimatedNumber.vue'
@@ -768,6 +773,19 @@ const formatDate = (iso) => iso ? new Date(iso).toLocaleDateString('en-IN', { we
 [data-theme="light"] .ot-pill-count { background: rgba(255, 255, 255, 0.45); color: inherit; }
 
 .ot-toolbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ot-rates-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 10px; text-decoration: none;
+  font: inherit; font-size: 11px; font-weight: 800; letter-spacing: 0.3px;
+  background: rgba(251, 146, 60, 0.10); color: #fdba74;
+  border: 1px solid rgba(251, 146, 60, 0.40);
+  transition: background .2s, color .2s, border-color .2s, transform .2s, box-shadow .25s;
+}
+.ot-rates-link:hover { transform: translateY(-1px); color: #fed7aa; background: rgba(251, 146, 60, 0.18); border-color: rgba(251, 146, 60, 0.65); box-shadow: 0 10px 22px -12px rgba(234, 88, 12, 0.5); }
+.ot-rates-link svg:last-child { transition: transform .2s; }
+.ot-rates-link:hover svg:last-child { transform: translate(2px, -2px); }
+[data-theme="light"] .ot-rates-link { background: rgba(194, 65, 12, 0.10); color: #9a3412; border-color: rgba(194, 65, 12, 0.40); }
+[data-theme="light"] .ot-rates-link:hover { color: #7c2d12; background: rgba(194, 65, 12, 0.18); border-color: rgba(194, 65, 12, 0.65); }
 .ot-toolbar-meta {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 10.5px; font-weight: 700; letter-spacing: 0.4px;

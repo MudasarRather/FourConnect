@@ -15,9 +15,9 @@
               <ShiftRotationSection    v-else-if="activeTab === 'rotation'"    @refresh-stats="onMutate" />
               <ShiftRostersSection     v-else-if="activeTab === 'rosters'"     @refresh-stats="onMutate" />
               <ShiftCalendarSection    v-else-if="activeTab === 'calendar'" />
-              <ShiftCoverageSection    v-else-if="activeTab === 'coverage'"    @refresh-stats="onMutate" />
+              <ShiftCoverageSection    v-else-if="activeTab === 'coverage'"    @refresh-stats="onMutate" @go="selectTab" />
               <ShiftOvertimeRulesSection v-else-if="activeTab === 'overtime-rules'" @refresh-stats="onMutate" />
-              <ShiftSwapSection          v-else-if="activeTab === 'swap'" @refresh-stats="onMutate" />
+              <ShiftSwapSection          v-else-if="activeTab === 'swap'" @refresh-stats="onMutate" @go="selectTab" />
               <ShiftHolidaySection       v-else-if="activeTab === 'holidays'" @refresh-stats="onMutate" />
               <ShiftNightSection         v-else-if="activeTab === 'night'" />
               <ShiftWorkforceSection     v-else-if="activeTab === 'workforce'" @refresh-stats="onMutate" />

@@ -116,6 +116,12 @@
 .shift-mono { font-family: var(--shift-mono); }
 .shift-spin :deep(svg), .shift-spin svg { animation: shift-spin 0.9s linear infinite; }
 
+/* Hide native number-input spinners across the shifts module — its modals use
+   clean numeric fields (loaded per-shift-view, so scoped to this module). */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+
 /* ════════════════════════════════════════════════════════════════════════
    LIGHT THEME OVERRIDES — cool cream console
    Graphite inverts to a cool paper; amber instrumentation stays vivid.

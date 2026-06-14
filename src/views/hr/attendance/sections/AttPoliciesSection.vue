@@ -123,6 +123,22 @@
       </Motion>
     </Motion>
 
+    <!-- ═══════════════════ OT REDIRECT NOTICE ═══════════════════ -->
+    <Motion v-if="!filterType" as="div" class="pol-ot-notice"
+      :initial="{ opacity: 0, y: -6 }" :animate="{ opacity: 1, y: 0 }"
+      :transition="{ duration: 0.4, delay: 0.18 }"
+    >
+      <span class="pon-ic"><TimerReset :size="15" /></span>
+      <p class="pon-text">
+        <b>Overtime rates live in Shifts.</b> Multipliers &amp; caps that pay OT are configured in
+        <strong>Shifts → Overtime Rules</strong> — the structured model payroll reads. Policies here drive
+        late&nbsp;/&nbsp;grace&nbsp;/&nbsp;WFH rollup logic, <em>not</em> OT pay.
+      </p>
+      <router-link class="pon-link" to="/admin/hr/shifts/overtime-rules">
+        Open Overtime Rules<ArrowUpRight :size="13" />
+      </router-link>
+    </Motion>
+
     <!-- ═══════════════════ TOOLBAR — refresh + new policy ═══════════════════ -->
     <Motion as="div" class="pol-toolbar"
       :initial="{ opacity: 0, y: 6 }" :animate="{ opacity: 1, y: 0 }"
@@ -322,7 +338,7 @@ import { Motion } from 'motion-v'
 import {
   RefreshCw, Plus, Calendar, BookOpenCheck, Briefcase, Home, Clock4, TimerReset,
   PartyPopper, Hourglass, Trash2, ShieldCheck, ShieldOff, Stamp, Braces,
-  FileText, Layers, Infinity as InfinityIcon,
+  FileText, Layers, Infinity as InfinityIcon, ArrowUpRight,
 } from 'lucide-vue-next'
 import { fetchPolicies, createPolicy, deletePolicy } from '../composables/useAttendance'
 import AttDeleteModal from '../components/AttDeleteModal.vue'
@@ -336,7 +352,11 @@ const props = defineProps({
 defineEmits(['refresh-stats'])
 const toast = useToast()
 
-const TYPES = ['OFFICE', 'WFH', 'SHIFT', 'OVERTIME', 'GRACE', 'HOLIDAY', 'LATE_RULE']
+// NOTE: 'OVERTIME' deliberately excluded — OT multipliers/caps are configured in
+// Shifts → Overtime Rules (the structured model payroll actually consumes). A
+// free-form OVERTIME policy here was orphaned config nothing read. Existing rows
+// (if any) still render; admins just can't author new ones from this picker.
+const TYPES = ['OFFICE', 'WFH', 'SHIFT', 'GRACE', 'HOLIDAY', 'LATE_RULE']
 const typeFilter = ref(props.filterType || '')
 const allRows = ref([])
 const rows = computed(() => typeFilter.value ? allRows.value.filter(r => r.policy_type === typeFilter.value) : allRows.value)
@@ -512,6 +532,49 @@ const highlightJson = (rules) => {
 @import '../../../../styles/attendance-theme.css';
 
 .att-pol { display: flex; flex-direction: column; gap: 16px; padding-top: 18px; }
+
+/* ═══ OT redirect notice — points OT config to Shifts → Overtime Rules ═══ */
+.pol-ot-notice {
+  display: flex; align-items: center; gap: 13px;
+  padding: 12px 16px; border-radius: 14px;
+  background:
+    radial-gradient(90% 120% at 0% 0%, rgba(251, 191, 36, 0.10), transparent 60%),
+    var(--att-glass);
+  border: 1px dashed rgba(251, 191, 36, 0.50);
+  backdrop-filter: var(--att-glass-blur);
+}
+[data-theme="light"] .pol-ot-notice {
+  background:
+    radial-gradient(90% 120% at 0% 0%, rgba(217, 119, 6, 0.10), transparent 60%),
+    rgba(255, 250, 240, 0.9);
+  border-color: rgba(180, 83, 9, 0.42);
+}
+.pon-ic {
+  display: grid; place-items: center; flex-shrink: 0;
+  width: 32px; height: 32px; border-radius: 10px;
+  background: rgba(251, 191, 36, 0.14); color: #fcd34d;
+  border: 1px solid rgba(251, 191, 36, 0.40);
+}
+[data-theme="light"] .pon-ic { background: rgba(217, 119, 6, 0.14); color: #b45309; border-color: rgba(180, 83, 9, 0.40); }
+.pon-text { margin: 0; flex: 1; min-width: 0; font-size: 11.5px; line-height: 1.55; color: var(--hr-text-muted); }
+.pon-text b { color: var(--hr-text); font-weight: 800; }
+.pon-text strong { color: #fcd34d; font-weight: 700; }
+[data-theme="light"] .pon-text strong { color: #b45309; }
+.pon-text em { font-style: normal; font-weight: 700; color: var(--hr-text-secondary); }
+.pon-link {
+  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
+  padding: 7px 13px; border-radius: 10px; text-decoration: none;
+  font-size: 11.5px; font-weight: 800; letter-spacing: 0.3px;
+  background: rgba(251, 191, 36, 0.12); color: #fcd34d;
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  transition: background .2s, color .2s, border-color .2s, transform .2s, box-shadow .25s;
+}
+.pon-link:hover { transform: translateY(-1px); background: rgba(251, 191, 36, 0.20); border-color: rgba(251, 191, 36, 0.7); box-shadow: 0 10px 24px -12px rgba(234, 88, 12, 0.5); }
+.pon-link svg { transition: transform .2s; }
+.pon-link:hover svg { transform: translate(2px, -2px); }
+[data-theme="light"] .pon-link { background: rgba(217, 119, 6, 0.12); color: #b45309; border-color: rgba(180, 83, 9, 0.45); }
+[data-theme="light"] .pon-link:hover { background: rgba(217, 119, 6, 0.20); border-color: rgba(180, 83, 9, 0.7); }
+@media (max-width: 720px) { .pol-ot-notice { flex-wrap: wrap; } .pon-text { flex-basis: 100%; } }
 
 /* ═══════════════════════════════════════════════════════════════════════
    HERO BANNER — blueprint grid + stacked rule-sheets + animated stamp

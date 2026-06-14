@@ -39,7 +39,9 @@
       "Bash(findstr \":8000\")",
       "Bash(tasklist /FI \"IMAGENAME eq python.exe\" /FO TABLE)",
       "Skill(deep-research)",
-      "Skill(deep-research:*)"
+      "Skill(deep-research:*)",
+      "Bash(cd /c/Projects/FourConnectService && sed -n '510,522p' app/utils/hr/attendance_logic.py)",
+      "Read(//c/c/Projects/FourConnectService/app/utils/hr/**)"
     ]
   }
 }

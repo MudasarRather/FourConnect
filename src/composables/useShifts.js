@@ -125,8 +125,10 @@ export const createRotation = async (body) =>
   (await axios.post(`${BASE}/shift-rotations/`, body, H())).data
 export const updateRotation = async (id, body) =>
   (await axios.patch(`${BASE}/shift-rotations/${id}`, body, H())).data
-export const deleteRotation = async (id) =>
-  (await axios.delete(`${BASE}/shift-rotations/${id}`, H())).data
+export const deleteRotation = async (id, { revokeFuture = false } = {}) =>
+  (await axios.delete(`${BASE}/shift-rotations/${id}`, { headers: authHeader(), params: { revoke_future: revokeFuture } })).data
+export const fetchRotationImpact = async (id) =>
+  (await axios.get(`${BASE}/shift-rotations/${id}/impact`, H())).data
 export const advanceRotation = async (id) =>
   (await axios.post(`${BASE}/shift-rotations/${id}/advance`, {}, H())).data
 
@@ -178,15 +180,43 @@ export const fetchDepartments = async () => {
   return rows.map(d => ({ id: d.id, name: d.name }))
 }
 
-// Shift-scoped audit rows from the shared attendance log.
+// Target tables that constitute the Shifts-module audit trail. The audit view
+// pulls every shift-scoped event in one time-ordered call by filtering on these.
+export const SHIFT_AUDIT_TABLES = [
+  'hr_employee_shift_assignments',
+  'hr_shift_rotations',
+  'hr_shift_rosters',
+  'hr_shift_swap_requests',
+  'hr_overtime_rules',
+]
+
+// Shift-scoped audit rows from the shared attendance log. Arrays (e.g.
+// target_table) are serialised as repeated keys (`a&a`) so FastAPI's
+// `List[str]` binds them — axios's default `a[]=` bracket form would not.
 export const fetchShiftLogs = async (params = {}) =>
-  (await axios.get(`${BASE}/attendance/logs/`, { headers: authHeader(), params })).data
+  (await axios.get(`${BASE}/attendance/logs/`, {
+    headers: authHeader(),
+    params,
+    paramsSerializer: (p) => {
+      const usp = new URLSearchParams()
+      for (const [k, v] of Object.entries(p)) {
+        if (Array.isArray(v)) v.forEach(x => x != null && usp.append(k, x))
+        else if (v != null) usp.append(k, v)
+      }
+      return usp.toString()
+    },
+  })).data
 
 // ─── Holidays (read-only lookup for Holiday Shifts) ─────────────────────────
+// Shift planning must only see APPLIED holidays — a draft/imported holiday that
+// hasn't been applied in Attendance · Holidays is not yet "live" (it doesn't
+// short-circuit the daily rollup), so staffing it would silently pay a holiday
+// premium for a day attendance treats as normal work. Default active_only=true;
+// callers may override by passing active_only:false explicitly.
 export const fetchHolidays = async (params = {}) => {
-  const { data } = await axios.get(`${BASE}/holidays/`, { headers: authHeader(), params })
+  const { data } = await axios.get(`${BASE}/holidays/`, { headers: authHeader(), params: { active_only: true, ...params } })
   const rows = Array.isArray(data) ? data : (data?.items || [])
-  return rows.map(h => ({ id: h.id, name: h.name, date: h.date, holiday_type: h.holiday_type }))
+  return rows.map(h => ({ id: h.id, name: h.name, date: h.date, holiday_type: h.holiday_type, is_active: h.is_active }))
 }
 
 // ═══════════════════ Phase 2 — Ops ═══════════════════
@@ -223,8 +253,8 @@ export const createOvertimeRule = async (body) =>
   (await axios.post(`${BASE}/overtime-rules/`, body, H())).data
 export const updateOvertimeRule = async (id, body) =>
   (await axios.patch(`${BASE}/overtime-rules/${id}`, body, H())).data
-export const deleteOvertimeRule = async (id) =>
-  (await axios.delete(`${BASE}/overtime-rules/${id}`, H())).data
+export const deleteOvertimeRule = async (id, reason = '') =>
+  (await axios.delete(`${BASE}/overtime-rules/${id}`, { headers: authHeader(), params: reason ? { reason } : {} })).data
 export const resolveOvertimeRule = async (params = {}) =>
   (await axios.get(`${BASE}/overtime-rules/resolve`, { headers: authHeader(), params })).data
 
@@ -239,8 +269,8 @@ export const approveSwap = async (id, notes = '') =>
   (await axios.patch(`${BASE}/shift-swaps/${id}/approve`, { notes }, H())).data
 export const rejectSwap = async (id, notes = '') =>
   (await axios.patch(`${BASE}/shift-swaps/${id}/reject`, { notes }, H())).data
-export const cancelSwap = async (id) =>
-  (await axios.post(`${BASE}/shift-swaps/${id}/cancel`, {}, H())).data
+export const cancelSwap = async (id, notes = '') =>
+  (await axios.post(`${BASE}/shift-swaps/${id}/cancel`, { notes }, H())).data
 export const deleteSwap = async (id) =>
   (await axios.delete(`${BASE}/shift-swaps/${id}`, H())).data
 
@@ -251,8 +281,16 @@ export const createHolidayShift = async (body) =>
   (await axios.post(`${BASE}/holiday-shifts/`, body, H())).data
 export const bulkHolidayShift = async (body) =>
   (await axios.post(`${BASE}/holiday-shifts/bulk`, body, H())).data
-export const deleteHolidayShift = async (id) =>
-  (await axios.delete(`${BASE}/holiday-shifts/${id}`, H())).data
+// body (optional): { reason, reason_category } — persisted as stand-down audit.
+// axios drops a DELETE body unless Content-Type is set, so attach it explicitly.
+export const deleteHolidayShift = async (id, body = null) => {
+  const cfg = { headers: authHeader() }
+  if (body && (body.reason || body.reason_category)) {
+    cfg.data = body
+    cfg.headers = { ...cfg.headers, 'Content-Type': 'application/json' }
+  }
+  return (await axios.delete(`${BASE}/holiday-shifts/${id}`, cfg)).data
+}
 
 // Night shift policies + roster
 export const fetchNightPolicies = async () =>
@@ -275,3 +313,55 @@ export const deleteWorkforceDemand = async (id) =>
   (await axios.delete(`${BASE}/workforce/demands/${id}`, H())).data
 export const fetchWorkforceForecast = async (params = {}) =>
   (await axios.get(`${BASE}/workforce/forecast`, { headers: authHeader(), params })).data
+
+// ═══════════════════ Shift Reports (server-side PDF/Excel/CSV) ═══════════════════
+// Each report maps 1:1 to a Shifts page; the backend renders a unique magazine-
+// style PDF + a tailored Excel + CSV. See app/utils/hr/shift_reports/.
+export const SHIFT_REPORTS = [
+  { key: 'roster',    name: 'Shift Roster',          accent: '#d97706', soft: '#fef3c7', deep: '#92400e' },
+  { key: 'coverage',  name: 'Coverage & Staffing',   accent: '#ea580c', soft: '#ffedd5', deep: '#7c2d12' },
+  { key: 'overtime',  name: 'Overtime Ledger',       accent: '#b45309', soft: '#fef3c7', deep: '#451a03' },
+  { key: 'night',     name: 'Night Shift Operations',accent: '#f59e0b', soft: '#fde68a', deep: '#78350f' },
+  { key: 'rotation',  name: 'Rotation Schedule',     accent: '#ca8a04', soft: '#fef9c3', deep: '#713f12' },
+  { key: 'workforce', name: 'Workforce Demand',      accent: '#c2410c', soft: '#ffedd5', deep: '#7c2d12' },
+]
+export const SHIFT_REPORT_KEYS = SHIFT_REPORTS.map(r => r.key)
+
+export const fetchShiftReportPreview = async (params = {}) =>
+  (await axios.get(`${BASE}/shifts/reports/preview`, { headers: authHeader(), params })).data
+
+const _filenameFromResponse = (resp, fallback) => {
+  const cd = resp.headers?.['content-disposition'] || ''
+  const star = /filename\*=UTF-8''([^;]+)/i.exec(cd)
+  if (star) { try { return decodeURIComponent(star[1]) } catch { /* noop */ } }
+  const plain = /filename="?([^";]+)"?/i.exec(cd)
+  return plain ? plain[1] : fallback
+}
+
+// Triggers a browser download of the requested report. Returns nothing (side-effect).
+export const runShiftReport = async ({ reportKey, format, from, to, department_id = null }) => {
+  if (!SHIFT_REPORT_KEYS.includes(reportKey)) throw new Error(`Unknown report: ${reportKey}`)
+  if (!['pdf', 'excel', 'csv'].includes(format)) throw new Error(`Unknown format: ${format}`)
+  const params = { format, from, to }
+  if (department_id) params.department_id = department_id
+
+  const resp = await axios.get(`${BASE}/shifts/reports/${reportKey}/export`, {
+    headers: authHeader(), params, responseType: 'blob',
+  })
+  // A JSON error can arrive disguised as a blob — surface its detail.
+  if (resp.data && resp.data.type === 'application/json') {
+    const txt = await resp.data.text()
+    let detail = 'Export failed'
+    try { detail = (JSON.parse(txt) || {}).detail || detail } catch { /* noop */ }
+    throw new Error(detail)
+  }
+  const ext = format === 'excel' ? 'xlsx' : format
+  const meta = SHIFT_REPORTS.find(r => r.key === reportKey)
+  const fallback = `Fourreck-Shifts-${(meta?.name || reportKey).replace(/\s+/g, '-')}-${from}-to-${to}.${ext}`
+  const filename = _filenameFromResponse(resp, fallback)
+  const url = URL.createObjectURL(resp.data)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename
+  document.body.appendChild(a); a.click(); a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}

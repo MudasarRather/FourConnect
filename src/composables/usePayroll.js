@@ -5,7 +5,7 @@ import { ref, computed } from 'vue'
 import axios from 'axios'
 import {
   Coins, Layers, ListTree, Wallet, Cpu, CalendarClock, ShieldCheck,
-  ReceiptText, BadgePercent, Landmark, FileSpreadsheet, ScrollText,
+  ReceiptText, BadgePercent, Landmark, FileSpreadsheet, ScrollText, FileText,
 } from 'lucide-vue-next'
 import { API, authHeader } from '@/utils/api'
 
@@ -68,6 +68,7 @@ export const PAYROLL_TABS = [
   { key: 'tax',           label: 'Tax computation',icon: Landmark,      group: 'statutory',phaseA: true },
   { key: 'tds',           label: 'TDS',            icon: Landmark,      group: 'statutory',phaseA: true },
   { key: 'statutory',     label: 'Compliance',     icon: Landmark,      group: 'statutory',phaseA: true },
+  { key: 'tax-documents', label: 'Tax documents',  icon: FileText,      group: 'statutory',phaseA: true },
   { key: 'bank-files',    label: 'Bank files',     icon: FileSpreadsheet,group:'payout',   phaseA: true },
   { key: 'reports',       label: 'Reports',        icon: FileSpreadsheet,group:'system',   phaseA: true },
   { key: 'audit-logs',    label: 'Audit logs',     icon: ScrollText,    group: 'system',   phaseA: true },

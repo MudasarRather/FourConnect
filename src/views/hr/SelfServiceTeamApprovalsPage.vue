@@ -15,9 +15,23 @@
     </Motion>
 
     <!-- ═════════════════════════════════════════════════════════════════
+         SURFACE TOGGLE — Leave vs Reimbursements
+         ════════════════════════════════════════════════════════════════ -->
+    <div class="tap-surface-toggle">
+      <button class="surf-btn" :class="{ active: surface === 'leave' }" @click="surface = 'leave'">
+        <CalendarDays :size="14" /> Leave
+        <span v-if="pendingCount" class="surf-count">{{ pendingCount }}</span>
+      </button>
+      <button class="surf-btn" :class="{ active: surface === 'reimbursements' }" @click="surface = 'reimbursements'">
+        <Receipt :size="14" /> Reimbursements
+        <span v-if="rmbQueue.length" class="surf-count">{{ rmbQueue.length }}</span>
+      </button>
+    </div>
+
+    <!-- ═════════════════════════════════════════════════════════════════
          HERO
          ════════════════════════════════════════════════════════════════ -->
-    <section class="tap-hero">
+    <section v-if="surface === 'leave'" class="tap-hero">
       <!-- Ambient -->
       <div class="tap-hero-atm" aria-hidden="true">
         <span class="hero-orb a1" />
@@ -90,7 +104,7 @@
     <!-- ═════════════════════════════════════════════════════════════════
          FILTERS + QUEUE
          ════════════════════════════════════════════════════════════════ -->
-    <section class="tap-queue-section">
+    <section v-if="surface === 'leave'" class="tap-queue-section">
       <header class="tap-section-head">
         <div class="tap-section-meta">
           <div class="tap-section-eye leave-mono">
@@ -166,7 +180,7 @@
     <!-- ═════════════════════════════════════════════════════════════════
          ENCASHMENT ENDORSEMENTS (payroll · stage 1)
          ════════════════════════════════════════════════════════════════ -->
-    <section v-if="encashQueue.length" class="tap-encash-section">
+    <section v-if="surface === 'leave' && encashQueue.length" class="tap-encash-section">
       <header class="tap-section-head">
         <div class="tap-section-meta">
           <div class="tap-section-eye leave-mono"><span class="hero-eye-dot ember" /> Payroll</div>
@@ -214,23 +228,70 @@
     </section>
 
     <!-- ═════════════════════════════════════════════════════════════════
-         REVIEW DRAWER
+         REVIEW DRAWER (leave)
          ════════════════════════════════════════════════════════════════ -->
     <TeamApprovalReviewDrawer
+      v-if="surface === 'leave'"
       :open="reviewOpen"
       :leave="reviewLeave"
       :submitting="reviewSubmitting"
       @close="closeReview"
       @submit="onDrawerSubmit"
     />
+
+    <!-- ═════════════════════════════════════════════════════════════════
+         REIMBURSEMENTS QUEUE (manager stage)
+         ════════════════════════════════════════════════════════════════ -->
+    <section v-if="surface === 'reimbursements'" class="tap-rmb">
+      <RmbApprovalDeck :queue="rmbQueue" :session="rmbSession" />
+
+      <header class="tap-section-head">
+        <div class="tap-section-meta">
+          <div class="tap-section-eye leave-mono"><span class="hero-eye-dot" /> Live queue</div>
+          <h2 class="tap-section-title">Pending reimbursement approvals</h2>
+        </div>
+        <button class="tap-refresh leave-btn leave-btn-sm" :disabled="rmbLoading" @click="loadRmb">
+          <RefreshCw :size="13" :class="{ spin: rmbLoading }" /> Refresh
+        </button>
+      </header>
+
+      <div v-if="rmbLoading && !rmbQueue.length" class="rmb-cards">
+        <div v-for="i in 3" :key="`rsk-${i}`" class="tap-skel-card">
+          <div class="leave-skel skel-line" style="width:55%; height:14px;" />
+          <div class="leave-skel skel-block" style="height:60px; margin-top:14px" />
+          <div class="leave-skel skel-line" style="width:80%; margin-top:12px" />
+        </div>
+      </div>
+      <Motion v-else-if="!rmbQueue.length" as="div" class="tap-empty"
+        :initial="{ opacity: 0, scale: 0.92 }" :animate="{ opacity: 1, scale: 1 }"
+        :transition="{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }">
+        <div class="empty-art">
+          <span class="empty-aura" /><span class="empty-ring r1" /><span class="empty-ring r2" /><span class="empty-ring r3" />
+          <CircleCheck :size="46" class="empty-icon" />
+        </div>
+        <div class="empty-title">{{ rmbSession.approved + rmbSession.returned + rmbSession.rejected > 0 ? 'Queue cleared — nicely done' : 'No claims awaiting you' }}</div>
+        <div class="empty-sub">Claims from your direct reports needing your stage land here the moment they're submitted.</div>
+      </Motion>
+      <TransitionGroup v-else name="rac-grid" tag="div" class="rmb-cards">
+        <RmbApprovalCard v-for="(c, i) in rmbQueue" :key="c.id" :claim="c" :index="i"
+          :decided="rmbDecidedById[c.id] || null"
+          @open="openRmb(c)" @act="(a) => rmbAct(c, a)" />
+      </TransitionGroup>
+    </section>
+
+    <ClaimDetailDrawer v-if="surface === 'reimbursements'" :claim="rmbActive" surface="manager" :can-act="true"
+                       @close="rmbActive = null" @action="onRmbDrawerAction" />
+    <ClaimActionModal v-if="rmbActionModal" :claim="rmbActive || rmbActionClaim" :action="rmbActionModal" surface="manager"
+                      @close="rmbActionModal = null" @done="onRmbDone" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive, watch } from 'vue'
 import { Motion } from 'motion-v'
 import {
   RefreshCw, UserRoundX, CircleCheck, Layers, Clock, Hourglass, AlertTriangle, Check, X,
+  CalendarDays, Receipt,
 } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 
@@ -238,12 +299,63 @@ import {
   fetchManagerQueue, decideAsManager,
   fetchManagerEncashmentQueue, managerDecideEncashment,
 } from '@/composables/useLeaves'
+import {
+  fetchMyApprovalQueue, fetchMyClaim, errText,
+} from '@/composables/useReimbursements'
 import TeamApprovalCard from './team-approvals/components/TeamApprovalCard.vue'
 import TeamApprovalReviewDrawer from './team-approvals/drawers/TeamApprovalReviewDrawer.vue'
+import RmbApprovalDeck from './reimbursements/components/RmbApprovalDeck.vue'
+import RmbApprovalCard from './reimbursements/components/RmbApprovalCard.vue'
+import ClaimDetailDrawer from './reimbursements/drawers/ClaimDetailDrawer.vue'
+import ClaimActionModal from './reimbursements/modals/ClaimActionModal.vue'
 
 import '@/styles/leave-theme.css'
+import '@/styles/reimbursements-theme.css'
 
 const toast = useToast()
+
+// ─── Surface toggle (Leave vs Reimbursements) ────────────────────────
+const surface = ref('leave')
+
+// ─── Reimbursement manager queue ─────────────────────────────────────
+const rmbQueue = ref([])
+const rmbLoading = ref(false)
+const rmbActive = ref(null)
+const rmbActionClaim = ref(null)
+const rmbActionModal = ref(null)
+// session counters + decided-card map (drive the deck stats + card exit animation)
+const rmbSession = reactive({ approved: 0, returned: 0, rejected: 0 })
+const rmbDecidedById = reactive({})
+
+const loadRmb = async () => {
+  rmbLoading.value = true
+  try { rmbQueue.value = (await fetchMyApprovalQueue({ limit: 100 })).items || [] }
+  catch (e) { toast.error(errText(e, 'Failed to load reimbursement queue')) }
+  finally { rmbLoading.value = false }
+}
+const openRmb = async (c) => { try { rmbActive.value = await fetchMyClaim(c.id) } catch { rmbActive.value = c } }
+const rmbAct = (c, action) => { rmbActionClaim.value = c; rmbActive.value = null; rmbActionModal.value = action }
+const onRmbDrawerAction = ({ action }) => { rmbActionModal.value = action }
+
+// A claim was just decided in the modal → stamp the card, count it, then drop it.
+const onRmbDone = () => {
+  const claim = rmbActive.value || rmbActionClaim.value
+  const action = rmbActionModal.value   // approve | return | reject
+  rmbActive.value = null
+  rmbActionClaim.value = null
+  if (!claim || !action) { loadRmb(); return }
+  const id = claim.id
+  if (action === 'approve') rmbSession.approved += 1
+  else if (action === 'return') rmbSession.returned += 1
+  else rmbSession.rejected += 1
+  rmbDecidedById[id] = action
+  setTimeout(() => {
+    rmbQueue.value = rmbQueue.value.filter((x) => x.id !== id)
+    delete rmbDecidedById[id]
+  }, 1050)
+}
+
+watch(surface, (s) => { if (s === 'reimbursements' && !rmbQueue.value.length) loadRmb() })
 
 const queue = ref([])
 const loading = ref(false)
@@ -867,4 +979,37 @@ const sendDecision = async (leave, payload, viaDrawer = false) => {
 .ee-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 2px; }
 .ee-rsn-enter-active, .ee-rsn-leave-active { transition: opacity .25s, transform .25s; }
 .ee-rsn-enter-from, .ee-rsn-leave-to { opacity: 0; transform: translateY(-4px); }
+
+/* ─── Surface toggle (Leave vs Reimbursements) ─────────────────────── */
+.tap-surface-toggle {
+  display: inline-flex; gap: 4px; padding: 4px; border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
+  align-self: flex-start;
+}
+[data-theme="light"] .tap-surface-toggle { background: rgba(255, 250, 240, 0.85); border-color: rgba(120, 53, 15, 0.14); }
+.surf-btn {
+  display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 9px;
+  background: transparent; border: none; color: var(--hr-text-muted);
+  font: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: all .22s;
+}
+.surf-btn:hover { color: var(--hr-text); }
+.surf-btn.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.10));
+  color: #fbbf24; box-shadow: 0 4px 14px -6px rgba(251, 191, 36, 0.5);
+}
+[data-theme="light"] .surf-btn.active { color: #b45309; }
+.surf-count { min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; display: inline-grid; place-items: center;
+  font-size: 9.5px; font-weight: 800; background: rgba(0,0,0,0.4); color: #fef3c7; }
+[data-theme="light"] .surf-count { background: rgba(180, 83, 9, 0.22); color: #7c2d12; }
+
+/* ─── Reimbursement approval surface ─────────────────────────────────── */
+.tap-rmb { display: flex; flex-direction: column; gap: 18px; }
+.rmb-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 15px; }
+/* TransitionGroup: enter is handled by each card's own Motion; we own leave + reflow */
+.rac-grid-leave-active { transition: opacity 0.45s var(--rmb-ease), transform 0.45s var(--rmb-ease); }
+.rac-grid-leave-to { opacity: 0; transform: scale(0.92) translateY(-12px); }
+.rac-grid-move { transition: transform 0.55s var(--rmb-spring); }
+@media (prefers-reduced-motion: reduce) {
+  .rac-grid-leave-active, .rac-grid-move { transition: opacity 0.2s; }
+}
 </style>

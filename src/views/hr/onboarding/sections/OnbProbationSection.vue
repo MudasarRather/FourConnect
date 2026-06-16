@@ -121,6 +121,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { Motion } from 'motion-v'
 import axios from 'axios'
+import { API } from '@/utils/api'
 import { RefreshCw, Gauge } from 'lucide-vue-next'
 import OnbProgressRing from '../components/OnbProgressRing.vue'
 import OnbModal from '../components/OnbModal.vue'
@@ -152,7 +153,7 @@ const authHeader = () => {
 
 const loadActiveEmployees = async () => {
   try {
-    const { data } = await axios.get('/api/hr/employees/', {
+    const { data } = await axios.get(`${API}/hr/employees/`, {
       params: { lifecycle_state: 'ACTIVE', limit: 100 },
       headers: authHeader(),
     })
@@ -177,7 +178,7 @@ const submitPlace = async () => {
     if (placeForm.confirmation_date) body.confirmation_date = placeForm.confirmation_date
     if (placeForm.reason) body.reason = placeForm.reason
     await axios.post(
-      `/api/hr/employees/${placeForm.employee_id}/lifecycle/put-on-probation`,
+      `${API}/hr/employees/${placeForm.employee_id}/lifecycle/put-on-probation`,
       body,
       { headers: authHeader() }
     )

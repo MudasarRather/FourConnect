@@ -451,11 +451,9 @@ const rawMenuItems = [
       ]},
       { title: 'Pay & Benefits', items: [
          { label: 'Payroll', to: '/dashboard/hr/payroll', icon: Banknote },
-         { label: 'Reimbursements', to: '/dashboard/hr/reimbursements', icon: Receipt },
-         { label: 'Compliance & Statutory', to: '/dashboard/hr/compliance', icon: Scale }
+         { label: 'Reimbursements', to: '/dashboard/hr/reimbursements', icon: Receipt }
       ]},
       { title: 'Growth', items: [
-         { label: 'Performance Management', to: '/dashboard/hr/performance', icon: Target },
          { label: 'Training & Certifications', to: '/dashboard/hr/training', icon: GraduationCap }
       ]}
     ], [

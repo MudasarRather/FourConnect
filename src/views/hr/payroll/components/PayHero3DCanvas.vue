@@ -1,5 +1,5 @@
 <template>
-  <TresCanvas clear-color="#06050400" alpha :antialias="true" :dpr="[1, 1.5]"
+  <TresCanvas clear-color="#060504" :clear-alpha="0" alpha :antialias="true" :dpr="[1, 1.5]"
     :renderer-options="{ powerPreference: 'low-power' }">
     <TresPerspectiveCamera :position="[0, 0, 5.2]" :fov="42" />
     <!-- Scene lives in a child so useLoop()/useTres() have the Tres context.

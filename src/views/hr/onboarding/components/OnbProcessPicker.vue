@@ -36,6 +36,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { RefreshCw, Sparkles } from 'lucide-vue-next'
 import axios from 'axios'
+import { API } from '@/utils/api'
 import { fetchProcesses } from '../composables/useOnboarding'
 import OnbField from './OnbField.vue'
 import { useToast } from 'vue-toastification'
@@ -92,7 +93,7 @@ const doBackfill = async () => {
   loading.value = true
   try {
     const token = localStorage.getItem('admin_token') || localStorage.getItem('user_token')
-    const { data } = await axios.post('/api/hr/onboarding/processes/backfill', {}, {
+    const { data } = await axios.post(`${API}/hr/onboarding/processes/backfill`, {}, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
     toast.success(`Created ${data.created || 0} onboarding processes`)

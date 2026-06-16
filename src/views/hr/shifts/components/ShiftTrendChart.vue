@@ -3,18 +3,39 @@
     <svg class="stc-svg" :viewBox="`0 0 ${W} ${H}`" preserveAspectRatio="none" @mousemove="onMove" @mouseleave="hover = -1">
       <defs>
         <linearGradient :id="`${uid}-fill`" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" :stop-color="color" stop-opacity="0.32" />
+          <stop offset="0%" :stop-color="color" stop-opacity="0.34" />
           <stop offset="100%" :stop-color="color" stop-opacity="0" />
         </linearGradient>
+        <filter :id="`${uid}-glow`" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3.4" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
       </defs>
+
       <g class="stc-grid">
         <line v-for="g in 4" :key="g" :x1="0" :x2="W" :y1="(g-1)*(PLOT_H/3)+PAD_T" :y2="(g-1)*(PLOT_H/3)+PAD_T" />
       </g>
+
       <path v-if="vals.length > 1" class="stc-area" :d="areaD" :fill="`url(#${uid}-fill)`" />
       <path v-if="vals.length > 1" class="stc-line" :d="lineD" :stroke="color" pathLength="1" />
-      <g v-for="(v, i) in vals" :key="'d'+i">
-        <circle :cx="px(i)" :cy="py(v)" :r="hover===i ? 4 : 2.6" :fill="color" class="stc-dot" />
+
+      <!-- traveling comet that retraces the trend -->
+      <g v-if="vals.length > 1 && !reduced" :filter="`url(#${uid}-glow)`">
+        <circle r="3.2" :fill="color" class="stc-comet">
+          <animateMotion :path="lineD" :dur="cometDur" repeatCount="indefinite" rotate="auto" />
+        </circle>
       </g>
+
+      <g v-for="(v, i) in vals" :key="'d'+i">
+        <circle :cx="px(i)" :cy="py(v)" :r="hover===i ? 4.4 : 2.6" :fill="color" class="stc-dot" :class="{ on: hover===i }" />
+      </g>
+
+      <!-- persistent pulsing head at the latest reading -->
+      <g v-if="vals.length" class="stc-head">
+        <circle :cx="px(vals.length-1)" :cy="py(vals[vals.length-1])" r="5.5" fill="none" :stroke="color" class="stc-head-ring" />
+        <circle :cx="px(vals.length-1)" :cy="py(vals[vals.length-1])" r="3" :fill="color" />
+      </g>
+
       <g v-if="hover >= 0" class="stc-cross">
         <line :x1="px(hover)" :x2="px(hover)" :y1="PAD_T" :y2="H - PAD_B" :stroke="color" />
       </g>
@@ -35,6 +56,7 @@ let _stcUid = 0
 
 <script setup>
 import { ref, computed } from 'vue'
+import { prefersReduced } from '@/composables/useShiftMotion'
 
 const props = defineProps({
   // points: [{ label, value }]
@@ -48,6 +70,7 @@ const W = 600, H = 180, PAD_T = 14, PAD_B = 14, PAD_X = 6
 const PLOT_H = H - PAD_T - PAD_B
 const rootRef = ref(null)
 const hover = ref(-1)
+const reduced = prefersReduced()
 
 const labels = computed(() => props.points.map(p => p.label))
 const vals = computed(() => props.points.map(p => Number(p.value) || 0))
@@ -60,6 +83,7 @@ const areaD = computed(() => {
   if (vals.value.length < 2) return ''
   return `${lineD.value} L${px(vals.value.length - 1).toFixed(1)} ${H - PAD_B} L${px(0).toFixed(1)} ${H - PAD_B} Z`
 })
+const cometDur = computed(() => `${Math.max(2.6, n.value * 0.55).toFixed(1)}s`)
 const fmt = (v) => `${Number(v) || 0}${props.suffix}`
 
 const onMove = (e) => {
@@ -81,8 +105,12 @@ const tipStyle = computed(() => {
 .stc-grid line { stroke: var(--shift-grid-line); stroke-width: 1; stroke-dasharray: 3 5; }
 .stc-area { animation: stc-area-in 1.1s var(--shift-ease) both; }
 .stc-line { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1;
-  animation: shift-draw 1.3s var(--shift-ease) both; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.3)); }
+  animation: shift-draw 1.4s var(--shift-ease) both; filter: drop-shadow(0 3px 8px rgba(0,0,0,0.3)); }
+.stc-comet { opacity: 0.9; }
 .stc-dot { transition: r 0.15s; }
+.stc-dot.on { filter: drop-shadow(0 0 5px currentColor); }
+.stc-head-ring { stroke-width: 1.4; opacity: 0.7; transform-box: fill-box; transform-origin: center;
+  animation: stc-head 2.6s ease-out infinite; }
 .stc-cross line { stroke-width: 1; stroke-dasharray: 4 3; opacity: 0.6; }
 .stc-xlabels { display: flex; justify-content: space-between; margin-top: 4px; padding: 0 2px; }
 .stc-xlabels span { font-family: var(--shift-mono); font-size: 9px; color: var(--shift-text-muted); transition: color 0.2s; }
@@ -93,5 +121,6 @@ const tipStyle = computed(() => {
 .stc-tip .tip-l { font-family: var(--shift-mono); font-size: 9.5px; color: var(--shift-text-muted); text-transform: uppercase; letter-spacing: 0.08em; }
 .stc-tip b { font-family: var(--shift-mono); font-size: 14px; color: var(--shift-text); }
 @keyframes stc-area-in { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .stc-line, .stc-area { animation: none; stroke-dashoffset: 0; } }
+@keyframes stc-head { 0% { transform: scale(0.5); opacity: 0.9; } 70%, 100% { transform: scale(2.2); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .stc-line, .stc-area, .stc-head-ring { animation: none; stroke-dashoffset: 0; } }
 </style>

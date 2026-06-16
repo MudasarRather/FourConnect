@@ -1,6 +1,7 @@
 <template>
   <TresCanvas
-    clear-color="#0a0a0c00"
+    clear-color="#0a0a0c"
+    :clear-alpha="0"
     alpha
     :antialias="true"
     :dpr="[1, 1.5]"

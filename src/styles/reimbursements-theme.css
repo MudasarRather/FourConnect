@@ -1,0 +1,357 @@
+/* ============================================================================
+   REIMBURSEMENTS MODULE THEME  ·  "Receipt-Tape Ledger"
+   ----------------------------------------------------------------------------
+   Feature-scoped tokens. Imported per-view (HrReimbursementsWorkspacePage,
+   SelfServiceReimbursementsPage) — NEVER globally from main.js.
+   Inherits the HR palette, then layers a thermal-receipt / ledger aesthetic:
+   paper surfaces, perforation edges, rubber-stamp inks, a lifecycle stage rail.
+   ============================================================================ */
+@import './hr-theme.css';
+
+:root {
+  /* ── Canvas & paper surfaces (dark) ── */
+  --rmb-canvas: #060504;
+  --rmb-paper: rgba(26, 24, 22, 0.82);          /* a receipt slip */
+  --rmb-paper-elevated: rgba(34, 31, 28, 0.92);
+  --rmb-paper-edge: rgba(255, 255, 255, 0.05);
+  --rmb-ribbon: rgba(16, 15, 14, 0.6);          /* the ledger ribbon behind slips */
+  --rmb-surface: rgba(20, 19, 18, 0.66);
+  --rmb-surface-elevated: rgba(30, 28, 26, 0.88);
+  --rmb-border-soft: rgba(255, 255, 255, 0.07);
+  --rmb-border-strong: rgba(255, 255, 255, 0.13);
+
+  /* ── Perforation ── */
+  --rmb-perf-color: rgba(255, 255, 255, 0.10);
+  --rmb-perf-size: 7px;
+  --rmb-perf-gap: 12px;
+  --rmb-perf-shimmer: rgba(251, 191, 36, 0.35);
+
+  /* ── Stamp inks ── */
+  --rmb-ink-blue: #60a5fa;
+  --rmb-ink-amber: #fbbf24;
+  --rmb-ink-violet: #c084fc;
+  --rmb-ink-green: #34d399;
+  --rmb-ink-red: #f87171;
+  --rmb-ink-orange: #fb923c;
+  --rmb-ink-teal: #2dd4bf;
+  --rmb-ink-deepgreen: #16a34a;
+
+  /* ── Status palette (solid / soft-fill / chart-hex) ── */
+  --rmb-st-submitted: #60a5fa;        --rmb-st-submitted-soft: rgba(96, 165, 250, 0.14);   --rmb-st-submitted-hex: #60a5fa;
+  --rmb-st-pending: #fbbf24;          --rmb-st-pending-soft: rgba(251, 191, 36, 0.14);     --rmb-st-pending-hex: #fbbf24;
+  --rmb-st-manager: #fbbf24;          --rmb-st-manager-soft: rgba(251, 191, 36, 0.14);     --rmb-st-manager-hex: #fbbf24;
+  --rmb-st-finance: #c084fc;          --rmb-st-finance-soft: rgba(192, 132, 252, 0.14);    --rmb-st-finance-hex: #c084fc;
+  --rmb-st-hr: #f0abfc;               --rmb-st-hr-soft: rgba(240, 171, 252, 0.14);         --rmb-st-hr-hex: #f0abfc;
+  --rmb-st-approved: #34d399;         --rmb-st-approved-soft: rgba(52, 211, 153, 0.14);    --rmb-st-approved-hex: #34d399;
+  --rmb-st-rejected: #f87171;         --rmb-st-rejected-soft: rgba(248, 113, 113, 0.14);   --rmb-st-rejected-hex: #f87171;
+  --rmb-st-returned: #fb923c;         --rmb-st-returned-soft: rgba(251, 146, 60, 0.14);    --rmb-st-returned-hex: #fb923c;
+  --rmb-st-settled: #2dd4bf;          --rmb-st-settled-soft: rgba(45, 212, 191, 0.14);     --rmb-st-settled-hex: #2dd4bf;
+  --rmb-st-paid: #16a34a;             --rmb-st-paid-soft: rgba(22, 163, 74, 0.16);         --rmb-st-paid-hex: #22c55e;
+  --rmb-st-cancelled: #9ca3af;        --rmb-st-cancelled-soft: rgba(156, 163, 175, 0.12);  --rmb-st-cancelled-hex: #9ca3af;
+  --rmb-st-reversed: #c084fc;         --rmb-st-reversed-soft: rgba(192, 132, 252, 0.14);   --rmb-st-reversed-hex: #c084fc;
+
+  /* ── Category accents ── */
+  --rmb-cat-travel: #3b82f6;     --rmb-cat-travel-hex: #3b82f6;
+  --rmb-cat-medical: #ef4444;    --rmb-cat-medical-hex: #ef4444;
+  --rmb-cat-internet: #8b5cf6;   --rmb-cat-internet-hex: #8b5cf6;
+  --rmb-cat-food: #14b8a6;       --rmb-cat-food-hex: #14b8a6;
+  --rmb-cat-fuel: #f59e0b;       --rmb-cat-fuel-hex: #f59e0b;
+
+  /* ── Money ── */
+  --rmb-money: #fcd34d;
+  --rmb-money-positive: #34d399;
+  --rmb-money-pending: #fbbf24;
+
+  /* ── Type ── */
+  --rmb-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  --rmb-title: 46px;
+  --rmb-eyebrow: 11px;
+  --rmb-receipt-size: 12px;
+  --rmb-text: var(--hr-text);
+  --rmb-text-secondary: var(--hr-text-secondary);
+  --rmb-text-muted: var(--hr-text-muted);
+
+  /* ── Motion ── */
+  --rmb-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --rmb-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Glass for modals / drawers ── */
+  --rmb-glass: rgba(18, 17, 16, 0.62);
+  --rmb-glass-deep: rgba(12, 11, 10, 0.86);
+  --rmb-glass-blur: blur(26px) saturate(160%);
+  --rmb-glass-shadow: 0 28px 70px -34px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04);
+
+  /* ── Dashboard instrument deck (cinematic console) ── */
+  --rmb-amber: #fbbf24;
+  --rmb-amber-bright: #fde68a;
+  --rmb-amber-strong: #f59e0b;
+  --rmb-ember: #fb923c;
+  --rmb-grid-line: rgba(255, 255, 255, 0.045);
+  --rmb-glare: rgba(255, 255, 255, 0.10);
+  --rmb-grad-hero:
+    radial-gradient(120% 120% at 16% -10%, rgba(251, 191, 36, 0.16), transparent 58%),
+    radial-gradient(95% 95% at 92% 110%, rgba(45, 212, 191, 0.11), transparent 60%),
+    radial-gradient(80% 80% at 60% 50%, rgba(251, 146, 60, 0.06), transparent 70%);
+  --rmb-surf-card: linear-gradient(165deg, var(--rmb-paper-elevated), var(--rmb-paper));
+  --rmb-card-shadow: 0 16px 40px -28px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --rmb-card-shadow-hover: 0 28px 56px -26px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────── */
+@keyframes rmb-tear-off {
+  0%   { transform: translateY(0) rotate(0); opacity: 1; }
+  35%  { transform: translateY(-4px) rotate(-1.2deg); }
+  100% { transform: translateY(46px) rotate(2.5deg); opacity: 0; clip-path: inset(0 0 70% 0); }
+}
+@keyframes rmb-stamp-press {
+  0%   { transform: scale(1.5) rotate(-14deg); opacity: 0; filter: blur(1px); }
+  55%  { transform: scale(0.92) rotate(-7deg); opacity: 1; filter: blur(0); }
+  72%  { transform: scale(1.04) rotate(-9deg); }
+  100% { transform: scale(1) rotate(-8deg); opacity: 1; }
+}
+@keyframes rmb-money-tick {
+  0%   { transform: translateY(2px); opacity: 0.55; text-shadow: 0 0 0 transparent; }
+  60%  { text-shadow: 0 0 18px rgba(252, 211, 77, 0.55); }
+  100% { transform: translateY(0); opacity: 1; text-shadow: 0 0 0 transparent; }
+}
+@keyframes rmb-ribbon-scroll {
+  0%   { background-position: 0 0; }
+  100% { background-position: 0 -240px; }
+}
+@keyframes rmb-perforation-shimmer {
+  0%   { background-position: -120% 0; }
+  100% { background-position: 220% 0; }
+}
+@keyframes rmb-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes rmb-icon-pop {
+  0%   { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+  60%  { transform: scale(1.12) rotate(3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes rmb-pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(251, 191, 36, 0); }
+}
+/* ── Cinematic primitives (shared by hero / ledger / drawer) ── */
+@keyframes rmb-grain-shift {
+  0%   { transform: translate3d(0, 0, 0); }
+  20%  { transform: translate3d(-6%, 4%, 0); }
+  40%  { transform: translate3d(4%, -6%, 0); }
+  60%  { transform: translate3d(-3%, 5%, 0); }
+  80%  { transform: translate3d(5%, -3%, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+@keyframes rmb-tape-feed { 0% { background-position: 0 0; } 100% { background-position: 0 var(--rmb-tape-step, -120px); } }
+@keyframes rmb-draw-rail { from { stroke-dashoffset: var(--rmb-rail-len, 600); } to { stroke-dashoffset: 0; } }
+@keyframes rmb-flow-down { 0% { background-position: 0 -200%; } 100% { background-position: 0 200%; } }
+@keyframes rmb-scan-sweep { 0% { transform: translateY(-120%); opacity: 0; } 12% { opacity: 0.9; } 88% { opacity: 0.9; } 100% { transform: translateY(820%); opacity: 0; } }
+@keyframes rmb-spark-rise { 0% { transform: translateY(0) scale(1); opacity: 0; } 16% { opacity: 0.9; } 100% { transform: translateY(-34px) scale(0.4); opacity: 0; } }
+@keyframes rmb-aura-breathe { 0%, 100% { opacity: 0.45; transform: scale(0.96); } 50% { opacity: 0.85; transform: scale(1.05); } }
+@keyframes rmb-amount-shimmer { 0% { background-position: 140% 0; } 100% { background-position: -40% 0; } }
+@keyframes rmb-orbit { to { transform: rotate(360deg); } }
+@keyframes rmb-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ── Utility classes ───────────────────────────────────────────────────── */
+.rmb-mono { font-family: var(--rmb-mono); font-variant-numeric: tabular-nums; }
+
+/* Film-grain dust overlay — pin to a positioned ancestor, sits above gradients
+   but below content (give content position+z-index). Animated drift = "blender" feel. */
+.rmb-grain {
+  position: absolute; inset: -50%; pointer-events: none; z-index: 0; opacity: 0.05; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: rmb-grain-shift 7s steps(6) infinite;
+}
+[data-theme="light"] .rmb-grain { opacity: 0.04; mix-blend-mode: multiply; }
+
+/* Pointer-tracked glare — needs --mx/--my/--spot from usePointerSpotlight */
+.rmb-spotlight {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: var(--spot, 0); transition: opacity 0.4s ease;
+  background: radial-gradient(420px 320px at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%),
+    color-mix(in srgb, var(--rmb-amber) 16%, transparent), transparent 60%);
+}
+
+/* Perforated thermal-receipt paper — top & bottom torn edges via radial mask */
+.rmb-receipt {
+  position: relative;
+  background: var(--rmb-paper);
+  border: 1px solid var(--rmb-paper-edge);
+  border-radius: 4px;
+  color: var(--rmb-text);
+}
+.rmb-receipt::before,
+.rmb-receipt::after {
+  content: "";
+  position: absolute; left: 0; right: 0; height: 8px;
+  background-image: radial-gradient(circle at var(--rmb-perf-gap) 0, transparent var(--rmb-perf-size), var(--rmb-paper) calc(var(--rmb-perf-size) + 0.5px));
+  background-size: calc(var(--rmb-perf-gap) * 2) 8px;
+  background-repeat: repeat-x;
+}
+.rmb-receipt::before { top: -1px; transform: rotate(180deg); }
+.rmb-receipt::after  { bottom: -1px; }
+
+/* the continuous ledger ribbon behind slips */
+.rmb-ribbon {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 38px, rgba(255, 255, 255, 0.02) 38px 39px),
+    var(--rmb-ribbon);
+}
+
+/* dashed perforation divider line */
+.rmb-perf-line {
+  border: none;
+  border-top: 1.5px dashed var(--rmb-perf-color);
+  margin: 10px 0;
+}
+
+/* Rubber-stamp status badge */
+.rmb-stamp {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--rmb-mono); font-weight: 700; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 4px 9px; border-radius: 4px;
+  border: 1.6px solid currentColor;
+  transform: rotate(-2deg);
+}
+.rmb-stamp[data-status="DRAFT"]            { color: var(--rmb-st-cancelled); background: var(--rmb-st-cancelled-soft); }
+.rmb-stamp[data-status="PENDING_APPROVAL"] { color: var(--rmb-st-pending);   background: var(--rmb-st-pending-soft); }
+.rmb-stamp[data-status="APPROVED"]         { color: var(--rmb-st-approved);  background: var(--rmb-st-approved-soft); }
+.rmb-stamp[data-status="RETURNED"]         { color: var(--rmb-st-returned);  background: var(--rmb-st-returned-soft); }
+.rmb-stamp[data-status="REJECTED"]         { color: var(--rmb-st-rejected);  background: var(--rmb-st-rejected-soft); }
+.rmb-stamp[data-status="SETTLED"]          { color: var(--rmb-st-settled);   background: var(--rmb-st-settled-soft); }
+.rmb-stamp[data-status="PAID"]             { color: var(--rmb-st-paid);      background: var(--rmb-st-paid-soft); }
+.rmb-stamp[data-status="CANCELLED"]        { color: var(--rmb-st-cancelled); background: var(--rmb-st-cancelled-soft); }
+.rmb-stamp[data-status="REVERSED"]         { color: var(--rmb-st-reversed);  background: var(--rmb-st-reversed-soft); }
+.rmb-stamp.is-fresh { animation: rmb-stamp-press 0.6s var(--rmb-spring) both; }
+
+/* Stage-tracker chip */
+.rmb-stage-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.4px;
+  padding: 5px 10px; border-radius: 999px; white-space: nowrap;
+  color: var(--rmb-text-muted);
+  background: var(--rmb-surface);
+  border: 1px solid var(--rmb-border-soft);
+  transition: all 0.3s var(--rmb-spring);
+}
+.rmb-stage-chip[data-state="done"]    { color: var(--rmb-st-approved); background: var(--rmb-st-approved-soft); border-color: transparent; }
+.rmb-stage-chip[data-state="current"] { color: var(--rmb-st-pending); background: var(--rmb-st-pending-soft); border-color: var(--rmb-st-pending); animation: rmb-pulse-dot 1.8s ease-in-out infinite; }
+.rmb-stage-chip[data-state="skipped"] { color: var(--rmb-st-cancelled); opacity: 0.6; text-decoration: line-through; }
+.rmb-stage-chip[data-state="rejected"]{ color: var(--rmb-st-rejected); background: var(--rmb-st-rejected-soft); border-color: var(--rmb-st-rejected); }
+
+/* Buttons */
+.rmb-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: 10px;
+  border: 1px solid transparent; cursor: pointer; transition: all 0.25s var(--rmb-spring);
+  white-space: nowrap;
+}
+.rmb-btn-primary {
+  background: var(--hr-gradient-hero); color: #1a1206; border: none;
+  box-shadow: 0 8px 22px -10px rgba(251, 146, 60, 0.6);
+}
+.rmb-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 28px -10px rgba(251, 146, 60, 0.7); }
+.rmb-btn-ghost {
+  background: var(--rmb-surface); color: var(--rmb-text-secondary);
+  border-color: var(--rmb-border-soft);
+}
+.rmb-btn-ghost:hover { background: var(--rmb-surface-elevated); color: var(--rmb-text); }
+.rmb-btn-danger { background: rgba(248, 113, 113, 0.14); color: #f87171; border-color: rgba(248, 113, 113, 0.34); }
+.rmb-btn-danger:hover { background: rgba(248, 113, 113, 0.22); }
+.rmb-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Skeleton shimmer */
+.rmb-skel {
+  background: linear-gradient(90deg, var(--rmb-surface) 25%, var(--rmb-surface-elevated) 37%, var(--rmb-surface) 63%);
+  background-size: 400% 100%;
+  animation: rmb-perforation-shimmer 1.4s ease infinite;
+  border-radius: 8px;
+}
+
+/* Empty state */
+.rmb-empty-card {
+  border: 1.5px dashed var(--rmb-border-strong);
+  border-radius: 16px; padding: 44px 24px; text-align: center;
+  background: var(--rmb-surface);
+  color: var(--rmb-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rmb-stamp.is-fresh,
+  .rmb-stage-chip[data-state="current"],
+  .rmb-skel { animation: none !important; }
+}
+
+/* ============================================================================
+   ═════════════════════  LIGHT THEME OVERRIDES  ═════════════════════
+   Warm cream canvas; receipt paper goes near-white-warm (MUST differ from
+   canvas or slips vanish). Status inks stay vivid; only neutrals invert.
+   ============================================================================ */
+[data-theme="light"] {
+  --rmb-canvas: #faf7f0;
+  --rmb-paper: rgba(255, 252, 245, 0.96);
+  --rmb-paper-elevated: #fffdf8;
+  --rmb-paper-edge: rgba(40, 25, 10, 0.10);
+  --rmb-ribbon: rgba(244, 235, 222, 0.7);
+  --rmb-surface: rgba(255, 250, 240, 0.7);
+  --rmb-surface-elevated: rgba(255, 250, 240, 0.92);
+  --rmb-border-soft: rgba(40, 25, 10, 0.10);
+  --rmb-border-strong: rgba(40, 25, 10, 0.18);
+
+  --rmb-perf-color: rgba(40, 25, 10, 0.18);
+
+  /* Status inks re-cast for cream readability */
+  --rmb-st-submitted: #2563eb;  --rmb-st-submitted-soft: rgba(37, 99, 235, 0.12);  --rmb-st-submitted-hex: #2563eb;
+  --rmb-st-pending: #b45309;    --rmb-st-pending-soft: rgba(180, 83, 9, 0.12);     --rmb-st-pending-hex: #d97706;
+  --rmb-st-manager: #b45309;    --rmb-st-manager-soft: rgba(180, 83, 9, 0.12);     --rmb-st-manager-hex: #d97706;
+  --rmb-st-finance: #7c3aed;    --rmb-st-finance-soft: rgba(124, 58, 237, 0.12);   --rmb-st-finance-hex: #7c3aed;
+  --rmb-st-hr: #a21caf;         --rmb-st-hr-soft: rgba(162, 28, 175, 0.12);        --rmb-st-hr-hex: #a21caf;
+  --rmb-st-approved: #047857;   --rmb-st-approved-soft: rgba(4, 120, 87, 0.12);    --rmb-st-approved-hex: #047857;
+  --rmb-st-rejected: #b91c1c;   --rmb-st-rejected-soft: rgba(185, 28, 28, 0.12);   --rmb-st-rejected-hex: #b91c1c;
+  --rmb-st-returned: #c2410c;   --rmb-st-returned-soft: rgba(194, 65, 12, 0.12);   --rmb-st-returned-hex: #c2410c;
+  --rmb-st-settled: #0f766e;    --rmb-st-settled-soft: rgba(15, 118, 110, 0.12);   --rmb-st-settled-hex: #0f766e;
+  --rmb-st-paid: #15803d;       --rmb-st-paid-soft: rgba(21, 128, 61, 0.14);       --rmb-st-paid-hex: #15803d;
+  --rmb-st-cancelled: #78716c;  --rmb-st-cancelled-soft: rgba(120, 113, 108, 0.12);--rmb-st-cancelled-hex: #78716c;
+  --rmb-st-reversed: #7c3aed;   --rmb-st-reversed-soft: rgba(124, 58, 237, 0.12);  --rmb-st-reversed-hex: #7c3aed;
+
+  --rmb-money: #b45309;
+  --rmb-money-positive: #047857;
+  --rmb-money-pending: #b45309;
+
+  --rmb-text: #1a1410;
+  --rmb-text-secondary: #44362a;
+  --rmb-text-muted: #6b5840;
+
+  --rmb-glass: rgba(255, 250, 240, 0.7);
+  --rmb-glass-deep: rgba(255, 250, 240, 0.92);
+  --rmb-glass-blur: blur(20px) saturate(135%);
+  --rmb-glass-shadow: 0 24px 60px -30px rgba(180, 83, 9, 0.3), 0 0 0 1px rgba(40, 25, 10, 0.06);
+
+  /* Instrument deck — warm cream recast */
+  --rmb-amber: #d97706;
+  --rmb-amber-bright: #f59e0b;
+  --rmb-amber-strong: #b45309;
+  --rmb-ember: #c2410c;
+  --rmb-grid-line: rgba(40, 25, 10, 0.06);
+  --rmb-glare: rgba(255, 214, 140, 0.32);
+  --rmb-grad-hero:
+    radial-gradient(120% 120% at 16% -10%, rgba(251, 191, 36, 0.22), transparent 58%),
+    radial-gradient(95% 95% at 92% 110%, rgba(20, 184, 166, 0.12), transparent 60%),
+    radial-gradient(80% 80% at 60% 50%, rgba(251, 146, 60, 0.08), transparent 70%);
+  --rmb-card-shadow: 0 16px 36px -26px rgba(120, 80, 20, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --rmb-card-shadow-hover: 0 26px 50px -24px rgba(120, 80, 20, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="light"] .rmb-receipt::before,
+[data-theme="light"] .rmb-receipt::after {
+  background-image: radial-gradient(circle at var(--rmb-perf-gap) 0, transparent var(--rmb-perf-size), var(--rmb-paper) calc(var(--rmb-perf-size) + 0.5px));
+}
+[data-theme="light"] .rmb-btn-primary { color: #2a1a06; }
+[data-theme="light"] .rmb-btn-danger { background: rgba(185, 28, 28, 0.10); color: #b91c1c; border-color: rgba(185, 28, 28, 0.30); }
+[data-theme="light"] .rmb-ribbon {
+  background:
+    repeating-linear-gradient(180deg, transparent 0 38px, rgba(40, 25, 10, 0.03) 38px 39px),
+    var(--rmb-ribbon);
+}

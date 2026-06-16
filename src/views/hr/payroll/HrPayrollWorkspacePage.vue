@@ -28,6 +28,7 @@
           <PayTaxSection            v-else-if="activeTab === 'tax'" />
           <PayTdsSection            v-else-if="activeTab === 'tds'" />
           <PayStatutorySection      v-else-if="activeTab === 'statutory'" />
+          <PayTaxDocsSection        v-else-if="activeTab === 'tax-documents'" />
           <PayBankFilesSection      v-else-if="activeTab === 'bank-files'" />
           <PayReportsSection        v-else-if="activeTab === 'reports'" />
           <PayAuditLogsSection      v-else-if="activeTab === 'audit-logs'" />
@@ -66,6 +67,7 @@ import PayVariablePaySection from './sections/PayVariablePaySection.vue'
 import PayTaxSection from './sections/PayTaxSection.vue'
 import PayTdsSection from './sections/PayTdsSection.vue'
 import PayStatutorySection from './sections/PayStatutorySection.vue'
+import PayTaxDocsSection from './sections/PayTaxDocsSection.vue'
 import PayBankFilesSection from './sections/PayBankFilesSection.vue'
 import PayReportsSection from './sections/PayReportsSection.vue'
 import PayAuditLogsSection from './sections/PayAuditLogsSection.vue'

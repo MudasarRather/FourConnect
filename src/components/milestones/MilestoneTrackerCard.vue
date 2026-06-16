@@ -92,6 +92,7 @@ import DatePicker from '../ui/CompactDatePicker.vue'
 import CustomSelect from '../ui/CustomSelect.vue'
 import { useToast } from '../../composables/useToast'
 import axios from 'axios'
+import { API } from '@/utils/api'
 
 const props = defineProps({
   milestone: { type: Object, required: true }
@@ -130,7 +131,7 @@ const saveTracking = async () => {
       if (form.value.risk_level) formData.append('risk_level', form.value.risk_level)
       if (form.value.delay_reason) formData.append('delay_reason', form.value.delay_reason)
 
-      await axios.patch(`/api/milestones/${props.milestone.id}`, formData)
+      await axios.patch(`${API}/milestones/${props.milestone.id}`, formData)
       addToast('Milestone tracking updated', 'success')
       emit('refresh')
    } catch (e) {

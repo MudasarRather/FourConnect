@@ -118,7 +118,7 @@ const routes = [
             { path: 'self-service/payslips', name: 'SelfServicePayslips', component: () => import('../views/hr/SelfServicePayslipsPage.vue') },
             { path: 'self-service/tax-documents', name: 'SelfServiceTaxDocuments', component: () => import('../views/hr/SelfServiceTaxDocumentsPage.vue') },
             { path: 'self-service/reimbursements', name: 'SelfServiceReimbursements', component: () => import('../views/hr/SelfServiceReimbursementsPage.vue') },
-            { path: 'self-service/training', name: 'SelfServiceTraining', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Training', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'self-service/training', name: 'SelfServiceTraining', component: () => import('../views/hr/SelfServiceTrainingPage.vue') },
             { path: 'self-service/assets', name: 'SelfServiceAssets', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Assets', phase: 'Phase 5 — Growth & Lifecycle' }) },
             { path: 'self-service/documents', name: 'SelfServiceDocuments', component: () => import('../views/hr/SelfServiceDocumentsPage.vue') },
             { path: 'self-service/performance', name: 'SelfServicePerformance', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Performance Reviews', phase: 'Phase 5 — Growth & Lifecycle' }) },
@@ -210,8 +210,11 @@ const routes = [
                 component: () => import('../views/hr/recruitment/HrRecruitmentWorkspacePage.vue'),
             },
             { path: 'hr/onboarding', redirect: '/admin/hr/onboarding/dashboard' },
+            // Training management consolidated into the dedicated Training module —
+            // legacy onboarding/training links now land on Employee Trainings.
+            { path: 'hr/onboarding/training', redirect: '/admin/hr/training/enrollment' },
             {
-                path: 'hr/onboarding/:tab(dashboard|pending-joining|checklist|approvals|documents|identity|assets|account-provisioning|welcome-kit|training|induction|probation|tasks|reports)',
+                path: 'hr/onboarding/:tab(dashboard|pending-joining|checklist|approvals|documents|identity|assets|account-provisioning|welcome-kit|induction|probation|tasks|reports)',
                 name: 'HrOnboardingTab',
                 component: () => import('../views/hr/onboarding/HrOnboardingWorkspacePage.vue'),
             },
@@ -247,7 +250,12 @@ const routes = [
                 name: 'HrReimbursementsTab',
                 component: () => import('../views/hr/reimbursements/HrReimbursementsWorkspacePage.vue'),
             },
-            { path: 'hr/training', name: 'HrTraining', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Training & Certifications', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'hr/training', redirect: '/admin/hr/training/dashboard' },
+            {
+                path: 'hr/training/:tab(dashboard|programs|trainers|materials|enrollment|skill-matrix|certifications|certification-expiry|compliance|requests|feedback|assessments|calendar|budget|reports|audit-logs)',
+                name: 'HrTrainingTab',
+                component: () => import('../views/hr/training/HrTrainingWorkspacePage.vue'),
+            },
             { path: 'hr/assets', name: 'HrAssets', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Assets Management', phase: 'Phase 5 — Growth & Lifecycle' }) },
             { path: 'hr/travel', name: 'HrTravel', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Travel Management', phase: 'Phase 5 — Growth & Lifecycle' }) },
             { path: 'hr/exit', name: 'HrExit', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Exit Management', phase: 'Phase 5 — Growth & Lifecycle' }) },

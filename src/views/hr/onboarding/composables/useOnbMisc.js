@@ -57,8 +57,11 @@ export async function patchTrainingProgram(id, payload) {
   const { data } = await axios.patch(`${API}/hr/training/programs/${id}`, payload, { headers: authHeader() })
   return data
 }
-export async function deleteTrainingProgram(id) {
-  await axios.delete(`${API}/hr/training/programs/${id}`, { headers: authHeader() })
+export async function deleteTrainingProgram(id, { reason, note } = {}) {
+  const params = {}
+  if (reason) params.reason = reason
+  if (note) params.note = note
+  await axios.delete(`${API}/hr/training/programs/${id}`, { headers: authHeader(), params })
 }
 export async function fetchTrainingAssignments(params = {}) {
   const { data } = await axios.get(`${API}/hr/training/assignments`, { headers: authHeader(), params })
@@ -72,8 +75,11 @@ export async function patchTrainingAssignment(id, payload) {
   const { data } = await axios.patch(`${API}/hr/training/assignments/${id}`, payload, { headers: authHeader() })
   return data
 }
-export async function deleteTrainingAssignment(id) {
-  await axios.delete(`${API}/hr/training/assignments/${id}`, { headers: authHeader() })
+export async function deleteTrainingAssignment(id, { reason, note } = {}) {
+  const params = {}
+  if (reason) params.reason = reason
+  if (note) params.note = note
+  await axios.delete(`${API}/hr/training/assignments/${id}`, { headers: authHeader(), params })
 }
 
 // ── Induction ──

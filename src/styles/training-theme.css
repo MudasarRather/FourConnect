@@ -1,0 +1,254 @@
+/* ============================================================================
+   TRAINING & DEVELOPMENT MODULE THEME  ·  "Learning Observatory"
+   ----------------------------------------------------------------------------
+   Feature-scoped tokens. Imported per-view (HrTrainingWorkspacePage,
+   SelfServiceTrainingPage) — NEVER globally from main.js.
+   Inherits the HR palette, then layers a planetarium / observatory aesthetic:
+   a deep dome, twinkling skill-stars, orbiting certification rings, a gold
+   org-core. Warm gold/amber/orange only; emerald = success, red = danger.
+   ============================================================================ */
+@import './hr-theme.css';
+
+:root {
+  /* ── Dome canvas & surfaces (dark) ── */
+  --trn-canvas: #050505;
+  --trn-dome: radial-gradient(140% 120% at 50% -20%, #0c0a08 0%, #060505 60%, #040303 100%);
+  --trn-surface: rgba(20, 18, 16, 0.66);
+  --trn-surface-elevated: rgba(30, 27, 24, 0.9);
+  --trn-panel: rgba(24, 21, 18, 0.82);
+  --trn-border-soft: rgba(255, 255, 255, 0.07);
+  --trn-border-strong: rgba(255, 255, 255, 0.13);
+
+  /* ── Observatory palette ── */
+  --trn-core: #fbbf24;            /* the gold org-core */
+  --trn-star: #fde68a;            /* a bright skill star */
+  --trn-star-dim: #9ca3af;        /* an un-lit / not-started star */
+  --trn-orbit: #fb923c;           /* orbiting certification ring */
+  --trn-orbit-far: #ea580c;
+  --trn-dome-glow: rgba(251, 191, 36, 0.14);
+  --trn-grid-line: rgba(255, 255, 255, 0.045);
+  --trn-starfield: rgba(253, 230, 138, 0.5);
+  --trn-glare: rgba(255, 255, 255, 0.10);
+
+  --trn-amber: #fbbf24;
+  --trn-amber-bright: #fde68a;
+  --trn-amber-strong: #f59e0b;
+  --trn-ember: #fb923c;
+
+  /* ── Assignment status (solid / soft / chart-hex) ── */
+  --trn-st-not-started: #9ca3af; --trn-st-not-started-soft: rgba(156,163,175,0.14); --trn-st-not-started-hex: #9ca3af;
+  --trn-st-in-progress: #fbbf24; --trn-st-in-progress-soft: rgba(251,191,36,0.16);  --trn-st-in-progress-hex: #fbbf24;
+  --trn-st-completed: #34d399;   --trn-st-completed-soft: rgba(52,211,153,0.16);    --trn-st-completed-hex: #34d399;
+  --trn-st-failed: #f87171;      --trn-st-failed-soft: rgba(248,113,113,0.16);      --trn-st-failed-hex: #f87171;
+  --trn-st-waived: #fb923c;      --trn-st-waived-soft: rgba(251,146,60,0.16);       --trn-st-waived-hex: #fb923c;
+
+  /* ── Certification status ── */
+  --trn-cert-active: #34d399;          --trn-cert-active-soft: rgba(52,211,153,0.16);
+  --trn-cert-expiring: #fbbf24;        --trn-cert-expiring-soft: rgba(251,191,36,0.16);
+  --trn-cert-expired: #f87171;         --trn-cert-expired-soft: rgba(248,113,113,0.16);
+  --trn-cert-revoked: #9ca3af;         --trn-cert-revoked-soft: rgba(156,163,175,0.14);
+  --trn-cert-pending: #fb923c;         --trn-cert-pending-soft: rgba(251,146,60,0.16);
+
+  /* ── Training-type accents (warm ramp + 1 neutral for OTHER) ── */
+  --trn-type-hr_orientation: #fbbf24;
+  --trn-type-security: #fb923c;
+  --trn-type-software: #f59e0b;
+  --trn-type-compliance: #ea580c;
+  --trn-type-safety: #fcd34d;
+  --trn-type-department: #d97706;
+  --trn-type-other: #9ca3af;
+
+  /* ── Skill heat ramp (dim grey → gold → bright → emerald mastery) ── */
+  --trn-heat-0: rgba(156, 163, 175, 0.16);
+  --trn-heat-1: rgba(217, 119, 6, 0.34);
+  --trn-heat-2: rgba(245, 158, 11, 0.52);
+  --trn-heat-3: rgba(251, 191, 36, 0.74);
+  --trn-heat-4: rgba(52, 211, 153, 0.82);
+
+  /* ── Text ── */
+  --trn-text: var(--hr-text);
+  --trn-text-secondary: var(--hr-text-secondary);
+  --trn-text-muted: var(--hr-text-muted);
+  --trn-text-dim: #6b6357;
+
+  /* ── Type ── */
+  --trn-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  /* ── Motion ── */
+  --trn-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --trn-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Gradients ── */
+  --trn-grad-hero:
+    radial-gradient(120% 120% at 18% -10%, rgba(251, 191, 36, 0.18), transparent 56%),
+    radial-gradient(95% 95% at 88% 112%, rgba(251, 146, 60, 0.12), transparent 60%),
+    radial-gradient(70% 70% at 60% 46%, rgba(234, 88, 12, 0.07), transparent 72%);
+  --trn-grad-core: conic-gradient(from 0deg, #fbbf24, #fde68a, #fb923c, #ea580c, #fbbf24);
+  --trn-grad-rail: linear-gradient(180deg, var(--trn-amber-bright), var(--trn-amber-strong));
+  --trn-grad-sweep: conic-gradient(from 0deg, transparent 0deg, rgba(251,191,36,0.5) 40deg, transparent 80deg);
+
+  /* ── Card surfaces ── */
+  --trn-surf-card: linear-gradient(165deg, var(--trn-surface-elevated), var(--trn-surface));
+  --trn-card-shadow: 0 16px 42px -28px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(253, 230, 138, 0.05);
+  --trn-card-shadow-hover: 0 28px 58px -26px rgba(0, 0, 0, 0.82), inset 0 1px 0 rgba(253, 230, 138, 0.08);
+
+  /* ── Glass (modals / drawers) ── */
+  --trn-glass: rgba(18, 16, 14, 0.62);
+  --trn-glass-deep: rgba(10, 9, 8, 0.88);
+  --trn-glass-blur: blur(26px) saturate(150%);
+  --trn-glass-shadow: 0 28px 70px -34px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────── */
+@keyframes trn-twinkle { 0%, 100% { opacity: 0.35; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.15); } }
+@keyframes trn-orbit-spin { to { transform: rotate(360deg); } }
+@keyframes trn-orbit-spin-rev { to { transform: rotate(-360deg); } }
+@keyframes trn-radar-sweep { to { transform: rotate(360deg); } }
+@keyframes trn-shoot {
+  0% { transform: translate(0, 0) scale(1); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translate(var(--trn-shoot-x, 60px), var(--trn-shoot-y, -40px)) scale(0.2); opacity: 0; }
+}
+@keyframes trn-arc-draw { from { stroke-dashoffset: var(--trn-arc-len, 320); } to { stroke-dashoffset: 0; } }
+@keyframes trn-core-breathe { 0%, 100% { filter: drop-shadow(0 0 10px rgba(251,146,60,0.4)); } 50% { filter: drop-shadow(0 0 22px rgba(251,146,60,0.7)); } }
+@keyframes trn-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes trn-sheen { 0% { background-position: 140% 0; } 100% { background-position: -40% 0; } }
+@keyframes trn-pulse-dot { 0%, 100% { box-shadow: 0 0 0 0 rgba(251,191,36,0.5); } 50% { box-shadow: 0 0 0 6px rgba(251,191,36,0); } }
+@keyframes trn-grain-shift {
+  0% { transform: translate3d(0,0,0); } 25% { transform: translate3d(-5%,4%,0); }
+  50% { transform: translate3d(4%,-5%,0); } 75% { transform: translate3d(-3%,5%,0); } 100% { transform: translate3d(0,0,0); }
+}
+
+/* ── Utility classes ───────────────────────────────────────────────────── */
+.trn-mono { font-family: var(--trn-mono); font-variant-numeric: tabular-nums; }
+
+/* twinkling starfield dust — pin to a positioned ancestor */
+.trn-grain {
+  position: absolute; inset: -50%; pointer-events: none; z-index: 0; opacity: 0.05; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: trn-grain-shift 8s steps(6) infinite;
+}
+[data-theme="light"] .trn-grain { opacity: 0.04; mix-blend-mode: multiply; }
+
+/* pointer-tracked starlight glare — needs --mx/--my/--spot from usePointerSpotlight */
+.trn-spotlight {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: var(--spot, 0); transition: opacity 0.4s ease;
+  background: radial-gradient(440px 340px at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%),
+    color-mix(in srgb, var(--trn-amber) 16%, transparent), transparent 60%);
+}
+
+/* glass card base */
+.trn-card {
+  position: relative; background: var(--trn-surf-card); border: 1px solid var(--trn-border-soft);
+  border-radius: 18px; box-shadow: var(--trn-card-shadow);
+}
+
+/* status star-pill */
+.trn-stamp {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--trn-mono); font-weight: 700; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap;
+}
+.trn-stamp[data-status="NOT_STARTED"] { color: var(--trn-st-not-started); background: var(--trn-st-not-started-soft); }
+.trn-stamp[data-status="IN_PROGRESS"] { color: var(--trn-st-in-progress); background: var(--trn-st-in-progress-soft); }
+.trn-stamp[data-status="COMPLETED"]   { color: var(--trn-st-completed);   background: var(--trn-st-completed-soft); }
+.trn-stamp[data-status="FAILED"]      { color: var(--trn-st-failed);      background: var(--trn-st-failed-soft); }
+.trn-stamp[data-status="WAIVED"]      { color: var(--trn-st-waived);      background: var(--trn-st-waived-soft); }
+.trn-stamp[data-status="ACTIVE"]      { color: var(--trn-cert-active);    background: var(--trn-cert-active-soft); }
+.trn-stamp[data-status="EXPIRING_SOON"]{ color: var(--trn-cert-expiring); background: var(--trn-cert-expiring-soft); }
+.trn-stamp[data-status="EXPIRED"]     { color: var(--trn-cert-expired);   background: var(--trn-cert-expired-soft); }
+.trn-stamp[data-status="REVOKED"]     { color: var(--trn-cert-revoked);   background: var(--trn-cert-revoked-soft); }
+.trn-stamp[data-status="PENDING_RENEWAL"]{ color: var(--trn-cert-pending); background: var(--trn-cert-pending-soft); }
+.trn-stamp[data-status="PENDING_APPROVAL"]{ color: var(--trn-st-in-progress); background: var(--trn-st-in-progress-soft); }
+.trn-stamp[data-status="APPROVED"]    { color: var(--trn-st-completed);   background: var(--trn-st-completed-soft); }
+.trn-stamp[data-status="REJECTED"]    { color: var(--trn-st-failed);      background: var(--trn-st-failed-soft); }
+.trn-stamp[data-status="RETURNED"]    { color: var(--trn-st-waived);      background: var(--trn-st-waived-soft); }
+.trn-stamp[data-status="CANCELLED"]   { color: var(--trn-st-not-started); background: var(--trn-st-not-started-soft); }
+.trn-stamp[data-status="FULFILLED"]   { color: var(--trn-cert-active);    background: var(--trn-cert-active-soft); }
+.trn-stamp[data-status="DRAFT"]       { color: var(--trn-st-not-started); background: var(--trn-st-not-started-soft); }
+
+/* buttons */
+.trn-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: 11px;
+  border: 1px solid transparent; cursor: pointer; transition: all 0.25s var(--trn-spring); white-space: nowrap;
+}
+.trn-btn-primary { background: var(--hr-gradient-hero); color: #1a1206; border: none; box-shadow: 0 8px 22px -10px rgba(251, 146, 60, 0.6); }
+.trn-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 28px -10px rgba(251, 146, 60, 0.72); }
+.trn-btn-ghost { background: var(--trn-surface); color: var(--trn-text-secondary); border-color: var(--trn-border-soft); }
+.trn-btn-ghost:hover { background: var(--trn-surface-elevated); color: var(--trn-text); }
+.trn-btn-danger { background: rgba(248, 113, 113, 0.14); color: #f87171; border-color: rgba(248, 113, 113, 0.34); }
+.trn-btn-danger:hover { background: rgba(248, 113, 113, 0.22); }
+.trn-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* skeleton + empty */
+.trn-skel { background: linear-gradient(90deg, var(--trn-surface) 25%, var(--trn-surface-elevated) 37%, var(--trn-surface) 63%);
+  background-size: 400% 100%; animation: trn-sheen 1.4s ease infinite; border-radius: 8px; }
+.trn-empty-card { border: 1.5px dashed var(--trn-border-strong); border-radius: 16px; padding: 44px 24px; text-align: center;
+  background: var(--trn-surface); color: var(--trn-text-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .trn-grain, .trn-skel { animation: none !important; }
+}
+
+/* ============================================================================
+   ═════════════════════  LIGHT THEME OVERRIDES  ═════════════════════
+   Warm cream dome; gold/amber stay vivid; emerald/red darken for AA on cream.
+   ============================================================================ */
+[data-theme="light"] {
+  --trn-canvas: #faf7f0;
+  --trn-dome: radial-gradient(140% 120% at 50% -20%, #fffaf0 0%, #faf7f0 60%, #f3ece0 100%);
+  --trn-surface: rgba(255, 250, 240, 0.72);
+  --trn-surface-elevated: rgba(255, 250, 240, 0.94);
+  --trn-panel: rgba(255, 252, 245, 0.96);
+  --trn-border-soft: rgba(40, 25, 10, 0.10);
+  --trn-border-strong: rgba(40, 25, 10, 0.18);
+
+  --trn-star: #d97706;
+  --trn-star-dim: #a8a29e;
+  --trn-dome-glow: rgba(251, 191, 36, 0.22);
+  --trn-grid-line: rgba(40, 25, 10, 0.06);
+  --trn-starfield: rgba(217, 119, 6, 0.4);
+
+  --trn-amber: #d97706;
+  --trn-amber-bright: #f59e0b;
+  --trn-amber-strong: #b45309;
+  --trn-ember: #c2410c;
+
+  --trn-st-not-started: #78716c; --trn-st-not-started-soft: rgba(120,113,108,0.12); --trn-st-not-started-hex: #78716c;
+  --trn-st-in-progress: #b45309; --trn-st-in-progress-soft: rgba(180,83,9,0.12);    --trn-st-in-progress-hex: #d97706;
+  --trn-st-completed: #047857;   --trn-st-completed-soft: rgba(4,120,87,0.12);      --trn-st-completed-hex: #047857;
+  --trn-st-failed: #b91c1c;      --trn-st-failed-soft: rgba(185,28,28,0.12);        --trn-st-failed-hex: #b91c1c;
+  --trn-st-waived: #c2410c;      --trn-st-waived-soft: rgba(194,65,12,0.12);        --trn-st-waived-hex: #c2410c;
+
+  --trn-cert-active: #047857;    --trn-cert-active-soft: rgba(4,120,87,0.12);
+  --trn-cert-expiring: #b45309;  --trn-cert-expiring-soft: rgba(180,83,9,0.12);
+  --trn-cert-expired: #b91c1c;   --trn-cert-expired-soft: rgba(185,28,28,0.12);
+  --trn-cert-revoked: #78716c;   --trn-cert-revoked-soft: rgba(120,113,108,0.12);
+  --trn-cert-pending: #c2410c;   --trn-cert-pending-soft: rgba(194,65,12,0.12);
+
+  --trn-heat-0: rgba(120, 113, 108, 0.14);
+  --trn-heat-1: rgba(217, 119, 6, 0.30);
+  --trn-heat-2: rgba(245, 158, 11, 0.48);
+  --trn-heat-3: rgba(217, 119, 6, 0.72);
+  --trn-heat-4: rgba(4, 120, 87, 0.78);
+
+  --trn-text: #1a1410;
+  --trn-text-secondary: #44362a;
+  --trn-text-muted: #6b5840;
+  --trn-text-dim: #8a7b66;
+
+  --trn-grad-hero:
+    radial-gradient(120% 120% at 18% -10%, rgba(251, 191, 36, 0.24), transparent 56%),
+    radial-gradient(95% 95% at 88% 112%, rgba(251, 146, 60, 0.14), transparent 60%),
+    radial-gradient(70% 70% at 60% 46%, rgba(234, 88, 12, 0.08), transparent 72%);
+  --trn-card-shadow: 0 16px 36px -26px rgba(120, 80, 20, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --trn-card-shadow-hover: 0 26px 50px -24px rgba(120, 80, 20, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  --trn-glass: rgba(255, 250, 240, 0.72);
+  --trn-glass-deep: rgba(255, 250, 240, 0.94);
+  --trn-glass-blur: blur(20px) saturate(135%);
+  --trn-glass-shadow: 0 24px 60px -30px rgba(180, 83, 9, 0.3), 0 0 0 1px rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .trn-btn-primary { color: #2a1a06; }
+[data-theme="light"] .trn-btn-danger { background: rgba(185, 28, 28, 0.10); color: #b91c1c; border-color: rgba(185, 28, 28, 0.30); }

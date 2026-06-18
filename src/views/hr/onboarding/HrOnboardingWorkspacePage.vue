@@ -56,10 +56,6 @@
             v-else-if="activeTab === 'welcome-kit'"
             @refresh-stats="loadDashboard"
           />
-          <OnbTrainingSection
-            v-else-if="activeTab === 'training'"
-            @refresh-stats="loadDashboard"
-          />
           <OnbInductionSection
             v-else-if="activeTab === 'induction'"
             @refresh-stats="loadDashboard"
@@ -104,7 +100,6 @@ import OnbIdentitySection from './sections/OnbIdentitySection.vue'
 import OnbAssetSection from './sections/OnbAssetSection.vue'
 import OnbAccountSection from './sections/OnbAccountSection.vue'
 import OnbWelcomeKitSection from './sections/OnbWelcomeKitSection.vue'
-import OnbTrainingSection from './sections/OnbTrainingSection.vue'
 import OnbInductionSection from './sections/OnbInductionSection.vue'
 import OnbProbationSection from './sections/OnbProbationSection.vue'
 import OnbTasksSection from './sections/OnbTasksSection.vue'
@@ -127,7 +122,6 @@ const TABS = [
   { key: 'assets',               label: 'Assets',            icon: Laptop },
   { key: 'account-provisioning', label: 'Accounts',          icon: KeyRound },
   { key: 'welcome-kit',          label: 'Welcome Kit',       icon: Gift },
-  { key: 'training',             label: 'Training',          icon: GraduationCap },
   { key: 'induction',            label: 'Induction',         icon: Users },
   { key: 'probation',            label: 'Probation',         icon: Gauge },
   { key: 'tasks',                label: 'Tasks',             icon: ClipboardList },
@@ -140,6 +134,9 @@ const activeTab = ref(VALID.has(route.params.tab) ? route.params.tab : 'dashboar
 const slideDir = ref('forward')
 
 const selectTab = (key) => {
+  // training management now lives in the dedicated Training module — a few
+  // onboarding affordances deep-link out to it via an absolute path.
+  if (typeof key === 'string' && key.startsWith('/')) { router.push(key); return }
   if (!VALID.has(key) || key === activeTab.value) return
   router.replace({ name: 'HrOnboardingTab', params: { tab: key } })
 }
@@ -150,7 +147,7 @@ const STAGE_TO_TAB = {
   DOCS: 'documents',
   IDENTITY: 'identity',
   ASSETS: 'assets',
-  TRAINING: 'training',
+  TRAINING: '/admin/hr/training/enrollment',
   ACTIVE: 'dashboard',
 }
 const onWaypoint = (key) => {
@@ -201,7 +198,7 @@ const heroMetrics = computed(() => {
     { key: 'today',    label: 'Today Joining',    sub: 'reporting today',      icon: Briefcase,     value: s.today_joining || 0,            color: '#fbbf24', go: 'pending-joining' },
     { key: 'docs',     label: 'Docs Pending',     sub: 'awaiting verification',icon: FileText,      value: s.pending_documents || 0,        color: '#f59e0b', go: 'documents' },
     { key: 'assets',   label: 'Assets Pending',   sub: 'unallocated joiners',  icon: Package,       value: s.pending_asset_allocation || 0, color: '#fb923c', go: 'assets' },
-    { key: 'training', label: 'Training Pending', sub: 'incomplete sessions',  icon: GraduationCap, value: s.training_pending || 0,         color: '#f97316', go: 'training' },
+    { key: 'training', label: 'Training Pending', sub: 'manage in Training',    icon: GraduationCap, value: s.training_pending || 0,         color: '#f97316', go: '/admin/hr/training/enrollment' },
     { key: 'inprog',   label: 'In Progress',      sub: 'open processes',       icon: Gauge,         value: s.incomplete_onboarding || 0,    color: '#ea580c', go: 'dashboard' },
     { key: 'done',     label: 'Onboarded',        sub: 'fully completed',      icon: CheckCircle2,  value: s.completed_onboarding || 0,     color: '#34d399', go: 'dashboard' },
   ]

@@ -1,0 +1,350 @@
+/* ============================================================================
+   ASSET MANAGEMENT MODULE THEME  ·  "Asset Hangar"
+   ----------------------------------------------------------------------------
+   Feature-scoped tokens. Imported per-view (HrAssetsWorkspacePage,
+   SelfServiceAssetsPage) — NEVER globally from main.js.
+   Inherits the HR palette, then layers a machined-hangar aesthetic: a warm
+   gold/amber brand base + a brushed-steel / chrome accent for asset bezels,
+   rings and tags. Warm gold/amber/orange only; emerald = ready/success,
+   red = damage/danger, steel = neutral/maintenance.
+   ============================================================================ */
+@import './hr-theme.css';
+
+:root {
+  /* ── Hangar canvas & surfaces (dark) ── */
+  --as-canvas: #050506;
+  --as-dome: radial-gradient(150% 130% at 50% -20%, #0c0b0a 0%, #070605 60%, #040404 100%);
+  --as-surface: rgba(19, 19, 21, 0.66);
+  --as-surface-elevated: rgba(29, 28, 30, 0.9);
+  --as-panel: rgba(23, 22, 24, 0.84);
+  --as-border-soft: rgba(255, 255, 255, 0.07);
+  --as-border-strong: rgba(255, 255, 255, 0.13);
+
+  /* ── Warm brand ── */
+  --as-amber: #fbbf24;
+  --as-amber-bright: #fde68a;
+  --as-amber-strong: #f59e0b;
+  --as-ember: #fb923c;
+  --as-ember-deep: #ea580c;
+
+  /* ── ★ Chrome / brushed steel (the machined accent) ── */
+  --as-steel: #c9ced6;
+  --as-steel-dim: #9aa1ab;
+  --as-steel-dark: #5b626d;
+  --as-steel-hi: #eef1f5;
+  --as-bezel: linear-gradient(145deg, #eef1f5 0%, #c2c8d1 28%, #767d88 52%, #c2c8d1 74%, #eef1f5 100%);
+  --as-bezel-ring: linear-gradient(140deg, #f3f5f8, #aab1bb 35%, #686f7a 60%, #aab1bb 82%, #f3f5f8);
+  --as-machined: repeating-linear-gradient(115deg, rgba(255,255,255,0.05) 0 1px, rgba(255,255,255,0) 1px 3px);
+  --as-chrome-sheen: linear-gradient(100deg, transparent 0%, rgba(255,255,255,0.55) 48%, transparent 72%);
+  --as-tag-bg: linear-gradient(165deg, #2b2e34, #1a1c20);
+
+  /* ── Asset status (solid / soft / chart-hex) ── */
+  --as-st-available: #34d399;   --as-st-available-soft: rgba(52,211,153,0.15);  --as-st-available-hex: #34d399;
+  --as-st-allocated: #fbbf24;   --as-st-allocated-soft: rgba(251,191,36,0.16);  --as-st-allocated-hex: #fbbf24;
+  --as-st-reserved: #fb923c;    --as-st-reserved-soft: rgba(251,146,60,0.16);   --as-st-reserved-hex: #fb923c;
+  --as-st-maintenance: #9aa1ab; --as-st-maintenance-soft: rgba(154,161,171,0.18); --as-st-maintenance-hex: #9aa1ab;
+  --as-st-retired: #6b7280;     --as-st-retired-soft: rgba(107,114,128,0.16);   --as-st-retired-hex: #6b7280;
+
+  /* ── Condition ramp (new → retired) ── */
+  --as-cond-new: #34d399;   --as-cond-new-soft: rgba(52,211,153,0.15);
+  --as-cond-good: #fbbf24;  --as-cond-good-soft: rgba(251,191,36,0.15);
+  --as-cond-fair: #fb923c;  --as-cond-fair-soft: rgba(251,146,60,0.15);
+  --as-cond-poor: #f87171;  --as-cond-poor-soft: rgba(248,113,113,0.15);
+  --as-cond-retired: #6b7280; --as-cond-retired-soft: rgba(107,114,128,0.16);
+
+  /* ── Allocation status ── */
+  --as-al-allocated: #fbbf24; --as-al-allocated-soft: rgba(251,191,36,0.16);
+  --as-al-returned: #34d399;  --as-al-returned-soft: rgba(52,211,153,0.15);
+  --as-al-lost: #f87171;      --as-al-lost-soft: rgba(248,113,113,0.15);
+  --as-al-damaged: #fb7185;   --as-al-damaged-soft: rgba(251,113,133,0.15);
+
+  /* ── Type accents (warm ramp + steel for hardware-ish) ── */
+  --as-type-laptop: #fbbf24;   --as-type-desktop: #f59e0b;  --as-type-monitor: #fcd34d;
+  --as-type-mobile: #fb923c;   --as-type-sim: #d97706;      --as-type-rfid_card: #ea580c;
+  --as-type-id_card: #f59e0b;  --as-type-headset: #fbbf24;  --as-type-keyboard: #c9ced6;
+  --as-type-mouse: #9aa1ab;    --as-type-vehicle: #34d399;  --as-type-keys: #c9ced6;
+  --as-type-other: #9ca3af;
+
+  /* ── Hangar lighting / blueprint ── */
+  --as-blueprint: rgba(251, 191, 36, 0.10);
+  --as-hangar-fog: rgba(8, 7, 6, 0.9);
+  --as-bay-glow: rgba(251, 146, 60, 0.16);
+  --as-floor-tint: rgba(20, 18, 16, 0.7);
+
+  /* ── Text ── */
+  --as-text: var(--hr-text);
+  --as-text-secondary: var(--hr-text-secondary);
+  --as-text-muted: var(--hr-text-muted);
+  --as-text-dim: #6b6357;
+
+  /* ── Type ── */
+  --as-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+
+  /* ── Motion ── */
+  --as-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --as-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ── Gradients & shadows ── */
+  --as-grad-hero:
+    radial-gradient(120% 120% at 16% -12%, rgba(251, 191, 36, 0.18), transparent 56%),
+    radial-gradient(95% 95% at 90% 112%, rgba(251, 146, 60, 0.12), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%);
+  --as-grad-rail: linear-gradient(180deg, var(--as-amber-bright), var(--as-amber-strong));
+  --as-surf-card: linear-gradient(165deg, var(--as-surface-elevated), var(--as-surface));
+  --as-card-shadow: 0 16px 42px -28px rgba(0,0,0,0.78), inset 0 1px 0 rgba(255,255,255,0.05);
+  --as-card-shadow-hover: 0 28px 60px -26px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.09);
+
+  /* ── Glass (modals / drawers) ── */
+  --as-glass: rgba(18, 17, 16, 0.62);
+  --as-glass-deep: rgba(10, 9, 9, 0.9);
+  --as-glass-blur: blur(26px) saturate(150%);
+  --as-glass-shadow: 0 28px 70px -34px rgba(0,0,0,0.74), 0 0 0 1px rgba(255,255,255,0.04);
+}
+
+/* ── Keyframes ─────────────────────────────────────────────────────────── */
+@keyframes as-chrome-sheen { 0% { background-position: 180% 0; } 100% { background-position: -80% 0; } }
+@keyframes as-bay-pulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 0.95; } }
+@keyframes as-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes as-scan { 0% { transform: translateY(-100%); opacity: 0; } 12% { opacity: 0.7; } 100% { transform: translateY(100%); opacity: 0; } }
+@keyframes as-sheen { 0% { background-position: 140% 0; } 100% { background-position: -40% 0; } }
+@keyframes as-spin { to { transform: rotate(360deg); } }
+@keyframes as-grain-shift {
+  0% { transform: translate3d(0,0,0); } 25% { transform: translate3d(-5%,4%,0); }
+  50% { transform: translate3d(4%,-5%,0); } 75% { transform: translate3d(-3%,5%,0); } 100% { transform: translate3d(0,0,0); }
+}
+@keyframes as-pulse-dot { 0%, 100% { box-shadow: 0 0 0 0 rgba(248,113,113,0.5); } 50% { box-shadow: 0 0 0 6px rgba(248,113,113,0); } }
+
+/* ── Inventory Deck cinematics (shared across Inv* components) ───────────── */
+/* "deal" — card/row materialising into the bay with a tiny 3D rise */
+@keyframes as-deal {
+  0%   { opacity: 0; transform: translate3d(0, 26px, 0) scale(0.94); filter: blur(6px); }
+  60%  { filter: blur(0); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0) scale(1); filter: blur(0); }
+}
+/* manifest row — slides in from the rail edge */
+@keyframes as-deal-row {
+  0%   { opacity: 0; transform: translate3d(-18px, 0, 0); }
+  100% { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+/* vertical scanline that sweeps a freshly-revealed card once (px so it isn't
+   scaled by the 2px line height — % translateY would barely move) */
+@keyframes as-scanline {
+  0%   { transform: translateY(-6px); opacity: 0; }
+  12%  { opacity: 0.9; }
+  88%  { opacity: 0.9; }
+  100% { transform: translateY(190px); opacity: 0; }
+}
+/* horizontal bay-scan sweep across the whole grid on (re)deal — the sweep
+   element is full-width with a narrow bright band, so translateX(100%) of its
+   own width traverses the entire grid */
+@keyframes as-bay-scan {
+  0%   { transform: translateX(-20%); opacity: 0; }
+  12%  { opacity: 0.8; }
+  88%  { opacity: 0.5; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+/* pulse-strip segment charging up from zero width */
+@keyframes as-charge { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* light bar travelling along a manifest row on entry */
+@keyframes as-row-sweep {
+  0%   { transform: translateX(-100%); opacity: 0; }
+  20%  { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+/* slow conic sweep on the holographic type medallion */
+@keyframes as-holo-spin { to { transform: rotate(360deg); } }
+/* condition segment igniting */
+@keyframes as-seg-ignite { 0% { opacity: 0; transform: scaleY(0.3); } 100% { opacity: 1; transform: scaleY(1); } }
+
+/* ── Transit Relay cinematics (Transfers · TransferRelayConsole / TransferRouteCard) ── */
+/* dashed energy flowing along a custody beam */
+@keyframes as-beam-flow { to { background-position: -200% 0; } }
+/* a cargo packet travelling the beam from source → destination node */
+@keyframes as-packet { 0% { left: 0%; opacity: 0; } 14% { opacity: 1; } 86% { opacity: 1; } 100% { left: 100%; opacity: 0; } }
+/* relay station beacon breathing */
+@keyframes as-relay-pulse { 0%, 100% { transform: scale(1); opacity: 0.75; } 50% { transform: scale(1.18); opacity: 1; } }
+/* conveyor lane scrolling under the pipeline */
+@keyframes as-convey { to { background-position: 26px 0; } }
+/* node arrival ping ring */
+@keyframes as-ping { 0% { transform: scale(0.6); opacity: 0.6; } 100% { transform: scale(1.9); opacity: 0; } }
+
+/* ── Utility classes ───────────────────────────────────────────────────── */
+.as-mono { font-family: var(--as-mono); font-variant-numeric: tabular-nums; }
+
+.as-grain {
+  position: absolute; inset: -50%; pointer-events: none; z-index: 0; opacity: 0.05; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: as-grain-shift 8s steps(6) infinite;
+}
+[data-theme="light"] .as-grain { opacity: 0.04; mix-blend-mode: multiply; }
+
+/* blueprint-grid floor overlay (pin to a positioned ancestor) */
+.as-blueprint-floor {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(var(--as-blueprint) 1px, transparent 1px),
+    linear-gradient(90deg, var(--as-blueprint) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: radial-gradient(120% 90% at 50% 120%, #000 30%, transparent 78%);
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 120%, #000 30%, transparent 78%);
+}
+
+/* pointer-tracked glare — needs --mx/--my/--spot from usePointerSpotlight.
+   Dual-layer: a tight bright core fading through amber + a soft wide halo — reads
+   as a real light source rather than a flat blob. Works on dark + cream. */
+.as-spotlight {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: var(--spot, 0); transition: opacity 0.45s var(--as-ease, ease);
+  background:
+    radial-gradient(260px 210px at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%),
+      color-mix(in srgb, var(--as-amber-bright) 32%, transparent), color-mix(in srgb, var(--as-amber) 13%, transparent) 42%, transparent 64%),
+    radial-gradient(580px 480px at calc(var(--mx, 0.5) * 100%) calc(var(--my, 0.5) * 100%),
+      color-mix(in srgb, var(--as-amber) 10%, transparent), transparent 70%);
+}
+
+/* machined glass card */
+.as-card {
+  position: relative; background: var(--as-surf-card); border: 1px solid var(--as-border-soft);
+  border-radius: 18px; box-shadow: var(--as-card-shadow);
+}
+
+/* brushed-steel bezel ring (decorative chrome edge) */
+.as-bezel {
+  background: var(--as-bezel); border-radius: inherit;
+}
+
+/* status / condition pill */
+.as-stamp {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--as-mono); font-weight: 700; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid currentColor; white-space: nowrap;
+}
+.as-stamp[data-status="AVAILABLE"]   { color: var(--as-st-available);   background: var(--as-st-available-soft); }
+.as-stamp[data-status="ALLOCATED"]   { color: var(--as-st-allocated);   background: var(--as-st-allocated-soft); }
+.as-stamp[data-status="RESERVED"]    { color: var(--as-st-reserved);    background: var(--as-st-reserved-soft); }
+.as-stamp[data-status="MAINTENANCE"] { color: var(--as-st-maintenance); background: var(--as-st-maintenance-soft); }
+.as-stamp[data-status="RETIRED"]     { color: var(--as-st-retired);     background: var(--as-st-retired-soft); }
+.as-stamp[data-status="RETURNED"]    { color: var(--as-al-returned);    background: var(--as-al-returned-soft); }
+.as-stamp[data-status="LOST"]        { color: var(--as-al-lost);        background: var(--as-al-lost-soft); }
+.as-stamp[data-status="DAMAGED"]     { color: var(--as-al-damaged);     background: var(--as-al-damaged-soft); }
+.as-stamp[data-status="NEW"]         { color: var(--as-cond-new);       background: var(--as-cond-new-soft); }
+.as-stamp[data-status="GOOD"]        { color: var(--as-cond-good);      background: var(--as-cond-good-soft); }
+.as-stamp[data-status="FAIR"]        { color: var(--as-cond-fair);      background: var(--as-cond-fair-soft); }
+.as-stamp[data-status="POOR"]        { color: var(--as-cond-poor);      background: var(--as-cond-poor-soft); }
+/* ── Workflow statuses (transfers / maintenance / damage / audit / disposal) ── */
+.as-stamp[data-status="REQUESTED"], .as-stamp[data-status="SCHEDULED"], .as-stamp[data-status="REPORTED"],
+.as-stamp[data-status="DRAFT"], .as-stamp[data-status="PENDING"]
+  { color: var(--as-st-reserved); background: var(--as-st-reserved-soft); }
+.as-stamp[data-status="APPROVED"], .as-stamp[data-status="IN_PROGRESS"], .as-stamp[data-status="UNDER_REVIEW"], .as-stamp[data-status="IN_REPAIR"]
+  { color: var(--as-st-allocated); background: var(--as-st-allocated-soft); }
+.as-stamp[data-status="COMPLETED"], .as-stamp[data-status="RESOLVED"], .as-stamp[data-status="FOUND"]
+  { color: var(--as-st-available); background: var(--as-st-available-soft); }
+.as-stamp[data-status="REJECTED"], .as-stamp[data-status="WRITE_OFF"], .as-stamp[data-status="MISSING"]
+  { color: var(--as-al-lost); background: var(--as-al-lost-soft); }
+.as-stamp[data-status="CANCELLED"], .as-stamp[data-status="MISMATCH"]
+  { color: var(--as-st-retired); background: var(--as-st-retired-soft); }
+.as-stamp[data-status="MINOR"]      { color: var(--as-cond-good); background: var(--as-cond-good-soft); }
+.as-stamp[data-status="MODERATE"]   { color: var(--as-st-reserved); background: var(--as-st-reserved-soft); }
+.as-stamp[data-status="MAJOR"]      { color: var(--as-cond-poor); background: var(--as-cond-poor-soft); }
+.as-stamp[data-status="TOTAL_LOSS"] { color: var(--as-al-lost); background: var(--as-al-lost-soft); }
+
+/* buttons */
+.as-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: 11px;
+  border: 1px solid transparent; cursor: pointer; transition: all 0.25s var(--as-spring); white-space: nowrap;
+}
+.as-btn-primary { background: var(--hr-gradient-hero, linear-gradient(135deg, #fbbf24, #f59e0b)); color: #1a1206; border: none; box-shadow: 0 8px 22px -10px rgba(251,146,60,0.6); }
+.as-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 28px -10px rgba(251,146,60,0.72); }
+.as-btn-ghost { background: var(--as-surface); color: var(--as-text-secondary); border-color: var(--as-border-soft); }
+.as-btn-ghost:hover { background: var(--as-surface-elevated); color: var(--as-text); }
+.as-btn-steel { background: linear-gradient(165deg, #4a4f57, #2a2d33); color: var(--as-steel-hi); border: 1px solid rgba(255,255,255,0.12); }
+.as-btn-steel:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.22); }
+.as-btn-danger { background: rgba(248,113,113,0.14); color: #f87171; border-color: rgba(248,113,113,0.34); }
+.as-btn-danger:hover { background: rgba(248,113,113,0.22); }
+.as-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* skeleton + empty */
+.as-skel { background: linear-gradient(90deg, var(--as-surface) 25%, var(--as-surface-elevated) 37%, var(--as-surface) 63%);
+  background-size: 400% 100%; animation: as-sheen 1.4s ease infinite; border-radius: 8px; }
+.as-empty-card { border: 1.5px dashed var(--as-border-strong); border-radius: 16px; padding: 44px 24px; text-align: center;
+  background: var(--as-surface); color: var(--as-text-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .as-grain, .as-skel { animation: none !important; }
+}
+
+/* ============================================================================
+   ═════════════════════  LIGHT THEME OVERRIDES  ═════════════════════
+   Warm cream hangar; gold/amber stay vivid; steel darkens so chrome reads on
+   cream; emerald/red darken for AA.
+   ============================================================================ */
+[data-theme="light"] {
+  --as-canvas: #faf7f0;
+  --as-dome: radial-gradient(150% 130% at 50% -20%, #fffaf0 0%, #faf7f0 60%, #f1eadd 100%);
+  --as-surface: rgba(255, 250, 240, 0.72);
+  --as-surface-elevated: rgba(255, 250, 240, 0.95);
+  --as-panel: rgba(255, 252, 245, 0.96);
+  --as-border-soft: rgba(40, 25, 10, 0.10);
+  --as-border-strong: rgba(40, 25, 10, 0.18);
+
+  --as-amber: #d97706;
+  --as-amber-bright: #f59e0b;
+  --as-amber-strong: #b45309;
+  --as-ember: #c2410c;
+  --as-ember-deep: #9a3412;
+
+  /* darker brushed steel so the chrome reads on cream */
+  --as-steel: #7a818c;
+  --as-steel-dim: #9aa1ab;
+  --as-steel-dark: #4b515b;
+  --as-steel-hi: #2a2d33;
+  --as-bezel: linear-gradient(145deg, #e7eaef 0%, #b9bfc8 30%, #7c828d 54%, #b9bfc8 76%, #e7eaef 100%);
+  --as-bezel-ring: linear-gradient(140deg, #eef1f5, #aeb4bd 38%, #767d88 62%, #aeb4bd 84%, #eef1f5);
+  --as-machined: repeating-linear-gradient(115deg, rgba(40,25,10,0.05) 0 1px, rgba(0,0,0,0) 1px 3px);
+  --as-tag-bg: linear-gradient(165deg, #e9ebef, #d3d7dd);
+
+  --as-st-available: #047857;   --as-st-available-soft: rgba(4,120,87,0.12);    --as-st-available-hex: #047857;
+  --as-st-allocated: #b45309;   --as-st-allocated-soft: rgba(180,83,9,0.12);    --as-st-allocated-hex: #d97706;
+  --as-st-reserved: #c2410c;    --as-st-reserved-soft: rgba(194,65,12,0.12);    --as-st-reserved-hex: #c2410c;
+  --as-st-maintenance: #4b515b; --as-st-maintenance-soft: rgba(75,81,91,0.12);  --as-st-maintenance-hex: #4b515b;
+  --as-st-retired: #78716c;     --as-st-retired-soft: rgba(120,113,108,0.12);   --as-st-retired-hex: #78716c;
+
+  --as-cond-new: #047857;   --as-cond-new-soft: rgba(4,120,87,0.12);
+  --as-cond-good: #b45309;  --as-cond-good-soft: rgba(180,83,9,0.12);
+  --as-cond-fair: #c2410c;  --as-cond-fair-soft: rgba(194,65,12,0.12);
+  --as-cond-poor: #b91c1c;  --as-cond-poor-soft: rgba(185,28,28,0.12);
+  --as-cond-retired: #78716c; --as-cond-retired-soft: rgba(120,113,108,0.12);
+
+  --as-al-allocated: #b45309; --as-al-allocated-soft: rgba(180,83,9,0.12);
+  --as-al-returned: #047857;  --as-al-returned-soft: rgba(4,120,87,0.12);
+  --as-al-lost: #b91c1c;      --as-al-lost-soft: rgba(185,28,28,0.12);
+  --as-al-damaged: #be123c;   --as-al-damaged-soft: rgba(190,18,60,0.12);
+
+  --as-type-keyboard: #7a818c; --as-type-mouse: #7a818c; --as-type-keys: #7a818c;
+  --as-type-vehicle: #047857;  --as-type-other: #78716c;
+
+  --as-blueprint: rgba(180, 83, 9, 0.10);
+  --as-hangar-fog: rgba(255, 250, 240, 0.9);
+  --as-bay-glow: rgba(251, 146, 60, 0.18);
+  --as-floor-tint: rgba(255, 250, 240, 0.7);
+
+  --as-text: #1a1410;
+  --as-text-secondary: #44362a;
+  --as-text-muted: #6b5840;
+  --as-text-dim: #8a7b66;
+
+  --as-grad-hero:
+    radial-gradient(120% 120% at 16% -12%, rgba(251, 191, 36, 0.24), transparent 56%),
+    radial-gradient(95% 95% at 90% 112%, rgba(251, 146, 60, 0.14), transparent 60%),
+    linear-gradient(180deg, rgba(255,255,255,0.5), transparent 40%);
+  --as-card-shadow: 0 16px 36px -26px rgba(120, 80, 20, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --as-card-shadow-hover: 0 26px 50px -24px rgba(120, 80, 20, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+
+  --as-glass: rgba(255, 250, 240, 0.72);
+  --as-glass-deep: rgba(255, 250, 240, 0.95);
+  --as-glass-blur: blur(20px) saturate(135%);
+  --as-glass-shadow: 0 24px 60px -30px rgba(180, 83, 9, 0.3), 0 0 0 1px rgba(40, 25, 10, 0.06);
+}
+[data-theme="light"] .as-btn-primary { color: #2a1a06; }
+[data-theme="light"] .as-btn-steel { background: linear-gradient(165deg, #d9dde2, #b9bfc8); color: #2a2d33; border-color: rgba(40,25,10,0.14); }
+[data-theme="light"] .as-btn-danger { background: rgba(185,28,28,0.10); color: #b91c1c; border-color: rgba(185,28,28,0.30); }

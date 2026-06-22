@@ -81,6 +81,28 @@
                 <div v-if="!categories.length" class="loading rmb-mono">Loading categories…</div>
                 <div v-else-if="!filteredCats.length" class="loading rmb-mono">No categories match “{{ catQuery }}”.</div>
               </div>
+
+              <!-- travel gate (self): trip-linked expenses reconcile on the trip, not here -->
+              <Motion v-if="form.category_id && isTravelCat && mode === 'self'" as="div" class="trip-gate"
+                      :initial="{ opacity: 0, y: 10 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.35, ease: [0.16,1,0.3,1] }">
+                <div class="tg-q"><Plane :size="14" /> Is this for a business trip you raised a travel request for?</div>
+                <div class="tg-opts">
+                  <button type="button" class="tg-opt" :class="{ on: tripLinked === 'yes' }" @click="tripLinked = 'yes'">Yes, it's for a trip</button>
+                  <button type="button" class="tg-opt" :class="{ on: tripLinked === 'no' }" @click="tripLinked = 'no'">No — ad-hoc travel</button>
+                </div>
+                <Transition name="cc-check">
+                  <div v-if="tripLinked === 'yes'" class="tg-redirect">
+                    <p>Trip costs are reconciled on the trip itself — your <b>advance &amp; per-diem are netted there</b>, and a separate claim would <b>double-pay</b>. File your actual expenses on the trip and the overspend is reimbursed after approval.</p>
+                    <button type="button" class="tg-go" @click="goTravel"><PlaneTakeoff :size="15" /> Open my travel trips <ArrowRight :size="14" /></button>
+                  </div>
+                </Transition>
+                <p v-if="tripLinked === 'no'" class="tg-ok"><Check :size="13" :stroke-width="3" /> Ad-hoc travel, no travel request — continue below.</p>
+              </Motion>
+
+              <!-- admin: non-blocking caution -->
+              <div v-else-if="form.category_id && isTravelCat && mode === 'admin'" class="tg-caution">
+                <AlertTriangle :size="14" /> If a travel request exists for this trip, reconcile it in the Travel module — a separate claim may double-pay the advance.
+              </div>
             </div>
 
             <!-- Step 1 — dynamic + core fields -->
@@ -172,8 +194,9 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { Motion } from 'motion-v'
-import { X, ChevronLeft, ChevronRight, Upload, FileText, Send, Check, CheckCircle2, Search } from 'lucide-vue-next'
+import { X, ChevronLeft, ChevronRight, Upload, FileText, Send, Check, CheckCircle2, Search, Plane, PlaneTakeoff, ArrowRight, AlertTriangle } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
+import { useRouter } from 'vue-router'
 import RmbDynamicField from '../components/RmbDynamicField.vue'
 import HrDatePicker from '@/components/hr/forms/HrDatePicker.vue'
 import {
@@ -188,6 +211,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['close', 'created'])
 const toast = useToast()
+const router = useRouter()
 
 const stepTitles = ['Pick a category', 'Claim details', 'Attach receipts', 'Review & submit']
 const shortTitles = ['Category', 'Details', 'Receipts', 'Review']
@@ -214,6 +238,12 @@ const filteredCats = computed(() => {
 const selectedCat = computed(() => categories.value.find(c => c.id === form.category_id) || null)
 const fieldSchema = computed(() => selectedCat.value?.field_schema || [])
 
+// Travel must reconcile on the trip (advance + per-diem netting), not as a standalone claim.
+// In self mode we gate it: a trip-linked expense is redirected to the Travel module.
+const isTravelCat = computed(() => String(selectedCat.value?.code || '').toUpperCase() === 'TRAVEL')
+const tripLinked = ref(null)   // null | 'yes' | 'no'  (self mode only)
+function goTravel() { emit('close'); router.push('/user/self-service/travel') }
+
 const today = new Date().toISOString().slice(0, 10)
 const form = reactive({
   category_id: null, amount: '', expense_date: '', vendor: '', cost_center: '',
@@ -227,7 +257,12 @@ const err = ref('')
 
 const progress = computed(() => ((step.value + 1) / stepTitles.length) * 100)
 const canNext = computed(() => {
-  if (step.value === 0) return !!form.category_id
+  if (step.value === 0) {
+    if (!form.category_id) return false
+    // a trip-linked travel expense must be filed on the trip, not here
+    if (isTravelCat.value && props.mode === 'self') return tripLinked.value === 'no'
+    return true
+  }
   if (step.value === 1) return Number(form.amount) > 0 && !!form.expense_date
   return true
 })
@@ -242,6 +277,7 @@ onMounted(async () => {
 function pickCategory(c) {
   form.category_id = c.id
   form.details = {}
+  tripLinked.value = null
 }
 
 // amount: digits + a single decimal point only, no spinner, no e/+/-
@@ -397,6 +433,27 @@ function close() { emit('close') }
 .cc-check-enter-active { transition: all 0.4s var(--rmb-spring); }
 .cc-check-leave-active { transition: all 0.2s ease; }
 .cc-check-enter-from, .cc-check-leave-to { opacity: 0; transform: scale(0.2) rotate(-30deg); }
+/* travel gate — redirect trip-linked expenses to the Travel module */
+.trip-gate { display: flex; flex-direction: column; gap: 10px; padding: 14px; border-radius: 13px;
+  background: var(--rmb-surface); border: 1px solid var(--rmb-border-soft); }
+.tg-q { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 650; color: var(--rmb-text); }
+.tg-q svg { color: var(--rmb-st-pending); flex-shrink: 0; }
+.tg-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.tg-opt { padding: 10px 12px; border-radius: 10px; font-size: 12.5px; font-weight: 650; cursor: pointer; font-family: inherit;
+  background: var(--rmb-surface-elevated); border: 1px solid var(--rmb-border-soft); color: var(--rmb-text-secondary); transition: all 0.2s; }
+.tg-opt:hover { border-color: var(--rmb-st-pending); color: var(--rmb-text); }
+.tg-opt.on { border-color: var(--rmb-st-pending); color: var(--rmb-st-pending); background: var(--rmb-st-pending-soft); box-shadow: 0 0 0 1px var(--rmb-st-pending); }
+.tg-redirect { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 11px;
+  background: var(--rmb-st-pending-soft); border: 1px solid color-mix(in srgb, var(--rmb-st-pending) 32%, transparent); }
+.tg-redirect p { margin: 0; font-size: 12px; line-height: 1.55; color: var(--rmb-text-secondary); }
+.tg-redirect p b { color: var(--rmb-text); }
+.tg-go { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border-radius: 10px;
+  font-size: 12.5px; font-weight: 750; cursor: pointer; border: 1px solid transparent; color: #1a1206; background: var(--hr-gradient-hero); }
+.tg-ok { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 12px; font-weight: 600; color: var(--rmb-st-approved); }
+.tg-caution { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; padding: 11px 13px; border-radius: 11px; font-size: 12px; line-height: 1.5;
+  color: var(--rmb-st-returned); background: var(--rmb-st-returned-soft); border: 1px solid color-mix(in srgb, var(--rmb-st-returned) 30%, transparent); }
+.tg-caution svg { flex-shrink: 0; margin-top: 1px; }
+
 .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .field-grid .full { grid-column: 1 / -1; }
 .rmb-field { display: flex; flex-direction: column; gap: 6px; }

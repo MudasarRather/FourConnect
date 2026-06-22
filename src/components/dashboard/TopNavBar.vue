@@ -492,7 +492,8 @@ const rawMenuItems = [
       { title: 'Growth & Assets', items: [
          { label: 'My Training', to: '/dashboard/self-service/training', icon: GraduationCap },
          { label: 'My Performance Reviews', to: '/dashboard/self-service/performance', icon: Award },
-         { label: 'My Assets', to: '/dashboard/self-service/assets', icon: Boxes }
+         { label: 'My Assets', to: '/dashboard/self-service/assets', icon: Boxes },
+         { label: 'My Travel', to: '/dashboard/self-service/travel', icon: Plane }
       ]}
     ]]
   },

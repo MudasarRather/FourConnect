@@ -26,6 +26,10 @@
         <Receipt :size="14" /> Reimbursements
         <span v-if="rmbQueue.length" class="surf-count">{{ rmbQueue.length }}</span>
       </button>
+      <button class="surf-btn" :class="{ active: surface === 'travel' }" @click="surface = 'travel'">
+        <Plane :size="14" /> Travel
+        <span v-if="trvCount" class="surf-count">{{ trvCount }}</span>
+      </button>
     </div>
 
     <!-- ═════════════════════════════════════════════════════════════════
@@ -283,15 +287,21 @@
                        @close="rmbActive = null" @action="onRmbDrawerAction" />
     <ClaimActionModal v-if="rmbActionModal" :claim="rmbActive || rmbActionClaim" :action="rmbActionModal" surface="manager"
                       @close="rmbActionModal = null" @done="onRmbDone" />
+
+    <!-- ═════════════════════════════════════════════════════════════════
+         TRAVEL surface — "Authorization Bridge" manager clearance deck
+         ════════════════════════════════════════════════════════════════ -->
+    <TeamTravelApprovals v-if="surface === 'travel'" @count="trvCount = $event" @go="goTravel" />
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, reactive, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { Motion } from 'motion-v'
 import {
   RefreshCw, UserRoundX, CircleCheck, Layers, Clock, Hourglass, AlertTriangle, Check, X,
-  CalendarDays, Receipt,
+  CalendarDays, Receipt, Plane,
 } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 
@@ -308,11 +318,19 @@ import RmbApprovalDeck from './reimbursements/components/RmbApprovalDeck.vue'
 import RmbApprovalCard from './reimbursements/components/RmbApprovalCard.vue'
 import ClaimDetailDrawer from './reimbursements/drawers/ClaimDetailDrawer.vue'
 import ClaimActionModal from './reimbursements/modals/ClaimActionModal.vue'
+import TeamTravelApprovals from './travel/team/TeamTravelApprovals.vue'
 
 import '@/styles/leave-theme.css'
 import '@/styles/reimbursements-theme.css'
+// Travel surface needs its theme loaded GLOBALLY (matches HrTravelWorkspacePage /
+// SelfServiceTravelPage). TeamTravelApprovals only @imports it in scoped CSS, which
+// does NOT globalize the :root { --trv-* } tokens — so without this the whole travel
+// surface renders unstyled unless a travel page was visited earlier in the session.
+import '@/styles/travel-theme.css'
 
 const toast = useToast()
+const router = useRouter()
+const goTravel = () => router.push({ name: 'SelfServiceTravel' })
 
 // ─── Surface toggle (Leave vs Reimbursements) ────────────────────────
 const surface = ref('leave')
@@ -356,6 +374,12 @@ const onRmbDone = () => {
 }
 
 watch(surface, (s) => { if (s === 'reimbursements' && !rmbQueue.value.length) loadRmb() })
+
+// ─── Travel manager surface ("Authorization Bridge") ─────────────────
+// The travel surface is a self-contained cinematic deck (TeamTravelApprovals)
+// that owns its own queue + decision flow; we only mirror its pending count
+// here so the surface-toggle badge stays in sync.
+const trvCount = ref(0)
 
 const queue = ref([])
 const loading = ref(false)

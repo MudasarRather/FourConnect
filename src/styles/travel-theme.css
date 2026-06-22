@@ -1,0 +1,240 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Travel Management theme — "Aviation Command Deck"
+   Airport / flight-ops aesthetic layered on the HR mission-control palette.
+   Warm gold/amber brand (NO blue/teal/indigo) — split-flap charcoal, runway
+   ambers, emerald=success, red=danger/overdue, steel=neutral.
+   Imports hr-theme.css for the shared --hr-* tokens + reduced-motion guard.
+   ─────────────────────────────────────────────────────────────────────────── */
+@import './hr-theme.css';
+
+:root {
+  /* Canvas + surfaces (deep charcoal "tarmac at night") */
+  --trv-canvas: #060606;
+  --trv-surface: rgba(22, 21, 24, 0.66);
+  --trv-surface-elevated: rgba(30, 28, 31, 0.88);
+  --trv-surface-glass: rgba(15, 14, 16, 0.72);
+  --trv-panel: rgba(12, 11, 13, 0.78);
+  --trv-border: rgba(255, 255, 255, 0.07);
+  --trv-border-strong: rgba(255, 255, 255, 0.14);
+  --trv-border-warm: rgba(251, 191, 36, 0.2);
+
+  /* Text */
+  --trv-text: #f6f5f3;
+  --trv-text-secondary: #c6c5c2;
+  --trv-text-muted: #8c8b88;
+  --trv-text-dim: #67655f;
+
+  /* Brand ramp (runway amber → ember) */
+  --trv-amber: #fbbf24;
+  --trv-amber-bright: #fcd34d;
+  --trv-amber-strong: #f59e0b;
+  --trv-ember: #fb923c;
+  --trv-ember-deep: #ea580c;
+  --trv-amber-soft: rgba(251, 191, 36, 0.12);
+  --trv-amber-border: rgba(251, 191, 36, 0.3);
+  --trv-amber-glow: 0 0 26px rgba(251, 191, 36, 0.24);
+
+  /* Split-flap departure board */
+  --trv-flap: #15161a;
+  --trv-flap-edge: rgba(0, 0, 0, 0.55);
+  --trv-flap-text: #fcd34d;
+  --trv-flap-seam: rgba(255, 255, 255, 0.06);
+
+  /* Boarding pass paper (dark variant) */
+  --trv-pass: rgba(28, 27, 30, 0.9);
+  --trv-pass-edge: rgba(255, 255, 255, 0.1);
+  --trv-barcode: rgba(255, 255, 255, 0.82);
+
+  /* Steel / neutral */
+  --trv-steel: #9ca3af;
+  --trv-steel-dim: #6b7280;
+  --trv-steel-soft: rgba(156, 163, 175, 0.1);
+
+  /* Status semantics */
+  --trv-st-draft: #9ca3af;          --trv-st-draft-soft: rgba(156, 163, 175, 0.12);
+  --trv-st-pending: #fbbf24;        --trv-st-pending-soft: rgba(251, 191, 36, 0.12);
+  --trv-st-approved: #34d399;       --trv-st-approved-soft: rgba(52, 211, 153, 0.12);
+  --trv-st-progress: #fb923c;       --trv-st-progress-soft: rgba(251, 146, 60, 0.12);
+  --trv-st-completed: #60d394;      --trv-st-completed-soft: rgba(96, 211, 148, 0.12);
+  --trv-st-rejected: #ef4444;       --trv-st-rejected-soft: rgba(239, 68, 68, 0.12);
+  --trv-st-returned: #f59e0b;       --trv-st-returned-soft: rgba(245, 158, 11, 0.12);
+  --trv-st-cancelled: #6b7280;      --trv-st-cancelled-soft: rgba(107, 114, 128, 0.1);
+
+  /* Priority */
+  --trv-pri-low: #9ca3af;
+  --trv-pri-normal: #fbbf24;
+  --trv-pri-high: #fb923c;
+  --trv-pri-urgent: #ef4444;
+
+  /* Gradients */
+  --trv-grad-hero: linear-gradient(135deg, #fbbf24 0%, #fb923c 55%, #f97316 100%);
+  --trv-grad-runway: linear-gradient(90deg, transparent, rgba(251, 191, 36, 0.5) 50%, transparent);
+  --trv-grad-radar: conic-gradient(from 0deg, rgba(251, 191, 36, 0) 0deg, rgba(251, 191, 36, 0.35) 40deg, rgba(251, 191, 36, 0) 80deg);
+  --trv-grad-card: radial-gradient(120% 100% at 0% 0%, rgba(251, 191, 36, 0.08), transparent 60%);
+
+  /* Shadows */
+  --trv-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  --trv-shadow-hover: 0 28px 70px rgba(0, 0, 0, 0.62);
+  --trv-card-shadow: 0 10px 34px rgba(0, 0, 0, 0.4);
+
+  /* Motion */
+  --trv-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --trv-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --trv-mono: var(--hr-mono);
+}
+
+/* ─── Light theme — warm cream, brand stays vivid ───────────────────────────── */
+[data-theme="light"] {
+  --trv-canvas: #f7f3ec;
+  --trv-surface: rgba(255, 251, 244, 0.78);
+  --trv-surface-elevated: rgba(255, 253, 248, 0.94);
+  --trv-surface-glass: rgba(255, 250, 240, 0.7);
+  --trv-panel: rgba(255, 252, 246, 0.92);
+  --trv-border: rgba(60, 45, 20, 0.1);
+  --trv-border-strong: rgba(60, 45, 20, 0.18);
+  --trv-border-warm: rgba(217, 119, 6, 0.3);
+
+  --trv-text: #211a10;
+  --trv-text-secondary: #5a4d3a;
+  --trv-text-muted: #6b5840;
+  --trv-text-dim: #94836a;
+
+  --trv-flap: #2a2620;
+  --trv-flap-text: #fcd34d;
+  --trv-flap-seam: rgba(255, 255, 255, 0.08);
+
+  --trv-pass: rgba(255, 251, 243, 0.92);
+  --trv-pass-edge: rgba(60, 45, 20, 0.14);
+  --trv-barcode: rgba(40, 30, 12, 0.78);
+
+  --trv-steel: #6b5840;
+  --trv-steel-soft: rgba(120, 100, 70, 0.12);
+
+  --trv-st-draft: #8a7a5f;
+  --trv-shadow: 0 18px 44px rgba(120, 90, 30, 0.16);
+  --trv-shadow-hover: 0 26px 60px rgba(120, 90, 30, 0.22);
+  --trv-card-shadow: 0 10px 28px rgba(120, 90, 30, 0.12);
+}
+
+/* ─── Shared keyframes (signature instruments) ──────────────────────────────── */
+@keyframes trv-flap-roll {
+  0% { transform: rotateX(-90deg); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: rotateX(0deg); opacity: 1; }
+}
+@keyframes trv-radar-sweep { to { transform: rotate(360deg); } }
+@keyframes trv-runway-flow {
+  0% { background-position: 0 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes trv-plane-taxi {
+  0% { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
+}
+@keyframes trv-arc-fly {
+  0% { stroke-dashoffset: var(--trv-arc-len, 200); opacity: 0.2; }
+  60% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+@keyframes trv-blip {
+  0%, 100% { opacity: 0.5; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+@keyframes trv-needle-settle {
+  0% { transform: rotate(-46deg); }
+  70% { transform: rotate(2deg); }
+  100% { transform: rotate(var(--trv-needle, 0deg)); }
+}
+@keyframes trv-scale-tip {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(var(--trv-tip, 0deg)); }
+}
+@keyframes trv-board-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(251, 191, 36, 0); }
+}
+@keyframes trv-aura-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  50% { transform: translate(2%, -3%) scale(1.06); opacity: 0.8; }
+}
+@keyframes trv-deal {
+  0% { opacity: 0; transform: translateY(16px) scale(0.985); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes trv-ribbon {
+  0% { transform: scaleY(0.35); }
+  100% { transform: scaleY(1); }
+}
+@keyframes trv-readhead {
+  0% { left: -6%; }
+  100% { left: 104%; }
+}
+@keyframes trv-spine-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+@keyframes trv-plane-drift {
+  0%, 100% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+}
+@keyframes trv-beacon {
+  0%, 100% { opacity: 1; filter: drop-shadow(0 0 0 transparent); }
+  50% { opacity: 0.55; filter: drop-shadow(0 0 6px var(--trv-amber)); }
+}
+/* Form-field stagger — global (NOT scoped) so inline `animation:` strings in
+   SFCs reference the real keyframe name; Vue renames scoped @keyframes. */
+@keyframes trv-fade-up {
+  0% { opacity: 0; transform: translateY(9px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── "Dispatch Bureau" press instrument (Reports tab) ──────────────────────
+   Global so inline `animation:` strings resolve. A print head sweeps down a
+   composing sheet while data lines typeset in; the platen roller turns. */
+@keyframes trv-print-sweep {
+  0% { transform: translateY(0); opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { transform: translateY(var(--trv-sweep-h, 150px)); opacity: 0; }
+}
+@keyframes trv-platen-roll { 0% { background-position: 0 0; } 100% { background-position: 0 -22px; } }
+@keyframes trv-line-print {
+  0%, 18% { transform: scaleX(0); opacity: 0.15; }
+  34% { transform: scaleX(1); opacity: 1; }
+  88% { transform: scaleX(1); opacity: 1; }
+  100% { transform: scaleX(1); opacity: 0.35; }
+}
+@keyframes trv-press-stamp {
+  0%, 100% { transform: rotate(-8deg) scale(1); opacity: 0.85; }
+  50% { transform: rotate(-8deg) scale(1.08); opacity: 1; }
+}
+@keyframes trv-feed-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+  50% { box-shadow: 0 0 18px -2px rgba(251, 191, 36, 0.5); }
+}
+@keyframes trv-sheen-pass {
+  0% { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(220%) skewX(-18deg); }
+}
+@keyframes trv-spin-slow { to { transform: rotate(360deg); } }
+
+/* ─── Utility surface helpers reused across travel SFCs ─────────────────────── */
+.trv-card {
+  background: var(--trv-surface);
+  border: 1px solid var(--trv-border);
+  border-radius: 18px;
+  box-shadow: var(--trv-card-shadow);
+}
+.trv-mono { font-family: var(--trv-mono); letter-spacing: 0.02em; }
+
+.trv-grain::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.4;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 3px 3px; border-radius: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trv-card *, .trv-anim, [class*="trv-"] {
+    animation: none !important;
+  }
+}

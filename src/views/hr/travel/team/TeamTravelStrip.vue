@@ -119,19 +119,24 @@
         </div>
       </div>
 
+      <!-- lifecycle block — approval no longer possible -->
+      <p v-if="blockReason" class="tts-block">
+        <AlertTriangle :size="13" /> <span>{{ blockReason }}</span>
+      </p>
+
       <!-- actions -->
       <div class="tts-actions">
         <button class="mini ghost" @click="open = !open">
           <component :is="open ? ChevronUp : ChevronDown" :size="13" /> {{ open ? 'Hide' : 'Details' }}
         </button>
         <span class="tts-spacer" />
-        <Motion as="button" class="mini ok" :disabled="busy"
+        <Motion v-if="!blockReason" as="button" class="mini ok" :disabled="busy"
           :whileHover="{ y: -2 }" :whileTap="{ scale: 0.96 }" @click="$emit('approve', req)">
           <Loader2 v-if="busy" :size="13" class="spin" /><Check v-else :size="13" /> Approve
         </Motion>
-        <Motion as="button" class="mini primary" :disabled="busy"
+        <Motion as="button" class="mini" :class="blockReason ? 'warn' : 'primary'" :disabled="busy"
           :whileHover="{ y: -2 }" :whileTap="{ scale: 0.96 }" @click="$emit('review', req)">
-          <Gavel :size="13" /> Decide
+          <component :is="blockReason ? AlertTriangle : Gavel" :size="13" /> {{ blockReason ? 'Reject / return' : 'Decide' }}
         </Motion>
       </div>
     </article>
@@ -143,7 +148,7 @@ import { ref, computed } from 'vue'
 import { Motion } from 'motion-v'
 import {
   Plane, Gavel, Flame, Timer, Check, Loader2, ChevronDown, ChevronUp,
-  Coins, Ticket, TrainFront, Hotel, Car, Wallet, ArrowRight, PlaneTakeoff, Route,
+  Coins, Ticket, TrainFront, Hotel, Car, Wallet, ArrowRight, PlaneTakeoff, Route, AlertTriangle,
 } from 'lucide-vue-next'
 import ApprovalRunway from '../components/ApprovalRunway.vue'
 import { usePointerSpotlight } from '@/composables/useShiftMotion'
@@ -165,6 +170,7 @@ usePointerSpotlight(cardEl)
 
 const open = ref(false)
 const code = (l) => airportCode(l)
+const blockReason = computed(() => props.req.approval_block || '')
 const urgent = computed(() => ['HIGH', 'URGENT'].includes(props.req.priority))
 const priColor = computed(() => priorityMeta(props.req.priority).hex)
 const multiCity = computed(() => isMultiCity(props.req))
@@ -354,6 +360,13 @@ const nextStop = computed(() => {
 .md-line { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--trv-text-secondary); padding: 8px 10px; border-radius: 9px; background: var(--trv-panel); border: 1px solid var(--trv-border); }
 .md-line svg { color: var(--trv-amber); } .md-line b { margin-left: auto; color: var(--trv-text); }
 
+/* lifecycle block notice */
+.tts-block { display: flex; align-items: flex-start; gap: 7px; margin: 10px 0 0; padding: 8px 11px; border-radius: 10px;
+  font-size: 11.5px; line-height: 1.45; font-weight: 600; color: var(--trv-st-rejected);
+  background: color-mix(in srgb, var(--trv-st-rejected) 11%, transparent); border: 1px solid color-mix(in srgb, var(--trv-st-rejected) 30%, transparent); }
+.tts-block svg { flex-shrink: 0; margin-top: 1px; }
+.tts-block span { color: var(--trv-text-secondary); }
+
 /* actions */
 .tts-actions { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
 .tts-spacer { flex: 1; }
@@ -362,6 +375,7 @@ const nextStop = computed(() => {
 .mini.ghost { background: transparent; border-color: var(--trv-border-strong); color: var(--trv-text-secondary); }
 .mini.ghost:hover { color: var(--trv-text); border-color: var(--trv-text-dim); }
 .mini.ok { background: var(--trv-st-approved-soft); color: var(--trv-st-approved); border-color: color-mix(in srgb, var(--trv-st-approved) 34%, transparent); }
+.mini.warn { background: var(--trv-st-returned-soft); color: var(--trv-st-returned); border-color: color-mix(in srgb, var(--trv-st-returned) 34%, transparent); }
 .mini.primary { background: var(--trv-grad-hero); color: #1a1205; box-shadow: var(--trv-amber-glow); }
 .spin { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

@@ -55,6 +55,10 @@
             v-else-if="activeTab === 'pipeline'"
             @refresh-counts="loadDashboard"
           />
+          <RecRehireSection
+            v-else-if="activeTab === 'rehire'"
+            @refresh-counts="loadDashboard"
+          />
           <RecAnalyticsSection
             v-else-if="activeTab === 'analytics'"
             :dashboard="dashboard"
@@ -72,7 +76,7 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   LayoutDashboard, FileText, Briefcase, UserSearch, ClipboardList,
   ScanSearch, CalendarClock, UsersRound, Mail, GitBranch, BarChart3,
-  UserPlus, CalendarDays, FileBadge,
+  UserPlus, CalendarDays, FileBadge, RotateCcw,
 } from 'lucide-vue-next'
 
 import '../../../styles/recruitment-theme.css'
@@ -90,6 +94,7 @@ import RecInterviewsSection from './sections/RecInterviewsSection.vue'
 import RecPanelsSection from './sections/RecPanelsSection.vue'
 import RecOffersSection from './sections/RecOffersSection.vue'
 import RecPipelineSection from './sections/RecPipelineSection.vue'
+import RecRehireSection from './sections/RecRehireSection.vue'
 import RecAnalyticsSection from './sections/RecAnalyticsSection.vue'
 
 import { fetchRecruitmentDashboard } from '../../../composables/useRecruitment'
@@ -112,6 +117,7 @@ const TABS = [
   { key: 'panels',        label: 'Panels',         icon: UsersRound },
   { key: 'offers',        label: 'Offers',         icon: Mail },
   { key: 'pipeline',      label: 'Pipeline',       icon: GitBranch },
+  { key: 'rehire',        label: 'Rehire',         icon: RotateCcw },
   { key: 'analytics',     label: 'Analytics',      icon: BarChart3 },
 ]
 const TAB_KEYS = TABS.map(t => t.key)

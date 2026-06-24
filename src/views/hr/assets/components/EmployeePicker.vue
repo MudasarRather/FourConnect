@@ -29,16 +29,24 @@ const props = defineProps({
   label: { type: String, default: 'Employee' },
   placeholder: { type: String, default: 'Search employee…' },
   required: { type: Boolean, default: false },
+  // When true, only ACTIVE / ON_PROBATION employees are selectable — mirrors the
+  // backend guard_employable() rule (a leaving / exited employee can't be a
+  // transfer destination). Default false to preserve other call sites.
+  employableOnly: { type: Boolean, default: false },
 })
 defineEmits(['update:modelValue', 'change'])
 
+const EMPLOYABLE = ['ACTIVE', 'ON_PROBATION']
 const q = ref('')
 const employees = ref([])
 const loading = ref(false)
+const pool = computed(() => props.employableOnly
+  ? employees.value.filter(e => EMPLOYABLE.includes((e.lifecycle_state || '').toUpperCase()))
+  : employees.value)
 const filtered = computed(() => {
   const s = q.value.trim().toLowerCase()
-  if (!s) return employees.value
-  return employees.value.filter(e => (e.full_name || '').toLowerCase().includes(s) || (e.employee_id || '').toLowerCase().includes(s))
+  if (!s) return pool.value
+  return pool.value.filter(e => (e.full_name || '').toLowerCase().includes(s) || (e.employee_id || '').toLowerCase().includes(s))
 })
 const initials = (n) => (n || '?').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 

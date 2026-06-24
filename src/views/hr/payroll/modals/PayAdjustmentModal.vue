@@ -21,8 +21,9 @@
             <label class="paym-field" :style="{'--i':0}"><span>Employee</span>
               <select v-model="f.employee_id">
                 <option :value="null" disabled>Select employee…</option>
-                <option v-for="e in employees" :key="e.id" :value="e.id">{{ empName(e) }} ({{ e.employee_id }})</option>
+                <option v-for="e in selectableEmps" :key="e.id" :value="e.id">{{ empName(e) }} ({{ e.employee_id }})</option>
               </select>
+              <small v-if="hiddenEmpCount" class="paym-note">{{ hiddenEmpCount }} exited employee{{ hiddenEmpCount > 1 ? 's' : '' }} hidden — their records are closed.</small>
             </label>
 
             <div class="paym-grid2">
@@ -84,6 +85,7 @@ import HrDatePicker from '@/components/hr/forms/HrDatePicker.vue'
 import { API, authHeader } from '@/utils/api'
 import { monthLabel } from '@/composables/usePayroll'
 import { ADJUSTMENT_KINDS, createAdjustment } from '@/composables/usePayrollExtra'
+import { selectableEmployees } from '@/utils/hr/employable'
 
 const props = defineProps({ open: Boolean, kind: { type: String, default: 'BONUS' } })
 const emit = defineEmits(['close', 'saved'])
@@ -98,6 +100,11 @@ const blank = () => ({ employee_id: null, sub_type: kindMeta.value.subTypes[0], 
   is_taxable: props.kind !== 'DEDUCTION', is_deduction: props.kind === 'DEDUCTION' })
 const f = ref(blank())
 const empName = (e) => e.user?.full_name || e.full_name || e.employee_id
+// A one-off pay adjustment can still post for an employee serving notice (final
+// dues), so keep ON_NOTICE — hide only the fully-separated, mirroring the
+// backend guard_settleable() on the create endpoint.
+const selectableEmps = computed(() => selectableEmployees(employees.value, 'not-separated'))
+const hiddenEmpCount = computed(() => (employees.value?.length || 0) - selectableEmps.value.length)
 
 watch(() => props.open, async (o) => {
   if (!o) return
@@ -127,4 +134,5 @@ const save = async () => {
 <style scoped>
 /* Title keeps lowercase source text but reads as a sentence-case heading */
 .paym-title { text-transform: capitalize; }
+.paym-note { display: block; margin-top: 5px; font-size: 11px; opacity: 0.7; }
 </style>

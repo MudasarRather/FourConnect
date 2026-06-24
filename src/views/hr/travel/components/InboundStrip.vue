@@ -54,14 +54,20 @@
       <!-- approval chain -->
       <ApprovalRunway :req="req" compact />
 
+      <!-- lifecycle block — approval no longer possible -->
+      <p v-if="blockReason" class="s-block">
+        <AlertTriangle :size="13" /> <span>{{ blockReason }}</span>
+      </p>
+
       <!-- actions -->
       <div class="s-actions">
         <button class="mini ghost" @click="$emit('detail', req)"><Eye :size="13" /> Details</button>
         <button v-if="!mine" class="mini warn" @click="$emit('escalate', req)">
           <FastForward :size="13" /> Override stage
         </button>
-        <Motion v-if="mine" as="button" class="mini primary" :whileHover="{ y: -2 }" :whileTap="{ scale: 0.96 }" @click="$emit('decide', req)">
-          <Gavel :size="13" /> Decide
+        <Motion v-if="mine" as="button" class="mini" :class="blockReason ? 'warn' : 'primary'"
+          :whileHover="{ y: -2 }" :whileTap="{ scale: 0.96 }" @click="$emit('decide', req)">
+          <component :is="blockReason ? AlertTriangle : Gavel" :size="13" /> {{ blockReason ? 'Reject / return' : 'Decide' }}
         </Motion>
       </div>
     </article>
@@ -71,7 +77,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { Motion } from 'motion-v'
-import { Plane, Gavel, Hourglass, Flame, Timer, Eye, FastForward, Route } from 'lucide-vue-next'
+import { Plane, Gavel, Hourglass, Flame, Timer, Eye, FastForward, Route, AlertTriangle } from 'lucide-vue-next'
 import ApprovalRunway from './ApprovalRunway.vue'
 import { usePointerSpotlight } from '@/composables/useShiftMotion'
 import { fmtINR, fmtDate, airportCode, priorityMeta, runwayStateFor, isMultiCity, legCount } from '@/composables/useTravel'
@@ -87,6 +93,7 @@ const cardEl = ref(null)
 usePointerSpotlight(cardEl)
 
 const code = (l) => airportCode(l)
+const blockReason = computed(() => props.req.approval_block || '')
 const urgent = computed(() => ['HIGH', 'URGENT'].includes(props.req.priority))
 const priColor = computed(() => priorityMeta(props.req.priority).hex)
 const stageLabel = computed(() => runwayStateFor(props.req).find(s => s.state === 'current')?.typeLabel || 'Approver')
@@ -160,6 +167,13 @@ const waitLabel = computed(() => {
 .m-avatar { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-size: 9px; font-weight: 800; color: #1a1205; background: var(--trv-grad-hero); }
 .m-type { font-size: 11px; color: var(--trv-text-muted); padding: 2px 8px; border-radius: 6px; background: var(--trv-panel); }
 .m-cost { margin-left: auto; font-size: 14px; font-weight: 800; color: var(--trv-amber); }
+
+/* lifecycle block notice */
+.s-block { display: flex; align-items: flex-start; gap: 7px; margin: 10px 0 0; padding: 8px 11px; border-radius: 10px;
+  font-size: 11.5px; line-height: 1.45; font-weight: 600; color: var(--trv-st-rejected);
+  background: color-mix(in srgb, var(--trv-st-rejected) 11%, transparent); border: 1px solid color-mix(in srgb, var(--trv-st-rejected) 30%, transparent); }
+.s-block svg { flex-shrink: 0; margin-top: 1px; }
+.s-block span { color: var(--trv-text-secondary); }
 
 /* actions */
 .s-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 10px; flex-wrap: wrap; }

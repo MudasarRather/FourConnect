@@ -70,7 +70,7 @@
         <!-- destination (conditional) -->
         <Motion as="div" class="nt-field" :initial="fIn" :animate="fOn" :transition="fT(2)">
           <template v-if="needsEmployee">
-            <EmployeePicker :model-value="form.to_employee_id" label="To employee" required
+            <EmployeePicker :model-value="form.to_employee_id" label="To employee" required employable-only
               @update:modelValue="form.to_employee_id = $event" @change="toEmpName = $event.full_name" />
           </template>
           <template v-else-if="form.transfer_type === 'LOCATION'">

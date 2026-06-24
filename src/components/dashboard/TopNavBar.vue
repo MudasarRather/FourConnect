@@ -114,7 +114,7 @@ import {
   DollarSign,
   UserCog, Fingerprint, CalendarOff, CalendarClock, Receipt,
   BadgeCheck, GraduationCap, Boxes, Plane, Scale, LineChart, IdCard,
-  LogIn, ClipboardList, Award, FileSignature, HeartPulse
+  LogIn, ClipboardList, Award, FileSignature, HeartPulse, DoorOpen
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -493,7 +493,8 @@ const rawMenuItems = [
          { label: 'My Training', to: '/dashboard/self-service/training', icon: GraduationCap },
          { label: 'My Performance Reviews', to: '/dashboard/self-service/performance', icon: Award },
          { label: 'My Assets', to: '/dashboard/self-service/assets', icon: Boxes },
-         { label: 'My Travel', to: '/dashboard/self-service/travel', icon: Plane }
+         { label: 'My Travel', to: '/dashboard/self-service/travel', icon: Plane },
+         { label: 'My Exit', to: '/dashboard/self-service/exit', icon: DoorOpen }
       ]}
     ]]
   },

@@ -1,0 +1,191 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Exit Management theme — "The Threshold: Ceremonial Gateway"
+   A monumental archway the employee record passes through. Dusk palette: warm
+   amber ground rising into the brand-blessed exit-lifecycle violet (#fb923c) —
+   the ONE sanctioned place for purple. Gate-posts light amber→emerald as each
+   stage clears; a beam of light seals the arch when fully cleared.
+   emerald = cleared/settled, red = blocked/overdue, steel = neutral.
+   Imports hr-theme.css for the shared --hr-* tokens + reduced-motion guard.
+   ─────────────────────────────────────────────────────────────────────────── */
+@import './hr-theme.css';
+
+:root {
+  /* Canvas + surfaces (warm tarmac at night — matches the HR warm charcoal) */
+  --ex-canvas: #0a0807;
+  --ex-surface: rgba(26, 22, 18, 0.66);
+  --ex-surface-elevated: rgba(34, 29, 24, 0.9);
+  --ex-surface-glass: rgba(18, 15, 12, 0.72);
+  --ex-panel: rgba(14, 12, 10, 0.8);
+  --ex-border: rgba(255, 255, 255, 0.07);
+  --ex-border-strong: rgba(255, 255, 255, 0.14);
+  --ex-border-warm: rgba(251,146,60, 0.22);
+
+  /* Text (warm neutrals) */
+  --ex-text: #f6f5f3;
+  --ex-text-secondary: #c8c4bd;
+  --ex-text-muted: #8e897f;
+  --ex-text-dim: #67635c;
+
+  /* Brand ramp — amber ground */
+  --ex-amber: #fbbf24;
+  --ex-amber-bright: #fcd34d;
+  --ex-amber-strong: #f59e0b;
+  --ex-ember: #fb923c;
+  --ex-ember-deep: #ea580c;
+  --ex-amber-soft: rgba(251, 191, 36, 0.12);
+  --ex-amber-border: rgba(251, 191, 36, 0.28);
+
+  /* Dusk violet — the sanctioned purple (lifecycle EXITED) */
+  --ex-violet: #fb923c;
+  --ex-violet-bright: #fcd34d;
+  --ex-violet-deep: #ea580c;
+  --ex-violet-soft: rgba(251,146,60, 0.13);
+  --ex-violet-border: rgba(251,146,60, 0.3);
+  --ex-violet-glow: 0 0 28px rgba(251,146,60, 0.28);
+
+  /* Steel / neutral */
+  --ex-steel: #9ca3af;
+  --ex-steel-dim: #6b7280;
+  --ex-steel-soft: rgba(156, 163, 175, 0.1);
+
+  /* Semantics */
+  --ex-cleared: #34d399;       --ex-cleared-soft: rgba(52, 211, 153, 0.13);
+  --ex-blocked: #ef4444;       --ex-blocked-soft: rgba(239, 68, 68, 0.13);
+  --ex-pending: #fbbf24;       --ex-pending-soft: rgba(251, 191, 36, 0.13);
+  --ex-progress: #fb923c;      --ex-progress-soft: rgba(251, 146, 60, 0.13);
+
+  /* Case-status semantics */
+  --ex-st-draft: #9ca3af;            --ex-st-draft-soft: rgba(156, 163, 175, 0.12);
+  --ex-st-submitted: #fbbf24;        --ex-st-submitted-soft: rgba(251, 191, 36, 0.12);
+  --ex-st-review: #f59e0b;           --ex-st-review-soft: rgba(245, 158, 11, 0.12);
+  --ex-st-accepted: #fb923c;         --ex-st-accepted-soft: rgba(251, 146, 60, 0.12);
+  --ex-st-notice: #ea580c;           --ex-st-notice-soft: rgba(234,88,12, 0.13);
+  --ex-st-clearance: #d97706;        --ex-st-clearance-soft: rgba(217,119,6, 0.13);
+  --ex-st-settlement: #34d399;       --ex-st-settlement-soft: rgba(52, 211, 153, 0.12);
+  --ex-st-completed: #60d394;        --ex-st-completed-soft: rgba(96, 211, 148, 0.12);
+  --ex-st-rejected: #ef4444;         --ex-st-rejected-soft: rgba(239, 68, 68, 0.12);
+  --ex-st-withdrawn: #6b7280;        --ex-st-withdrawn-soft: rgba(107, 114, 128, 0.1);
+  --ex-st-cancelled: #6b7280;        --ex-st-cancelled-soft: rgba(107, 114, 128, 0.1);
+
+  /* Gradients */
+  --ex-grad-hero: linear-gradient(135deg, #fcd34d 0%, #fb923c 45%, #ea580c 100%);
+  --ex-grad-dusk: linear-gradient(180deg, #fcd34d 0%, #fb923c 40%, #ea580c 78%, #b45309 100%);
+  --ex-grad-sun: radial-gradient(circle, #fef3c7 0%, #fde68a 30%, #fb923c 70%, #ea580c 115%);
+  --ex-grad-gate: linear-gradient(180deg, rgba(251,146,60, 0.22), rgba(251, 191, 36, 0.16));
+  --ex-grad-card: radial-gradient(120% 100% at 0% 0%, rgba(251,146,60, 0.09), transparent 60%);
+
+  /* Shadows */
+  --ex-shadow: 0 18px 50px rgba(0, 0, 0, 0.52);
+  --ex-shadow-hover: 0 28px 72px rgba(0, 0, 0, 0.64);
+  --ex-card-shadow: 0 10px 34px rgba(0, 0, 0, 0.42);
+
+  /* Motion */
+  --ex-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ex-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --ex-mono: var(--hr-mono);
+}
+
+/* ─── Light theme — warm cream; violet DEEPENED for AA, amber stays vivid ───── */
+[data-theme="light"] {
+  --ex-canvas: #f6f2ec;
+  --ex-surface: rgba(255, 251, 245, 0.8);
+  --ex-surface-elevated: rgba(255, 253, 249, 0.95);
+  --ex-surface-glass: rgba(255, 250, 242, 0.72);
+  --ex-panel: rgba(255, 252, 247, 0.93);
+  --ex-border: rgba(60, 45, 20, 0.1);
+  --ex-border-strong: rgba(60, 45, 20, 0.18);
+  --ex-border-warm: rgba(234,88,12, 0.26);
+
+  --ex-text: #211a10;
+  --ex-text-secondary: #5a4d3a;
+  --ex-text-muted: #6b5840;
+  --ex-text-dim: #94836a;
+
+  --ex-violet: #ea580c;
+  --ex-violet-bright: #f59e0b;
+  --ex-violet-deep: #b45309;
+  --ex-violet-soft: rgba(234,88,12, 0.1);
+  --ex-violet-border: rgba(234,88,12, 0.3);
+
+  --ex-steel: #6b5840;
+  --ex-steel-soft: rgba(120, 100, 70, 0.12);
+
+  --ex-st-draft: #8a7a5f;
+  --ex-st-notice: #ea580c;       --ex-st-notice-soft: rgba(234,88,12, 0.12);
+  --ex-st-clearance: #d97706;    --ex-st-clearance-soft: rgba(217,119,6, 0.12);
+  --ex-grad-hero: linear-gradient(135deg, #d97706 0%, #ea580c 50%, #b45309 100%);
+  --ex-grad-dusk: linear-gradient(180deg, #f59e0b 0%, #ea580c 45%, #b45309 100%);
+  --ex-shadow: 0 18px 44px rgba(120, 90, 30, 0.16);
+  --ex-shadow-hover: 0 26px 60px rgba(120, 90, 30, 0.22);
+  --ex-card-shadow: 0 10px 28px rgba(120, 90, 30, 0.12);
+}
+
+/* ─── Shared keyframes (signature instruments — GLOBAL so inline SVG
+   `animation:` strings resolve; Vue renames scoped @keyframes) ──────────────── */
+@keyframes ex-gate-light {
+  0%, 100% { opacity: 0.85; filter: drop-shadow(0 0 2px transparent); }
+  50% { opacity: 1; filter: drop-shadow(0 0 8px var(--ex-amber)); }
+}
+@keyframes ex-beam-seal {
+  0% { opacity: 0; transform: scaleY(0.2); }
+  60% { opacity: 0.9; }
+  100% { opacity: 0.7; transform: scaleY(1); }
+}
+@keyframes ex-archway-glow {
+  0%, 100% { opacity: 0.5; transform: translateY(0) scale(1); }
+  50% { opacity: 0.8; transform: translateY(-2%) scale(1.04); }
+}
+@keyframes ex-post-fill { 0% { transform: scaleY(0); } 100% { transform: scaleY(1); } }
+@keyframes ex-sun-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50% { transform: scale(1.04); opacity: 1; }
+}
+@keyframes ex-figure-walk { 0% { offset-distance: 0%; } 100% { offset-distance: 100%; } }
+@keyframes ex-procession-draw {
+  0% { stroke-dashoffset: var(--ex-len, 200); }
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes ex-node-ping {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251,146,60, 0.45); }
+  50% { box-shadow: 0 0 0 8px rgba(251,146,60, 0); }
+}
+@keyframes ex-aura-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  50% { transform: translate(2%, -3%) scale(1.06); opacity: 0.78; }
+}
+@keyframes ex-deal {
+  0% { opacity: 0; transform: translateY(16px) scale(0.985); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes ex-fade-up {
+  0% { opacity: 0; transform: translateY(9px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes ex-ribbon { 0% { transform: scaleY(0.35); } 100% { transform: scaleY(1); } }
+@keyframes ex-readhead { 0% { left: -6%; } 100% { left: 104%; } }
+@keyframes ex-spin-slow { to { transform: rotate(360deg); } }
+@keyframes ex-tide-flow { 0% { background-position: 0 0; } 100% { background-position: 200% 0; } }
+@keyframes ex-sheen-pass {
+  0% { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(220%) skewX(-18deg); }
+}
+
+/* ─── Utility surface helpers reused across exit SFCs ──────────────────────── */
+.ex-card {
+  background: var(--ex-surface);
+  border: 1px solid var(--ex-border);
+  border-radius: 18px;
+  box-shadow: var(--ex-card-shadow);
+}
+.ex-mono { font-family: var(--ex-mono); letter-spacing: 0.02em; }
+.ex-grain::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.4;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 3px 3px; border-radius: inherit;
+}
+
+@property --ex-p { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ex-card *, .ex-anim, [class*="ex-"] { animation: none !important; }
+}

@@ -228,7 +228,7 @@ watch(() => props.open, async (o) => {
 
 const loadEmps = async (q = '') => {
   loadingEmps.value = true
-  try { employees.value = await fetchEmployeesLite(q) }
+  try { employees.value = await fetchEmployeesLite(q, { excludeSeparated: true }) }
   catch { /* best-effort */ }
   finally { loadingEmps.value = false }
 }

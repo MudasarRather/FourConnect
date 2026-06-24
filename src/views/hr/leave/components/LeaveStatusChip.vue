@@ -53,4 +53,7 @@ const meta = computed(() => statusMeta(props.status))
 .leave-chip.mgr-rejected { color: var(--leave-mgr-rejected); background: var(--leave-mgr-rejected-soft); }
 .leave-chip.cancelled    { color: var(--leave-cancelled);    background: var(--leave-cancelled-soft); }
 .leave-chip.withdrawn    { color: var(--leave-withdrawn);    background: var(--leave-withdrawn-soft); }
+/* Lapsed — a faded ember/amber to read "expired, never actioned" */
+.leave-chip.lapsed       { color: #b45309;                   background: rgba(180, 83, 9, 0.12); }
+[data-theme="light"] .leave-chip.lapsed { color: #92400e; background: rgba(146, 64, 14, 0.12); }
 </style>

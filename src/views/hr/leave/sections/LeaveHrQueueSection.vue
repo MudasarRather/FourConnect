@@ -400,26 +400,38 @@
             <span class="stamp-label">Reject</span>
             <span class="stamp-shadow" />
           </button>
-          <button class="stamp stamp-proof" :disabled="busyId === r.id"
-            @click.stop="askProof(r)"
-            :aria-label="`${r.proof_requested ? 'Re-request' : 'Request'} proof for ${r.reference_no}`"
+          <!-- Past-dated, un-actioned leaves can't be approved — only closed (lapsed). -->
+          <button v-if="isLeavePast(r)" class="stamp stamp-lapse" :disabled="busyId === r.id"
+            @click.stop="askLapse(r)" :aria-label="`Close ${r.reference_no} as lapsed`"
           >
             <span class="stamp-glyph">
-              <FileSearch :size="12" />
+              <CalendarX :size="12" />
             </span>
-            <span class="stamp-label">{{ r.proof_requested ? 'Re-request' : 'Request proof' }}</span>
+            <span class="stamp-label">Close (lapsed)</span>
             <span class="stamp-shadow" />
           </button>
-          <button class="stamp stamp-approve" :disabled="busyId === r.id"
-            @click.stop="approve(r)" :aria-label="`Approve ${r.reference_no}`"
-          >
-            <span class="stamp-glyph">
-              <Check :size="12" />
-            </span>
-            <span class="stamp-label">Seal &amp; approve</span>
-            <span class="stamp-shadow" />
-            <span class="stamp-pulse" />
-          </button>
+          <template v-else>
+            <button class="stamp stamp-proof" :disabled="busyId === r.id"
+              @click.stop="askProof(r)"
+              :aria-label="`${r.proof_requested ? 'Re-request' : 'Request'} proof for ${r.reference_no}`"
+            >
+              <span class="stamp-glyph">
+                <FileSearch :size="12" />
+              </span>
+              <span class="stamp-label">{{ r.proof_requested ? 'Re-request' : 'Request proof' }}</span>
+              <span class="stamp-shadow" />
+            </button>
+            <button class="stamp stamp-approve" :disabled="busyId === r.id"
+              @click.stop="approve(r)" :aria-label="`Approve ${r.reference_no}`"
+            >
+              <span class="stamp-glyph">
+                <Check :size="12" />
+              </span>
+              <span class="stamp-label">Seal &amp; approve</span>
+              <span class="stamp-shadow" />
+              <span class="stamp-pulse" />
+            </button>
+          </template>
         </footer>
 
         <!-- ── SEAL CINEMATIC OVERLAY (only while sealing) ── -->
@@ -519,6 +531,15 @@
       @confirm="confirmReject"
     />
 
+    <LeaveLapseModal
+      :open="lapseModal.open"
+      :leave="lapseModal.leave"
+      stage="HR"
+      :busy="lapseBusy"
+      @cancel="lapseModal.open = false"
+      @confirm="confirmLapse"
+    />
+
     <LeaveProofRequestModal
       :open="proofModal.open"
       :leave="proofModal.leave"
@@ -607,7 +628,7 @@
 import { ref, reactive, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { Motion } from 'motion-v'
 import {
-  RefreshCw, AlertTriangle, CheckCircle2, Check, X, Quote, Calendar,
+  RefreshCw, AlertTriangle, CheckCircle2, Check, X, Quote, Calendar, CalendarX,
   Target, Activity, Timer, Layers, Flame, Inbox,
   FileSearch, Paperclip, Hourglass, FileText,
 } from 'lucide-vue-next'
@@ -615,9 +636,10 @@ import LeaveStatusChip from '../components/LeaveStatusChip.vue'
 import LeaveTypeIcon from '../components/LeaveTypeIcon.vue'
 import LeaveDetailDrawer from '../drawers/LeaveDetailDrawer.vue'
 import LeaveRejectModal from '../modals/LeaveRejectModal.vue'
+import LeaveLapseModal from '../modals/LeaveLapseModal.vue'
 import LeaveProofRequestModal from '../modals/LeaveProofRequestModal.vue'
 import LeavePagination from '../components/LeavePagination.vue'
-import { useLeaves, decideAsHr, requestLeaveProof, typeMeta } from '@/composables/useLeaves'
+import { useLeaves, decideAsHr, requestLeaveProof, lapseLeave, isLeavePast, typeMeta } from '@/composables/useLeaves'
 import { API_BASE } from '@/utils/api'
 import { useToast } from 'vue-toastification'
 
@@ -646,6 +668,8 @@ const pagedItems = computed(() => {
 })
 const drawer = ref({ open: false, id: null })
 const rejectModal = ref({ open: false, leave: null })
+const lapseModal = ref({ open: false, leave: null })
+const lapseBusy = ref(false)
 const proofModal = ref({ open: false, leave: null })
 const proofGallery = ref({ open: false, leave: null })
 const confetti = ref({ show: false })
@@ -840,6 +864,22 @@ const approve = async (r) => {
   } finally {
     busyId.value = null
   }
+}
+
+// Close a past-dated, never-approved leave as LAPSED with a mandatory remark.
+const askLapse = (r) => { lapseModal.value = { open: true, leave: r } }
+const confirmLapse = async (reason) => {
+  const r = lapseModal.value.leave
+  if (!r) { lapseModal.value.open = false; return }
+  lapseBusy.value = true
+  try {
+    await lapseLeave(r.id, reason)
+    toast.success(`Closed as lapsed · ${r.reference_no}`)
+    lapseModal.value.open = false
+    await reload()
+  } catch (e) {
+    toast.error(e?.response?.data?.detail || 'Could not close the leave')
+  } finally { lapseBusy.value = false }
 }
 
 const askReject = (r) => { rejectModal.value = { open: true, leave: r } }
@@ -2011,6 +2051,36 @@ const bitStyle = (n) => ({
   background: linear-gradient(135deg, rgba(165, 243, 252, 0.95), rgba(153, 246, 228, 0.95));
   border-color: rgba(8, 145, 178, 0.80);
   color: #155e75;
+}
+
+/* Close (lapsed) — faded ember; the only action for a past-dated stale request */
+.stamp-lapse {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(146, 64, 14, 0.12));
+  border-color: rgba(217, 119, 6, 0.55);
+  color: #fdba74;
+}
+.stamp-lapse .stamp-glyph {
+  background: rgba(217, 119, 6, 0.20);
+  color: #fdba74;
+  border: 1px solid rgba(217, 119, 6, 0.50);
+}
+.stamp-lapse:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.32), rgba(180, 83, 9, 0.22));
+  border-color: rgba(217, 119, 6, 0.85);
+  color: #fed7aa;
+  letter-spacing: 0.06em;
+  box-shadow: 0 12px 24px -10px rgba(180, 83, 9, 0.6);
+}
+[data-theme="light"] .stamp-lapse {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.9), rgba(253, 230, 138, 0.8));
+  border-color: rgba(180, 83, 9, 0.5);
+  color: #92400e;
+}
+[data-theme="light"] .stamp-lapse .stamp-glyph {
+  background: rgba(253, 230, 138, 0.9);
+  color: #92400e;
+  border-color: rgba(180, 83, 9, 0.5);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════

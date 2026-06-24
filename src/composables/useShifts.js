@@ -161,9 +161,13 @@ export const fetchCoverageAlerts = async (params = {}) =>
   (await axios.get(`${BASE}/shift-coverage/alerts`, { headers: authHeader(), params })).data
 
 // ─── Shared lookups ─────────────────────────────────────────────────────────
-export const fetchEmployeesLite = async (search = '') => {
+// opts.excludeSeparated → ask the API to drop EXITED/ARCHIVED/INACTIVE crew
+// (ON_NOTICE stays). Use it for forward-commitment pickers (assign/swap/rotation/
+// holiday/roster); leave it off for history/audit/exit-settlement pickers.
+export const fetchEmployeesLite = async (search = '', { excludeSeparated = false } = {}) => {
   const params = { limit: 100, page: 1 }
   if (search) params.search = search
+  if (excludeSeparated) params.exclude_separated = true
   const { data } = await axios.get(`${BASE}/employees/`, { headers: authHeader(), params })
   const rows = Array.isArray(data) ? data : (data?.items || [])
   return rows.map(r => ({
@@ -172,6 +176,10 @@ export const fetchEmployeesLite = async (search = '') => {
     employee_code: r.employee_code || r.employee_id || '',
     department_id: r.department_id || r.department?.id || null,
     department_name: r.department_name || r.department?.name || r.department || '',
+    // Lifecycle context so the picker can flag / block crew who have left or
+    // are serving notice (mirrors the backend tenure guard on /assign).
+    lifecycle_state: (r.lifecycle_state || 'ACTIVE'),
+    last_working_date: r.last_working_date || null,
   }))
 }
 export const fetchDepartments = async () => {

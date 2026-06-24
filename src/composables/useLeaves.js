@@ -39,6 +39,7 @@ export const LEAVE_STATUSES = [
   { key: 'REJECTED',         label: 'HR rejected',    tone: 'rejected',      pillClass: 'rejected' },
   { key: 'CANCELLED',        label: 'Cancelled',      tone: 'cancelled',     pillClass: 'cancelled' },
   { key: 'WITHDRAWN',        label: 'Withdrawn',      tone: 'withdrawn',     pillClass: 'withdrawn' },
+  { key: 'LAPSED',           label: 'Lapsed',         tone: 'lapsed',        pillClass: 'lapsed' },
 ]
 export const LEAVE_STATUS_BY_KEY = Object.fromEntries(LEAVE_STATUSES.map(s => [s.key, s]))
 
@@ -147,6 +148,20 @@ export const adminDeleteLeave    = async (id, body = null) => {
 export const decideAsHr          = async (id, payload) => (await axios.patch(`${BASE}/hr/${id}/decide`, payload, { headers: authHeader() })).data
 export const decideAsManager     = async (id, payload) => (await axios.patch(`${BASE}/manager/${id}/decide`, payload, { headers: authHeader() })).data
 export const bulkDecide          = async (ids, decision, notes) => (await axios.post(`${BASE}/bulk-decide`, { ids, decision, notes }, { headers: authHeader() })).data
+// Close a pending, past-dated leave as LAPSED with a mandatory remark (manager or HR).
+export const lapseLeave          = async (id, reason) => (await axios.post(`${BASE}/${id}/lapse`, { reason }, { headers: authHeader() })).data
+// Bulk top-up balances to the policy annual quota for a roster of employees.
+export const bulkGrantBalances   = async (body) => (await axios.post(`${BASE}/balances/grant-policy`, body, { headers: authHeader() })).data
+
+// A leave whose window has fully elapsed can no longer be approved — only lapsed.
+// Mirrors the backend _guard_not_past so the UI hides Approve on stale rows.
+export const isLeavePast = (leave) => {
+  if (!leave?.to_date) return false
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const to = new Date(leave.to_date); to.setHours(0, 0, 0, 0)
+  return to < today
+}
+export const PENDING_STATUSES = ['DRAFT', 'PENDING_MANAGER', 'PENDING_HR']
 
 // ─── Phase 4 — Configurable approval chain ────────────────────────────────
 export const APPROVER_TYPES = [
@@ -175,6 +190,9 @@ export const decideChainStage = async (id, payload) =>
 // ─── Cron ─────────────────────────────────────────────────────────────────
 export const cronAccrueMonthly   = async (month) => (await axios.post(`${BASE}/cron/accrue-monthly`, { month }, { headers: authHeader() })).data
 export const cronCarryForward    = async (from_fy, to_fy) => (await axios.post(`${BASE}/cron/carry-forward`, { from_fy, to_fy }, { headers: authHeader() })).data
+// Idempotent accrual catch-up for the current FY (credits accrual leaves like
+// Casual/Earned for any elapsed month that hasn't been accrued yet).
+export const accrueCatchup       = async () => (await axios.post(`${BASE}/cron/accrue-catchup`, {}, { headers: authHeader() })).data
 
 // ─── Self-service helpers ────────────────────────────────────────────────
 export const fetchMyLeaves       = async (params = {}) => (await axios.get(`${BASE}/me`, { headers: authHeader(), params })).data

@@ -202,3 +202,13 @@ export async function fetchDashboardStats() {
   const res = await axios.get(`${API_BASE}/hr/dashboard-stats`, { headers: authHeader() })
   return res.data
 }
+
+// Former employees who can be brought back (separated + exit case marked
+// eligible_for_rehire). Powers the Recruitment → Rehire roster.
+export async function fetchRehireEligible(search = '') {
+  const res = await axios.get(`${API_BASE}/hr/employees/rehire-eligible`, {
+    headers: authHeader(),
+    params: search ? { search } : {},
+  })
+  return res.data
+}

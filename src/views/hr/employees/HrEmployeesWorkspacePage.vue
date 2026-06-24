@@ -162,6 +162,13 @@
       @close="closeActionModal"
       @confirm="onActionModalConfirm"
     />
+
+    <RehireModal
+      :open="rehireOpen"
+      :candidate="rehireCandidate"
+      @close="rehireOpen = false"
+      @done="onRehireDone"
+    />
   </div>
 </template>
 
@@ -194,6 +201,7 @@ import ArchivedSection from './sections/ArchivedSection.vue'
 import EmployeeProfileDrawer from './EmployeeProfileDrawer.vue'
 import AddEmployeeWizard from './AddEmployeeWizard.vue'
 import LifecycleActionModal from '../../../components/hr/LifecycleActionModal.vue'
+import RehireModal from '../../../components/hr/RehireModal.vue'
 
 import { useEmployees, useHrReference, fetchDashboardStats } from '../../../composables/useEmployees'
 import { useToast } from '../../../composables/useToast'
@@ -479,13 +487,52 @@ const humanAction = (a) => ({
   transfer: 'Transfer',
 }[a] || a)
 
+// Separation (notice + exit) is owned by the Exit module, which wraps the
+// lifecycle flip with clearance → asset recovery → F&F → letters via an
+// ExitCase. We no longer mutate lifecycle inline for it — hand off to
+// /admin/hr/exit so a case drives the offboarding. `initiate-exit` is the new
+// key; give-notice/exit are caught defensively in case any path still emits them.
+const goToExit = (employee) => {
+  if (!employee?.id) return
+  router.push({ name: 'HrExitTab', params: { tab: 'resignation' }, query: { initiate: employee.id } })
+}
+
 const onLifecycleAction = ({ action, employee, body, onDone }) => {
+  if (['initiate-exit', 'give-notice', 'exit'].includes(action)) {
+    return goToExit(employee)
+  }
+  // Rehire runs through the dedicated, advanced boomerang-rehire wizard — the
+  // same modal Recruitment → Rehire and the profile page use.
+  if (action === 'rehire') {
+    rehireCandidate.value = employee
+    rehirePendingOnDone.value = onDone
+    rehireOpen.value = true
+    return
+  }
   // If the caller already collected a body (kanban legacy path), submit directly.
   if (body && Object.keys(body).length) {
     return submitLifecycle(action, employee, body, onDone)
   }
   // Otherwise open the shared modal so the user can fill required fields.
   openActionModal(action, employee, onDone)
+}
+
+// ─── Advanced rehire wizard ───
+const rehireOpen = ref(false)
+const rehireCandidate = ref(null)
+const rehirePendingOnDone = ref(null)
+const onRehireDone = async () => {
+  const emp = rehireCandidate.value
+  rehireOpen.value = false
+  await onRefresh()
+  if (activeTab.value === 'lifecycle') await fetchLifecycle()
+  if (emp && profileOpen.value && profileEmployeeId.value === emp.id) {
+    profileEmployeeId.value = ''
+    requestAnimationFrame(() => { profileEmployeeId.value = emp.id })
+  }
+  rehirePendingOnDone.value?.()
+  rehirePendingOnDone.value = null
+  rehireCandidate.value = null
 }
 
 const onActionModalConfirm = ({ action, employee, body }) => {

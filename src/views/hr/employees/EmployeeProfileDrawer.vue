@@ -286,7 +286,7 @@ import { computed, h, ref, reactive, watch } from 'vue'
 import {
   X, Edit, Check, Loader2, UserX, Eye, EyeOff, ShieldAlert,
   IdCard, Phone, Briefcase, Banknote, History,
-  Plus, ArrowUp, ArrowRight, CheckCircle, Pause, Play, LogOut, Archive, Undo2, Gauge,
+  Plus, ArrowUp, ArrowRight, CheckCircle, Pause, Play, LogOut, Archive, Undo2, Gauge, RotateCcw,
 } from 'lucide-vue-next'
 
 import ProfileDrawer from '../../../components/hr/ProfileDrawer.vue'
@@ -578,6 +578,7 @@ const formatChangeType = (t) => {
     NOTICE_SERVED: 'Notice Served',
     EXITED: 'Exited',
     ARCHIVED: 'Archived',
+    REHIRED: 'Rehired',
   }
   return map[t] || t
 }
@@ -593,6 +594,7 @@ const historyIcon = (t) => {
     NOTICE_SERVED: Briefcase,
     EXITED: LogOut,
     ARCHIVED: Archive,
+    REHIRED: RotateCcw,
   }
   return map[t] || History
 }
@@ -607,13 +609,20 @@ const availableActions = computed(() => {
   if (['ACTIVE','ON_PROBATION'].includes(s)) {
     out.push({ key: 'promote', label: 'Promote', icon: ArrowUp, tone: 'gold' })
     out.push({ key: 'transfer', label: 'Transfer', icon: ArrowRight, tone: 'neutral' })
-    out.push({ key: 'give-notice', label: 'Give Notice', icon: Briefcase, tone: 'orange' })
     out.push({ key: 'suspend', label: 'Suspend', icon: Pause, tone: 'red' })
   }
   if (s === 'SUSPENDED') out.push({ key: 'reinstate', label: 'Reinstate', icon: Play, tone: 'green' })
-  if (['ON_NOTICE','ACTIVE','SUSPENDED'].includes(s)) out.push({ key: 'exit', label: 'Exit', icon: LogOut, tone: 'red' })
+  // Separation hands off to the Exit module (clearance → assets → F&F → letters);
+  // the workspace's onLifecycleAction routes `initiate-exit` to /admin/hr/exit.
+  if (['ACTIVE','ON_PROBATION','ON_NOTICE','SUSPENDED'].includes(s)) {
+    out.push({ key: 'initiate-exit', label: s === 'ON_NOTICE' ? 'Manage Exit' : 'Initiate Exit', icon: LogOut, tone: 'red' })
+  }
   if (s === 'ARCHIVED') out.push({ key: 'unarchive', label: 'Restore', icon: Undo2, tone: 'green' })
-  if (s !== 'ARCHIVED') out.push({ key: 'archive', label: 'Archive', icon: Archive, tone: 'neutral' })
+  // Archive is post-separation cleanup only.
+  if (['EXITED','INACTIVE'].includes(s)) out.push({ key: 'archive', label: 'Archive', icon: Archive, tone: 'neutral' })
+  // Rehire a former employee (gated server-side on the exit case being
+  // eligible-for-rehire). Opens the shared lifecycle modal's `rehire` form.
+  if (['EXITED','ARCHIVED','INACTIVE'].includes(s)) out.push({ key: 'rehire', label: 'Rehire', icon: RotateCcw, tone: 'gold' })
   return out
 })
 

@@ -493,6 +493,13 @@
       @confirm="submitAction"
     />
 
+    <RehireModal
+      :open="rehireOpen"
+      :candidate="emp"
+      @close="rehireOpen = false"
+      @done="onRehireDone"
+    />
+
     <!-- Delete Employee — type-to-confirm safeguard -->
     <transition name="del-modal">
       <div v-if="deleteOpen" class="del-backdrop" @click.self="closeDeleteModal" @keydown.esc="closeDeleteModal">
@@ -553,7 +560,7 @@ import {
   ArrowLeft, Loader2, UserX,
   IdCard, Phone, Briefcase, Banknote, History, ShieldCheck, ShieldAlert, AlertOctagon, Home, Calendar, Stamp, Wallet,
   Edit, Check, X, Eye, EyeOff,
-  Plus, ArrowUp, ArrowRight, CheckCircle, Pause, Play, LogOut, Archive, Undo2,
+  Plus, ArrowUp, ArrowRight, CheckCircle, Pause, Play, LogOut, Archive, Undo2, RotateCcw,
   Trash2, AlertTriangle,
 } from 'lucide-vue-next'
 import axios from 'axios'
@@ -572,6 +579,7 @@ import HrCheckbox from '../../../components/hr/forms/HrCheckbox.vue'
 import HrRadio from '../../../components/hr/forms/HrRadio.vue'
 import HrSearchCombobox from '../../../components/hr/forms/HrSearchCombobox.vue'
 import LifecycleActionModal from '../../../components/hr/LifecycleActionModal.vue'
+import RehireModal from '../../../components/hr/RehireModal.vue'
 
 import { useEmployees, useHrReference } from '../../../composables/useEmployees'
 import { useToast } from '../../../composables/useToast'
@@ -1031,13 +1039,20 @@ const availableActions = computed(() => {
   if (['ACTIVE','ON_PROBATION'].includes(s)) {
     out.push({ key: 'promote', label: 'Promote', icon: ArrowUp, tone: 'gold' })
     out.push({ key: 'transfer', label: 'Transfer', icon: ArrowRight, tone: 'neutral' })
-    out.push({ key: 'give-notice', label: 'Give Notice', icon: Briefcase, tone: 'orange' })
     out.push({ key: 'suspend', label: 'Suspend', icon: Pause, tone: 'red' })
   }
   if (s === 'SUSPENDED') out.push({ key: 'reinstate', label: 'Reinstate', icon: Play, tone: 'green' })
-  if (['ON_NOTICE','ACTIVE','SUSPENDED'].includes(s)) out.push({ key: 'exit', label: 'Exit', icon: LogOut, tone: 'red' })
+  // Separation is owned by the Exit module (clearance → asset recovery → F&F →
+  // letters). The profile no longer flips lifecycle directly; it hands off to
+  // /admin/hr/exit so an ExitCase drives the whole offboarding.
+  if (['ACTIVE','ON_PROBATION','ON_NOTICE','SUSPENDED'].includes(s)) {
+    out.push({ key: 'initiate-exit', label: s === 'ON_NOTICE' ? 'Manage Exit' : 'Initiate Exit', icon: LogOut, tone: 'red' })
+  }
   if (s === 'ARCHIVED') out.push({ key: 'unarchive', label: 'Restore', icon: Undo2, tone: 'green' })
-  if (s !== 'ARCHIVED') out.push({ key: 'archive', label: 'Archive', icon: Archive, tone: 'neutral' })
+  // Archive is post-separation cleanup only — not an offboarding bypass.
+  if (['EXITED','INACTIVE'].includes(s)) out.push({ key: 'archive', label: 'Archive', icon: Archive, tone: 'neutral' })
+  // Rehire a former employee (gated server-side on exit-case rehire eligibility).
+  if (['EXITED','ARCHIVED','INACTIVE'].includes(s)) out.push({ key: 'rehire', label: 'Rehire', icon: RotateCcw, tone: 'gold' })
   return out
 })
 
@@ -1046,10 +1061,29 @@ const actionModalOpen = ref(false)
 const actionModalKey = ref('')
 const lifecycleSubmitting = ref(false)
 
+// Separation actions are handed off to the Exit module instead of mutating
+// lifecycle inline — see availableActions. `initiate-exit` (and the legacy
+// give-notice/exit keys, defensively) route into /admin/hr/exit.
+const goToExit = () => {
+  if (!emp.value) return
+  router.push({ name: 'HrExitTab', params: { tab: 'resignation' }, query: { initiate: emp.value.id } })
+}
+
 const openActionModal = (action) => {
   if (!emp.value) return
+  if (['initiate-exit', 'exit', 'give-notice'].includes(action)) { goToExit(); return }
+  // Rehire runs through the dedicated, advanced boomerang-rehire wizard rather
+  // than the generic lifecycle form — same modal used in Recruitment → Rehire.
+  if (action === 'rehire') { rehireOpen.value = true; return }
   actionModalKey.value = action
   actionModalOpen.value = true
+}
+
+// ─── Advanced rehire wizard (shared with Recruitment → Rehire) ───
+const rehireOpen = ref(false)
+const onRehireDone = async () => {
+  rehireOpen.value = false
+  await reload()
 }
 const onModalClose = () => {
   actionModalOpen.value = false

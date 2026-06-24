@@ -38,8 +38,19 @@
 
           <div class="cd-body">
 
+            <!-- ─── FROZEN NOTICE (leaving / exited) ────────────── -->
+            <Motion v-if="frozen" class="rev-frozen" as="section"
+              :initial="{ opacity: 0, y: 18 }" :animate="{ opacity: 1, y: 0 }"
+              :transition="{ duration: 0.5, delay: 0.12, ease: [0.16,1,0.3,1] }">
+              <span class="rf-ic"><Lock :size="16" /></span>
+              <div class="rf-txt">
+                <h4>Compensation frozen</h4>
+                <p>{{ empName }} {{ frozenReason }} — pay is locked at the current CTC. The final salary and dues are handled by the payroll run and the exit Full &amp; Final settlement, which use the existing compensation. To revise pay, cancel the notice (return the employee to active) first.</p>
+              </div>
+            </Motion>
+
             <!-- ─── REVISION WORKFLOW ──────────────────────────── -->
-            <Motion class="rev-card" as="section"
+            <Motion v-else class="rev-card" as="section"
               :initial="{ opacity: 0, y: 18 }" :animate="{ opacity: 1, y: 0 }"
               :transition="{ duration: 0.5, delay: 0.12, ease: [0.16,1,0.3,1] }">
 
@@ -214,7 +225,7 @@
                         {{ pctVsPrev(i) >= 0 ? '▲' : '▼' }} {{ Math.abs(pctVsPrev(i)).toFixed(1) }}% vs previous
                       </div>
                       <div class="node-actions">
-                        <button v-if="c.status === 'DRAFT'" class="btn micro accent"
+                        <button v-if="c.status === 'DRAFT' && !frozen" class="btn micro accent"
                           :disabled="activatingId === c.id" @click="activate(c)">
                           {{ activatingId === c.id ? 'Activating…' : 'Activate' }}
                         </button>
@@ -247,7 +258,7 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
 import { Motion } from 'motion-v'
-import { X, Trash2, Sparkles, Wallet } from 'lucide-vue-next'
+import { X, Trash2, Sparkles, Wallet, Lock } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 import PayMoneyValue from '../components/PayMoneyValue.vue'
 import PayCountUp from '../components/PayCountUp.vue'
@@ -257,6 +268,7 @@ import {
   inr, fetchCompHistory, createCompensation, deleteCompensation,
   activateCompensation, fetchStructures, previewStructure,
 } from '@/composables/usePayroll'
+import { isEmployable } from '@/utils/hr/employable'
 
 const props = defineProps({ open: Boolean, employee: { type: Object, default: null } })
 const emit = defineEmits(['close', 'saved'])
@@ -300,6 +312,17 @@ const initials = computed(() => {
 })
 const activeRow = computed(() => history.value.find(c => c.status === 'ACTIVE') || null)
 const defaultStructure = computed(() => structures.value.find(s => s.is_default) || null)
+
+// Compensation is frozen once an employee is leaving / gone — mirrors the backend
+// guard_employable() on create + activate. The history stays visible (read-only).
+const frozen = computed(() => !!props.employee && !isEmployable(props.employee))
+const frozenReason = computed(() => {
+  const s = (props.employee?.lifecycle_state || '').toUpperCase()
+  return {
+    ON_NOTICE: 'is serving notice', EXITED: 'has exited', ARCHIVED: 'is archived',
+    INACTIVE: 'is inactive', SUSPENDED: 'is suspended',
+  }[s] || `is ${s.toLowerCase().replace('_', ' ')}`
+})
 const statusClass = (s) => ({ ACTIVE: 'ok', DRAFT: 'draft', SUPERSEDED: 'mut', CANCELLED: 'mut' }[s] || 'mut')
 
 const canSave = computed(() => !!form.value.effective_from && !!form.value.annual_ctc)
@@ -380,6 +403,7 @@ watch(step, (n, o) => { stepDir.value = n >= o ? 'step-fwd' : 'step-back' })
 
 // ─── mutations ──────────────────────────────────────────────────────
 const save = async (activate) => {
+  if (frozen.value) { toast.error(`Compensation is frozen — ${empName.value} ${frozenReason.value}.`); return }
   if (!canSave.value || saving.value) return
   saving.value = activate ? 'activate' : 'draft'
   try {
@@ -402,6 +426,7 @@ const save = async (activate) => {
 }
 
 const activate = async (c) => {
+  if (frozen.value) { toast.error(`Compensation is frozen — ${empName.value} ${frozenReason.value}.`); return }
   if (activatingId.value) return
   activatingId.value = c.id
   try { await activateCompensation(c.id); toast.success('Revision activated'); await load(); emit('saved') }
@@ -464,6 +489,12 @@ const pctVsPrev = (i) => {
 .cb-mo { margin-left: auto; font-size: 11px; color: var(--pay-text-muted); font-family: var(--pay-mono); }
 
 .cd-body { padding: 18px 22px 44px; }
+
+/* ─── frozen notice (leaving / exited) ──────────────────────────── */
+.rev-frozen { display: flex; gap: 13px; align-items: flex-start; background: var(--pay-deduction-soft, rgba(194,65,12,0.1)); border: 1px solid rgba(194,65,12,0.28); border-radius: 18px; padding: 16px 18px; margin-bottom: 24px; }
+.rf-ic { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 10px; color: var(--pay-deduction, #c2410c); background: rgba(194,65,12,0.14); border: 1px solid rgba(194,65,12,0.3); }
+.rf-txt h4 { margin: 2px 0 5px; font-size: 13.5px; color: var(--pay-text); }
+.rf-txt p { margin: 0; font-size: 12px; line-height: 1.55; color: var(--pay-text-2); }
 
 /* ─── revision card ─────────────────────────────────────────────── */
 .rev-card { background: var(--pay-surface); border: 1px solid var(--pay-border-soft); border-radius: 18px; padding: 18px; margin-bottom: 24px; position: relative; }

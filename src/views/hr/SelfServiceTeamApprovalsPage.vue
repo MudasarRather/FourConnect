@@ -30,6 +30,10 @@
         <Plane :size="14" /> Travel
         <span v-if="trvCount" class="surf-count">{{ trvCount }}</span>
       </button>
+      <button class="surf-btn" :class="{ active: surface === 'exit' }" @click="surface = 'exit'">
+        <DoorOpen :size="14" /> Resignations
+        <span v-if="exitCount" class="surf-count">{{ exitCount }}</span>
+      </button>
     </div>
 
     <!-- ═════════════════════════════════════════════════════════════════
@@ -292,6 +296,11 @@
          TRAVEL surface — "Authorization Bridge" manager clearance deck
          ════════════════════════════════════════════════════════════════ -->
     <TeamTravelApprovals v-if="surface === 'travel'" @count="trvCount = $event" @go="goTravel" />
+
+    <!-- ═════════════════════════════════════════════════════════════════
+         RESIGNATIONS surface — manager endorsement (two-stage, → HR)
+         ════════════════════════════════════════════════════════════════ -->
+    <TeamExitApprovals v-if="surface === 'exit'" @count="exitCount = $event" @go="goExit" />
   </div>
 </template>
 
@@ -301,7 +310,7 @@ import { useRouter } from 'vue-router'
 import { Motion } from 'motion-v'
 import {
   RefreshCw, UserRoundX, CircleCheck, Layers, Clock, Hourglass, AlertTriangle, Check, X,
-  CalendarDays, Receipt, Plane,
+  CalendarDays, Receipt, Plane, DoorOpen,
 } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
 
@@ -319,6 +328,7 @@ import RmbApprovalCard from './reimbursements/components/RmbApprovalCard.vue'
 import ClaimDetailDrawer from './reimbursements/drawers/ClaimDetailDrawer.vue'
 import ClaimActionModal from './reimbursements/modals/ClaimActionModal.vue'
 import TeamTravelApprovals from './travel/team/TeamTravelApprovals.vue'
+import TeamExitApprovals from './exit/team/TeamExitApprovals.vue'
 
 import '@/styles/leave-theme.css'
 import '@/styles/reimbursements-theme.css'
@@ -327,10 +337,13 @@ import '@/styles/reimbursements-theme.css'
 // does NOT globalize the :root { --trv-* } tokens — so without this the whole travel
 // surface renders unstyled unless a travel page was visited earlier in the session.
 import '@/styles/travel-theme.css'
+// Exit (resignation) surface uses the --ex-* tokens; same global-import rule as travel.
+import '@/styles/exit-theme.css'
 
 const toast = useToast()
 const router = useRouter()
 const goTravel = () => router.push({ name: 'SelfServiceTravel' })
+const goExit = () => router.push({ name: 'SelfServiceExit' })
 
 // ─── Surface toggle (Leave vs Reimbursements) ────────────────────────
 const surface = ref('leave')
@@ -380,6 +393,11 @@ watch(surface, (s) => { if (s === 'reimbursements' && !rmbQueue.value.length) lo
 // that owns its own queue + decision flow; we only mirror its pending count
 // here so the surface-toggle badge stays in sync.
 const trvCount = ref(0)
+
+// ─── Exit (resignation) manager surface ──────────────────────────────
+// Self-contained endorsement deck (TeamExitApprovals) owns its own queue +
+// manager-decision flow; we mirror its pending count for the toggle badge.
+const exitCount = ref(0)
 
 const queue = ref([])
 const loading = ref(false)

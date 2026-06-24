@@ -176,7 +176,7 @@ import axios from 'axios'
 import {
   X, Loader2,
   CheckCircle, ArrowUp, ArrowDown, ArrowRight, Pause, Play, Briefcase, LogOut, Archive,
-  Undo2, Gauge, Sparkles,
+  Undo2, Gauge, Sparkles, RotateCcw,
 } from 'lucide-vue-next'
 
 import HrFieldLabel from './forms/HrFieldLabel.vue'
@@ -300,6 +300,26 @@ const TEMPLATES = {
     confirmLabel: 'Restore',
     fields: [
       { key: 'reason', label: 'Restoration reason', type: 'textarea', placeholder: 'Optional', full: true },
+    ],
+  },
+  rehire: {
+    title: 'Rehire Employee',
+    desc: "Bring this former employee back on a fresh tenure. Requires their exit case to be marked 'eligible for rehire'. Their record, history and original join date are preserved; onboarding re-opens.",
+    icon: RotateCcw,
+    tone: 'gold',
+    confirmLabel: 'Rehire',
+    fields: [
+      { key: 'joining_date', label: 'New Joining Date', type: 'date', required: true, helper: 'Start of the new tenure' },
+      { key: 'on_probation', label: 'Start on probation?', type: 'radio', options: [
+        { value: true,  label: 'Yes' },
+        { value: false, label: 'No' },
+      ], full: true },
+      { key: 'probation_months', label: 'Probation length (months)', type: 'number', step: 1, helper: 'If on probation — defaults to 6' },
+      { key: 'designation_id', label: 'Designation', type: 'select', dynamic: 'designations', helper: 'Blank = keep prior' },
+      { key: 'department_id', label: 'Department', type: 'select', dynamic: 'departments', helper: 'Blank = keep prior' },
+      { key: 'grade_id', label: 'Grade', type: 'select', dynamic: 'grades' },
+      { key: 'work_location_id', label: 'Work Location', type: 'select', dynamic: 'locations' },
+      { key: 'reason', label: 'Reason / Notes', type: 'textarea', placeholder: 'e.g. Rejoining the team after a year — strong prior performance.', full: true },
     ],
   },
   promote: {

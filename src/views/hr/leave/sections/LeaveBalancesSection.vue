@@ -137,6 +137,11 @@
         </Motion>
       </div>
 
+      <Motion as="button" class="leave-btn leave-btn-sm rv-grant" type="button"
+        :whileHover="{ y: -2, scale: 1.02 }" :whileTap="{ scale: 0.97 }"
+        @click="grantDrawer = true">
+        <Gift :size="13" /> Grant per policy
+      </Motion>
       <button class="leave-btn leave-btn-sm rv-refresh" :disabled="loading" @click="reload">
         <RefreshCw :size="13" :class="{ spin: loading }" /> Refresh
       </button>
@@ -260,6 +265,13 @@
       @close="adjustDrawer.open = false"
       @saved="onAdjusted"
     />
+
+    <LeaveBulkGrantDrawer
+      :open="grantDrawer"
+      :employees="byEmployee"
+      @close="grantDrawer = false"
+      @granted="onGranted"
+    />
   </div>
 </template>
 
@@ -268,10 +280,11 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Motion } from 'motion-v'
 import {
   RefreshCw, PencilLine, Search, X, Droplets, Gauge, Users, TrendingDown,
-  ArrowDownAZ, Waves, Flame,
+  ArrowDownAZ, Waves, Flame, Gift,
 } from 'lucide-vue-next'
 import LeaveTypeIcon from '../components/LeaveTypeIcon.vue'
 import LeaveBalanceAdjustDrawer from '../drawers/LeaveBalanceAdjustDrawer.vue'
+import LeaveBulkGrantDrawer from '../drawers/LeaveBulkGrantDrawer.vue'
 import LeavePagination from '../components/LeavePagination.vue'
 import { fetchLeaveBalances, typeMeta, LEAVE_TYPES } from '@/composables/useLeaves'
 import { useToast } from 'vue-toastification'
@@ -285,6 +298,7 @@ const query = ref('')
 const sortKey = ref('reserve')
 const focusType = ref(null)
 const adjustDrawer = ref({ open: false, employee: null })
+const grantDrawer = ref(false)
 
 // Client-side pagination — kicks in once there are more than `pageSize`
 // employees so the vault doesn't turn into an endless scroll. Default 3.
@@ -350,7 +364,7 @@ const byEmployee = computed(() => {
     if (!m.has(r.employee_id)) {
       m.set(r.employee_id, {
         id: r.employee_id, name: r.employee_name || '—', code: r.employee_code || '',
-        dept: r.department_name || '', balances: [],
+        dept: r.department_name || '', lifecycle_state: r.lifecycle_state || null, balances: [],
         totalAvail: 0, totalUsed: 0, totalQuota: 0,
       })
     }
@@ -494,6 +508,7 @@ const initials = (name) => {
 }
 const openAdjust = (emp) => { adjustDrawer.value = { open: true, employee: emp } }
 const onAdjusted = () => { adjustDrawer.value.open = false; reload() }
+const onGranted = () => { reload() }
 
 onMounted(reload)
 </script>
@@ -805,7 +820,15 @@ onMounted(reload)
   box-shadow: 0 6px 18px -10px rgba(251, 191, 36, 0.55);
 }
 [data-theme="light"] .rv-sort-btn.is-active { color: var(--w-gold-700); }
-.rv-refresh { margin-left: auto; }
+.rv-grant {
+  margin-left: auto;
+  color: #2a1100; font-weight: 800;
+  background: var(--leave-grad-cta); background-size: 200% 100%;
+  border: 1px solid rgba(251, 146, 60, 0.6);
+  box-shadow: 0 10px 24px -12px rgba(234, 88, 12, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.rv-grant:hover { filter: brightness(1.04); }
+.rv-refresh { margin-left: 0; }
 
 /* Type-focus chips */
 .rv-chips { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }

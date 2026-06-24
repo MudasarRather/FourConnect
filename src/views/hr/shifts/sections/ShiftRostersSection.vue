@@ -368,7 +368,7 @@ const onSearch = () => {
   timer = setTimeout(async () => {
     if (!empSearch.value.trim()) { empResults.value = []; return }
     try {
-      const all = await fetchEmployeesLite(empSearch.value.trim())
+      const all = await fetchEmployeesLite(empSearch.value.trim(), { excludeSeparated: true })
       const have = new Set(rows.value.map(r => r.employee_id))
       empResults.value = all.filter(e => !have.has(e.id)).slice(0, 8)
     } catch { empResults.value = [] }

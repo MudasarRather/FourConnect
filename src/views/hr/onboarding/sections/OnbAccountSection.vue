@@ -55,15 +55,76 @@
             </button>
           </div>
         </header>
-        <div class="ac-card-body">
-          <OnbField :model-value="ap.system_username || ''" @update:model-value="v => ap.system_username = v" label="System username" placeholder="alex.doe" />
-          <OnbField :model-value="ap.notes || ''" @update:model-value="v => ap.notes = v" type="textarea" label="Notes" placeholder="Any custom config..." :rows="2" />
-        </div>
-        <footer class="ac-card-foot">
-          <button class="onb-btn-ghost" @click="save(ap)">Save</button>
-          <button v-if="ap.status !== 'ACTIVE'"   class="onb-btn-primary" @click="activate(ap)"><CheckCircle2 :size="13" />Activate</button>
-          <button v-if="ap.status === 'ACTIVE'"   class="onb-btn-danger"  @click="revoke(ap)"><XCircle :size="13" />Revoke</button>
-        </footer>
+        <!-- ERP = the real login: grant credentials on the linked User -->
+        <template v-if="ap.account_type === 'ERP'">
+          <div class="ac-card-body erp-body">
+            <template v-if="ap.has_login">
+              <div class="erp-field">
+                <label class="erp-lab">Login username</label>
+                <div class="erp-username onb-mono"><AtSign :size="13" />{{ ap.login_email }}</div>
+                <span class="erp-sub">= work email · used to sign in at /authentication/user/login</span>
+              </div>
+
+              <div class="erp-state">
+                <span class="erp-chip" :class="ap.login_is_active ? 'ok' : 'off'">
+                  <component :is="ap.login_is_active ? CheckCircle2 : XCircle" :size="12" />{{ ap.login_is_active ? 'Login enabled' : 'Login disabled' }}
+                </span>
+                <span class="erp-chip" :class="ap.login_is_activated ? 'ok' : 'warn'">
+                  <component :is="ap.login_is_activated ? CheckCircle2 : Clock" :size="12" />{{ ap.login_is_activated ? 'Activated' : 'Not activated' }}
+                </span>
+              </div>
+
+              <div class="erp-field">
+                <label class="erp-lab">{{ ap.login_is_activated ? 'Reset password' : 'Set password' }}</label>
+                <div class="erp-pw">
+                  <Lock :size="13" class="erp-pw-ico" />
+                  <input :type="pwShow[ap.id] ? 'text' : 'password'" v-model="pwInput[ap.id]"
+                    placeholder="Min 8 characters" autocomplete="new-password" spellcheck="false" />
+                  <button class="erp-eye" type="button" :title="pwShow[ap.id] ? 'Hide' : 'Show'" @click="pwShow[ap.id] = !pwShow[ap.id]">
+                    <component :is="pwShow[ap.id] ? EyeOff : Eye" :size="14" />
+                  </button>
+                  <button class="erp-gen" type="button" @click="autogen(ap)"><Sparkles :size="12" />Auto</button>
+                </div>
+              </div>
+
+              <div v-if="handover[ap.id]" class="erp-handover">
+                <ShieldCheck :size="14" />
+                <div class="erp-ho-body">
+                  <span class="erp-ho-lab">Login granted — hand this to the joiner (shown once)</span>
+                  <code class="onb-mono">{{ handover[ap.id] }}</code>
+                </div>
+                <button class="erp-copy" type="button" title="Copy" @click="copyHandover(ap)"><Copy :size="13" /></button>
+              </div>
+
+              <p class="erp-note"><Info :size="12" />Granting login activates the account directly — no whitelist or 8-digit activation code needed for this joiner.</p>
+              <OnbField :model-value="ap.notes || ''" @update:model-value="v => ap.notes = v" type="textarea" label="Notes" placeholder="Any custom config..." :rows="2" />
+            </template>
+            <div v-else class="erp-nolink">
+              <AlertTriangle :size="16" />
+              <span>No linked user account for this employee. Re-create the employee with a work email so a login can be provisioned.</span>
+            </div>
+          </div>
+          <footer class="ac-card-foot">
+            <button class="onb-btn-ghost" @click="save(ap)">Save notes</button>
+            <button v-if="ap.has_login" class="onb-btn-primary" :disabled="busyId === ap.id" @click="grantLogin(ap)">
+              <KeyRound :size="13" />{{ ap.login_is_active && ap.login_is_activated ? 'Reset / re-grant' : 'Grant login' }}
+            </button>
+            <button v-if="ap.has_login && ap.login_is_active" class="onb-btn-danger" :disabled="busyId === ap.id" @click="revoke(ap)"><XCircle :size="13" />Revoke</button>
+          </footer>
+        </template>
+
+        <!-- All other systems: IT tracking record only -->
+        <template v-else>
+          <div class="ac-card-body">
+            <OnbField :model-value="ap.system_username || ''" @update:model-value="v => ap.system_username = v" label="System username" placeholder="alex.doe" />
+            <OnbField :model-value="ap.notes || ''" @update:model-value="v => ap.notes = v" type="textarea" label="Notes" placeholder="Any custom config..." :rows="2" />
+          </div>
+          <footer class="ac-card-foot">
+            <button class="onb-btn-ghost" @click="save(ap)">Save</button>
+            <button v-if="ap.status !== 'ACTIVE'"   class="onb-btn-primary" @click="activate(ap)"><CheckCircle2 :size="13" />Activate</button>
+            <button v-if="ap.status === 'ACTIVE'"   class="onb-btn-danger"  @click="revoke(ap)"><XCircle :size="13" />Revoke</button>
+          </footer>
+        </template>
       </Motion>
 
       <Motion as="button" class="ac-card ac-add" @click="showAdd = true"
@@ -121,6 +182,7 @@ import { Motion } from 'motion-v'
 import {
   KeyRound, Plus, CheckCircle2, XCircle, Trash2, AlertTriangle,
   Mail, Server, Wifi, Fingerprint, Clock, IdCard, GitBranch, MessagesSquare, HardDrive, MoreHorizontal,
+  AtSign, Lock, Eye, EyeOff, Sparkles, ShieldCheck, Copy, Info,
 } from 'lucide-vue-next'
 import OnbProcessPicker from '../components/OnbProcessPicker.vue'
 import OnbModal from '../components/OnbModal.vue'
@@ -128,10 +190,11 @@ import OnbField from '../components/OnbField.vue'
 import { fetchProcessDetail } from '../composables/useOnboarding'
 import {
   fetchAccountsByEmployee, createAccount, patchAccount, activateAccount, revokeAccount, deleteAccount,
+  setAccountCredentials,
 } from '../composables/useOnbMisc'
 import { useToast } from 'vue-toastification'
 
-defineEmits(['refresh-stats'])
+const emit = defineEmits(['refresh-stats'])
 
 const toast = useToast()
 const TYPES = ['ERP','EMAIL','VPN','BIOMETRIC','ATTENDANCE','RFID_SYSTEM','GIT','SLACK','DRIVE','OTHER']
@@ -149,6 +212,41 @@ const iconFor = (t) => ({
 const processId = ref('')
 const employeeId = ref(null)
 const accounts = ref([])
+
+// ERP login credential state (keyed by provisioning row id)
+const pwInput = reactive({})   // typed/generated password
+const pwShow = reactive({})    // reveal toggle
+const handover = reactive({})  // password shown once after a grant
+const busyId = ref(null)
+
+const genPassword = (n = 12) => {
+  const sets = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnpqrstuvwxyz', '23456789', '!@#$%*?']
+  const all = sets.join('')
+  const out = sets.map(s => s[Math.floor(Math.random() * s.length)])
+  while (out.length < n) out.push(all[Math.floor(Math.random() * all.length)])
+  for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[out[i], out[j]] = [out[j], out[i]] }
+  return out.join('')
+}
+const autogen = (ap) => { pwInput[ap.id] = genPassword(); pwShow[ap.id] = true }
+const copyHandover = (ap) => {
+  try { navigator.clipboard?.writeText(handover[ap.id]); toast.success('Password copied') } catch {}
+}
+const grantLogin = async (ap) => {
+  const pw = (pwInput[ap.id] || '').trim()
+  const alreadyLive = ap.login_is_active && ap.login_is_activated
+  if (!pw && !alreadyLive) { toast.error('Enter or auto-generate a password to grant the login'); return }
+  if (pw && pw.length < 8) { toast.error('Password must be at least 8 characters'); return }
+  busyId.value = ap.id
+  try {
+    await setAccountCredentials(ap.id, { password: pw || null, auto_generate: false, activate: true })
+    if (pw) handover[ap.id] = pw          // surface once for handover
+    pwInput[ap.id] = ''
+    await reload()
+    toast.success('ERP login granted — the employee can sign in now')
+    emit('refresh-stats')
+  } catch (e) { toast.error(e?.response?.data?.detail || 'Could not grant login') }
+  finally { busyId.value = null }
+}
 
 const showAdd = ref(false)
 const newAccount = reactive({ account_type: 'VPN', system_username: '', notes: '' })
@@ -334,4 +432,52 @@ onMounted(() => {})
   margin: 0;
 }
 .ac-confirm-text strong { color: var(--hr-text); font-weight: 700; }
+
+/* ── ERP login (credential) card ───────────────────────────────────────── */
+.erp-body { gap: 13px; }
+.erp-field { display: flex; flex-direction: column; gap: 5px; }
+.erp-lab { font-size: 10.5px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--hr-text-muted); }
+.erp-username {
+  display: inline-flex; align-items: center; gap: 7px; padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  color: var(--hr-text); background: rgba(251, 191, 36, 0.07); border: 1px solid var(--hr-border-warm);
+}
+.erp-username svg { color: var(--hr-accent-gold); flex-shrink: 0; }
+.erp-sub { font-size: 10.5px; color: var(--hr-text-dim); }
+
+.erp-state { display: flex; flex-wrap: wrap; gap: 7px; }
+.erp-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px;
+  border: 1px solid transparent; }
+.erp-chip.ok { background: rgba(52, 211, 153, 0.14); color: #34d399; border-color: rgba(52, 211, 153, 0.30); }
+.erp-chip.off { background: rgba(248, 113, 113, 0.14); color: #f87171; border-color: rgba(248, 113, 113, 0.30); }
+.erp-chip.warn { background: rgba(251, 146, 60, 0.14); color: #fb923c; border-color: rgba(251, 146, 60, 0.30); }
+
+.erp-pw { display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 11px; border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22); border: 1px solid rgba(255, 255, 255, 0.10); }
+.erp-pw-ico { color: var(--hr-text-muted); flex-shrink: 0; }
+.erp-pw input { flex: 1; min-width: 0; background: none; border: none; outline: none; color: var(--hr-text); font-size: 13px; font-family: var(--hr-mono); letter-spacing: 0.04em; }
+.erp-pw input::placeholder { color: var(--hr-text-dim); font-family: inherit; letter-spacing: 0; }
+.erp-eye { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; cursor: pointer; flex-shrink: 0;
+  background: transparent; border: none; color: var(--hr-text-muted); transition: color .2s, background .2s; }
+.erp-eye:hover { color: var(--hr-text); background: rgba(255, 255, 255, 0.06); }
+.erp-gen { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; padding: 6px 10px; border-radius: 8px; cursor: pointer; font: inherit; font-size: 11px; font-weight: 700;
+  background: var(--hr-accent-gold-soft); border: 1px solid var(--hr-border-warm); color: var(--hr-accent-gold); transition: background .2s; }
+.erp-gen:hover { background: rgba(251, 191, 36, 0.16); }
+[data-theme="light"] .erp-pw { background: rgba(255, 250, 242, 0.7); border-color: rgba(60, 45, 20, 0.14); }
+
+.erp-handover { display: flex; align-items: center; gap: 9px; padding: 10px 12px; border-radius: 11px;
+  background: rgba(52, 211, 153, 0.10); border: 1px solid rgba(52, 211, 153, 0.30); }
+.erp-handover > svg { color: #34d399; flex-shrink: 0; }
+.erp-ho-body { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.erp-ho-lab { font-size: 10.5px; font-weight: 600; color: var(--hr-text-secondary); }
+.erp-ho-body code { font-size: 14px; font-weight: 800; color: #34d399; letter-spacing: 0.06em; }
+.erp-copy { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; cursor: pointer; flex-shrink: 0;
+  background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.30); color: #34d399; }
+.erp-copy:hover { background: rgba(52, 211, 153, 0.22); }
+
+.erp-note { display: flex; align-items: flex-start; gap: 6px; margin: 0; font-size: 10.5px; line-height: 1.45; color: var(--hr-text-muted); }
+.erp-note svg { color: var(--hr-accent-gold); flex-shrink: 0; margin-top: 1px; }
+
+.erp-nolink { display: flex; align-items: center; gap: 9px; padding: 12px 14px; border-radius: 12px; font-size: 12px; line-height: 1.45;
+  color: var(--hr-text-secondary); background: rgba(248, 113, 113, 0.10); border: 1px solid rgba(248, 113, 113, 0.28); }
+.erp-nolink svg { color: #f87171; flex-shrink: 0; }
 </style>

@@ -85,7 +85,7 @@
 import { ref, computed } from 'vue'
 import {
   CheckCircle, ArrowUp, ArrowRight, Pause, Play, Briefcase, LogOut, Archive,
-  MoreVertical, Loader2, Undo2, Gauge,
+  MoreVertical, Loader2, Undo2, Gauge, RotateCcw,
 } from 'lucide-vue-next'
 
 import EmployeeAvatar from '../../../../components/hr/EmployeeAvatar.vue'
@@ -138,13 +138,18 @@ function actionsFor(e) {
   if (['ACTIVE', 'ON_PROBATION'].includes(s)) {
     list.push({ key: 'promote', label: 'Promote', icon: ArrowUp, tone: 'gold' })
     list.push({ key: 'transfer', label: 'Transfer', icon: ArrowRight, tone: 'neutral' })
-    list.push({ key: 'give-notice', label: 'Give Notice', icon: Briefcase, tone: 'orange' })
     list.push({ key: 'suspend', label: 'Suspend', icon: Pause, tone: 'red' })
   }
   if (s === 'SUSPENDED') list.push({ key: 'reinstate', label: 'Reinstate', icon: Play, tone: 'green' })
-  if (['ON_NOTICE', 'ACTIVE', 'SUSPENDED'].includes(s)) list.push({ key: 'exit', label: 'Exit', icon: LogOut, tone: 'red' })
+  // Separation hands off to the Exit module; the workspace routes `initiate-exit`.
+  if (['ACTIVE', 'ON_PROBATION', 'ON_NOTICE', 'SUSPENDED'].includes(s)) {
+    list.push({ key: 'initiate-exit', label: s === 'ON_NOTICE' ? 'Manage Exit' : 'Initiate Exit', icon: LogOut, tone: 'red' })
+  }
   if (s === 'ARCHIVED') list.push({ key: 'unarchive', label: 'Restore', icon: Undo2, tone: 'green' })
-  if (s !== 'ARCHIVED') list.push({ key: 'archive', label: 'Archive', icon: Archive, tone: 'neutral' })
+  // Archive is post-separation cleanup only.
+  if (['EXITED', 'INACTIVE'].includes(s)) list.push({ key: 'archive', label: 'Archive', icon: Archive, tone: 'neutral' })
+  // Rehire a former employee (gated server-side on exit-case rehire eligibility).
+  if (['EXITED', 'ARCHIVED', 'INACTIVE'].includes(s)) list.push({ key: 'rehire', label: 'Rehire', icon: RotateCcw, tone: 'gold' })
   return list
 }
 

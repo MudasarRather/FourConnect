@@ -78,10 +78,23 @@
               <ApprovalRunway :req="request" compact />
             </div>
 
+            <!-- ░░ lifecycle block — approval is not possible ░░ -->
+            <div v-if="blocked" class="tdm-block">
+              <AlertTriangle :size="17" />
+              <div class="tdm-block-txt">
+                <b>This request can’t be approved</b>
+                <span>{{ blockReason }} You can still <em>return</em> or <em>reject</em> it to clear it from the queue.</span>
+              </div>
+            </div>
+
             <!-- decision segmented -->
             <div class="tdm-seg">
-              <Motion v-for="d in options" :key="d.key" as="button" class="seg-btn" :class="{ on: decision === d.key }"
-                :style="{ '--c': d.hex }" :whileHover="{ y: -1 }" :whileTap="{ scale: 0.96 }" @click="decision = d.key">
+              <Motion v-for="d in options" :key="d.key" as="button" class="seg-btn"
+                :class="{ on: decision === d.key, disabled: d.key === 'APPROVED' && blocked }"
+                :disabled="d.key === 'APPROVED' && blocked"
+                :style="{ '--c': d.hex }" :whileHover="{ y: (d.key === 'APPROVED' && blocked) ? 0 : -1 }"
+                :whileTap="{ scale: (d.key === 'APPROVED' && blocked) ? 1 : 0.96 }"
+                @click="(d.key === 'APPROVED' && blocked) ? null : (decision = d.key)">
                 <component :is="d.icon" :size="14" /> {{ d.label }}
               </Motion>
             </div>
@@ -103,7 +116,7 @@
           <footer class="tdm-foot">
             <button class="btn ghost" @click="$emit('close')">Cancel</button>
             <Motion as="button" class="btn act" :style="{ '--c': curMeta.hex }"
-              :disabled="busy || (decision !== 'APPROVED' && !notes.trim())"
+              :disabled="busy || (decision === 'APPROVED' && blocked) || (decision !== 'APPROVED' && !notes.trim())"
               :whileHover="{ y: -2 }" :whileTap="{ scale: 0.97 }" @click="confirm">
               <Loader2 v-if="busy" :size="15" class="spin" /><component :is="curMeta.icon" v-else :size="15" />
               {{ curMeta.cta }}
@@ -120,7 +133,7 @@ import { ref, computed, watch } from 'vue'
 import { Motion, AnimatePresence as Presence } from 'motion-v'
 import {
   X, Plane, Stamp, CheckCircle2, Undo2, XCircle, Loader2,
-  PlaneTakeoff, ArrowRight, Route,
+  PlaneTakeoff, ArrowRight, Route, AlertTriangle,
 } from 'lucide-vue-next'
 import ApprovalRunway from '../components/ApprovalRunway.vue'
 import { fmtINR, fmtDate, airportCode, runwayStateFor } from '@/composables/useTravel'
@@ -136,7 +149,14 @@ const options = [
 const decision = ref('APPROVED')
 const notes = ref('')
 
-watch(() => props.open, (v) => { if (v) { decision.value = 'APPROVED'; notes.value = '' } })
+// Server-derived: non-empty when the traveller's lifecycle (exited / suspended /
+// trip past last working day) makes an approve impossible. flow.apply_decision is
+// the real enforcement; here we just stop the approver heading down a dead end.
+const blockReason = computed(() => props.request?.approval_block || '')
+const blocked = computed(() => !!blockReason.value)
+
+// Open on Reject when approval is blocked — the only useful way to clear it.
+watch(() => props.open, (v) => { if (v) { decision.value = blocked.value ? 'REJECTED' : 'APPROVED'; notes.value = '' } })
 
 const code = (l) => airportCode(l)
 const curMeta = computed(() => options.find(o => o.key === decision.value) || options[0])
@@ -171,7 +191,10 @@ const nextPreview = computed(() => {
   return { ico: XCircle, text: 'Request is terminated — traveller is notified' }
 })
 
-const confirm = () => emit('decided', { decision: decision.value, notes: notes.value.trim() })
+const confirm = () => {
+  if (decision.value === 'APPROVED' && blocked.value) return
+  emit('decided', { decision: decision.value, notes: notes.value.trim() })
+}
 </script>
 
 <style scoped>
@@ -235,8 +258,19 @@ const confirm = () => emit('decided', { decision: decision.value, notes: notes.v
 .tdm-chain-lbl { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--trv-text-muted); }
 .tdm-chain-lbl svg { color: var(--trv-amber); }
 
+/* lifecycle block notice */
+.tdm-block { display: flex; align-items: flex-start; gap: 11px; padding: 12px 14px; border-radius: 13px; margin-bottom: 14px;
+  background: color-mix(in srgb, var(--trv-st-rejected) 12%, var(--trv-panel)); border: 1px solid color-mix(in srgb, var(--trv-st-rejected) 34%, transparent); }
+.tdm-block svg { color: var(--trv-st-rejected); flex-shrink: 0; margin-top: 1px; }
+.tdm-block-txt { display: flex; flex-direction: column; gap: 3px; }
+.tdm-block-txt b { font-size: 12.5px; font-weight: 800; color: var(--trv-st-rejected); }
+.tdm-block-txt span { font-size: 12px; line-height: 1.5; color: var(--trv-text-secondary); }
+.tdm-block-txt em { font-style: normal; font-weight: 700; color: var(--trv-text); }
+
 /* segmented */
 .tdm-seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+.seg-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+.seg-btn.disabled:hover { color: var(--trv-text-muted); }
 .seg-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 11px; cursor: pointer;
   background: var(--trv-panel); border: 1px solid var(--trv-border); color: var(--trv-text-muted); font-size: 12.5px; font-weight: 700; transition: color 0.2s, border-color 0.2s, background 0.2s; }
 .seg-btn:hover { color: var(--trv-text-secondary); }

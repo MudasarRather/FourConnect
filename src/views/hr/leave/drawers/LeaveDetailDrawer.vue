@@ -285,7 +285,15 @@
               >
                 <X :size="13" /> Reject
               </Motion>
-              <Motion as="button" class="leave-btn leave-btn-sm leave-btn-primary"
+              <!-- Past-dated, un-actioned leaves can't be approved — only closed (lapsed). -->
+              <Motion v-if="isLeavePast(d)" as="button" class="leave-btn leave-btn-sm leave-btn-lapse"
+                @click="lapseModal = true" :disabled="busy"
+                :whileHover="{ y: -2 }" :whileTap="{ scale: 0.97 }"
+                :transition="{ duration: 0.18 }"
+              >
+                <CalendarX :size="13" /> Close (lapsed)
+              </Motion>
+              <Motion v-else as="button" class="leave-btn leave-btn-sm leave-btn-primary"
                 @click="approve" :disabled="busy"
                 :whileHover="{ y: -2, scale: 1.02 }" :whileTap="{ scale: 0.97 }"
                 :transition="{ duration: 0.18 }"
@@ -297,6 +305,8 @@
 
           <LeaveRejectModal :open="rejectModal" :leave="d" stage="HR"
             @cancel="rejectModal = false" @confirm="confirmReject" />
+          <LeaveLapseModal :open="lapseModal" :leave="d" stage="HR" :busy="busy"
+            @cancel="lapseModal = false" @confirm="confirmLapse" />
         </aside>
       </div>
     </transition>
@@ -308,12 +318,13 @@ import { ref, computed, watch } from 'vue'
 import { Motion } from 'motion-v'
 import {
   X, Check, Trash2, ListChecks, MessageSquare, Phone, AlertOctagon,
-  History, Calendar,
+  History, Calendar, CalendarX,
 } from 'lucide-vue-next'
 import LeaveStatusChip from '../components/LeaveStatusChip.vue'
 import LeaveStatusPipeline from '../components/LeaveStatusPipeline.vue'
 import LeaveRejectModal from '../modals/LeaveRejectModal.vue'
-import { fetchLeaveOne, decideAsHr, adminDeleteLeave, typeMeta } from '@/composables/useLeaves'
+import LeaveLapseModal from '../modals/LeaveLapseModal.vue'
+import { fetchLeaveOne, decideAsHr, adminDeleteLeave, lapseLeave, isLeavePast, typeMeta } from '@/composables/useLeaves'
 import { useToast } from 'vue-toastification'
 
 const props = defineProps({
@@ -327,6 +338,7 @@ const d = ref(null)
 const loading = ref(false)
 const busy = ref(false)
 const rejectModal = ref(false)
+const lapseModal = ref(false)
 
 const hasChainSnapshot = computed(() => Array.isArray(d.value?.approval_steps) && d.value.approval_steps.length > 0)
 
@@ -373,6 +385,16 @@ const confirmReject = async (notes) => {
     toast.success('Rejected')
     emit('changed'); emit('close')
   } catch (e) { toast.error(e?.response?.data?.detail || 'Failed') }
+  finally { busy.value = false }
+}
+const confirmLapse = async (reason) => {
+  busy.value = true
+  try {
+    await lapseLeave(props.leaveId, reason)
+    toast.success('Closed as lapsed')
+    lapseModal.value = false
+    emit('changed'); emit('close')
+  } catch (e) { toast.error(e?.response?.data?.detail || 'Could not close the leave') }
   finally { busy.value = false }
 }
 const onDelete = async () => {

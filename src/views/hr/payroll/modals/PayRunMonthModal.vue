@@ -145,7 +145,11 @@
                           </span>
                           <span v-else class="emp-sub">CTC {{ inrShort(r.monthly_ctc) }}</span>
                         </div>
-                        <span v-if="r.eligible" class="emp-flag ok">
+                        <span v-if="r.eligible && r.net_floored" class="emp-flag floored"
+                          :title="`Net floored to ₹0 — deductions exceeded pay. ₹${Math.round(Number(r.tds_deferred)||0).toLocaleString('en-IN')} TDS deferred to a later run.`">
+                          <AlertTriangle :size="12" /> Net floored
+                        </span>
+                        <span v-else-if="r.eligible" class="emp-flag ok">
                           <component :is="r.final_settlement ? LogOut : Check" :size="13" />
                           {{ r.final_settlement ? 'Final settle' : 'Will pay' }}
                         </span>
@@ -172,6 +176,7 @@
                     <div class="rt-row"><span><Wallet :size="13" /> Estimated gross</span><PayMoneyValue :value="elig.estimated_gross" class="rt-val" /></div>
                     <div class="rt-row" v-if="elig.final_settlement_count"><span><LogOut :size="13" /> Final settlements included</span><b class="mono">{{ elig.final_settlement_count }}</b></div>
                     <div class="rt-row" v-if="elig.blocked_count"><span><AlertTriangle :size="13" /> Exceptions (won't be paid)</span><b class="mono warn">{{ elig.blocked_count }}</b></div>
+                    <div class="rt-row" v-if="elig.floored_count"><span><AlertTriangle :size="13" /> Net floored (deductions &gt; pay)</span><b class="mono warn">{{ elig.floored_count }}</b></div>
                   </div>
                   <label class="paym-field" :style="{ '--i': 4 }"><span>Notes (optional)</span>
                     <textarea v-model="f.notes" rows="2" placeholder="Optional"></textarea>
@@ -412,6 +417,7 @@ watch(() => props.open, async (o) => {
 .emp-sub .lop { color: var(--pay-deduction); }
 .emp-flag { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; padding: 4px 9px; border-radius: 999px; white-space: nowrap; min-width: 78px; justify-content: center; }
 .emp-flag.ok { color: var(--pay-net); background: var(--pay-net-soft); }
+.emp-flag.floored { color: #b45309; background: rgba(245,158,11,0.16); }
 .emp-flag.blk { color: var(--pay-deduction); background: rgba(194,65,12,0.14); }
 
 /* ── step 3: review ── */

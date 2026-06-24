@@ -21,8 +21,9 @@
               <span>Employee</span>
               <select v-model="form.employee_id">
                 <option value="" disabled>— select an employee —</option>
-                <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.full_name || e.employee_id }} · {{ e.employee_id }}</option>
+                <option v-for="e in selectableEmps" :key="e.id" :value="e.id">{{ e.full_name || e.employee_id }} · {{ e.employee_id }}</option>
               </select>
+              <small v-if="hiddenEmpCount" class="cog-note">{{ hiddenEmpCount }} exited employee{{ hiddenEmpCount > 1 ? 's' : '' }} hidden.</small>
             </label>
             <div class="cog-row">
               <div class="cog-field">
@@ -81,6 +82,7 @@ import axios from 'axios'
 import { API } from '@/utils/api'
 import HrDatePicker from '@/components/hr/forms/HrDatePicker.vue'
 import { grantCompOff, COMP_OFF_EXPIRY_DEFAULT_DAYS } from '@/composables/useLeaves'
+import { selectableEmployees } from '@/utils/hr/employable'
 import { useToast } from 'vue-toastification'
 
 const props = defineProps({ open: { type: Boolean, default: false } })
@@ -92,6 +94,10 @@ const blank = () => ({ employee_id: '', earned_on: today, days: 1, expires_on: '
 const form = ref(blank())
 const saving = ref(false)
 const employees = ref([])
+// Comp-off can still be credited to someone serving notice; hide only the
+// fully-separated (mirrors backend guard_settleable semantics).
+const selectableEmps = computed(() => selectableEmployees(employees.value, 'not-separated'))
+const hiddenEmpCount = computed(() => (employees.value?.length || 0) - selectableEmps.value.length)
 
 const canSave = computed(() =>
   !!form.value.employee_id && form.value.earned_on && Number(form.value.days) > 0
@@ -176,6 +182,7 @@ onMounted(() => {})
 @media (max-width: 540px) { .cog-row { grid-template-columns: 1fr; } }
 .cog-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .cog-field > span { font-size: 9.5px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hr-text-muted); }
+.cog-note { font-size: 10.5px; color: var(--hr-text-dim, var(--hr-text-muted)); opacity: 0.8; }
 .cog-field > input, .cog-field > select, .cog-field > textarea {
   padding: 9px 11px; border-radius: 9px;
   background: rgba(251, 146, 60, 0.06);

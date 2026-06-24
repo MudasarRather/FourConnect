@@ -13,6 +13,7 @@
             <TrnSelect v-model="form.employee_id" label="Employee" required searchable
               search-placeholder="Search employees…" :options="employeeOptions"
               :placeholder="loadingEmployees ? 'Loading employees…' : (employeeOptions.length ? 'Select an employee…' : 'No employees found')" />
+            <p v-if="hiddenEmpCount" class="at-emp-note"><Info :size="12" /> {{ hiddenEmpCount }} employee{{ hiddenEmpCount > 1 ? 's' : '' }} on notice or exited {{ hiddenEmpCount > 1 ? 'are' : 'is' }} hidden — a leaving employee can't be enrolled.</p>
           </div>
         </Motion>
 
@@ -83,8 +84,9 @@ import { ref, computed, watch } from 'vue'
 import axios from 'axios'
 import { Motion, AnimatePresence as Presence } from 'motion-v'
 import { useToast } from 'vue-toastification'
-import { UserPlus, Loader, BookOpen, CalendarClock, Sparkles, ArrowRight, AlertTriangle } from 'lucide-vue-next'
+import { UserPlus, Loader, BookOpen, CalendarClock, Sparkles, ArrowRight, AlertTriangle, Info } from 'lucide-vue-next'
 import { API, authHeader } from '@/utils/api'
+import { selectableEmployees } from '@/utils/hr/employable'
 import TrnModal from '../components/TrnModal.vue'
 import TrnField from '../components/TrnField.vue'
 import TrnSelect from '../components/TrnSelect.vue'
@@ -114,7 +116,12 @@ const todayIso = new Date().toISOString().slice(0, 10)
 const programOptions = computed(() => (props.programs || []).map(p => ({
   value: p.id, label: p.name, dot: `var(${typeMeta(p.training_type).cssVar})`,
 })))
-const employeeOptions = computed(() => (employees.value || []).map(e => ({
+// Only ACTIVE / ON_PROBATION employees can be enrolled — mirrors the backend
+// guard_employable() on the assign endpoint, so a leaving / exited employee
+// never appears (the API would 409 anyway).
+const selectableEmps = computed(() => selectableEmployees(employees.value, 'employable'))
+const hiddenEmpCount = computed(() => (employees.value?.length || 0) - selectableEmps.value.length)
+const employeeOptions = computed(() => selectableEmps.value.map(e => ({
   value: e.id, label: e.full_name || e.name || e.employee_id || 'Unnamed',
   hint: e.employee_id || e.employee_code || '',
 })))
@@ -236,6 +243,8 @@ const save = async () => {
 .ap-due { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--trn-text-muted); }
 .ap-due :deep(svg) { color: var(--trn-text-dim); }
 .at-hint { margin: 0; font-size: 11px; line-height: 1.45; color: var(--trn-text-dim); }
+.at-emp-note { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; font-size: 11px; color: var(--trn-text-dim); }
+.at-emp-note :deep(svg) { flex-shrink: 0; color: var(--trn-steel-dim, var(--trn-text-dim)); }
 
 .spin { animation: trn-orbit-spin 0.9s linear infinite; }
 

@@ -40,6 +40,11 @@ export async function revokeAccount(id) {
   const { data } = await axios.post(`${API}/hr/account-provisioning/${id}/revoke`, {}, { headers: authHeader() })
   return data
 }
+// ERP login bridge — set/reset the linked User's password and activate the login.
+export async function setAccountCredentials(id, payload) {
+  const { data } = await axios.post(`${API}/hr/account-provisioning/${id}/set-credentials`, payload, { headers: authHeader() })
+  return data
+}
 export async function deleteAccount(id) {
   await axios.delete(`${API}/hr/account-provisioning/${id}`, { headers: authHeader() })
 }

@@ -75,6 +75,7 @@
           </button>
         </div>
         <div v-else class="al-hint"><SearchX :size="14" /> No matching employees.</div>
+        <p v-if="hiddenCount" class="al-hidden"><Info :size="12" /> {{ hiddenCount }} employee{{ hiddenCount > 1 ? 's' : '' }} on notice or exited are hidden — a leaving employee can't receive a new asset.</p>
       </Motion>
 
       <!-- ░░ step 2 · terms ░░ -->
@@ -120,7 +121,7 @@ import { ref, computed, watch } from 'vue'
 import axios from 'axios'
 import { Motion } from 'motion-v'
 import { useToast } from 'vue-toastification'
-import { Send, Search, SearchX, Check, Loader, UserPlus, CalendarClock, Gauge, ShieldQuestion } from 'lucide-vue-next'
+import { Send, Search, SearchX, Check, Loader, UserPlus, CalendarClock, Gauge, ShieldQuestion, Info } from 'lucide-vue-next'
 import { API, authHeader } from '@/utils/api'
 import AssetModal from '../components/AssetModal.vue'
 import AssetTypeBadge from '../components/AssetTypeBadge.vue'
@@ -164,10 +165,16 @@ watch(() => props.open, (o) => {
   loadEmployees()
 })
 
+// Only ACTIVE / ON_PROBATION employees can receive a new asset — mirrors the
+// backend guard_employable() rule, so a leaving / exited employee never appears
+// as a pick (the API would 409 anyway).
+const EMPLOYABLE = ['ACTIVE', 'ON_PROBATION']
+const employablePool = computed(() => employees.value.filter(e => EMPLOYABLE.includes((e.lifecycle_state || '').toUpperCase())))
+const hiddenCount = computed(() => employees.value.length - employablePool.value.length)
 const filtered = computed(() => {
   const q = search.value.trim().toLowerCase()
-  if (!q) return employees.value
-  return employees.value.filter(e =>
+  if (!q) return employablePool.value
+  return employablePool.value.filter(e =>
     (e.full_name || '').toLowerCase().includes(q) || (e.employee_id || '').toLowerCase().includes(q))
 })
 const selectedEmployee = computed(() => employees.value.find(e => e.id === form.value.employee_id) || null)
@@ -281,6 +288,8 @@ async function submit() {
 .al-search-input { flex: 1; min-width: 0; border: none; background: none; outline: none; font: inherit; font-size: 13.5px; color: var(--as-text); }
 .al-search-n { font-family: var(--as-mono); font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; color: var(--as-text-secondary); background: var(--as-surface-elevated); }
 .al-hint { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--as-text-muted); padding: 14px 2px; }
+.al-hidden { display: flex; align-items: center; gap: 6px; margin: 2px 0 0; font-size: 11px; color: var(--as-text-dim); }
+.al-hidden :deep(svg) { flex-shrink: 0; color: var(--as-steel-dim); }
 
 .al-emp-list { max-height: 216px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; padding: 2px; }
 .al-emp { display: flex; align-items: center; gap: 11px; padding: 8px 11px; border-radius: 11px; cursor: pointer; text-align: left; font: inherit;

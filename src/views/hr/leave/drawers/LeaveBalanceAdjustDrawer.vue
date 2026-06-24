@@ -47,6 +47,17 @@
 
           <!-- ════════ BODY ════════ -->
           <div class="ba-body">
+            <!-- Lifecycle gate banner — credit is blocked for leaving/separated staff -->
+            <transition name="ba-badge">
+              <div v-if="!employable" class="ba-gate">
+                <ShieldAlert :size="15" />
+                <span>
+                  This employee <b>is {{ stateLabel || 'leaving' }}</b> — new leave can’t be
+                  <b>credited</b>. Only debit corrections are allowed until their record is settled.
+                </span>
+              </div>
+            </transition>
+
             <!-- ─── 01 · Leave type picker ─── -->
             <Motion as="section" class="ba-block"
               :initial="{ opacity: 0, y: 16 }" :animate="{ opacity: 1, y: 0 }"
@@ -198,6 +209,11 @@
             :initial="{ opacity: 0, y: 18 }" :animate="{ opacity: 1, y: 0 }"
             :transition="{ duration: 0.5, delay: 0.46, ease: [0.16, 1, 0.3, 1] }"
           >
+            <transition name="ba-badge">
+              <span v-if="!canSave && disabledHint" class="ba-hint">
+                <Info :size="12" /> {{ disabledHint }}
+              </span>
+            </transition>
             <button class="leave-btn leave-btn-sm" @click="$emit('close')">Cancel</button>
             <Motion as="button" type="button" class="ba-save"
               :class="{ ready: canSave }"
@@ -220,7 +236,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { Motion } from 'motion-v'
-import { X, PencilLine, Save, Check, Plus, Minus, RotateCcw, Loader2, ArrowUp, ArrowDown, Equal, AlertTriangle } from 'lucide-vue-next'
+import { X, PencilLine, Save, Check, Plus, Minus, RotateCcw, Loader2, ArrowUp, ArrowDown, Equal, AlertTriangle, ShieldAlert, Info } from 'lucide-vue-next'
 import LeaveTypeIcon from '../components/LeaveTypeIcon.vue'
 import { LEAVE_TYPES, adjustLeaveBalance } from '@/composables/useLeaves'
 import { useToast } from 'vue-toastification'
@@ -297,9 +313,27 @@ const projPct = computed(() => pct(projectedAvail.value))
 
 const sign = computed(() => deltaNum.value > 0 ? 'pos' : deltaNum.value < 0 ? 'neg' : 'zero')
 const signIcon = computed(() => sign.value === 'pos' ? ArrowUp : sign.value === 'neg' ? ArrowDown : Equal)
+
+// ── Lifecycle eligibility — you can't CREDIT new leave to someone who is leaving
+// or has left (only ACTIVE / ON_PROBATION may receive new entitlement). Debit
+// corrections stay allowed while ON_NOTICE. Mirrors the backend guard so the UI
+// blocks it up-front instead of round-tripping a 409.
+const lifecycle = computed(() => props.employee?.lifecycle_state || null)
+const employable = computed(() => !lifecycle.value || ['ACTIVE', 'ON_PROBATION'].includes(lifecycle.value))
+const stateLabel = computed(() => (lifecycle.value || '').replace(/_/g, ' ').toLowerCase())
+const creditBlocked = computed(() => !employable.value && deltaNum.value > 0)
+
 const canSave = computed(() =>
-  form.value.reason.trim().length >= 4 && deltaNum.value !== 0 && !overCap.value,
+  form.value.reason.trim().length >= 4 && deltaNum.value !== 0 && !overCap.value && !creditBlocked.value,
 )
+// Plain-language reason the Save button is disabled (the "why can't I save" hint).
+const disabledHint = computed(() => {
+  if (creditBlocked.value) return `Can't credit — this employee ${stateLabel.value ? 'is ' + stateLabel.value : 'is leaving'}. Only debit corrections are allowed.`
+  if (deltaNum.value === 0) return 'Set a non-zero delta — use the stepper or a preset.'
+  if (overCap.value) return `Exceeds the policy cap — credit at most ${fmt(capRoom.value)} more.`
+  if (form.value.reason.trim().length < 4) return 'Add a reason (min 4 characters) for the audit trail.'
+  return ''
+})
 
 // ── Tween the "after" number so it counts up/down on every change ──
 function useTween(getter, { duration = 520 } = {}) {
@@ -504,6 +538,29 @@ const save = async () => {
 }
 .ba-body::-webkit-scrollbar { width: 6px; }
 .ba-body::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.4); border-radius: 999px; }
+
+/* lifecycle gate banner */
+.ba-gate {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 11px 13px; border-radius: 12px;
+  background: var(--leave-rejected-soft);
+  border: 1px solid var(--leave-border-ember);
+  color: var(--w-ember-200);
+  font-size: 11.5px; line-height: 1.5; font-weight: 600;
+}
+[data-theme="light"] .ba-gate { color: var(--w-ember-700); }
+.ba-gate svg { flex-shrink: 0; margin-top: 1px; color: var(--w-ember-400); }
+[data-theme="light"] .ba-gate svg { color: var(--w-ember-600); }
+.ba-gate b { font-weight: 800; }
+
+/* disabled-save hint (the "why can't I save" nudge) */
+.ba-hint {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-right: auto; max-width: 60%;
+  font-size: 10.5px; line-height: 1.35; font-weight: 600;
+  color: var(--leave-text-muted);
+}
+.ba-hint svg { flex-shrink: 0; color: var(--leave-brand); }
 
 .ba-block { display: flex; flex-direction: column; gap: 11px; }
 .ba-label {

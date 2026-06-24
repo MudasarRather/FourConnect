@@ -44,6 +44,7 @@
                       <label>Traveller</label>
                       <div v-if="isEdit" class="locked-emp"><UserRound :size="14" /> {{ editRequest?.employee_name || 'Employee' }} <span class="lock">fixed</span></div>
                       <HrSelect v-else v-model="form.employee_id" :options="empOptions" placeholder="Select employee…" searchable />
+                      <small v-if="!isEdit && hiddenEmpCount" class="emp-note">{{ hiddenEmpCount }} exited employee{{ hiddenEmpCount > 1 ? 's' : '' }} hidden — a departed employee can't be sent on a new trip.</small>
                     </div>
                     <div class="row2" :style="fT(1)">
                       <div class="fld"><label>Travel type</label>
@@ -248,6 +249,7 @@ import {
 } from 'lucide-vue-next'
 import HrSelect from '@/components/hr/forms/HrSelect.vue'
 import HrDatePicker from '@/components/hr/forms/HrDatePicker.vue'
+import { selectableEmployees } from '@/utils/hr/employable'
 import { useToast } from 'vue-toastification'
 import {
   fmtINR, airportCode, errText, adminCreateRequest, updateRequest,
@@ -337,7 +339,11 @@ watch(() => props.open, (v) => {
   load()
 })
 
-const empOptions = computed(() => employees.value.map(e => ({
+// Keep ON_NOTICE (a trip before their last day is fine; the backend caps by
+// date) but drop the fully-separated — they can't be sent on a new trip.
+const selectableEmps = computed(() => selectableEmployees(employees.value, 'not-separated'))
+const hiddenEmpCount = computed(() => (employees.value?.length || 0) - selectableEmps.value.length)
+const empOptions = computed(() => selectableEmps.value.map(e => ({
   value: e.id, label: `${e.full_name || e.name || 'Employee'} · ${e.employee_code || e.employee_id || ''}`.trim(),
 })))
 const typeOptions = TRAVEL_TYPES.map(t => ({ value: t.key, label: t.key, icon: t.icon }))
@@ -542,6 +548,7 @@ const save = async () => {
 .step-pane { display: flex; flex-direction: column; gap: 13px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .fld label { display: block; font-size: 11px; font-weight: 650; color: var(--trv-text-muted); margin-bottom: 5px; }
+.emp-note { display: block; margin-top: 5px; font-size: 10.5px; color: var(--trv-text-dim); opacity: 0.85; }
 .req-star { color: var(--trv-ember); }
 .inp { width: 100%; padding: 9px 11px; border-radius: 9px; font-size: 13px; font-family: inherit; resize: vertical; background: rgba(0,0,0,0.3); border: 1px solid var(--trv-border); color: var(--trv-text); transition: border-color 0.2s, box-shadow 0.2s; }
 .inp:focus { outline: none; border-color: var(--trv-amber-border); box-shadow: 0 0 0 3px rgba(251,191,36,0.1); }

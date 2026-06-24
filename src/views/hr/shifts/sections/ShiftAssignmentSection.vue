@@ -99,6 +99,7 @@
                   <div class="cc-meta">
                     <b>{{ a.employee_name || 'Employee' }}</b>
                     <small><CalendarClock :size="10" /> {{ fmtDate(a.effective_from) }} → {{ a.effective_until ? fmtDate(a.effective_until) : 'open' }}</small>
+                    <span v-if="lifecycleTag(a)" class="cc-life" :class="lifecycleTag(a).tone">{{ lifecycleTag(a).label }}</span>
                   </div>
                   <button class="cc-rm" :disabled="removing === a.id" @click="askRemove(a, g)" title="Stand down">
                     <Loader2 v-if="removing === a.id" :size="13" class="spin" /><UserMinus v-else :size="13" />
@@ -116,7 +117,7 @@
               <TransitionGroup tag="tbody" name="crew" appear>
                 <tr v-for="(a, i) in filtered" :key="a.id" class="lrow" :style="{ '--i': Math.min(i, 18) }">
                   <td>
-                    <div class="lc-emp"><span class="lc-av">{{ initials(a.employee_name) }}</span><span class="lc-name">{{ a.employee_name || '—' }}</span></div>
+                    <div class="lc-emp"><span class="lc-av">{{ initials(a.employee_name) }}</span><span class="lc-name">{{ a.employee_name || '—' }}</span><span v-if="lifecycleTag(a)" class="cc-life" :class="lifecycleTag(a).tone">{{ lifecycleTag(a).label }}</span></div>
                   </td>
                   <td>
                     <span class="lc-shift" :style="{ '--c': colorFor(a.shift_id) }"><span class="lc-dot" /><span class="lc-code">{{ a.shift_code }}</span> {{ a.shift_name }}</span>
@@ -237,6 +238,14 @@ const fmtDate = (iso) => {
   const d = new Date(iso + 'T00:00:00')
   if (isNaN(d)) return iso
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+// Flag crew still on the board who are leaving (separated crew are excluded
+// server-side). ON_NOTICE shows their last working day so HR can plan cover.
+const lifecycleTag = (a) => {
+  const ls = (a.lifecycle_state || 'ACTIVE').toUpperCase()
+  if (ls === 'ON_NOTICE') return { tone: 'notice', label: a.last_working_date ? `Notice · until ${fmtDate(a.last_working_date)}` : 'On notice' }
+  if (ls === 'SUSPENDED') return { tone: 'suspended', label: 'Suspended' }
+  return null
 }
 
 // ── data ──
@@ -394,6 +403,11 @@ const confirmRemove = async ({ reason }) => {
 .cc-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; }
 .cc-meta b { font-size: 12px; color: var(--shift-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cc-meta small { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-family: var(--shift-mono); color: var(--shift-text-muted); }
+.cc-life { align-self: flex-start; margin-top: 3px; font-size: 8.5px; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap;
+  padding: 1px 6px; border-radius: 999px; border: 1px solid transparent; }
+.cc-life.notice { color: var(--shift-ember-strong); background: var(--shift-warn-soft); border-color: color-mix(in srgb, var(--shift-ember) 28%, transparent); }
+.cc-life.suspended { color: var(--shift-text-muted); background: var(--shift-surface-2); border-color: var(--shift-border-soft); }
+.lc-emp .cc-life { align-self: center; margin-top: 0; margin-left: 8px; }
 .cc-rm { width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0; display: grid; place-items: center; cursor: pointer; background: transparent; border: 1px solid var(--shift-border-soft); color: var(--shift-text-muted); transition: 0.18s; }
 .cc-rm:hover:not(:disabled) { background: var(--shift-warn-soft); border-color: color-mix(in srgb, var(--shift-ember) 36%, transparent); color: var(--shift-ember-strong); }
 .cc-rm:disabled { opacity: 0.5; cursor: default; }

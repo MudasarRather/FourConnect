@@ -151,7 +151,7 @@
                 <div class="crew-grid" v-if="filteredEmps.length">
                   <TransitionGroup name="crew-pop" appear>
                     <button v-for="(e, i) in filteredEmps" :key="e.id" type="button" class="crew-pick"
-                      :class="{ on: form.employee_ids.includes(e.id), busy: assignedIds.has(e.id), elsewhere: !!otherShift[e.id] }"
+                      :class="{ on: form.employee_ids.includes(e.id), busy: assignedIds.has(e.id), elsewhere: !!otherShift[e.id], blocked: crewBlocked(e) }"
                       :style="{ '--i': Math.min(i, 16) }" @click="toggle(e.id)">
                       <span class="cp-av" :class="{ on: form.employee_ids.includes(e.id) }">{{ initials(e.full_name) }}</span>
                       <span class="cp-meta">
@@ -162,6 +162,8 @@
                         <Check v-if="form.employee_ids.includes(e.id)" :size="14" class="cp-ck" />
                         <span v-else-if="assignedIds.has(e.id)" class="cp-tag">on shift</span>
                         <span v-else-if="otherShift[e.id]" class="cp-elsewhere" :title="`Already on ${otherShift[e.id].shift_code}`"><Lock :size="10" /> {{ otherShift[e.id].shift_code }}</span>
+                        <span v-else-if="crewStatus(e)" class="cp-life" :class="crewStatus(e).tone"
+                          :title="crewStatus(e).blocked ? 'Window runs past their last working day' : ''">{{ crewStatus(e).label }}</span>
                       </span>
                     </button>
                   </TransitionGroup>
@@ -351,6 +353,8 @@ const departments = computed(() => {
 const filteredEmps = computed(() => {
   const q = search.value.trim().toLowerCase()
   return employees.value.filter(e => {
+    // Separated crew are no longer deployable — keep them out of the picker.
+    if (SEPARATED_STATES.includes((e.lifecycle_state || 'ACTIVE').toUpperCase())) return false
     if (deptFilter.value && e.department_name !== deptFilter.value) return false
     if (!q) return true
     return (e.full_name || '').toLowerCase().includes(q)
@@ -359,13 +363,41 @@ const filteredEmps = computed(() => {
   }).slice(0, 120)
 })
 const assignedIds = computed(() => new Set(current.value.map(a => a.employee_id)))
-const selectableVisible = computed(() => filteredEmps.value.filter(e => !assignedIds.value.has(e.id) && !otherShift.value[e.id]))
+const selectableVisible = computed(() => filteredEmps.value.filter(e => !assignedIds.value.has(e.id) && !otherShift.value[e.id] && !crewBlocked(e)))
 // selDetails caches the employee object at selection time so review-step avatars
 // and the count survive server-side search re-fetches (large orgs, >100 employees).
 const selDetails = reactive({})
 const selectedEmps = computed(() =>
   form.employee_ids.map(id => selDetails[id] || employees.value.find(e => e.id === id)).filter(Boolean))
 const initials = (n) => (n || '').split(' ').filter(Boolean).slice(0, 2).map(w => w[0]?.toUpperCase()).join('') || '?'
+
+// ── crew lifecycle gating — mirrors the backend tenure guard on /assign ──
+// Separated crew (EXITED / ARCHIVED / INACTIVE) are filtered out of the picker
+// entirely. ON_NOTICE crew are still working and may be deployed, but only for a
+// window that ends on/before their last working day; an open-ended or past-LWD
+// window blocks them. SUSPENDED is flagged but allowed (matches backend).
+const SEPARATED_STATES = ['EXITED', 'ARCHIVED', 'INACTIVE']
+const fmtLwd = (iso) => {
+  if (!iso) return ''
+  const d = new Date(iso + 'T00:00:00')
+  return isNaN(d) ? iso : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+}
+// → { tone, label, blocked } for non-active crew, else null. (Dates are ISO
+// 'YYYY-MM-DD' strings, so lexical comparison is chronological.)
+const crewStatus = (e) => {
+  const ls = (e?.lifecycle_state || 'ACTIVE').toUpperCase()
+  if (ls === 'ON_NOTICE') {
+    const lwd = e.last_working_date
+    const until = openEnded.value ? null : form.effective_until
+    const pastTenure = !!lwd && (
+      (form.effective_from && form.effective_from > lwd) || until === null || (until && until > lwd)
+    )
+    return { tone: 'notice', label: lwd ? `Notice · until ${fmtLwd(lwd)}` : 'On notice', blocked: pastTenure }
+  }
+  if (ls === 'SUSPENDED') return { tone: 'suspended', label: 'Suspended', blocked: false }
+  return null
+}
+const crewBlocked = (e) => !!crewStatus(e)?.blocked
 
 const toggle = (id) => {
   if (assignedIds.value.has(id) && !form.employee_ids.includes(id)) {
@@ -375,6 +407,11 @@ const toggle = (id) => {
   const other = otherShift.value[id]
   if (other && !form.employee_ids.includes(id)) {
     toast.warning(`Already deployed to ${other.shift_code} for an active period — stand them down from that shift first.`)
+    return
+  }
+  const emp = employees.value.find(x => x.id === id)
+  if (emp && crewBlocked(emp) && !form.employee_ids.includes(id)) {
+    toast.warning(`${emp.full_name} is serving notice — the window runs past their last working day (${fmtLwd(emp.last_working_date)}). Shorten it to deploy them.`)
     return
   }
   const i = form.employee_ids.indexOf(id)
@@ -440,7 +477,7 @@ watch(search, (q) => {
 
 const loadEmps = async (q = '') => {
   loadingEmps.value = true
-  try { employees.value = await fetchEmployeesLite(q) }
+  try { employees.value = await fetchEmployeesLite(q, { excludeSeparated: true }) }
   catch (e) { toast.error(e?.response?.data?.detail || 'Could not load employees') }
   finally { loadingEmps.value = false }
 }
@@ -486,6 +523,13 @@ const deploy = async () => {
     if (e?.response?.status === 409 && d?.conflicts) {
       conflicts.value = d.conflicts
       toast.error(d.message || 'Assignment conflicts block this deploy')
+    } else if (e?.response?.status === 409 && d?.blocked) {
+      // Tenure/lifecycle block (e.g. a crew member left or went on notice
+      // between load and deploy). Drop the offenders and bounce back to crew.
+      const ids = new Set(d.blocked.map(b => String(b.employee_id)))
+      form.employee_ids = form.employee_ids.filter(id => !ids.has(String(id)))
+      toast.error(d.message || 'Some crew have left or are serving notice past the shift window')
+      goStep(2)
     } else {
       toast.error((typeof d === 'string' && d) || 'Could not deploy shift')
     }
@@ -687,6 +731,8 @@ const sparkStyle = (n) => {
 .crew-pick.busy:not(.on) { opacity: 0.55; }
 .crew-pick.elsewhere:not(.on) { opacity: 0.62; cursor: not-allowed; }
 .crew-pick.elsewhere:not(.on):hover { transform: none; border-color: var(--shift-border-soft); }
+.crew-pick.blocked:not(.on) { opacity: 0.55; cursor: not-allowed; }
+.crew-pick.blocked:not(.on):hover { transform: none; border-color: var(--shift-border-soft); }
 .cp-av { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-size: 11px; font-weight: 800; font-family: var(--shift-mono);
   background: rgba(251,191,36,0.14); color: var(--shift-amber); transition: 0.2s; }
 .cp-av.on { background: var(--shift-grad-cta); color: #1f1408; }
@@ -698,6 +744,10 @@ const sparkStyle = (n) => {
 .cp-tag { font-size: 9px; font-family: var(--shift-mono); text-transform: uppercase; letter-spacing: 0.05em; color: var(--shift-text-dim); }
 .cp-elsewhere { display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-family: var(--shift-mono); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
   padding: 2px 6px; border-radius: 999px; color: var(--shift-ember-strong); background: var(--shift-warn-soft); border: 1px solid color-mix(in srgb, var(--shift-ember) 30%, transparent); }
+.cp-life { display: inline-flex; align-items: center; font-size: 9px; font-weight: 700; letter-spacing: 0.03em; white-space: nowrap;
+  padding: 2px 7px; border-radius: 999px; border: 1px solid transparent; }
+.cp-life.notice { color: var(--shift-ember-strong); background: var(--shift-warn-soft); border-color: color-mix(in srgb, var(--shift-ember) 28%, transparent); }
+.cp-life.suspended { color: var(--shift-text-muted); background: var(--shift-surface-2); border-color: var(--shift-border-soft); }
 
 .dep-mini-empty { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 30px; color: var(--shift-text-dim); font-size: 12.5px; }
 .onshift-strip { border-top: 1px dashed var(--shift-border-soft); padding-top: 12px; }

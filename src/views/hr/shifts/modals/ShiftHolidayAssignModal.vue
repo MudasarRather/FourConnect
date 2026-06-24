@@ -59,7 +59,7 @@ watch(() => props.open, async (o) => {
   if (!o || !props.holiday) return
   Object.assign(form, { employee_ids: [], compensation: 'DOUBLE_PAY', pay_multiplier: 2.0, shift_id: '' })
   search.value = ''
-  try { [employees.value, shifts.value] = await Promise.all([fetchEmployeesLite(''), fetchShifts({ limit: 100 }).then(d => d.items || [])]) } catch { /* */ }
+  try { [employees.value, shifts.value] = await Promise.all([fetchEmployeesLite('', { excludeSeparated: true }), fetchShifts({ limit: 100 }).then(d => d.items || [])]) } catch { /* */ }
 })
 
 const filtered = computed(() => {
@@ -71,7 +71,7 @@ const initials = (n) => (n || '').split(' ').filter(Boolean).slice(0, 2).map(w =
 const syncMult = () => { form.pay_multiplier = compMeta(form.compensation).mult }
 const toggle = (id) => { const i = form.employee_ids.indexOf(id); if (i >= 0) form.employee_ids.splice(i, 1); else form.employee_ids.push(id) }
 let timer = null
-const onSearch = () => { clearTimeout(timer); timer = setTimeout(async () => { try { employees.value = await fetchEmployeesLite(search.value.trim()) } catch { /* */ } }, 260) }
+const onSearch = () => { clearTimeout(timer); timer = setTimeout(async () => { try { employees.value = await fetchEmployeesLite(search.value.trim(), { excludeSeparated: true }) } catch { /* */ } }, 260) }
 
 const submit = async () => {
   if (!form.employee_ids.length) return

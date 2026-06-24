@@ -22,6 +22,21 @@ const routes = [
     { path: '/', redirect: '/authentication/user/login' },
 
     // ============================================
+    // PUBLIC — Former-employee exit document portal + letter QR verification
+    // (no auth: a leaver whose ERP login was revoked downloads their letters here)
+    // ============================================
+    {
+        path: '/exit/documents/:token',
+        name: 'ExitDocumentsPortal',
+        component: () => import('../views/public/ExitDocumentsPortal.vue'),
+    },
+    {
+        path: '/exit/verify/:code',
+        name: 'ExitVerifyPage',
+        component: () => import('../views/public/ExitVerifyPage.vue'),
+    },
+
+    // ============================================
     // USER AUTHENTICATION ROUTES
     // ============================================
     {
@@ -121,6 +136,7 @@ const routes = [
             { path: 'self-service/training', name: 'SelfServiceTraining', component: () => import('../views/hr/SelfServiceTrainingPage.vue') },
             { path: 'self-service/assets', name: 'SelfServiceAssets', component: () => import('../views/hr/SelfServiceAssetsPage.vue') },
             { path: 'self-service/travel', name: 'SelfServiceTravel', component: () => import('../views/hr/SelfServiceTravelPage.vue') },
+            { path: 'self-service/exit', name: 'SelfServiceExit', component: () => import('../views/hr/SelfServiceExitPage.vue') },
             { path: 'self-service/documents', name: 'SelfServiceDocuments', component: () => import('../views/hr/SelfServiceDocumentsPage.vue') },
             { path: 'self-service/performance', name: 'SelfServicePerformance', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Performance Reviews', phase: 'Phase 5 — Growth & Lifecycle' }) },
             { path: 'self-service/:pathMatch(.*)*', name: 'SelfServiceCatchall', component: PlaceholderPage, props: () => ({ type: 'self-service' }) },
@@ -206,7 +222,7 @@ const routes = [
             },
             { path: 'hr/recruitment', redirect: '/admin/hr/recruitment/dashboard' },
             {
-                path: 'hr/recruitment/:tab(dashboard|requisitions|positions|candidates|applications|screening|interviews|panels|offers|pipeline|analytics)',
+                path: 'hr/recruitment/:tab(dashboard|requisitions|positions|candidates|applications|screening|interviews|panels|offers|pipeline|rehire|analytics)',
                 name: 'HrRecruitmentTab',
                 component: () => import('../views/hr/recruitment/HrRecruitmentWorkspacePage.vue'),
             },
@@ -269,7 +285,12 @@ const routes = [
                 name: 'HrTravelTab',
                 component: () => import('../views/hr/travel/HrTravelWorkspacePage.vue'),
             },
-            { path: 'hr/exit', name: 'HrExit', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Exit Management', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'hr/exit', redirect: '/admin/hr/exit/dashboard' },
+            {
+                path: 'hr/exit/:tab(dashboard|resignation|notice|interviews|clearance|asset-return|settlement|experience-letter|relieving-letter|policies|reports|audit-logs)',
+                name: 'HrExitTab',
+                component: () => import('../views/hr/exit/HrExitWorkspacePage.vue'),
+            },
             { path: 'hr/reports', name: 'HrReports', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Reports & Analytics', phase: 'Phase 6 — Reports & Hardening' }) },
             { path: 'hr/settings', name: 'HrSettings', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'HR Settings', phase: 'Phase 6 — Reports & Hardening' }) },
             { path: 'hr/audit-logs', name: 'HrAuditLogs', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'HR Audit Logs', phase: 'Phase 1 — Foundation' }) },

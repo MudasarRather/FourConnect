@@ -135,7 +135,7 @@ watch(() => props.open, async (o) => {
   if (!o) return
   Object.assign(form, blank())
   reqShift.value = undefined; cptShift.value = undefined
-  try { [employees.value, shifts.value] = await Promise.all([fetchEmployeesLite(''), fetchShifts({ limit: 100 }).then(d => d.items || [])]) } catch { /* */ }
+  try { [employees.value, shifts.value] = await Promise.all([fetchEmployeesLite('', { excludeSeparated: true }), fetchShifts({ limit: 100 }).then(d => d.items || [])]) } catch { /* */ }
   loadHolidays(Number((form.swap_date || '').slice(0, 4)))
 })
 watch(() => form.swap_date, (d) => { if (d) loadHolidays(Number(d.slice(0, 4))) })

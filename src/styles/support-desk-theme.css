@@ -1,0 +1,209 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Support Desk theme — "The Triage Basin: Liquid Operations Theatre"
+   A signature unlike any sibling module. Tickets are luminous droplets in a
+   deep obsidian basin; the fluid surface ripples on inflow and drains as
+   tickets resolve. Warm amber/gold brand fluid over near-black; emerald =
+   resolved/healthy, red = critical/SLA-breached, steel = idle/neutral.
+   Distinct from: helix, spectrum, equalizer, orrery, magnetic-vault,
+   lattice/concourse, reactors, radar/control-tower, heatmaps, ECG, timelines.
+
+   Imports hr-theme.css for the shared --hr-* tokens + the reduced-motion guard.
+   Tokens are prefixed --sd-*. Keyframes are GLOBAL so inline SVG / canvas-driven
+   `animation:` strings resolve (Vue would otherwise rename scoped @keyframes).
+   Imported PER-VIEW only (workspace SFC <style scoped>), never globally.
+   ─────────────────────────────────────────────────────────────────────────── */
+@import './hr-theme.css';
+
+:root {
+  /* Canvas + surfaces — obsidian basin under warm light */
+  --sd-canvas: #060708;
+  --sd-basin: #0a0c0e;
+  --sd-surface: rgba(22, 24, 27, 0.66);
+  --sd-surface-elevated: rgba(30, 33, 37, 0.9);
+  --sd-surface-glass: rgba(15, 17, 19, 0.72);
+  --sd-panel: rgba(12, 14, 16, 0.8);
+  --sd-border: rgba(255, 255, 255, 0.07);
+  --sd-border-strong: rgba(255, 255, 255, 0.14);
+  --sd-border-warm: rgba(251, 146, 60, 0.22);
+
+  /* Text — cool-neutral on obsidian (basin reads colder than HR's warm charcoal) */
+  --sd-text: #f4f6f8;
+  --sd-text-secondary: #c2c7cd;
+  --sd-text-muted: #868d95;
+  --sd-text-dim: #5d646c;
+
+  /* Brand ramp — amber/gold/ember (house palette) */
+  --sd-amber: #fbbf24;
+  --sd-amber-bright: #fcd34d;
+  --sd-amber-strong: #f59e0b;
+  --sd-ember: #fb923c;
+  --sd-ember-deep: #ea580c;
+  --sd-gold: #ffb900;
+  --sd-amber-soft: rgba(251, 191, 36, 0.12);
+  --sd-amber-border: rgba(251, 191, 36, 0.28);
+
+  /* SLA priority ramp — critical(red) → low(stone). Drives droplet tint. */
+  --sd-pri-critical: #ef4444;   --sd-pri-critical-soft: rgba(239, 68, 68, 0.14);
+  --sd-pri-urgent:   #f97316;   --sd-pri-urgent-soft:   rgba(249, 115, 22, 0.14);
+  --sd-pri-high:     #fb923c;   --sd-pri-high-soft:     rgba(251, 146, 60, 0.14);
+  --sd-pri-medium:   #fbbf24;   --sd-pri-medium-soft:   rgba(251, 191, 36, 0.14);
+  --sd-pri-low:      #a8a29e;   --sd-pri-low-soft:      rgba(168, 162, 158, 0.14);
+
+  /* Ticket-status semantics */
+  --sd-st-open:        #fbbf24;  --sd-st-open-soft:        rgba(251, 191, 36, 0.13);
+  --sd-st-pending:     #d6b25e;  --sd-st-pending-soft:     rgba(214, 178, 94, 0.13);
+  --sd-st-progress:    #fb923c;  --sd-st-progress-soft:    rgba(251, 146, 60, 0.13);
+  --sd-st-escalated:   #f97316;  --sd-st-escalated-soft:   rgba(249, 115, 22, 0.13);
+  --sd-st-resolved:    #34d399;  --sd-st-resolved-soft:    rgba(52, 211, 153, 0.13);
+  --sd-st-closed:      #9ca3af;  --sd-st-closed-soft:      rgba(156, 163, 175, 0.12);
+  --sd-st-breached:    #dc2626;  --sd-st-breached-soft:    rgba(220, 38, 38, 0.14);
+
+  /* Semantics */
+  --sd-success: #34d399;        --sd-success-soft: rgba(52, 211, 153, 0.13);
+  --sd-danger:  #ef4444;        --sd-danger-soft:  rgba(239, 68, 68, 0.13);
+  --sd-warning: #fbbf24;        --sd-warning-soft: rgba(251, 191, 36, 0.13);
+  --sd-steel:   #9ca3af;        --sd-steel-soft:   rgba(156, 163, 175, 0.1);
+
+  /* Basin fluid (canvas-driven; literal hex for shader uniforms lives in JS) */
+  --sd-fluid-core: #fb923c;
+  --sd-fluid-glow: rgba(251, 146, 60, 0.5);
+  --sd-fluid-deep: #ea580c;
+  --sd-basin-rim: rgba(251, 191, 36, 0.22);
+
+  /* Gradients */
+  --sd-grad-hero: linear-gradient(135deg, #fcd34d 0%, #fb923c 46%, #ea580c 100%);
+  --sd-grad-fluid: radial-gradient(circle at 50% 120%, #fde68a 0%, #fb923c 38%, #ea580c 72%, #7c2d12 110%);
+  --sd-grad-card: radial-gradient(120% 100% at 0% 0%, rgba(251, 146, 60, 0.09), transparent 60%);
+  --sd-grad-rail: linear-gradient(90deg, #fbbf24, #fb923c, #ea580c);
+
+  /* Shadows */
+  --sd-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+  --sd-shadow-hover: 0 28px 72px rgba(0, 0, 0, 0.66);
+  --sd-card-shadow: 0 10px 34px rgba(0, 0, 0, 0.45);
+  --sd-glow: 0 0 28px rgba(251, 146, 60, 0.28);
+
+  /* Motion */
+  --sd-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --sd-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --sd-mono: var(--hr-mono, 'JetBrains Mono', 'SF Mono', ui-monospace, monospace);
+}
+
+/* ─── Light theme — warm cream; brand amber stays vivid, accents deepen for AA ── */
+[data-theme="light"] {
+  --sd-canvas: #f5f1ea;
+  --sd-basin: #efe9df;
+  --sd-surface: rgba(255, 251, 245, 0.8);
+  --sd-surface-elevated: rgba(255, 253, 249, 0.95);
+  --sd-surface-glass: rgba(255, 250, 242, 0.72);
+  --sd-panel: rgba(255, 252, 247, 0.93);
+  --sd-border: rgba(60, 45, 20, 0.1);
+  --sd-border-strong: rgba(60, 45, 20, 0.18);
+  --sd-border-warm: rgba(234, 88, 12, 0.26);
+
+  --sd-text: #1d1812;
+  --sd-text-secondary: #574a38;
+  --sd-text-muted: #6b5840;
+  --sd-text-dim: #94836a;
+
+  --sd-amber: #d97706;
+  --sd-amber-bright: #f59e0b;
+  --sd-amber-strong: #b45309;
+  --sd-ember: #ea580c;
+  --sd-ember-deep: #c2410c;
+  --sd-gold: #d97706;
+
+  --sd-pri-critical: #dc2626;
+  --sd-pri-urgent:   #ea580c;
+  --sd-pri-high:     #d97706;
+  --sd-pri-medium:   #b45309;
+  --sd-pri-low:      #78716c;
+
+  --sd-st-open: #b45309;        --sd-st-pending: #a16207;
+  --sd-st-progress: #ea580c;    --sd-st-escalated: #c2410c;
+  --sd-st-resolved: #059669;    --sd-st-closed: #78716c;
+  --sd-st-breached: #b91c1c;
+
+  --sd-success: #059669;        --sd-danger: #dc2626;
+  --sd-warning: #b45309;        --sd-steel: #78716c;
+
+  --sd-fluid-core: #ea580c;
+  --sd-fluid-glow: rgba(234, 88, 12, 0.45);
+  --sd-fluid-deep: #c2410c;
+  --sd-basin-rim: rgba(217, 119, 6, 0.3);
+
+  --sd-grad-hero: linear-gradient(135deg, #d97706 0%, #ea580c 50%, #b45309 100%);
+  --sd-grad-fluid: radial-gradient(circle at 50% 120%, #fcd34d 0%, #ea580c 42%, #c2410c 78%, #7c2d12 112%);
+  --sd-grad-rail: linear-gradient(90deg, #d97706, #ea580c);
+
+  --sd-shadow: 0 18px 44px rgba(120, 90, 30, 0.16);
+  --sd-shadow-hover: 0 26px 60px rgba(120, 90, 30, 0.22);
+  --sd-card-shadow: 0 10px 28px rgba(120, 90, 30, 0.12);
+  --sd-glow: 0 0 24px rgba(234, 88, 12, 0.22);
+}
+
+/* ─── Global keyframes — basin + cards (GLOBAL so canvas/SVG inline strings resolve) ── */
+@keyframes sd-basin-ripple {
+  0%, 100% { transform: scaleX(1) scaleY(1); opacity: 0.55; }
+  50% { transform: scaleX(1.015) scaleY(0.97); opacity: 0.75; }
+}
+@keyframes sd-droplet-drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(2%, -3%) scale(1.04); }
+  66%  { transform: translate(-2%, 2%) scale(0.98); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+@keyframes sd-droplet-drain {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(80px) scale(0.2); opacity: 0; }
+}
+@keyframes sd-droplet-spawn {
+  0%   { transform: translateY(-40px) scale(0.3); opacity: 0; }
+  60%  { opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+@keyframes sd-fluid-shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+@keyframes sd-pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.45); }
+  50%      { box-shadow: 0 0 0 9px rgba(251, 146, 60, 0); }
+}
+@keyframes sd-breach-flash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+  50%      { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+}
+@keyframes sd-fade-up {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes sd-deal {
+  0%   { opacity: 0; transform: translateY(16px) scale(0.985); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes sd-sheen-pass {
+  0%   { transform: translateX(-120%) skewX(-18deg); }
+  100% { transform: translateX(220%) skewX(-18deg); }
+}
+@keyframes sd-spin-slow { to { transform: rotate(360deg); } }
+@keyframes sd-rail-flow { 0% { background-position: 0 0; } 100% { background-position: 200% 0; } }
+
+@property --sd-p { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+
+/* ─── Utility surface helpers reused across Support Desk SFCs ──────────────── */
+.sd-card {
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-border);
+  border-radius: 18px;
+  box-shadow: var(--sd-card-shadow);
+}
+.sd-mono { font-family: var(--sd-mono); letter-spacing: 0.02em; }
+.sd-grain::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.4;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 3px 3px; border-radius: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sd-card *, .sd-anim, [class*="sd-"] { animation: none !important; }
+}

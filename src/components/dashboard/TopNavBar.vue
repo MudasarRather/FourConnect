@@ -114,7 +114,9 @@ import {
   DollarSign,
   UserCog, Fingerprint, CalendarOff, CalendarClock, Receipt,
   BadgeCheck, GraduationCap, Boxes, Plane, Scale, IdCard,
-  LogIn, ClipboardList, Award, FileSignature, HeartPulse, DoorOpen
+  LogIn, ClipboardList, Award, FileSignature, HeartPulse, DoorOpen,
+  Ticket, Gauge, Bug, Server, Megaphone, Building2, LayoutGrid, GitPullRequest,
+  ScrollText, LifeBuoy, Headset
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -504,29 +506,61 @@ const rawMenuItems = [
     ]]
   },
   {
-    label: 'Notes',
-    icon: StickyNote,
+    // Replaces the legacy "Notes" slot — full customer Support Desk (admin/agent panel).
+    // Project-scoped notes remain inside the Projects menu (Project Notes).
+    label: 'Support Desk',
+    icon: LifeBuoy,
     children: true,
+    adminOnlyMenu: true, // Customer support desk — admin/agent panel context only
     columns: [[
-      { title: 'General', items: [
-         { label: 'All Notes', to: '/dashboard/notes', icon: StickyNote },
-         { label: 'Create Note', to: '/dashboard/notes/new', icon: Plus },
-         { label: 'Edit Note', to: '/dashboard/notes/edit', icon: Edit },
-         { label: 'View Note', to: '/dashboard/notes/view', icon: Eye }
+      { title: 'Overview', items: [
+         { label: 'Dashboard', to: '/dashboard/support-desk/dashboard', icon: LayoutDashboard }
       ]},
-      { title: 'Contextual', items: [
-         { label: 'Project Notes', to: '/dashboard/notes/project', icon: Briefcase },
-         { label: 'Expense Notes', to: '/dashboard/notes/expense', icon: Wallet }
+      { title: 'Tickets', items: [
+         { label: 'Tickets', to: '/dashboard/support-desk/tickets', icon: Ticket },
+         { label: 'Organizations', to: '/dashboard/support-desk/organizations', icon: Building2 },
+         { label: 'Customers', to: '/dashboard/support-desk/customers', icon: Users }
       ]}
     ], [
-       { title: 'Privacy', items: [
-         { label: 'Private Notes', to: '/dashboard/notes/private', icon: Lock },
-         { label: 'Shared Notes', to: '/dashboard/notes/shared', icon: UserPlus },
-         { label: 'Lock Note', to: '/dashboard/notes/lock', icon: Lock }
-       ]},
-       { title: '', items: [
-           { label: 'Archive Note', to: '/dashboard/notes/archive', icon: Archive }
-       ]}
+      { title: 'Service', items: [
+         { label: 'Contracts', to: '/dashboard/support-desk/contracts', icon: FileSignature },
+         { label: 'SLA Management', to: '/dashboard/support-desk/sla', icon: Gauge },
+         { label: 'Knowledge Base', to: '/dashboard/support-desk/knowledge-base', icon: BookOpen },
+         { label: 'Service Catalog', to: '/dashboard/support-desk/service-catalog', icon: LayoutGrid }
+      ]},
+      { title: 'ITIL', items: [
+         { label: 'Change Requests', to: '/dashboard/support-desk/change-requests', icon: GitPullRequest },
+         { label: 'Problem Management', to: '/dashboard/support-desk/problem-management', icon: Bug }
+      ]}
+    ], [
+      { title: 'Assets & Comms', items: [
+         { label: 'Customer Assets', to: '/dashboard/support-desk/customer-assets', icon: Server },
+         { label: 'Announcements', to: '/dashboard/support-desk/announcements', icon: Megaphone }
+      ]},
+      { title: 'Administration', items: [
+         { label: 'Reports', to: '/dashboard/support-desk/reports', icon: BarChart3 },
+         { label: 'Automation Rules', to: '/dashboard/support-desk/automation', icon: Zap },
+         { label: 'Settings', to: '/dashboard/support-desk/settings', icon: Settings },
+         { label: 'Audit Logs', to: '/dashboard/support-desk/audit-logs', icon: ScrollText }
+      ]}
+    ]]
+  },
+  {
+    // Employee-facing self-service helpdesk (user panel context only).
+    label: 'Support',
+    icon: Headset,
+    children: true,
+    userOnlyMenu: true,
+    columns: [[
+      { title: 'Help', items: [
+         { label: 'My Tickets', to: '/dashboard/support/tickets', icon: Ticket },
+         { label: 'New Ticket', to: '/dashboard/support/new', icon: Plus }
+      ]}
+    ], [
+      { title: 'Resources', items: [
+         { label: 'Knowledge Base', to: '/dashboard/support/knowledge-base', icon: BookOpen },
+         { label: 'Announcements', to: '/dashboard/support/announcements', icon: Megaphone }
+      ]}
     ]]
   },
    {

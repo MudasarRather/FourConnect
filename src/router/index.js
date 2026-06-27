@@ -37,6 +37,21 @@ const routes = [
     },
 
     // ============================================
+    // PUBLIC — Support Desk client portal (no auth; tokenized capability)
+    // External clients raise + track tickets here; fourreck.com links to this.
+    // ============================================
+    {
+        path: '/support/portal',
+        name: 'SupportPortalLanding',
+        component: () => import('../views/public/SupportPortalLanding.vue'),
+    },
+    {
+        path: '/support/portal/:token',
+        name: 'SupportPortalTicket',
+        component: () => import('../views/public/SupportPortalTicket.vue'),
+    },
+
+    // ============================================
     // USER AUTHENTICATION ROUTES
     // ============================================
     {
@@ -87,7 +102,19 @@ const routes = [
             { path: 'tasks/archive', name: 'UserTaskArchive', component: () => import('../views/TaskArchivePage.vue') },
             { path: 'tasks/view', redirect: to => ({ path: '/user/tasks', query: to.query }) },
             { path: 'tasks/:pathMatch(.*)*', name: 'Tasks', component: PlaceholderPage, props: route => ({ type: 'tasks' }) },
-            { path: 'notes/:pathMatch(.*)*', name: 'Notes', component: PlaceholderPage, props: route => ({ type: 'notes' }) },
+            // Legacy top-level "Notes" slot is now the Support Desk. Old links land on self-service support.
+            // (Project-scoped notes remain at /user/projects/notes — see ProjectNotesPage.)
+            { path: 'notes/:pathMatch(.*)*', redirect: '/user/support/tickets' },
+
+            // ============================================
+            // SUPPORT (USER SELF-SERVICE) — Phase 1 scaffolding
+            // ============================================
+            { path: 'support', redirect: '/user/support/tickets' },
+            {
+                path: 'support/:tab(tickets|new|knowledge-base|announcements)',
+                name: 'SupportSelfTab',
+                component: () => import('../views/support-desk/SupportDeskSelfPage.vue'),
+            },
             { path: 'expenses/new', name: 'NewExpense', component: () => import('../views/NewExpensePage.vue') },
             { path: 'expenses/all', name: 'AllExpenses', component: () => import('../views/AllExpensesPage.vue') },
             { path: 'expenses/draftexpenses', name: 'DraftExpenses', component: () => import('../views/DraftExpensesPage.vue') },
@@ -305,6 +332,17 @@ const routes = [
             },
             { path: 'hr/audit-logs', name: 'HrAuditLogs', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'HR Audit Logs', phase: 'Phase 1 — Foundation' }) },
             { path: 'hr/:pathMatch(.*)*', name: 'AdminHrCatchall', component: PlaceholderPage, props: () => ({ type: 'hr' }) },
+
+            // ============================================
+            // SUPPORT DESK (ADMIN) — Phase 1 scaffolding
+            // ============================================
+            { path: 'support-desk', redirect: '/admin/support-desk/dashboard' },
+            {
+                path: 'support-desk/:tab(dashboard|tickets|organizations|customers|contracts|sla|knowledge-base|service-catalog|change-requests|problem-management|customer-assets|announcements|reports|automation|settings|audit-logs)',
+                name: 'SupportDeskTab',
+                component: () => import('../views/support-desk/SupportDeskWorkspacePage.vue'),
+            },
+            { path: 'support-desk/:pathMatch(.*)*', redirect: '/admin/support-desk/dashboard' },
 
             { path: ':pathMatch(.*)*', name: 'AdminPlaceholder', component: PlaceholderPage, props: route => ({ type: 'admin' }) }
         ]

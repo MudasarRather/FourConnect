@@ -273,3 +273,48 @@
     transparent 60%
   );
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Shared dashboard surface utilities — used by the HR Command Center
+   (HrDashboardPage + its dashboard/ components). New classes; no overrides.
+   ─────────────────────────────────────────────────────────────────────────── */
+.hr-card {
+  position: relative;
+  background: var(--hr-surface);
+  border: 1px solid var(--hr-border);
+  border-radius: 18px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Faint film-grain wash for depth — pure CSS, GPU-cheap, no asset request. */
+.hr-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.5;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 4px 4px;
+  mix-blend-mode: screen;
+}
+[data-theme="light"] .hr-grain {
+  opacity: 0.6;
+  background-image: radial-gradient(rgba(40, 25, 10, 0.05) 1px, transparent 1px);
+  mix-blend-mode: multiply;
+}
+
+/* Blueprint floor — faint engineering grid, fades to transparent toward the top. */
+.hr-blueprint {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.4;
+  background-image:
+    linear-gradient(var(--hr-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--hr-border) 1px, transparent 1px);
+  background-size: 36px 36px;
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 120%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(120% 100% at 50% 120%, #000 30%, transparent 75%);
+}

@@ -14,6 +14,7 @@ import {
   UserCog, LogOut,
 } from 'lucide-vue-next'
 import { API, authHeader } from '@/utils/api'
+import { separationReasonOptions } from '@/composables/useEmployees'
 
 const BASE = `${API}/hr/exit`
 const ME = `${API}/hr/me/exit`
@@ -124,6 +125,28 @@ export const RESIGNATION_TYPES = [
 ]
 export const resignationTypeMeta = (k) => RESIGNATION_TYPES.find(t => t.key === k) || RESIGNATION_TYPES[0]
 
+// Master-driven option list (HR Settings → Separation Reasons). The hardcoded
+// arrays remain the rich FALLBACK (icons, selfAllowed) + the metadata overlay.
+// When the lexicon master is loaded, only its ACTIVE reasons are offered (HR can
+// retire one and it disappears here live); each is overlaid with the FE icon/
+// selfAllowed by key. `selfAllowed` stays a frontend rule (the backend also blocks
+// TERMINATION/MUTUAL for self-service). Pass `current` to keep an already-stored
+// (possibly retired) value visible so editing never blanks it. Call inside a
+// `computed()` so it re-evaluates when the reference cache loads.
+export function resignationTypeOptions({ selfOnly = false, current = '' } = {}) {
+  const master = separationReasonOptions('RESIGNATION_TYPE', current)
+  let base
+  if (master && master.length) {
+    base = master.map((m) => {
+      const meta = RESIGNATION_TYPES.find(t => t.key === m.value)
+      return { key: m.value, label: m.label, icon: meta?.icon || DoorOpen, selfAllowed: meta ? meta.selfAllowed : true, inactive: !!m.inactive }
+    })
+  } else {
+    base = RESIGNATION_TYPES.map(t => ({ ...t }))
+  }
+  return selfOnly ? base.filter(t => t.selfAllowed) : base
+}
+
 // ─── reason categories ──────────────────────────────────────────────────────
 export const REASON_CATEGORIES = [
   { key: 'BETTER_OPPORTUNITY', label: 'Better opportunity', icon: TrendingUp },
@@ -142,6 +165,20 @@ export const REASON_CATEGORIES = [
   { key: 'OTHER', label: 'Other', icon: FileText },
 ]
 export const reasonMeta = (k) => REASON_CATEGORIES.find(r => r.key === k) || REASON_CATEGORIES[REASON_CATEGORIES.length - 1]
+
+// Master-driven exit-reason options (HR Settings → Separation Reasons). Falls back
+// to the built-in REASON_CATEGORIES (with icons) when the lexicon hasn't loaded.
+// Call inside a `computed()` so it tracks the reference cache.
+export function reasonCategoryOptions({ current = '' } = {}) {
+  const master = separationReasonOptions('EXIT_REASON', current)
+  if (master && master.length) {
+    return master.map((m) => {
+      const meta = REASON_CATEGORIES.find(r => r.key === m.value)
+      return { key: m.value, label: m.label, icon: meta?.icon || FileText, inactive: !!m.inactive }
+    })
+  }
+  return REASON_CATEGORIES.map(r => ({ ...r }))
+}
 
 // ─── clearance departments + statuses ───────────────────────────────────────
 export const CLEARANCE_DEPTS = [

@@ -1,0 +1,196 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   HR Settings theme — "The Governance Board"
+   The meta-configuration nerve-centre. A printed-circuit / control-fabric
+   aesthetic: an org core that wires power to every HR module. Warm gold/amber
+   brand ramp (emerald = configured/success, red = conflict, steel = neutral).
+   Imports hr-theme.css for the shared --hr-* tokens + reduced-motion guard.
+   Imported PER-VIEW by HrSettingsWorkspacePage.vue — never globally.
+   ─────────────────────────────────────────────────────────────────────────── */
+@import './hr-theme.css';
+
+:root {
+  /* Canvas + surfaces (deep board substrate) */
+  --set-canvas: #060607;
+  --set-surface: rgba(22, 22, 26, 0.62);
+  --set-surface-elevated: rgba(30, 30, 34, 0.9);
+  --set-surface-glass: rgba(16, 16, 19, 0.72);
+  --set-panel: rgba(12, 12, 15, 0.82);
+  --set-border: rgba(255, 255, 255, 0.07);
+  --set-border-strong: rgba(255, 255, 255, 0.13);
+  --set-border-warm: rgba(251, 191, 36, 0.2);
+
+  /* Text */
+  --set-text: #f5f5f7;
+  --set-text-secondary: #c6c6cb;
+  --set-text-muted: #8d8d94;
+  --set-text-dim: #66666d;
+
+  /* Brand ramp */
+  --set-gold: #fbbf24;
+  --set-gold-bright: #fcd34d;
+  --set-amber: #f59e0b;
+  --set-orange: #fb923c;
+  --set-ember: #d97706;
+  --set-rust: #b45309;
+  --set-deep: #ea580c;
+
+  /* Circuit / trace */
+  --set-trace: rgba(251, 191, 36, 0.34);
+  --set-trace-idle: rgba(255, 255, 255, 0.07);
+  --set-trace-flow: #fcd34d;
+  --set-copper: #f59e0b;
+  --set-pad: rgba(251, 146, 60, 0.16);
+
+  /* State semantics (LED) */
+  --set-ok: #34d399;          --set-ok-soft: rgba(52, 211, 153, 0.14);
+  --set-partial: #fbbf24;     --set-partial-soft: rgba(251, 191, 36, 0.14);
+  --set-unset: #6b7280;       --set-unset-soft: rgba(107, 114, 128, 0.12);
+  --set-conflict: #f87171;    --set-conflict-soft: rgba(248, 113, 113, 0.14);
+
+  /* Gradients */
+  --set-grad-hero: linear-gradient(135deg, #fbbf24 0%, #fb923c 52%, #ea580c 100%);
+  --set-grad-core: radial-gradient(circle at 50% 38%, rgba(251, 191, 36, 0.30), transparent 70%);
+  --set-card-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.78), 0 0 0 1px rgba(0, 0, 0, 0.18);
+  --set-card-shadow-hover: 0 26px 56px -28px rgba(0, 0, 0, 0.82), 0 0 0 1px rgba(251, 191, 36, 0.12);
+
+  --set-mono: var(--hr-mono);
+  --set-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --set-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Conic-ring angle prop — required for smooth conic transitions (BoardCore etc.) */
+@property --gb-p {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* ─── Light theme — warm cream substrate ───────────────────────────────────── */
+[data-theme="light"] {
+  --set-canvas: #faf7f0;
+  --set-surface: rgba(255, 250, 240, 0.74);
+  --set-surface-elevated: rgba(255, 250, 240, 0.94);
+  --set-surface-glass: rgba(255, 250, 240, 0.8);
+  --set-panel: rgba(255, 248, 236, 0.9);
+  --set-border: rgba(40, 25, 10, 0.1);
+  --set-border-strong: rgba(40, 25, 10, 0.18);
+  --set-border-warm: rgba(217, 119, 6, 0.28);
+
+  --set-text: #1a1410;
+  --set-text-secondary: #44362a;
+  --set-text-muted: #6b5840;
+  --set-text-dim: #8d7b62;
+
+  --set-gold: #d97706;
+  --set-gold-bright: #f59e0b;
+  --set-amber: #d97706;
+  --set-orange: #ea580c;
+  --set-ember: #c2410c;
+  --set-rust: #9a3412;
+  --set-deep: #c2410c;
+
+  --set-trace: rgba(180, 83, 9, 0.4);
+  --set-trace-idle: rgba(40, 25, 10, 0.1);
+  --set-trace-flow: #c2410c;
+  --set-copper: #b45309;
+  --set-pad: rgba(234, 88, 12, 0.14);
+
+  --set-ok: #059669;          --set-ok-soft: rgba(5, 150, 105, 0.14);
+  --set-partial: #b45309;     --set-partial-soft: rgba(180, 83, 9, 0.14);
+  --set-unset: #8d7b62;       --set-unset-soft: rgba(141, 123, 98, 0.14);
+  --set-conflict: #dc2626;    --set-conflict-soft: rgba(220, 38, 38, 0.12);
+
+  --set-card-shadow: 0 18px 40px -30px rgba(40, 25, 10, 0.3), 0 0 0 1px rgba(40, 25, 10, 0.05);
+  --set-card-shadow-hover: 0 26px 56px -30px rgba(40, 25, 10, 0.34), 0 0 0 1px rgba(217, 119, 6, 0.16);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Shared utility classes (global to the Settings view — used across components)
+   ════════════════════════════════════════════════════════════════════════════ */
+
+/* Buttons */
+.set-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 9px 15px; border-radius: 11px; cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 650; letter-spacing: 0.1px;
+  border: 1px solid var(--set-border-strong); background: var(--set-surface);
+  color: var(--set-text-secondary);
+  transition: background 0.2s var(--set-spring), border-color 0.2s var(--set-spring),
+              color 0.2s var(--set-spring), transform 0.2s var(--set-spring), box-shadow 0.25s;
+}
+.set-btn :deep(svg), .set-btn svg { flex-shrink: 0; }
+.set-btn:hover { color: var(--set-text); border-color: var(--set-border-warm); }
+.set-btn-primary {
+  border: none; color: #1a1206;
+  background: var(--set-grad-hero);
+  box-shadow: 0 10px 26px -12px rgba(251, 146, 60, 0.55);
+}
+.set-btn-primary:hover { color: #1a1206; }
+.set-btn-ghost { background: transparent; }
+.set-btn-steel { background: var(--set-surface); }
+.set-btn.disabled, .set-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Pill / chip */
+.set-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  font: inherit; font-size: 12px; font-weight: 600;
+  color: var(--set-text-muted); background: var(--set-surface);
+  border: 1px solid var(--set-border); transition: all 0.2s var(--set-spring);
+}
+.set-chip:hover { color: var(--set-text); border-color: var(--set-border-strong); }
+.set-chip.on {
+  color: var(--acc, var(--set-gold));
+  background: color-mix(in srgb, var(--acc, var(--set-gold)) 13%, transparent);
+  border-color: color-mix(in srgb, var(--acc, var(--set-gold)) 34%, transparent);
+}
+
+.set-mono { font-family: var(--set-mono); letter-spacing: 0.3px; }
+
+/* ─── Keyframes ─────────────────────────────────────────────────────────────── */
+@keyframes set-deal {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes set-trace-flow { to { stroke-dashoffset: -1000; } }
+@keyframes set-led-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1; transform: scale(1.35); }
+}
+@keyframes set-sheen {
+  0% { background-position: 220% 0; }
+  100% { background-position: -120% 0; }
+}
+@keyframes set-spin { to { transform: rotate(360deg); } }
+@keyframes set-draw { to { stroke-dashoffset: 0; } }
+@keyframes set-core-rot { to { transform: rotate(360deg); } }
+@keyframes set-mote-drift {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  20%  { opacity: 0.7; }
+  80%  { opacity: 0.7; }
+  100% { transform: translate(var(--dx, 12px), var(--dy, -16px)); opacity: 0; }
+}
+.set-spin { animation: set-spin 0.9s linear infinite; }
+
+/* ─── Strip native number-input spinners across Settings ─────────────────────
+   Applies to in-page sections (.set-scope) AND teleported modals (.set-ov),
+   covering both raw <input type="number"> and the inner input of HrInput.
+   These are global (this file is imported unscoped by the workspace page), so
+   descendant combinators correctly pierce child component boundaries. */
+.set-scope input[type="number"],
+.set-ov input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.set-scope input[type="number"]::-webkit-outer-spin-button,
+.set-scope input[type="number"]::-webkit-inner-spin-button,
+.set-ov input[type="number"]::-webkit-outer-spin-button,
+.set-ov input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .set-deal, [data-flow], .set-led, .set-sheen,
+  .set-spin { animation: none !important; }
+}

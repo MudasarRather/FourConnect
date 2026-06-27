@@ -11,6 +11,11 @@ import {
   FileBarChart2, ScrollText,
   Banknote, Hammer, Gift, Recycle, CircleHelp, FileX2,
 } from 'lucide-vue-next'
+import {
+  Laptop, HardDrive, Monitor, Smartphone, CreditCard, Headphones, Keyboard, Mouse,
+  Car, KeyRound, Package, Bike, Printer, Server, Tablet, Camera, Cpu, Plug, Wifi,
+  Tv, Watch, Truck, HardHat, Box, Shapes, Tag, Usb, Projector, Speaker,
+} from 'lucide-vue-next'
 
 const BASE = `${API}/hr/assets`
 const ME = `${API}/hr/me/assets`
@@ -219,6 +224,23 @@ export async function deleteCategory(id) {
   await axios.delete(`${API}/hr/asset-categories/${id}`, { headers: authHeader() })
 }
 
+// ── Asset Types (manageable catalog — the physical-kind tag on each asset) ──
+export async function fetchAssetTypes(params = {}) {
+  const { data } = await axios.get(`${API}/hr/asset-types/`, { headers: authHeader(), params })
+  return Array.isArray(data) ? data : (data?.items || [])
+}
+export async function createAssetType(payload) {
+  const { data } = await axios.post(`${API}/hr/asset-types/`, payload, { headers: authHeader() })
+  return data
+}
+export async function patchAssetType(id, payload) {
+  const { data } = await axios.patch(`${API}/hr/asset-types/${id}`, payload, { headers: authHeader() })
+  return data
+}
+export async function deleteAssetType(id) {
+  await axios.delete(`${API}/hr/asset-types/${id}`, { headers: authHeader() })
+}
+
 // ── Vendors ──
 export async function fetchVendors(params = {}) {
   const { data } = await axios.get(`${API}/hr/asset-vendors/`, { headers: authHeader(), params })
@@ -417,6 +439,15 @@ export const disposalMethodMeta = (k) => DISPOSAL_METHOD_META[k] || DISPOSAL_MET
 export function titleCase(s) {
   return String(s || '').replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
 }
+
+// ── Asset-type icon registry (catalog `icon` column stores the lucide name) ──
+export const ASSET_TYPE_ICONS = {
+  Laptop, HardDrive, Monitor, Smartphone, CreditCard, Headphones, Keyboard, Mouse,
+  Car, KeyRound, Package, Bike, Printer, Server, Tablet, Camera, Cpu, Plug, Wifi,
+  Tv, Watch, Truck, HardHat, Box, Boxes, Shapes, Tag, Usb, Projector, Speaker,
+}
+export const iconForTypeName = (name) => ASSET_TYPE_ICONS[name] || Package
+export const ASSET_TYPE_ICON_CHOICES = Object.keys(ASSET_TYPE_ICONS)
 
 // ── Client-side stats aggregate (used until /stats lands; merged with it too) ─
 export function computeAssetStats(assets = [], allocations = []) {

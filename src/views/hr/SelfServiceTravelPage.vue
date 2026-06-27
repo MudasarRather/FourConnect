@@ -54,6 +54,7 @@ import { useToast } from 'vue-toastification'
 import { API, authHeader } from '@/utils/api'
 import '@/styles/travel-theme.css'
 import { errText, fetchMyRequests, fetchMySummary, submitMyRequest, deleteMyBooking } from '@/composables/useTravel'
+import { useGreeting } from '@/composables/useGreeting'
 
 const toast = useToast()
 const requests = ref([])
@@ -77,7 +78,7 @@ const deleteTrip = ref(null)
 
 const meUser = () => { try { return JSON.parse(localStorage.getItem('user') || '{}') } catch { return {} } }
 const firstName = computed(() => (meUser().full_name || 'there').split(' ')[0])
-const greeting = computed(() => { const h = new Date().getHours(); return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening' })
+const { greeting } = useGreeting()
 
 const LENS_STATUSES = {
   planning: ['DRAFT', 'RETURNED'], review: ['PENDING_APPROVAL'], approved: ['APPROVED'],

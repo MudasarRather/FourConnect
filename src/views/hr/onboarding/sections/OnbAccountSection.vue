@@ -233,18 +233,23 @@ const copyHandover = (ap) => {
 }
 const grantLogin = async (ap) => {
   const pw = (pwInput[ap.id] || '').trim()
-  const alreadyLive = ap.login_is_active && ap.login_is_activated
-  if (!pw && !alreadyLive) { toast.error('Enter or auto-generate a password to grant the login'); return }
-  if (pw && pw.length < 8) { toast.error('Password must be at least 8 characters'); return }
+  const wasLive = ap.login_is_active && ap.login_is_activated
+  // Always require a password: a blank "Reset password" used to silently no-op
+  // (leaving the OLD password valid) while still reporting success. To only
+  // re-activate without changing the password, use the Activate action instead.
+  if (!pw) { toast.error(wasLive ? 'Enter or auto-generate a new password to reset the login' : 'Enter or auto-generate a password to grant the login'); return }
+  if (pw.length < 8) { toast.error('Password must be at least 8 characters'); return }
   busyId.value = ap.id
   try {
-    await setAccountCredentials(ap.id, { password: pw || null, auto_generate: false, activate: true })
-    if (pw) handover[ap.id] = pw          // surface once for handover
+    await setAccountCredentials(ap.id, { password: pw, auto_generate: false, activate: true })
+    handover[ap.id] = pw          // surface once for handover
     pwInput[ap.id] = ''
     await reload()
-    toast.success('ERP login granted — the employee can sign in now')
+    toast.success(wasLive
+      ? 'Password reset — the previous password no longer works and any active session is signed out'
+      : 'ERP login granted — the employee can sign in now')
     emit('refresh-stats')
-  } catch (e) { toast.error(e?.response?.data?.detail || 'Could not grant login') }
+  } catch (e) { toast.error(e?.response?.data?.detail || 'Could not set the login password') }
   finally { busyId.value = null }
 }
 

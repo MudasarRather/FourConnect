@@ -69,6 +69,16 @@ const activeTab = ref(VALID.has(route.params.tab) ? route.params.tab : 'dashboar
 const slideDir = ref('forward')
 const historyAssetId = ref('')
 const invFilter = ref(null)   // deep-link filter pushed into the inventory section
+// External deep-link (e.g. HR Settings → Asset Categories → "View N assets"):
+// /admin/hr/assets/inventory?category_id=…&categoryLabel=… lands pre-filtered.
+// Seeded synchronously in setup so the inventory section reads it on its own mount.
+if (activeTab.value === 'inventory' && route.query.category_id) {
+  invFilter.value = {
+    category_id: String(route.query.category_id),
+    categoryLabel: route.query.categoryLabel ? String(route.query.categoryLabel) : '',
+    _n: 1,
+  }
+}
 
 const selectTab = (payload) => {
   const key = typeof payload === 'string' ? payload : payload?.tab

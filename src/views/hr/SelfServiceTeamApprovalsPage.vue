@@ -313,6 +313,7 @@ import {
   CalendarDays, Receipt, Plane, DoorOpen,
 } from 'lucide-vue-next'
 import { useToast } from 'vue-toastification'
+import { useGreeting } from '@/composables/useGreeting'
 
 import {
   fetchManagerQueue, decideAsManager,
@@ -462,8 +463,9 @@ const firstName = computed(() => {
   } catch { return 'manager' }
 })
 
+const { tzHour } = useGreeting()
 const heroGreeting = computed(() => {
-  const h = new Date().getHours()
+  const h = tzHour.value
   if (h < 5)  return `Late night, ${firstName.value}`
   if (h < 12) return `Good morning, ${firstName.value}`
   if (h < 17) return `Good afternoon, ${firstName.value}`

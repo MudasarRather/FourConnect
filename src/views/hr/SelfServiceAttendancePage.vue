@@ -1438,6 +1438,7 @@ import { ref, reactive, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { Motion } from 'motion-v'
 import { usePreferredReducedMotion, useGeolocation } from '@vueuse/core'
 import { useToast } from 'vue-toastification'
+import { useGreeting } from '@/composables/useGreeting'
 import {
   Fingerprint, Coffee, LogOut, Clock, Sparkles, Home, ArrowRight,
   MapPin, CheckCircle2, Pencil, CalendarDays, X, Activity, Hourglass,
@@ -1496,11 +1497,8 @@ const userFirst = (() => {
   } catch {}
   return 'there'
 })()
-const greetingWords = computed(() => {
-  const h = new Date().getHours()
-  const g = h < 12 ? 'Good morning,' : h < 17 ? 'Good afternoon,' : 'Good evening,'
-  return [g, userFirst + '.']
-})
+const { greeting } = useGreeting()
+const greetingWords = computed(() => [greeting.value + ',', userFirst + '.'])
 
 // ─────── state ───────
 const todayData = ref(null)
@@ -3768,12 +3766,24 @@ const dayNum = (iso) => String(new Date(iso).getDate()).padStart(2, '0')
 }
 [data-theme="light"] .hero-greeting { color: #fff; text-shadow: 0 2px 12px rgba(40, 25, 10, 0.30); }
 [data-theme="light"] .hero-clock { color: rgba(255,255,255,0.95); }
+/* The clock core sits on the BRIGHT warm hero gradient in light mode
+   (teal → gold → orange). The dark-mode dial uses light teal/gold strokes +
+   white center text, which wash out completely on that bright wash. Deepen the
+   strokes, ticks, hand and center text to deep teal / dark warm so the dial
+   reads as crisply as it does on the dark theme. */
+[data-theme="light"] .core-svg { filter: drop-shadow(0 22px 60px rgba(15, 118, 110, 0.30)); }
+[data-theme="light"] .core-ring-dots { stroke: rgba(15, 94, 89, 0.55); }
+[data-theme="light"] .core-progress { stroke: #0f766e; }
+[data-theme="light"] .core-ticks { opacity: 0.92; }
+[data-theme="light"] .core-ticks line { stroke: rgba(15, 94, 89, 0.55); }
+[data-theme="light"] .core-hand { stroke: #0f766e; }
 [data-theme="light"] .core-time {
-  background: linear-gradient(110deg, #fff, #fde68a);
+  background: linear-gradient(110deg, #0f766e 0%, #7c2d12 100%);
   -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
-[data-theme="light"] .core-sub { color: rgba(255, 255, 255, 0.80); }
-[data-theme="light"] .core-eyebrow { color: rgba(255, 255, 255, 0.85); }
+[data-theme="light"] .core-sub { color: rgba(38, 26, 12, 0.85); }
+[data-theme="light"] .core-eyebrow { color: #0f766e; }
 [data-theme="light"] .hero-stat {
   background: rgba(255, 250, 240, 0.18);
   border-color: rgba(255, 255, 255, 0.40);
@@ -5448,7 +5458,10 @@ const dayNum = (iso) => String(new Date(iso).getDate()).padStart(2, '0')
 }
 [data-theme="light"] .journey-eyebrow { color: var(--att-teal-500); }
 [data-theme="light"] .journey-title {
-  background: linear-gradient(110deg, var(--att-teal-500) 0%, var(--att-yellow-500) 50%, var(--att-orange-500) 100%);
+  /* Deep teal → amber → burnt-orange — mirrors the dark-mode gradient but
+     darkened so it clears ~4.5:1 on the cream journey card. The previous
+     amber/gold stops (#d97706/#ca8a04) sat near ~3:1 and read as invisible. */
+  background: linear-gradient(110deg, #0f766e 0%, #b45309 50%, #c2410c 100%);
   background-size: 200% auto;
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;

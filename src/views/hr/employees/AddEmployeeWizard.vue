@@ -86,8 +86,8 @@
             </template>
 
             <div class="field-block">
-              <HrFieldLabel label="Employee Code" required :error="!!errors.employee_code" />
-              <HrInput v-model="form.employee_code" placeholder="e.g. EMP-CUST-007" mono :error="!!errors.employee_code" :error-text="errors.employee_code" />
+              <HrFieldLabel label="Employee Code" required helper="Auto-assigned from HR Settings → Numbering Series — editable if needed" :error="!!errors.employee_code" />
+              <HrInput v-model="form.employee_code" :placeholder="nextCodeLoading ? 'Generating…' : 'Auto-generated'" mono :error="!!errors.employee_code" :error-text="errors.employee_code" />
             </div>
             <div class="field-block">
               <HrFieldLabel label="Gender" required :error="!!errors.gender" />
@@ -208,9 +208,9 @@
           <div v-else-if="stepIdx === 2" class="grid">
             <div class="field-block">
               <HrFieldLabel label="Department" required :error="!!errors.department_id" />
-              <HrSelect
+              <HrDepartmentSelect
                 v-model="form.department_id"
-                :options="departmentOptions"
+                :departments="departmentSource"
                 :error="!!errors.department_id"
                 :error-text="errors.department_id"
                 placeholder="Select department"
@@ -239,6 +239,10 @@
             <div class="field-block">
               <HrFieldLabel label="Joining Date" required :error="!!errors.joining_date" />
               <HrDatePicker v-model="form.joining_date" :error="!!errors.joining_date" :error-text="errors.joining_date" />
+            </div>
+            <div v-if="form.employee_category === 'CONTRACT'" class="field-block">
+              <HrFieldLabel label="Contract End Date" required helper="Drives contract-expiry alerts" :error="!!errors.contract_end_date" />
+              <HrDatePicker v-model="form.contract_end_date" :error="!!errors.contract_end_date" :error-text="errors.contract_end_date" />
             </div>
             <div class="field-block">
               <HrFieldLabel label="Probation (months)" helper="Optional" />
@@ -276,11 +280,15 @@
             </div>
             <div class="field-block">
               <HrFieldLabel label="Grade" helper="Optional" />
-              <HrSelect v-model="form.grade_id" :options="gradeOptions" placeholder="Select grade" />
+              <HrSelect v-model="form.grade_id" :options="gradeOptions" placeholder="Select grade" @change="onGradePicked" />
             </div>
             <div class="field-block full">
-              <HrFieldLabel label="Work Location" helper="Optional · Type freely (e.g. HQ — Mumbai)" />
-              <HrInput v-model="form.work_location_text" placeholder="Type a location…" />
+              <HrFieldLabel label="Work Location" helper="Optional · Pick a configured site to inherit its timezone" />
+              <HrLocationSelect
+                v-model="form.work_location_id"
+                v-model:customText="form.work_location_text"
+                :locations="reference.locations"
+              />
             </div>
             <div class="note phase-tag full">
               Shift assignment becomes available with Phase 2 — Time Management.
@@ -405,6 +413,13 @@
               />
             </div>
 
+            <div v-if="ctcBand.status === 'below' || ctcBand.status === 'above'" class="ctc-band-row full warn">
+              ⚠ {{ ctcBand.message }} — grade band {{ fmtBand(ctcBand) }}
+            </div>
+            <div v-else-if="ctcBand.min != null || ctcBand.max != null" class="ctc-band-row full">
+              Grade band {{ fmtBand(ctcBand) }}
+            </div>
+
             <!-- ════════ Indian Salary Structure Preview ════════ -->
             <div v-if="salaryStructure" class="salary-structure full">
               <div class="ss-head">
@@ -493,12 +508,15 @@ import HrInput from '../../../components/hr/forms/HrInput.vue'
 import HrNumberInput from '../../../components/hr/forms/HrNumberInput.vue'
 import HrTextarea from '../../../components/hr/forms/HrTextarea.vue'
 import HrSelect from '../../../components/hr/forms/HrSelect.vue'
+import HrDepartmentSelect from '../../../components/hr/forms/HrDepartmentSelect.vue'
+import HrLocationSelect from '../../../components/hr/forms/HrLocationSelect.vue'
 import HrDatePicker from '../../../components/hr/forms/HrDatePicker.vue'
 import HrCheckbox from '../../../components/hr/forms/HrCheckbox.vue'
 import HrRadio from '../../../components/hr/forms/HrRadio.vue'
 import HrSearchCombobox from '../../../components/hr/forms/HrSearchCombobox.vue'
 
-import { useEmployees, useHrReference } from '../../../composables/useEmployees'
+import { useEmployees, useHrReference, payLevelForGrade, gradeCtcBand,
+  employmentTypeOptions as buildEmploymentTypeOptions, employeeCategoryOptions as buildEmployeeCategoryOptions } from '../../../composables/useEmployees'
 import { useOffers } from '../../../composables/useRecruitment'
 import { useToast } from '../../../composables/useToast'
 import { useSpotlight } from '../../../composables/useSpotlight'
@@ -514,7 +532,7 @@ const emit = defineEmits(['update:open', 'created'])
 
 const { success, error } = useToast()
 const { reference, loadReferenceData } = useHrReference()
-const { create } = useEmployees()
+const { create, peekNextCode } = useEmployees()
 const { listAccepted: listAcceptedOffers, getOnboardingPrefill } = useOffers()
 
 // Local state for the offer-prefill combobox (only the id is tracked here —
@@ -564,19 +582,9 @@ const relationOptions = [
   { value: 'Guardian', label: 'Guardian' },
   { value: 'Other', label: 'Other' },
 ]
-const employmentTypeOptions = [
-  { value: 'FULL_TIME', label: 'Full-Time' },
-  { value: 'CONTRACT', label: 'Contract' },
-  { value: 'INTERN', label: 'Intern' },
-  { value: 'CONSULTANT', label: 'Consultant' },
-  { value: 'PART_TIME', label: 'Part-Time' },
-]
-const categoryOptions = [
-  { value: 'PERMANENT', label: 'Permanent' },
-  { value: 'PROBATIONARY', label: 'Probationary' },
-  { value: 'CONTRACT', label: 'Contract' },
-  { value: 'TRAINEE', label: 'Trainee' },
-]
+// Sourced from HR Settings masters — deactivated values are hidden from new hires.
+const employmentTypeOptions = computed(() => buildEmploymentTypeOptions(form.employment_type))
+const categoryOptions = computed(() => buildEmployeeCategoryOptions(form.employee_category))
 const taxRegimeOptions = [
   { value: 'OLD', label: 'Old Regime' },
   { value: 'NEW', label: 'New Regime' },
@@ -628,9 +636,12 @@ const FALLBACK_GRADES = [
   { value: 'g8', label: 'G8 — VP' },
 ]
 
-const departmentOptions = computed(() => {
-  const live = reference.departments.map(d => ({ value: d.id, label: d.name }))
-  return live.length ? live : FALLBACK_DEPARTMENTS
+// Department objects (not options) for the cascading HrDepartmentSelect. Falls
+// back to a flat top-level list before the reference tables are seeded.
+const departmentSource = computed(() => {
+  const live = reference.departments || []
+  if (live.length) return live
+  return FALLBACK_DEPARTMENTS.map(d => ({ id: d.value, name: d.label, parent_department_id: null }))
 })
 const designationOptions = computed(() => {
   const live = reference.designations.map(d => ({ value: d.id, label: d.name }))
@@ -640,6 +651,20 @@ const gradeOptions = computed(() => {
   const live = reference.grades.map(g => ({ value: g.id, label: `${g.code} — ${g.name}` }))
   return live.length ? live : FALLBACK_GRADES
 })
+
+// Picking a grade pre-fills the pay level from that grade's default (editable).
+const onGradePicked = (gradeId) => {
+  const pl = payLevelForGrade(reference.grades, gradeId)
+  if (pl) form.pay_level = pl
+}
+
+// Soft (non-blocking) CTC-band guidance against the selected grade.
+const ctcBand = computed(() => {
+  const g = (reference.grades || []).find(x => String(x.id) === String(form.grade_id))
+  return gradeCtcBand(g, form.annual_ctc)
+})
+const _inr0 = (n) => (n == null ? '—' : `₹${Number(n).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`)
+const fmtBand = (b) => `${_inr0(b.min)}–${_inr0(b.max)}/yr`
 
 const initialForm = () => ({
   linkMode: 'new',
@@ -686,6 +711,7 @@ const initialForm = () => ({
   employment_type: '',
   employee_category: 'PERMANENT',
   joining_date: todayIso,
+  contract_end_date: '',
   probation_months: 6,
   notice_period_days: 30,
   reporting_manager_id: null,
@@ -831,13 +857,21 @@ const applyPrefill = (p, summary = null) => {
   // Employment (Step 3) — prefer offer-level overrides over the position's defaults
   if (o.department_id || pos.department_id) form.department_id = o.department_id || pos.department_id
   if (pos.designation_id) form.designation_id = pos.designation_id
-  if (o.grade_id || pos.grade_id) form.grade_id = o.grade_id || pos.grade_id
+  if (o.grade_id || pos.grade_id) {
+    form.grade_id = o.grade_id || pos.grade_id
+    // Prefill from a grade set programmatically (not a user @change) — fill pay
+    // level from the grade's default unless the offer already carried one.
+    if (!form.pay_level) {
+      const pl = payLevelForGrade(reference.grades, form.grade_id)
+      if (pl) form.pay_level = pl
+    }
+  }
   const locId = o.location_id || pos.location_id
   if (locId) {
+    // Link the managed work-location FK; HrLocationSelect renders the live name
+    // + timezone from the reference directory, so no text resolution needed.
     form.work_location_id = locId
-    // Resolve to a human-readable name for the work_location_text input
-    const match = (reference.locations || []).find(l => l.id === locId)
-    if (match && !form.work_location_text) form.work_location_text = match.name || ''
+    form.work_location_text = ''
   }
   if (pos.employment_type) form.employment_type = pos.employment_type
   if (o.joining_date) form.joining_date = String(o.joining_date).slice(0, 10)
@@ -936,6 +970,7 @@ const validateStep = (idx) => {
     if (!form.employment_type) errors.employment_type = 'Required'
     if (!form.employee_category) errors.employee_category = 'Required'
     if (!form.joining_date) errors.joining_date = 'Required'
+    if (form.employee_category === 'CONTRACT' && !form.contract_end_date) errors.contract_end_date = 'Required for contract staff'
     if (form.notice_period_days === null || form.notice_period_days === undefined || form.notice_period_days === '') {
       errors.notice_period_days = 'Required'
     }
@@ -1048,7 +1083,7 @@ const buildPayload = () => {
     'emergency_contact_phone', 'emergency_contact_relation',
     'permanent_address', 'current_address', 'current_same_as_permanent',
     'department_id', 'designation_id', 'employment_type', 'employee_category',
-    'joining_date', 'probation_months', 'notice_period_days',
+    'joining_date', 'contract_end_date', 'probation_months', 'notice_period_days',
     'reporting_manager_id', 'hr_manager_id', 'grade_id', 'pay_level',
     'work_location_id', 'work_location_text', 'bank_name', 'account_number', 'ifsc',
     'uan', 'pf_number', 'esic_number', 'tax_regime',
@@ -1090,8 +1125,25 @@ const submit = async () => {
   }
 }
 
-onMounted(async () => { await loadReferenceData() })
-watch(() => props.open, async (v) => { if (v) await loadReferenceData() })
+// ─── Auto employee code ───
+// The canonical employee id is minted server-side from HR Settings → Numbering
+// Series (or the EMP#### sequence). Preview it so the code "comes automatically"
+// rather than being hand-typed. Only auto-fills while the field is still
+// untouched, so an explicit override is preserved.
+const nextCodeLoading = ref(false)
+const loadNextCode = async () => {
+  if (form.employee_code) return
+  nextCodeLoading.value = true
+  try {
+    const code = await peekNextCode()
+    if (code && !form.employee_code) form.employee_code = code
+  } finally {
+    nextCodeLoading.value = false
+  }
+}
+
+onMounted(async () => { await Promise.all([loadReferenceData(), loadNextCode()]) })
+watch(() => props.open, async (v) => { if (v) { await Promise.all([loadReferenceData(), loadNextCode()]) } })
 </script>
 
 <style scoped>
@@ -1297,6 +1349,11 @@ watch(() => props.open, async (v) => { if (v) await loadReferenceData() })
   color: var(--hr-accent-gold);
   flex-shrink: 0;
 }
+
+.ctc-band-row { font-size: 11.5px; color: var(--hr-text-muted); font-family: var(--hr-mono); margin-top: -2px; }
+.ctc-band-row.warn { color: var(--hr-orange); font-weight: 700; font-family: inherit; }
+[data-theme="light"] .ctc-band-row { color: #6b5840; }
+[data-theme="light"] .ctc-band-row.warn { color: #c2410c; }
 
 /* ════════ Indian salary structure preview ════════ */
 .salary-structure {

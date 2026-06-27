@@ -5,7 +5,7 @@
 
     <div class="up">
       <!-- live preview — mirrors the inventory bay card -->
-      <Motion as="div" class="up-preview" :data-status="form.status" :style="{ '--accent': `var(${typeVar})` }"
+      <Motion as="div" class="up-preview" :data-status="form.status" :style="{ '--accent': `var(${typeVar}, var(--as-amber))` }"
         :initial="{ opacity: 0, y: 10 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.4 }">
         <span class="up-preview-grid" aria-hidden="true" />
         <span class="up-med">
@@ -39,7 +39,22 @@
       <Motion as="section" class="up-sec" :initial="secIn" :animate="secOn" :transition="secT(1)">
         <header class="up-sec-h"><span class="up-sec-ic"><Layers :size="14" /></span> Classification</header>
         <div class="up-grid">
-          <div class="up-field"><span class="up-lab">Type</span><AsSelect v-model="form.asset_type" :options="typeOptions" /></div>
+          <div class="up-field up-span">
+            <span class="up-lab">Category <i class="up-lab-soft">— sets depreciation &amp; useful life</i></span>
+            <AsSelect v-model="form.category_id" :options="categoryOptions" placeholder="Uncategorised"
+              @update:model-value="onPickCategory" />
+            <span v-if="pickedCat" class="up-cat-note">
+              <Boxes :size="11" />
+              {{ pickedCatPermanent ? 'Permanent — no depreciation' : (pickedCat.useful_life_months ? `Straight-line over ${pickedCat.useful_life_months} mo` : 'No useful-life set on this class') }}
+            </span>
+          </div>
+          <div class="up-field">
+            <span class="up-lab">Type <i class="up-lab-soft">— what it physically is</i></span>
+            <AsSelect v-model="form.asset_type" :options="typeOptions" />
+            <button v-if="allowedTypes.length" type="button" class="up-typefilter" @click="showAllTypes = !showAllTypes">
+              {{ showAllTypes ? `Showing all types — limit to ${pickedCat?.name || 'class'}` : `Limited to ${pickedCat?.name || 'class'} — show all types` }}
+            </button>
+          </div>
           <div class="up-field"><span class="up-lab">Condition</span><AsSelect v-model="form.condition" :options="conditionOptions" /></div>
           <div v-if="!isEdit" class="up-field up-span"><span class="up-lab">Initial status</span><AsSelect v-model="form.status" :options="statusOptions" /></div>
         </div>
@@ -96,15 +111,15 @@ import { useToast } from 'vue-toastification'
 import {
   PackagePlus, Check, Loader, Fingerprint, Layers, ReceiptText, MapPin, StickyNote,
   Laptop, HardDrive, Monitor, Smartphone, CreditCard, Headphones,
-  Keyboard, Mouse, Car, KeyRound, Package,
+  Keyboard, Mouse, Car, KeyRound, Package, FolderTree, Boxes,
 } from 'lucide-vue-next'
 import AssetModal from '../components/AssetModal.vue'
 import AssetField from '../components/AssetField.vue'
 import AsSelect from '../components/AsSelect.vue'
 import HrDatePicker from '@/components/hr/forms/HrDatePicker.vue'
 import {
-  createAsset, patchAsset, ASSET_TYPES, ASSET_CONDITIONS,
-  typeMeta, conditionMeta, statusMeta, errText,
+  createAsset, patchAsset, fetchCategories, fetchAssetTypes, iconForTypeName,
+  ASSET_TYPES, ASSET_CONDITIONS, typeMeta, conditionMeta, statusMeta, errText,
 } from '@/composables/useAssets'
 
 const props = defineProps({
@@ -129,9 +144,25 @@ const TYPE_ICONS = {
   SIM: CreditCard, RFID_CARD: CreditCard, ID_CARD: CreditCard, HEADSET: Headphones,
   KEYBOARD: Keyboard, MOUSE: Mouse, VEHICLE: Car, KEYS: KeyRound, OTHER: Package,
 }
-const typeOptions = ASSET_TYPES.map(t => ({
+// Built-in fallback used only until the live catalog loads (or if it's empty).
+const FALLBACK_TYPE_OPTIONS = ASSET_TYPES.map(t => ({
   value: t, label: typeMeta(t).label, icon: TYPE_ICONS[t] || Package, accent: `var(${typeMeta(t).cssVar})`,
 }))
+// The asset-type catalog (built-ins + custom, managed in HR Settings → Asset Types).
+const assetTypes = ref([])
+async function loadAssetTypes() {
+  try {
+    const list = await fetchAssetTypes({ is_active: true })
+    assetTypes.value = Array.isArray(list) ? list : []
+  } catch { assetTypes.value = [] }
+}
+const ALL_TYPE_OPTIONS = computed(() => {
+  if (!assetTypes.value.length) return FALLBACK_TYPE_OPTIONS
+  return assetTypes.value.map(t => ({
+    value: t.code, label: t.label, icon: iconForTypeName(t.icon),
+    accent: `var(${typeMeta(t.code).cssVar}, var(--as-amber))`,
+  }))
+})
 const CONDITION_DOT = { NEW: 'var(--as-cond-new)', GOOD: 'var(--as-cond-good)', FAIR: 'var(--as-cond-fair)', POOR: 'var(--as-cond-poor)', RETIRED: 'var(--as-cond-retired)' }
 const conditionOptions = ASSET_CONDITIONS.filter(c => c !== 'RETIRED').map(c => ({ value: c, label: conditionMeta(c).label, dot: CONDITION_DOT[c] }))
 const statusOptions = [
@@ -139,9 +170,51 @@ const statusOptions = [
   { value: 'RESERVED', label: 'Reserved', dot: 'var(--as-st-reserved)' },
 ]
 
+// ── Asset categories (the taxonomy from HR Settings → Asset Categories). Lets a
+// registered asset be filed into a class so it inherits depreciation/useful-life
+// and counts toward that class's fleet share. Active classes only. ──
+const categories = ref([])
+async function loadCategories() {
+  try {
+    const d = await fetchCategories({ is_active: true, limit: 200 })
+    categories.value = Array.isArray(d) ? d : (d?.items || [])
+  } catch { categories.value = [] }
+}
+const categoryOptions = computed(() => [
+  { value: '', label: 'Uncategorised' },
+  ...categories.value.map(c => ({ value: c.id, label: c.name, hint: c.code, icon: FolderTree })),
+])
+const pickedCat = computed(() => categories.value.find(c => c.id === form.value.category_id) || null)
+const pickedCatPermanent = computed(() => !!pickedCat.value &&
+  (pickedCat.value.depreciation_method === 'NONE' || (!pickedCat.value.depreciation_method && !pickedCat.value.useful_life_months)))
+
+// The class can govern WHICH types are valid (opt-in allow-list). Empty = any
+// type. The Type dropdown filters to the class's types, with a "show all" escape.
+const showAllTypes = ref(false)
+const allowedTypes = computed(() => (Array.isArray(pickedCat.value?.allowed_asset_types) ? pickedCat.value.allowed_asset_types : []))
+const typeOptions = computed(() => {
+  if (showAllTypes.value || !allowedTypes.value.length) return ALL_TYPE_OPTIONS.value
+  // keep the currently-selected type visible even if it predates the allow-list
+  const set = new Set([...allowedTypes.value, form.value.asset_type].filter(Boolean))
+  return ALL_TYPE_OPTIONS.value.filter(o => set.has(o.value))
+})
+
+// On user pick, let the class drive the asset type + depreciation method so the
+// two stay consistent (the taxonomy is the source of truth for the class).
+function onPickCategory(id) {
+  showAllTypes.value = false
+  const c = categories.value.find(x => x.id === id)
+  if (!c) return
+  const allowed = Array.isArray(c.allowed_asset_types) ? c.allowed_asset_types : []
+  if (allowed.length && !allowed.includes(form.value.asset_type)) form.value.asset_type = c.default_asset_type || allowed[0]
+  else if (c.default_asset_type) form.value.asset_type = c.default_asset_type
+  if (c.depreciation_method) form.value.depreciation_method = c.depreciation_method
+}
+
 // ── live-preview derivations ──
-const typeIcon = computed(() => TYPE_ICONS[form.value.asset_type] || Package)
-const typeLabel = computed(() => typeMeta(form.value.asset_type).label)
+const catType = computed(() => assetTypes.value.find(t => t.code === form.value.asset_type) || null)
+const typeIcon = computed(() => catType.value ? iconForTypeName(catType.value.icon) : (TYPE_ICONS[form.value.asset_type] || Package))
+const typeLabel = computed(() => catType.value ? catType.value.label : typeMeta(form.value.asset_type).label)
 const typeVar = computed(() => typeMeta(form.value.asset_type).cssVar)
 const condLevel = computed(() => conditionMeta(form.value.condition).level)
 const condLabel = computed(() => conditionMeta(form.value.condition).label)
@@ -149,25 +222,29 @@ const statusLabel = computed(() => statusMeta(form.value.status).label)
 const condColors = ['var(--as-cond-poor)', 'var(--as-cond-fair)', 'var(--as-cond-good)', 'var(--as-cond-new)']
 
 const blank = () => ({
-  asset_code: '', asset_type: 'LAPTOP', brand: '', model: '', serial_number: '', tag: '',
+  asset_code: '', asset_type: 'LAPTOP', category_id: '', brand: '', model: '', serial_number: '', tag: '',
   condition: 'NEW', status: 'AVAILABLE', purchase_date: '', purchase_cost: null,
   warranty_start: '', warranty_end: '', invoice_no: '', purchase_order_no: '',
-  building: '', floor: '', notes: '',
+  depreciation_method: '', building: '', floor: '', notes: '',
 })
 const form = ref(blank())
 
 watch(() => props.open, (o) => {
   if (!o) return
+  loadCategories()
+  loadAssetTypes()
+  showAllTypes.value = false
   if (props.asset) {
     const a = props.asset
     form.value = {
       ...blank(),
-      asset_code: a.asset_code, asset_type: a.asset_type, brand: a.brand || '', model: a.model || '',
+      asset_code: a.asset_code, asset_type: a.asset_type, category_id: a.category_id || '',
+      brand: a.brand || '', model: a.model || '',
       serial_number: a.serial_number || '', tag: a.tag || '', condition: a.condition, status: a.status,
       purchase_date: a.purchase_date || '', purchase_cost: a.purchase_cost ?? null,
       warranty_start: a.warranty_start || '', warranty_end: a.warranty_end || '',
       invoice_no: a.invoice_no || '', purchase_order_no: a.purchase_order_no || '',
-      building: a.building || '', floor: a.floor || '', notes: a.notes || '',
+      depreciation_method: a.depreciation_method || '', building: a.building || '', floor: a.floor || '', notes: a.notes || '',
     }
   } else {
     form.value = blank()
@@ -177,7 +254,7 @@ watch(() => props.open, (o) => {
 function payload() {
   const f = { ...form.value }
   for (const k of ['purchase_date', 'warranty_start', 'warranty_end']) if (!f[k]) f[k] = null
-  for (const k of ['brand', 'model', 'serial_number', 'tag', 'invoice_no', 'purchase_order_no', 'building', 'floor', 'notes']) {
+  for (const k of ['brand', 'model', 'serial_number', 'tag', 'invoice_no', 'purchase_order_no', 'building', 'floor', 'notes', 'category_id', 'depreciation_method']) {
     if (f[k] === '') f[k] = null
   }
   if (isEdit.value) delete f.status // status is driven by lifecycle actions, not free edit here
@@ -236,6 +313,11 @@ async function save() {
 
 .up-field { display: flex; flex-direction: column; gap: 6px; }
 .up-lab { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--as-text-dim); }
+.up-lab-soft { font-style: normal; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--as-text-dim); opacity: 0.85; }
+.up-cat-note { display: inline-flex; align-items: center; gap: 6px; margin-top: 2px; font-size: 11px; font-weight: 600; color: var(--as-text-muted); }
+.up-cat-note :deep(svg) { color: var(--as-amber); flex-shrink: 0; }
+.up-typefilter { align-self: flex-start; margin-top: 3px; padding: 0; background: none; border: 0; cursor: pointer; font: inherit; font-size: 10.5px; font-weight: 650; color: var(--as-amber); transition: opacity 0.2s; }
+.up-typefilter:hover { text-decoration: underline; }
 
 .as-btn.disabled { opacity: 0.5; cursor: not-allowed; }
 .spin { animation: as-spin 0.9s linear infinite; }

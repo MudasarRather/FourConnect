@@ -106,6 +106,7 @@ import SsActivityTimeline from './assets/components/SsActivityTimeline.vue'
 import DamageReportModal from './assets/modals/DamageReportModal.vue'
 import SsReturnModal from './assets/modals/SsReturnModal.vue'
 import { prefersReduced, usePointerSpotlight } from '@/composables/useShiftMotion'
+import { useGreeting } from '@/composables/useGreeting'
 import {
   fetchMyAssets, fetchMyAssetHistory, acknowledgeMyAllocation, cancelMyReturnRequest, errText,
 } from '@/composables/useAssets'
@@ -136,10 +137,7 @@ const VIEWS = [
 ]
 
 const firstName = ref('there')
-const greeting = computed(() => {
-  const h = new Date().getHours()
-  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'
-})
+const { greeting } = useGreeting()
 const ackedActive = computed(() => Math.max(0, summary.value.held - summary.value.pending_ack))
 const needsAction = computed(() => summary.value.pending_ack > 0 || summary.value.needs_return > 0)
 const actionLine = computed(() => {

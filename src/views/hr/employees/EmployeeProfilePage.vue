@@ -43,6 +43,16 @@
         <!-- Lifecycle actions -->
         <div class="identity-actions">
           <button
+            v-if="emp && !isSeparated"
+            type="button"
+            class="action-btn tone-gold"
+            @click="appraisalOpen = true"
+            title="Open the Appraisal Console — reviews, score history, launch & run an appraisal"
+          >
+            <Gauge :size="13" />
+            <span>Appraisal</span>
+          </button>
+          <button
             v-for="a in availableActions"
             :key="a.key"
             type="button"
@@ -91,6 +101,7 @@
         <div class="kpi">
           <span class="kpi-label">Location</span>
           <span class="kpi-value">{{ emp?.work_location_text || emp?.work_location?.name || '—' }}</span>
+          <span v-if="workLocationTz" class="kpi-tz">{{ workLocationTz }}</span>
         </div>
       </div>
 
@@ -259,11 +270,11 @@
                   <div class="ro-cell"><span class="ro-label">Joined</span><span class="ro-value">{{ fmtDate(emp.joining_date) || '—' }}</span></div>
                 </div>
                 <div class="edit-grid">
-                  <div class="field-block full"><HrFieldLabel label="Department" /><HrSelect v-model="form.department_id" :options="departmentOpts" placeholder="Select department" /></div>
+                  <div class="field-block full"><HrFieldLabel label="Department" /><HrDepartmentSelect v-model="form.department_id" :departments="reference.departments" /></div>
                   <div class="field-block full"><HrFieldLabel label="Designation" /><HrSelect v-model="form.designation_id" :options="designationOpts" placeholder="Select designation" /></div>
                   <div class="field-block full"><HrFieldLabel label="Employment Type" /><HrRadio v-model="form.employment_type" :options="employmentTypeOpts" /></div>
                   <div class="field-block full"><HrFieldLabel label="Employee Category" /><HrRadio v-model="form.employee_category" :options="categoryOpts" /></div>
-                  <div class="field-block"><HrFieldLabel label="Grade" /><HrSelect v-model="form.grade_id" :options="gradeOpts" placeholder="Select grade" /></div>
+                  <div class="field-block"><HrFieldLabel label="Grade" /><HrSelect v-model="form.grade_id" :options="gradeOpts" placeholder="Select grade" @change="onGradePicked" /></div>
                   <div class="field-block"><HrFieldLabel label="Pay Level" /><HrInput v-model="form.pay_level" /></div>
                 </div>
               </template>
@@ -273,6 +284,7 @@
               <template v-if="!editing.employment_tenure">
                 <DataPair label="Joining Date" :value="fmtDate(emp.joining_date)" />
                 <DataPair label="Confirmation Date" :value="fmtDate(emp.confirmation_date)" />
+                <DataPair v-if="emp.contract_end_date" label="Contract End Date" :value="fmtDate(emp.contract_end_date)" />
                 <DataPair label="Probation (months)" :value="emp.probation_months" />
                 <DataPair label="Notice Period" :value="emp.notice_period_days ? `${emp.notice_period_days} days` : '—'" />
                 <DataPair label="Reporting Manager" :value="emp.reporting_manager?.full_name" />
@@ -283,6 +295,7 @@
                 <div class="edit-grid">
                   <div class="field-block"><HrFieldLabel label="Joining Date" /><HrDatePicker v-model="form.joining_date" /></div>
                   <div class="field-block"><HrFieldLabel label="Confirmation Date" /><HrDatePicker v-model="form.confirmation_date" /></div>
+                  <div class="field-block"><HrFieldLabel label="Contract End Date" helper="Drives contract-expiry alerts" /><HrDatePicker v-model="form.contract_end_date" /></div>
                   <div class="field-block"><HrFieldLabel label="Probation (months)" /><HrNumberInput v-model="form.probation_months" :min="0" :max="36" /></div>
                   <div class="field-block"><HrFieldLabel label="Notice Period (days)" /><HrNumberInput v-model="form.notice_period_days" :min="0" :max="365" /></div>
                   <div class="field-block full">
@@ -448,8 +461,15 @@
                   <div class="field-block"><HrFieldLabel label="Annual CTC (₹)" :helper="form.annual_ctc ? `Monthly ≈ ₹${Number(form.annual_ctc / 12).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : 'Required'" /><HrNumberInput v-model="form.annual_ctc" :min="0" :step-by="50000" /></div>
                   <div class="field-block"><HrFieldLabel label="Monthly CTC (₹)" :helper="autoAnnual ? `Auto · Annual ₹${autoAnnual}` : 'Auto-derived'" /><HrNumberInput v-model="form.monthly_ctc" :min="0" :step-by="1000" /></div>
                 </div>
+                <p v-if="ctcBand.status === 'below' || ctcBand.status === 'above'" class="ctc-band-msg warn">⚠ {{ ctcBand.message }} — grade band {{ fmtBand(ctcBand) }}</p>
+                <p v-else-if="ctcBand.min != null || ctcBand.max != null" class="ctc-band-msg">Grade band {{ fmtBand(ctcBand) }}</p>
               </template>
             </ProfileCard>
+          </div>
+
+          <!-- ════════ Accounts / Access ════════ -->
+          <div v-else-if="activeTab === 'accounts'" class="accounts-pane">
+            <EmployeeAccountsPanel :employee="emp" />
           </div>
 
           <!-- ════════ History ════════ -->
@@ -500,6 +520,12 @@
       @done="onRehireDone"
     />
 
+    <AppraisalConsoleModal
+      :open="appraisalOpen"
+      :employee="emp"
+      @close="appraisalOpen = false"
+    />
+
     <!-- Delete Employee — type-to-confirm safeguard -->
     <transition name="del-modal">
       <div v-if="deleteOpen" class="del-backdrop" @click.self="closeDeleteModal" @keydown.esc="closeDeleteModal">
@@ -520,6 +546,13 @@
                 <strong>{{ displayName }}</strong>
                 <span class="mono">{{ emp?.employee_id }}</span>
               </div>
+            </div>
+
+            <div class="del-consequences" :class="{ hard: !deleteSoftOnly }">
+              <span class="dc-eye">What happens</span>
+              <ul>
+                <li v-for="c in deleteConsequences" :key="c"><Check :size="12" /><span>{{ c }}</span></li>
+              </ul>
             </div>
 
             <p class="del-prompt">Type <code>DELETE</code> below to confirm permanent removal:</p>
@@ -558,10 +591,10 @@ import { ref, reactive, computed, watch, onMounted, nextTick, h } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
   ArrowLeft, Loader2, UserX,
-  IdCard, Phone, Briefcase, Banknote, History, ShieldCheck, ShieldAlert, AlertOctagon, Home, Calendar, Stamp, Wallet,
+  IdCard, Phone, Briefcase, Banknote, History, ShieldCheck, ShieldAlert, AlertOctagon, Home, Calendar, Stamp, Wallet, KeyRound,
   Edit, Check, X, Eye, EyeOff,
   Plus, ArrowUp, ArrowRight, CheckCircle, Pause, Play, LogOut, Archive, Undo2, RotateCcw,
-  Trash2, AlertTriangle,
+  Trash2, AlertTriangle, Gauge,
 } from 'lucide-vue-next'
 import axios from 'axios'
 import '../../../styles/hr-theme.css'
@@ -574,14 +607,19 @@ import HrInput from '../../../components/hr/forms/HrInput.vue'
 import HrNumberInput from '../../../components/hr/forms/HrNumberInput.vue'
 import HrTextarea from '../../../components/hr/forms/HrTextarea.vue'
 import HrSelect from '../../../components/hr/forms/HrSelect.vue'
+import HrDepartmentSelect from '../../../components/hr/forms/HrDepartmentSelect.vue'
 import HrDatePicker from '../../../components/hr/forms/HrDatePicker.vue'
 import HrCheckbox from '../../../components/hr/forms/HrCheckbox.vue'
 import HrRadio from '../../../components/hr/forms/HrRadio.vue'
 import HrSearchCombobox from '../../../components/hr/forms/HrSearchCombobox.vue'
 import LifecycleActionModal from '../../../components/hr/LifecycleActionModal.vue'
 import RehireModal from '../../../components/hr/RehireModal.vue'
+import AppraisalConsoleModal from '../../../components/hr/AppraisalConsoleModal.vue'
+import EmployeeAccountsPanel from './EmployeeAccountsPanel.vue'
 
-import { useEmployees, useHrReference } from '../../../composables/useEmployees'
+import { useEmployees, useHrReference, payLevelForGrade, gradeCtcBand,
+  employmentTypeOptions, employeeCategoryOptions } from '../../../composables/useEmployees'
+import { useNow, tzOffsetMinutes, offsetLabel, isValidTz } from '../settings/composables/useLocationClock'
 import { useToast } from '../../../composables/useToast'
 import { useSpotlight } from '../../../composables/useSpotlight'
 import { API } from '@/utils/api'
@@ -660,6 +698,7 @@ const tabs = [
   { key: 'contact',    label: 'Contact',       icon: Phone },
   { key: 'employment', label: 'Employment',    icon: Briefcase },
   { key: 'bank',       label: 'Bank & Salary', icon: Banknote },
+  { key: 'accounts',   label: 'Accounts',      icon: KeyRound },
   { key: 'history',    label: 'History',       icon: History },
 ]
 const activeTab = ref('basic')
@@ -691,13 +730,9 @@ const maritalOpts = [
   { value: 'WIDOWED', label: 'Widowed' },
   { value: 'OTHER', label: 'Other' },
 ]
-const employmentTypeOpts = [
-  { value: 'FULL_TIME', label: 'Full-Time' },
-  { value: 'CONTRACT', label: 'Contract' },
-  { value: 'INTERN', label: 'Intern' },
-  { value: 'CONSULTANT', label: 'Consultant' },
-  { value: 'PART_TIME', label: 'Part-Time' },
-]
+// Sourced from HR Settings masters — deactivated values are hidden, but the
+// employee's current value stays visible so editing never drops it.
+const employmentTypeOpts = computed(() => employmentTypeOptions(form.employment_type))
 const taxRegimeOpts = [
   { value: 'OLD', label: 'Old Regime' },
   { value: 'NEW', label: 'New Regime' },
@@ -710,16 +745,36 @@ const relationOpts = [
   { value: 'Guardian', label: 'Guardian' },
   { value: 'Other', label: 'Other' },
 ]
-const categoryOpts = [
-  { value: 'PERMANENT',    label: 'Permanent' },
-  { value: 'PROBATIONARY', label: 'Probationary' },
-  { value: 'CONTRACT',     label: 'Contract' },
-  { value: 'TRAINEE',      label: 'Trainee' },
-]
+const categoryOpts = computed(() => employeeCategoryOptions(form.employee_category))
 
-const departmentOpts = computed(() => reference.departments.map(d => ({ value: d.id, label: d.name })))
 const designationOpts = computed(() => reference.designations.map(d => ({ value: d.id, label: d.name })))
 const gradeOpts = computed(() => reference.grades.map(g => ({ value: g.id, label: `${g.code} — ${g.name}` })))
+
+// Timezone the employee inherits from their managed work location (custom
+// free-text locations carry no managed timezone).
+const _now = useNow()
+const workLocationTz = computed(() => {
+  const e = emp.value
+  if (!e || e.work_location_text) return ''
+  const refLoc = (reference.locations || []).find(l => String(l.id) === String(e.work_location?.id))
+  const tz = e.work_location?.timezone || refLoc?.timezone
+  if (!tz || !isValidTz(tz)) return ''
+  return `${tz} · ${offsetLabel(tzOffsetMinutes(tz, _now.value))}`
+})
+
+// Picking a grade pre-fills the pay level from that grade's default (editable).
+const onGradePicked = (gradeId) => {
+  const pl = payLevelForGrade(reference.grades, gradeId)
+  if (pl) form.pay_level = pl
+}
+
+// Soft (non-blocking) CTC-band guidance against the employee's grade.
+const ctcBand = computed(() => {
+  const gid = form.grade_id || emp.value?.grade?.id
+  const g = (reference.grades || []).find(x => String(x.id) === String(gid))
+  return gradeCtcBand(g, form.annual_ctc)
+})
+const fmtBand = (b) => `${b.min != null ? formatINR(b.min) : '—'}–${b.max != null ? formatINR(b.max) : '—'}/yr`
 
 const displayName = computed(() => emp.value?.user?.full_name || emp.value?.full_name || '—')
 
@@ -845,7 +900,7 @@ const SECTION_FIELDS = {
   contact_emergency: ['emergency_contact_name','emergency_contact_phone','emergency_contact_relation'],
   contact_address: ['permanent_address','current_address','current_same_as_permanent'],
   employment_role: ['department_id','designation_id','employment_type','employee_category','grade_id','pay_level'],
-  employment_tenure: ['joining_date','confirmation_date','probation_months','notice_period_days','reporting_manager_id','hr_manager_id','work_location_text'],
+  employment_tenure: ['joining_date','confirmation_date','contract_end_date','probation_months','notice_period_days','reporting_manager_id','hr_manager_id','work_location_text'],
   bank_main: ['bank_name','account_number','ifsc'],
   bank_statutory: ['uan','pf_number','esic_number','tax_regime'],
   bank_ctc: ['monthly_ctc','annual_ctc'],
@@ -887,6 +942,7 @@ const collectFormFromEmp = () => {
     employee_category: emp.value.employee_category || '',
     joining_date: emp.value.joining_date || '',
     confirmation_date: emp.value.confirmation_date || '',
+    contract_end_date: emp.value.contract_end_date || '',
     probation_months: emp.value.probation_months ?? null,
     notice_period_days: emp.value.notice_period_days ?? null,
     reporting_manager_id: emp.value.reporting_manager?.id || null,
@@ -1030,6 +1086,12 @@ const historyIcon = (t) => ({
   NOTICE_SERVED: Briefcase, EXITED: LogOut, ARCHIVED: Archive,
 }[t] || History)
 
+// Separated = the employee has left the company. Mirrors the backend's canonical
+// SEPARATED set (app/utils/hr/lifecycle_guard.py). Appraisals/performance actions
+// must not be offered for these states — they're surfaced only for live staff.
+const SEPARATED_STATES = ['EXITED', 'ARCHIVED', 'INACTIVE']
+const isSeparated = computed(() => SEPARATED_STATES.includes(emp.value?.lifecycle_state))
+
 // Lifecycle action chips
 const availableActions = computed(() => {
   if (!emp.value) return []
@@ -1079,6 +1141,9 @@ const openActionModal = (action) => {
   actionModalOpen.value = true
 }
 
+// ─── Appraisal Console (Performance module surfaced on the profile) ───
+const appraisalOpen = ref(false)
+
 // ─── Advanced rehire wizard (shared with Recruitment → Rehire) ───
 const rehireOpen = ref(false)
 const onRehireDone = async () => {
@@ -1121,6 +1186,11 @@ const closeDeleteModal = () => {
   deleteOpen.value = false
 }
 const canConfirmDelete = computed(() => deleteConfirmText.value.trim().toUpperCase() === 'DELETE')
+
+// "What happens" workflow shown in the delete modal — adapts to soft vs permanent.
+const deleteConsequences = computed(() => deleteSoftOnly.value
+  ? ['Moves the record to Archive (read-only)', 'Removed from active rosters & dashboards', 'Recoverable later from the Archived tab']
+  : ['Permanently removes the employee record', 'Deletes all lifecycle & history rows', 'This cannot be undone'])
 
 const { remove } = useEmployees()
 const confirmDelete = async () => {
@@ -1385,6 +1455,13 @@ onMounted(reload)
 }
 .del-target strong { display: block; font-size: 14px; color: var(--hr-text); }
 .del-target .mono { font-family: var(--hr-mono); color: var(--hr-suspended); font-size: 11.5px; font-weight: 600; }
+.del-consequences { display: flex; flex-direction: column; gap: 7px; padding: 11px 13px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--hr-border); }
+.del-consequences.hard { background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.28); }
+.dc-eye { font-size: 9.5px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hr-text-muted); }
+.del-consequences ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.del-consequences li { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: var(--hr-text-secondary); line-height: 1.45; }
+.del-consequences li svg { flex-shrink: 0; margin-top: 2px; color: var(--hr-text-muted); }
+.del-consequences.hard li svg { color: #f87171; }
 .del-prompt { margin: 0; font-size: 12.5px; color: var(--hr-text-secondary); }
 .del-prompt code {
   background: rgba(248, 113, 113, 0.12);
@@ -1486,6 +1563,13 @@ onMounted(reload)
   font-weight: 600;
   color: var(--hr-text);
   letter-spacing: -0.005em;
+}
+.kpi-tz {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--hr-accent-gold);
+  font-family: var(--hr-mono);
+  letter-spacing: 0.2px;
 }
 
 /* Tab strip */
@@ -1734,6 +1818,8 @@ onMounted(reload)
 }
 
 .muted-note { color: var(--hr-text-dim); font-size: 11.5px; margin: 2px 0 0; }
+.ctc-band-msg { font-size: 11.5px; margin: 8px 0 0; color: var(--hr-text-muted); font-family: var(--hr-mono); }
+.ctc-band-msg.warn { color: var(--hr-orange); font-weight: 700; font-family: inherit; }
 
 /* ── Indian salary structure preview (read-only) ── */
 .ss-preview {
@@ -1982,6 +2068,7 @@ onMounted(reload)
 [data-theme="light"] .kpi { border-right-color: rgba(40, 25, 10, 0.08); }
 [data-theme="light"] .kpi-label { color: #92400e; }
 [data-theme="light"] .kpi-value { color: #1a1410; }
+[data-theme="light"] .kpi-tz { color: #b45309; }
 
 [data-theme="light"] .tab-btn { color: #6b5840; }
 [data-theme="light"] .tab-btn:hover { color: #44362a; }
@@ -2082,6 +2169,8 @@ onMounted(reload)
   -webkit-text-fill-color: transparent;
 }
 [data-theme="light"] .muted-note { color: #8d7b62; }
+[data-theme="light"] .ctc-band-msg { color: #6b5840; }
+[data-theme="light"] .ctc-band-msg.warn { color: #c2410c; }
 [data-theme="light"] .ghost-mini { color: #6b5840; }
 [data-theme="light"] .ghost-mini:hover { color: #b45309; }
 
@@ -2161,6 +2250,12 @@ onMounted(reload)
 [data-theme="light"] .del-target strong { color: #1a1410; }
 [data-theme="light"] .del-target .mono { color: #b91c1c; }
 [data-theme="light"] .del-prompt { color: #44362a; }
+[data-theme="light"] .del-consequences { background: rgba(40, 25, 10, 0.04); border-color: rgba(40, 25, 10, 0.12); }
+[data-theme="light"] .del-consequences.hard { background: rgba(220, 38, 38, 0.08); border-color: rgba(220, 38, 38, 0.26); }
+[data-theme="light"] .del-consequences li { color: #44362a; }
+[data-theme="light"] .del-consequences li svg { color: #8d7b62; }
+[data-theme="light"] .del-consequences.hard li svg { color: #dc2626; }
+[data-theme="light"] .dc-eye { color: #8d7b62; }
 [data-theme="light"] .del-prompt code {
   background: rgba(220, 38, 38, 0.14);
   color: #b91c1c;

@@ -357,6 +357,7 @@ import SstSegProgress from './training/components/selfservice/SstSegProgress.vue
 import { usePointerSpotlight, prefersReduced } from '@/composables/useShiftMotion'
 import { typeMeta } from '@/composables/useTraining'
 import { API, API_BASE } from '@/utils/api'
+import { useGreeting } from '@/composables/useGreeting'
 import {
   fetchMyTrainingSummary, fetchMyTraining, updateMyProgress,
   fetchMyCertifications,
@@ -395,12 +396,7 @@ const currentUserName = ref('')
 const s = computed(() => summary.value || {})
 
 // ── greeting + hero quick-nav ──
-const greeting = computed(() => {
-  const h = new Date().getHours()
-  if (h < 12) return 'Good morning'
-  if (h < 17) return 'Good afternoon'
-  return 'Good evening'
-})
+const { greeting } = useGreeting()
 const scrollTo = (key) => {
   const map = { trainings: trainingsRef, skills: skillsRef, certifications: certsRef, requests: requestsRef, reports: reportsRef }
   const el = map[key]?.value

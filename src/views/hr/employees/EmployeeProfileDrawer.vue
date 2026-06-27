@@ -162,27 +162,29 @@
               <EmpDetailRow label="Category" :value="emp.employee_category" />
               <EmpDetailRow label="Joining Date" :value="fmtDate(emp.joining_date)" />
               <EmpDetailRow label="Confirmation Date" :value="fmtDate(emp.confirmation_date)" />
+              <EmpDetailRow v-if="emp.contract_end_date" label="Contract End Date" :value="fmtDate(emp.contract_end_date)" />
               <EmpDetailRow label="Tenure" :value="tenure" />
               <EmpDetailRow label="Probation (months)" :value="emp.probation_months" />
               <EmpDetailRow label="Reporting Manager" :value="emp.reporting_manager?.full_name" />
               <EmpDetailRow label="HR Manager" :value="emp.hr_manager?.full_name" />
               <EmpDetailRow label="Grade" :value="emp.grade?.name" />
               <EmpDetailRow label="Pay Level" :value="emp.pay_level" />
-              <EmpDetailRow label="Work Location" :value="emp.work_location_text || emp.work_location?.name" />
+              <EmpDetailRow label="Work Location" :value="workLocationValue" />
               <EmpDetailRow label="Notice Period" :value="emp.notice_period_days ? `${emp.notice_period_days} days` : ''" />
               <EmpDetailRow label="Shift" :value="'— (Phase 2)'" />
             </template>
 
             <div v-else class="edit-grid">
-              <div class="field-block full"><HrFieldLabel label="Department" /><HrSelect v-model="form.department_id" :options="departmentOpts" placeholder="Select department" /></div>
+              <div class="field-block full"><HrFieldLabel label="Department" /><HrDepartmentSelect v-model="form.department_id" :departments="reference.departments" /></div>
               <div class="field-block full"><HrFieldLabel label="Designation" /><HrSelect v-model="form.designation_id" :options="designationOpts" placeholder="Select designation" /></div>
               <div class="field-block full"><HrFieldLabel label="Employment Type" /><HrRadio v-model="form.employment_type" :options="employmentTypeOpts" /></div>
               <div class="field-block"><HrFieldLabel label="Joining Date" /><HrDatePicker v-model="form.joining_date" /></div>
+              <div class="field-block"><HrFieldLabel label="Contract End Date" /><HrDatePicker v-model="form.contract_end_date" /></div>
               <div class="field-block"><HrFieldLabel label="Probation Months" /><HrNumberInput v-model="form.probation_months" :min="0" :max="36" /></div>
               <div class="field-block"><HrFieldLabel label="Notice Period (days)" /><HrNumberInput v-model="form.notice_period_days" :min="0" :max="365" /></div>
               <div class="field-block"><HrFieldLabel label="Pay Level" /><HrInput v-model="form.pay_level" /></div>
-              <div class="field-block full"><HrFieldLabel label="Grade" /><HrSelect v-model="form.grade_id" :options="gradeOpts" placeholder="Select grade" /></div>
-              <div class="field-block full"><HrFieldLabel label="Work Location" helper="Type freely (e.g. HQ — Mumbai)" /><HrInput v-model="form.work_location_text" placeholder="Type a location…" /></div>
+              <div class="field-block full"><HrFieldLabel label="Grade" /><HrSelect v-model="form.grade_id" :options="gradeOpts" placeholder="Select grade" @change="onGradePicked" /></div>
+              <div class="field-block full"><HrFieldLabel label="Work Location" helper="Pick a configured site to inherit its timezone" /><HrLocationSelect v-model="form.work_location_id" v-model:customText="form.work_location_text" :locations="reference.locations" /></div>
             </div>
           </div>
 
@@ -299,11 +301,14 @@ import HrInput from '../../../components/hr/forms/HrInput.vue'
 import HrNumberInput from '../../../components/hr/forms/HrNumberInput.vue'
 import HrTextarea from '../../../components/hr/forms/HrTextarea.vue'
 import HrSelect from '../../../components/hr/forms/HrSelect.vue'
+import HrDepartmentSelect from '../../../components/hr/forms/HrDepartmentSelect.vue'
+import HrLocationSelect from '../../../components/hr/forms/HrLocationSelect.vue'
 import HrDatePicker from '../../../components/hr/forms/HrDatePicker.vue'
 import HrCheckbox from '../../../components/hr/forms/HrCheckbox.vue'
 import HrRadio from '../../../components/hr/forms/HrRadio.vue'
 
-import { useEmployees, useHrReference } from '../../../composables/useEmployees'
+import { useEmployees, useHrReference, payLevelForGrade, employmentTypeOptions } from '../../../composables/useEmployees'
+import { useNow, tzOffsetMinutes, offsetLabel, isValidTz } from '../settings/composables/useLocationClock'
 import { useToast } from '../../../composables/useToast'
 import { useSpotlight } from '../../../composables/useSpotlight'
 
@@ -319,13 +324,8 @@ const maritalOpts = [
   { value: 'WIDOWED', label: 'Widowed' },
   { value: 'OTHER', label: 'Other' },
 ]
-const employmentTypeOpts = [
-  { value: 'FULL_TIME', label: 'Full-Time' },
-  { value: 'CONTRACT', label: 'Contract' },
-  { value: 'INTERN', label: 'Intern' },
-  { value: 'CONSULTANT', label: 'Consultant' },
-  { value: 'PART_TIME', label: 'Part-Time' },
-]
+// Sourced from HR Settings masters — deactivated values hidden (current kept).
+const employmentTypeOpts = computed(() => employmentTypeOptions(form.employment_type))
 const taxRegimeOpts = [
   { value: 'OLD', label: 'Old Regime' },
   { value: 'NEW', label: 'New Regime' },
@@ -349,9 +349,31 @@ const { success, error } = useToast()
 const { reference, loadReferenceData } = useHrReference()
 const { getOne, update, history } = useEmployees()
 
-const departmentOpts = computed(() => reference.departments.map(d => ({ value: d.id, label: d.name })))
 const designationOpts = computed(() => reference.designations.map(d => ({ value: d.id, label: d.name })))
 const gradeOpts = computed(() => reference.grades.map(g => ({ value: g.id, label: `${g.code} — ${g.name}` })))
+
+// ── Work location display (name + inherited timezone) ──
+const _now = useNow()
+const workLocationValue = computed(() => {
+  const e = emp.value
+  if (!e) return ''
+  // Custom free-text takes precedence; otherwise the live FK name.
+  const name = e.work_location_text || e.work_location?.name || ''
+  if (e.work_location_text) return name  // custom value carries no managed timezone
+  // Resolve timezone from the enriched detail payload, then the reference cache.
+  const ref = (reference.locations || []).find(l => String(l.id) === String(e.work_location?.id))
+  const tz = e.work_location?.timezone || ref?.timezone
+  if (name && tz && isValidTz(tz)) {
+    return `${name} · ${tz} (${offsetLabel(tzOffsetMinutes(tz, _now.value))})`
+  }
+  return name
+})
+
+// Picking a grade pre-fills the pay level from that grade's default (editable).
+const onGradePicked = (gradeId) => {
+  const pl = payLevelForGrade(reference.grades, gradeId)
+  if (pl) form.pay_level = pl
+}
 
 const headerRef = ref(null)
 useSpotlight(headerRef)
@@ -470,12 +492,16 @@ const collectFormFromEmp = () => {
     designation_id: emp.value.designation?.id || null,
     employment_type: emp.value.employment_type || '',
     joining_date: emp.value.joining_date || '',
+    contract_end_date: emp.value.contract_end_date || '',
     probation_months: emp.value.probation_months ?? null,
     notice_period_days: emp.value.notice_period_days ?? null,
     grade_id: emp.value.grade?.id || null,
     pay_level: emp.value.pay_level || '',
     work_location_id: emp.value.work_location?.id || null,
-    work_location_text: emp.value.work_location_text || emp.value.work_location?.name || '',
+    // Keep the two fields mutually exclusive: managed employees carry the FK
+    // (text empty), legacy/custom employees carry the text. Don't seed text
+    // from the FK name or HrLocationSelect would open in custom mode.
+    work_location_text: emp.value.work_location_text || '',
     bank_name: emp.value.bank_name || '',
     account_number: '',
     ifsc: emp.value.ifsc || '',
@@ -491,7 +517,7 @@ const collectFormFromEmp = () => {
 const SECTION_FIELDS = {
   basic: ['gender','dob','marital_status','blood_group','nationality','religion','aadhaar_last_4','pan','passport_number','passport_expiry','driving_license'],
   contact: ['mobile','emergency_contact_name','emergency_contact_phone','emergency_contact_relation','permanent_address','current_address','current_same_as_permanent'],
-  employment: ['department_id','designation_id','employment_type','joining_date','probation_months','notice_period_days','grade_id','pay_level','work_location_text'],
+  employment: ['department_id','designation_id','employment_type','joining_date','contract_end_date','probation_months','notice_period_days','grade_id','pay_level','work_location_id','work_location_text'],
   bank: ['bank_name','account_number','ifsc','uan','pf_number','esic_number','tax_regime','monthly_ctc','annual_ctc'],
 }
 

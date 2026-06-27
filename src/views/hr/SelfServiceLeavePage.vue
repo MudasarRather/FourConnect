@@ -885,6 +885,7 @@ import LeaveDetailModal from './leave/modals/LeaveDetailModal.vue'
 import ProofUploadModal from './leave/modals/ProofUploadModal.vue'
 import LeaveEncashmentRequestModal from './leave/modals/LeaveEncashmentRequestModal.vue'
 import { useToast } from 'vue-toastification'
+import { useGreeting } from '@/composables/useGreeting'
 import {
   fetchMyLeaves, fetchMyBalance, withdrawMyLeave, typeMeta,
   fetchMyCompOff, fetchMyEncashment, cancelMyEncashment, ENCASHMENT_STATUSES,
@@ -929,8 +930,9 @@ const firstName = computed(() => {
   } catch { return 'there' }
 })
 
+const { tzHour } = useGreeting()
 const greetingPart = computed(() => {
-  const h = new Date().getHours()
+  const h = tzHour.value
   if (h < 5)  return 'Late night'
   if (h < 12) return 'Good morning'
   if (h < 17) return 'Good afternoon'

@@ -51,7 +51,7 @@
               <template v-else-if="step === 1">
                 <p class="lead">What's driving your decision? <i>Optional &amp; confidential — it only helps us improve.</i></p>
                 <div class="reasons">
-                  <button v-for="(r, i) in REASON_CATEGORIES" :key="r.key" type="button" class="reason-chip"
+                  <button v-for="(r, i) in reasonOpts" :key="r.key" type="button" class="reason-chip"
                     :class="{ on: form.reason_category === r.key }" :style="{ '--d': (i * 0.025) + 's' }"
                     @click="form.reason_category = form.reason_category === r.key ? '' : r.key">
                     <component :is="r.icon" :size="13" /> {{ r.label }}
@@ -158,7 +158,7 @@ import {
 } from 'lucide-vue-next'
 import HrDatePicker from '@/components/hr/forms/HrDatePicker.vue'
 import {
-  RESIGNATION_TYPES, REASON_CATEGORIES, resignationTypeMeta, reasonMeta,
+  resignationTypeOptions, reasonCategoryOptions, resignationTypeMeta, reasonMeta,
   fmtDate, todayISO, daysBetween, initials,
 } from '@/composables/useExit'
 import { prefersReduced } from '@/composables/useShiftMotion'
@@ -189,7 +189,11 @@ const TYPE_DESC = {
   PROBATION_EXIT: 'Stepping away during your probation.',
   TRANSFER: 'Moving to another entity or location.',
 }
-const typeOpts = RESIGNATION_TYPES.filter(t => t.selfAllowed).map(t => ({ key: t.key, label: t.label, icon: t.icon, desc: TYPE_DESC[t.key] || '' }))
+// Self-allowed resignation types + exit reasons, master-driven (HR Settings →
+// Separation Reasons) with a built-in fallback. `form` is read lazily in the getter.
+const typeOpts = computed(() => resignationTypeOptions({ selfOnly: true, current: form.resignation_type })
+  .map(t => ({ key: t.key, label: t.label, icon: t.icon, desc: TYPE_DESC[t.key] || '' })))
+const reasonOpts = computed(() => reasonCategoryOptions({ current: form.reason_category }))
 
 const step = ref(0)
 const dir = ref(1)

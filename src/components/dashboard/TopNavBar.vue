@@ -113,7 +113,7 @@ import {
   ShieldAlert, LogOut, Banknote, KeyRound, Handshake, FilePieChart, FileBox,
   DollarSign,
   UserCog, Fingerprint, CalendarOff, CalendarClock, Receipt,
-  BadgeCheck, GraduationCap, Boxes, Plane, Scale, LineChart, IdCard,
+  BadgeCheck, GraduationCap, Boxes, Plane, Scale, IdCard,
   LogIn, ClipboardList, Award, FileSignature, HeartPulse, DoorOpen
 } from 'lucide-vue-next'
 
@@ -432,14 +432,13 @@ const rawMenuItems = [
     superadminOnly: true, // Belt-and-suspenders: only superadmins
     columns: [[
       { title: 'Overview', items: [
-         { label: 'HR Dashboard', to: '/dashboard/hr/dashboard', icon: LayoutDashboard },
-         { label: 'Reports & Analytics', to: '/dashboard/hr/reports', icon: LineChart }
+         { label: 'HR Dashboard', to: '/dashboard/hr/dashboard', icon: LayoutDashboard }
       ]},
       { title: 'People', items: [
          { label: 'Employees', to: '/dashboard/hr/employees', icon: Users },
          { label: 'Employee Documents', to: '/dashboard/hr/employee-documents', icon: FileSignature }
       ]},
-      { title: 'Hiring', items: [
+      { title: 'Hiring & Onboarding', items: [
          { label: 'Recruitment', to: '/dashboard/hr/recruitment', icon: UserPlus },
          { label: 'Onboarding', to: '/dashboard/hr/onboarding', icon: ClipboardList }
       ]}
@@ -449,22 +448,24 @@ const rawMenuItems = [
          { label: 'Leave Management', to: '/dashboard/hr/leave', icon: CalendarOff },
          { label: 'Shifts & Rosters', to: '/dashboard/hr/shifts', icon: CalendarClock }
       ]},
-      { title: 'Pay & Benefits', items: [
+      { title: 'Pay & Expenses', items: [
          { label: 'Payroll', to: '/dashboard/hr/payroll', icon: Banknote },
-         { label: 'Reimbursements', to: '/dashboard/hr/reimbursements', icon: Receipt }
-      ]},
-      { title: 'Growth', items: [
-         { label: 'Training & Certifications', to: '/dashboard/hr/training', icon: GraduationCap }
+         { label: 'Reimbursements', to: '/dashboard/hr/reimbursements', icon: Receipt },
+         { label: 'Travel Management', to: '/dashboard/hr/travel', icon: Plane }
       ]}
     ], [
-      { title: 'Lifecycle', items: [
-         { label: 'Assets Management', to: '/dashboard/hr/assets', icon: Boxes },
-         { label: 'Travel Management', to: '/dashboard/hr/travel', icon: Plane },
+      { title: 'Talent & Growth', items: [
+         { label: 'Performance Management', to: '/dashboard/hr/performance', icon: Target },
+         { label: 'Training & Certifications', to: '/dashboard/hr/training', icon: GraduationCap }
+      ]},
+      { title: 'Assets', items: [
+         { label: 'Assets Management', to: '/dashboard/hr/assets', icon: Boxes }
+      ]},
+      { title: 'Offboarding', items: [
          { label: 'Exit Management', to: '/dashboard/hr/exit', icon: LogOut }
       ]},
       { title: 'Governance', items: [
-         { label: 'HR Settings', to: '/dashboard/hr/settings', icon: Settings },
-         { label: 'Audit Logs', to: '/dashboard/hr/audit-logs', icon: History }
+         { label: 'HR Settings', to: '/dashboard/hr/settings', icon: Settings }
       ]}
     ]]
   },
@@ -474,27 +475,31 @@ const rawMenuItems = [
     children: true,
     userOnlyMenu: true, // Only render in user panel context (hidden in admin)
     columns: [[
-      { title: 'Profile & Documents', items: [
-         { label: 'My Profile', to: '/dashboard/self-service/profile', icon: User },
-         { label: 'My Documents', to: '/dashboard/self-service/documents', icon: FileSignature }
-      ]},
-      { title: 'Time', items: [
+      { title: 'Time & Attendance', items: [
          { label: 'My Attendance', to: '/dashboard/self-service/attendance', icon: Fingerprint },
-         { label: 'My Leave', to: '/dashboard/self-service/leave', icon: CalendarOff },
-         { label: 'Team Approvals', to: '/dashboard/self-service/team-approvals', icon: UserCheck }
-      ]}
-    ], [
-      { title: 'Pay', items: [
+         { label: 'My Leave', to: '/dashboard/self-service/leave', icon: CalendarOff }
+      ]},
+      { title: 'Pay & Expenses', items: [
          { label: 'My Payslips', to: '/dashboard/self-service/payslips', icon: Banknote },
          { label: 'My Tax Documents', to: '/dashboard/self-service/tax-documents', icon: Scale },
-         { label: 'My Reimbursements', to: '/dashboard/self-service/reimbursements', icon: Receipt }
+         { label: 'My Reimbursements', to: '/dashboard/self-service/reimbursements', icon: Receipt },
+         { label: 'My Travel', to: '/dashboard/self-service/travel', icon: Plane }
       ]},
-      { title: 'Growth & Assets', items: [
-         { label: 'My Training', to: '/dashboard/self-service/training', icon: GraduationCap },
-         { label: 'My Performance Reviews', to: '/dashboard/self-service/performance', icon: Award },
-         { label: 'My Assets', to: '/dashboard/self-service/assets', icon: Boxes },
-         { label: 'My Travel', to: '/dashboard/self-service/travel', icon: Plane },
+      { title: 'Lifecycle', items: [
          { label: 'My Exit', to: '/dashboard/self-service/exit', icon: DoorOpen }
+      ]}
+    ], [
+      { title: 'Growth & Learning', items: [
+         { label: 'My Performance Reviews', to: '/dashboard/self-service/performance', icon: Award },
+         { label: 'My Training', to: '/dashboard/self-service/training', icon: GraduationCap }
+      ]},
+      { title: 'Documents & Assets', items: [
+         { label: 'My Documents', to: '/dashboard/self-service/documents', icon: FileSignature },
+         { label: 'My Assets', to: '/dashboard/self-service/assets', icon: Boxes }
+      ]},
+      { title: 'My Team', items: [
+         { label: 'Team Approvals', to: '/dashboard/self-service/team-approvals', icon: UserCheck },
+         { label: 'Team Performance', to: '/dashboard/self-service/team-performance', icon: ClipboardList }
       ]}
     ]]
   },

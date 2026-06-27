@@ -18,7 +18,7 @@
         <div class="dh-left">
           <span class="dh-eyebrow"><Radio :size="12" /> Console · live readout</span>
           <h2>Operations overview</h2>
-          <span class="dh-meta shift-mono"><span class="dh-live" />{{ clock }} · synced {{ syncedLabel }}</span>
+          <span class="dh-meta shift-mono"><span class="dh-live" />{{ clock }} · {{ viewerTz }} · synced {{ syncedLabel }}</span>
         </div>
         <div class="dh-right">
           <span class="dh-eq" aria-hidden="true"><i v-for="n in 5" :key="n" :style="{ animationDelay: `${(n * 0.12).toFixed(2)}s` }" /></span>
@@ -65,11 +65,19 @@
         </Motion>
       </div>
 
+      <!-- location clocks — each office in its own timezone -->
+      <Motion as="section" class="card" :initial="{ opacity: 0, y: 22 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.55, delay: 0.3, ease: [0.16, 1, 0.3, 1] }">
+        <span class="card-sheen" aria-hidden="true" />
+        <header class="card-head"><span class="hnum">05</span><h3>Location clocks · local time</h3>
+          <button class="card-link" @click="$emit('go','assignment')">Assign <ArrowUpRight :size="13" /></button></header>
+        <ShiftLocationClocks :coverage="locationCoverage" @go="(g) => $emit('go', g)" />
+      </Motion>
+
       <!-- coverage + quick actions -->
       <div class="grid-2-wide">
         <Motion as="section" class="card" :initial="{ opacity: 0, y: 22 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.55, delay: 0.32, ease: [0.16, 1, 0.3, 1] }">
           <span class="card-sheen" aria-hidden="true" />
-          <header class="card-head"><span class="hnum">05</span><h3>Weekly coverage</h3>
+          <header class="card-head"><span class="hnum">06</span><h3>Weekly coverage</h3>
             <button class="card-link" @click="$emit('go', 'coverage')">Manage <ArrowUpRight :size="13" /></button></header>
           <div v-if="(stats?.weekly_coverage || []).length" class="cov-list">
             <ShiftCoverageMeter v-for="(c, i) in stats.weekly_coverage" :key="i" :label="c.label" :required="c.required" :assigned="c.assigned" />
@@ -79,7 +87,7 @@
 
         <Motion as="section" class="card actions-card" :initial="{ opacity: 0, y: 22 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.55, delay: 0.38, ease: [0.16, 1, 0.3, 1] }">
           <span class="card-sheen" aria-hidden="true" />
-          <header class="card-head"><span class="hnum">06</span><h3>Quick actions</h3></header>
+          <header class="card-head"><span class="hnum">07</span><h3>Quick actions</h3></header>
           <div class="act-dock">
             <Motion v-for="(a, i) in actions" :key="a.go" as="button" class="act"
               :initial="{ opacity: 0, scale: 0.92 }" :animate="{ opacity: 1, scale: 1 }"
@@ -118,6 +126,7 @@ import ShiftKpiTile from '../components/ShiftKpiTile.vue'
 import ShiftBarChart from '../components/ShiftBarChart.vue'
 import ShiftTrendChart from '../components/ShiftTrendChart.vue'
 import ShiftCoverageMeter from '../components/ShiftCoverageMeter.vue'
+import ShiftLocationClocks from '../components/ShiftLocationClocks.vue'
 import { shiftTypeMeta } from '@/composables/useShifts'
 import { usePointerSpotlight } from '@/composables/useShiftMotion'
 
@@ -182,6 +191,13 @@ const distItems = computed(() => (props.stats?.shift_distribution || []).map(s =
 const deptItems = computed(() => (props.stats?.dept_allocation || []).map(d => ({
   label: d.department_name, value: d.count, color: 'var(--shift-amber)', subValue: d.night_count, subColor: 'var(--shift-ember-strong)',
 })))
+const locationCoverage = computed(() => props.stats?.location_coverage || [])
+
+// The header wall clock is the viewer's own local time — label it so it reads
+// honestly next to the per-office clocks (which run in each site's timezone).
+const viewerTz = (() => {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'local' } catch { return 'local' }
+})()
 </script>
 
 <style scoped>

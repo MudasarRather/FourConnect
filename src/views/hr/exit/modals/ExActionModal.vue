@@ -359,12 +359,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { Motion, AnimatePresence as Presence } from 'motion-v'
 import { X, Check, Loader2, DoorOpen, CheckCircle2, XCircle, Ban, CalendarClock, ShieldCheck, BadgeCheck, Undo2, FilePen, User, AlertTriangle, Sparkles, ClipboardCheck, Minus, Plus, Activity, ArrowRight, ArrowUpRight, ArrowDownRight } from 'lucide-vue-next'
+import { useHrReference } from '@/composables/useEmployees'
 import ExSelect from '../components/ExSelect.vue'
 import HrDatePicker from '@/components/hr/forms/HrDatePicker.vue'
-import { RESIGNATION_TYPES, REASON_CATEGORIES, resignationTypeMeta, reasonMeta, fmtDate, todayISO, addDays, daysBetween, daysRemaining, fetchNoticePreview, fetchPolicies } from '@/composables/useExit'
+import { RESIGNATION_TYPES, REASON_CATEGORIES, resignationTypeOptions, reasonCategoryOptions, resignationTypeMeta, reasonMeta, fmtDate, todayISO, addDays, daysBetween, daysRemaining, fetchNoticePreview, fetchPolicies } from '@/composables/useExit'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -472,9 +473,14 @@ const reset = () => {
 }
 watch(() => props.open, (o) => { if (o) reset() })
 
-const types = RESIGNATION_TYPES
+// Reason vocabulary is master-driven (HR Settings → Separation Reasons): load the
+// reference cache so deactivated reasons drop out of these pickers live; both
+// helpers fall back to the built-in lists if the master is unavailable.
+const { loadReferenceData } = useHrReference()
+onMounted(() => { loadReferenceData() })
+const types = computed(() => resignationTypeOptions({ current: form.resignation_type }))
 const employeeOpts = computed(() => props.employees.map(e => ({ value: e.id, label: `${e.name || e.code} · ${e.code || ''}` })))
-const reasonOpts = [{ value: '', label: '(none)' }, ...REASON_CATEGORIES.map(r => ({ value: r.key, label: r.label, icon: r.icon }))]
+const reasonOpts = computed(() => [{ value: '', label: '(none)' }, ...reasonCategoryOptions({ current: form.reason_category }).map(r => ({ value: r.key, label: r.label, icon: r.icon }))])
 
 // live-preview helpers (create / edit mode)
 const selEmp = computed(() => {

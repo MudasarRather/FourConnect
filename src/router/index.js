@@ -126,10 +126,10 @@ const routes = [
             // ============================================
             // SELF SERVICE PORTAL (USER ONLY)
             // ============================================
-            { path: 'self-service/profile', name: 'SelfServiceProfile', component: () => import('../views/hr/SelfServiceProfilePage.vue') },
             { path: 'self-service/attendance', name: 'SelfServiceAttendance', component: () => import('../views/hr/SelfServiceAttendancePage.vue') },
             { path: 'self-service/leave', name: 'SelfServiceLeave', component: () => import('../views/hr/SelfServiceLeavePage.vue') },
             { path: 'self-service/team-approvals', name: 'SelfServiceTeamApprovals', component: () => import('../views/hr/SelfServiceTeamApprovalsPage.vue') },
+            { path: 'self-service/team-performance', name: 'SelfServiceTeamPerformance', component: () => import('../views/hr/SelfServiceTeamPerformancePage.vue') },
             { path: 'self-service/payslips', name: 'SelfServicePayslips', component: () => import('../views/hr/SelfServicePayslipsPage.vue') },
             { path: 'self-service/tax-documents', name: 'SelfServiceTaxDocuments', component: () => import('../views/hr/SelfServiceTaxDocumentsPage.vue') },
             { path: 'self-service/reimbursements', name: 'SelfServiceReimbursements', component: () => import('../views/hr/SelfServiceReimbursementsPage.vue') },
@@ -138,7 +138,7 @@ const routes = [
             { path: 'self-service/travel', name: 'SelfServiceTravel', component: () => import('../views/hr/SelfServiceTravelPage.vue') },
             { path: 'self-service/exit', name: 'SelfServiceExit', component: () => import('../views/hr/SelfServiceExitPage.vue') },
             { path: 'self-service/documents', name: 'SelfServiceDocuments', component: () => import('../views/hr/SelfServiceDocumentsPage.vue') },
-            { path: 'self-service/performance', name: 'SelfServicePerformance', component: PlaceholderPage, props: () => ({ type: 'self-service', moduleName: 'My Performance Reviews', phase: 'Phase 5 — Growth & Lifecycle' }) },
+            { path: 'self-service/performance', name: 'SelfServicePerformance', component: () => import('../views/hr/SelfServicePerformancePage.vue') },
             { path: 'self-service/:pathMatch(.*)*', name: 'SelfServiceCatchall', component: PlaceholderPage, props: () => ({ type: 'self-service' }) },
             { path: ':pathMatch(.*)*', name: 'DynamicPlaceholder', component: PlaceholderPage, props: route => ({ type: route.params.pathMatch[0] || 'dashboard' }) }
         ]
@@ -273,6 +273,12 @@ const routes = [
                 name: 'HrTrainingTab',
                 component: () => import('../views/hr/training/HrTrainingWorkspacePage.vue'),
             },
+            { path: 'hr/performance', redirect: '/admin/hr/performance/dashboard' },
+            {
+                path: 'hr/performance/:tab(dashboard|insights|reviews|cycles|calibration|merit|goals|feedback|pips)',
+                name: 'HrPerformanceTab',
+                component: () => import('../views/hr/performance/HrPerformanceWorkspacePage.vue'),
+            },
             { path: 'hr/assets', redirect: '/admin/hr/assets/dashboard' },
             {
                 path: 'hr/assets/:tab(dashboard|inventory|allocations|returns|history|transfers|damage|maintenance|audits|disposal|categories|vendors|reports|audit-logs)',
@@ -291,8 +297,12 @@ const routes = [
                 name: 'HrExitTab',
                 component: () => import('../views/hr/exit/HrExitWorkspacePage.vue'),
             },
-            { path: 'hr/reports', name: 'HrReports', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'Reports & Analytics', phase: 'Phase 6 — Reports & Hardening' }) },
-            { path: 'hr/settings', name: 'HrSettings', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'HR Settings', phase: 'Phase 6 — Reports & Hardening' }) },
+            { path: 'hr/settings', redirect: '/admin/hr/settings/dashboard' },
+            {
+                path: 'hr/settings/:tab(dashboard|payroll-rules|appraisal-templates|merit-policy|designations|grades|departments|employment-types|employee-categories|work-locations|approval-workflows|notification-rules|compliance|numbering-series|separation-reasons|recruitment|onboarding|training|asset-categories|asset-types|audit-logs)',
+                name: 'HrSettingsTab',
+                component: () => import('../views/hr/settings/HrSettingsWorkspacePage.vue'),
+            },
             { path: 'hr/audit-logs', name: 'HrAuditLogs', component: PlaceholderPage, props: () => ({ type: 'hr', moduleName: 'HR Audit Logs', phase: 'Phase 1 — Foundation' }) },
             { path: 'hr/:pathMatch(.*)*', name: 'AdminHrCatchall', component: PlaceholderPage, props: () => ({ type: 'hr' }) },
 

@@ -149,6 +149,7 @@ import HrNumberInput from '../../../../components/hr/forms/HrNumberInput.vue'
 
 import { useMagnetic } from '../../../../composables/useMagnetic'
 import { useToast } from '../../../../composables/useToast'
+import { employmentTypeOptions as buildEmploymentTypeOptions } from '../../../../composables/useEmployees'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -170,13 +171,8 @@ const workModeOptions = [
   { value: 'REMOTE', label: 'Remote' },
   { value: 'HYBRID', label: 'Hybrid' },
 ]
-const employmentTypeOptions = [
-  { value: 'FULL_TIME',   label: 'Full-time' },
-  { value: 'PART_TIME',   label: 'Part-time' },
-  { value: 'CONTRACT',    label: 'Contract' },
-  { value: 'INTERN',      label: 'Intern' },
-  { value: 'CONSULTANT',  label: 'Consultant' },
-]
+// Sourced from HR Settings masters — deactivated types are hidden from new picks.
+const employmentTypeOptions = computed(() => buildEmploymentTypeOptions(form.value?.employment_type))
 
 const deptOptions  = computed(() => (props.reference?.departments  || []).map(d => ({ value: d.id, label: d.name })))
 const desigOptions = computed(() => (props.reference?.designations || []).map(d => ({ value: d.id, label: d.name })))

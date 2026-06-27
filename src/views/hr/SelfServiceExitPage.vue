@@ -54,14 +54,7 @@
         <p v-if="closedNote" class="sse-closed-note"><Info :size="13" /> {{ closedNote }}</p>
       </Motion>
 
-      <Motion as="div" class="sse-rest ex-card ex-grain" :initial="reduced ? false : { opacity: 0, y: 14 }" :animate="{ opacity: 1, y: 0 }" :transition="{ duration: 0.5, delay: 0.05 }">
-        <span class="rest-aura" aria-hidden="true" />
-        <span class="rest-portal"><DoorOpen :size="30" /><span class="rest-portal-ring" /><span class="rest-portal-ring r2" /></span>
-        <h3 class="rest-h">{{ closedCase ? 'Considering another move?' : 'Thinking of moving on?' }}</h3>
-        <p class="rest-sub">Submitting a resignation respectfully notifies your manager &amp; HR. You can revise or withdraw it any time before it's accepted.</p>
-        <button v-if="eligibleToResign" class="ex-btn primary" type="button" @click="openResign(null)"><DoorOpen :size="15" /> Begin a resignation</button>
-        <p v-else class="rest-gate"><Info :size="13" /> {{ gateNote }}</p>
-      </Motion>
+      <SsPassagePortal :eligible="eligibleToResign" :gate-note="gateNote" :closed="!!closedCase" :reduced="reduced" @begin="openResign(null)" />
     </template>
 
     <!-- ───────── ACTIVE — full journey dashboard ───────── -->
@@ -283,6 +276,7 @@ import NoticeCountdownArc from './exit/components/NoticeCountdownArc.vue'
 import SsDepartureClock from './exit/components/SsDepartureClock.vue'
 import SsTiltCard from './exit/components/SsTiltCard.vue'
 import SsExitJourney from './exit/components/SsExitJourney.vue'
+import SsPassagePortal from './exit/components/SsPassagePortal.vue'
 import SsResignModal from './exit/modals/SsResignModal.vue'
 import SsInterviewModal from './exit/modals/SsInterviewModal.vue'
 import SsHandoverModal from './exit/modals/SsHandoverModal.vue'
@@ -555,16 +549,7 @@ onMounted(load)
 .sse-closed-note { display: flex; align-items: flex-start; gap: 7px; margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: var(--ex-text-muted); }
 .sse-closed-note svg { color: var(--ex-text-dim); flex-shrink: 0; margin-top: 1px; }
 
-/* rest / begin */
-.sse-rest { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; gap: 11px; padding: 50px 30px; text-align: center; }
-.rest-aura { position: absolute; inset: -30% 20% 30% 20%; pointer-events: none; background: radial-gradient(60% 70% at 50% 16%, rgba(251, 146, 60, 0.18), transparent 70%); animation: ex-aura-drift 11s ease-in-out infinite; }
-.rest-portal { position: relative; display: grid; place-items: center; width: 70px; height: 70px; border-radius: 22px; color: var(--ex-violet); background: var(--ex-violet-soft); border: 1px solid var(--ex-violet-border); box-shadow: var(--ex-violet-glow); margin-bottom: 4px; }
-.rest-portal-ring { position: absolute; inset: 0; border-radius: 22px; border: 1px solid var(--ex-violet-border); animation: rest-ping 3.4s ease-out infinite; }
-.rest-portal-ring.r2 { animation-delay: 1.7s; }
-.rest-h { position: relative; font-size: 19px; font-weight: 840; margin: 0; }
-.rest-sub { position: relative; font-size: 13px; color: var(--ex-text-muted); max-width: 420px; margin: 0 0 6px; line-height: 1.55; }
-.rest-gate { position: relative; display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ex-text-muted); }
-.rest-gate svg { color: var(--ex-amber); }
+/* begin-resignation CTA (also used by the interview "Complete survey" button) */
 .ex-btn { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 11px 18px; border-radius: 12px; font-size: 13px; font-weight: 760; cursor: pointer; border: none; background: var(--ex-grad-hero); color: #1a1206; box-shadow: var(--ex-violet-glow); transition: transform 0.2s var(--ex-spring), filter 0.2s; }
 .ex-btn:hover { transform: translateY(-2px); filter: brightness(1.04); }
 .ex-btn.sm { padding: 8px 14px; font-size: 12.5px; }
@@ -773,11 +758,9 @@ onMounted(load)
 .dr-dl { transition: transform 0.25s var(--ex-spring); }
 .doc-row:hover .dr-dl { transform: translateY(2px); }
 
-@keyframes rest-ping { 0% { transform: scale(1); opacity: 0.6; } 100% { transform: scale(1.5); opacity: 0; } }
-
 @media (max-width: 860px) { .sse-hero { grid-template-columns: 1fr; } .sse-stats { grid-template-columns: repeat(2, 1fr); } .sse-grid { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) {
-  .spin, .sse-aura, .rest-aura, .med-spin, .rest-portal-ring, .sh,
+  .spin, .sse-aura, .med-spin, .sh,
   .ssc-h svg, .ssc-facts > div, .ff-leg, .ns-chip, .clr-list li, .doc-row,
   .mgr-banner.ok::after, .mgr-banner.wait::after, .cl-dot, .clr-ring-glow, .cl-act::after,
   .dl-beam, .dl-sec svg, .ffb-sweep, .iv-pend-ic { animation: none !important; }

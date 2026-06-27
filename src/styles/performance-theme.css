@@ -1,0 +1,107 @@
+/* ============================================================================
+   PERFORMANCE MANAGEMENT MODULE THEME  ·  "The Arena"
+   Review instances scored against appraisal rubrics. Feature-scoped tokens
+   (--perf-*). Imported PER-VIEW (HrPerformanceWorkspacePage,
+   SelfServicePerformancePage) — never globally. Warm gold/amber brand;
+   emerald = success/acknowledged, red = danger.
+   ============================================================================ */
+@import './hr-theme.css';
+
+:root {
+  --perf-canvas: #060607;
+  --perf-surface: rgba(22, 22, 26, 0.62);
+  --perf-surface-elevated: rgba(30, 30, 34, 0.9);
+  --perf-glass: rgba(16, 16, 19, 0.72);
+  --perf-panel: rgba(12, 12, 15, 0.82);
+  --perf-border: rgba(255, 255, 255, 0.07);
+  --perf-border-strong: rgba(255, 255, 255, 0.13);
+  --perf-border-warm: rgba(251, 191, 36, 0.2);
+
+  --perf-text: #f5f5f7;
+  --perf-text-secondary: #c6c6cb;
+  --perf-text-muted: #8d8d94;
+  --perf-text-dim: #66666d;
+
+  --perf-gold: #fbbf24;
+  --perf-gold-bright: #fcd34d;
+  --perf-amber: #f59e0b;
+  --perf-orange: #fb923c;
+  --perf-ember: #d97706;
+  --perf-rust: #b45309;
+  --perf-deep: #ea580c;
+
+  --perf-ok: #34d399;          --perf-ok-soft: rgba(52, 211, 153, 0.14);
+  --perf-conflict: #f87171;    --perf-conflict-soft: rgba(248, 113, 113, 0.14);
+  --perf-unset: #6b7280;       --perf-unset-soft: rgba(107, 114, 128, 0.12);
+  --perf-track: rgba(255, 255, 255, 0.07);
+
+  --perf-grad-hero: linear-gradient(135deg, #fbbf24 0%, #fb923c 52%, #ea580c 100%);
+  --perf-card-shadow: 0 18px 40px -28px rgba(0, 0, 0, 0.78), 0 0 0 1px rgba(0, 0, 0, 0.18);
+  --perf-card-shadow-hover: 0 26px 56px -28px rgba(0, 0, 0, 0.82), 0 0 0 1px rgba(251, 191, 36, 0.12);
+
+  --perf-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --perf-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --perf-mono: var(--hr-mono);
+}
+
+/* conic angle prop for the score gauges */
+@property --perf-p {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+[data-theme="light"] {
+  --perf-canvas: #faf7f0;
+  --perf-surface: rgba(255, 250, 240, 0.74);
+  --perf-surface-elevated: rgba(255, 250, 240, 0.94);
+  --perf-glass: rgba(255, 250, 240, 0.8);
+  --perf-panel: rgba(255, 248, 236, 0.9);
+  --perf-border: rgba(40, 25, 10, 0.1);
+  --perf-border-strong: rgba(40, 25, 10, 0.18);
+  --perf-border-warm: rgba(217, 119, 6, 0.28);
+
+  --perf-text: #1a1410;
+  --perf-text-secondary: #44362a;
+  --perf-text-muted: #6b5840;
+  --perf-text-dim: #8d7b62;
+
+  --perf-gold: #d97706;
+  --perf-gold-bright: #f59e0b;
+  --perf-amber: #d97706;
+  --perf-orange: #ea580c;
+  --perf-ember: #c2410c;
+  --perf-rust: #9a3412;
+  --perf-deep: #c2410c;
+
+  --perf-ok: #059669;          --perf-ok-soft: rgba(5, 150, 105, 0.14);
+  --perf-conflict: #dc2626;    --perf-conflict-soft: rgba(220, 38, 38, 0.12);
+  --perf-unset: #8d7b62;       --perf-unset-soft: rgba(141, 123, 98, 0.14);
+  --perf-track: rgba(40, 25, 10, 0.1);
+
+  --perf-card-shadow: 0 18px 40px -30px rgba(40, 25, 10, 0.3), 0 0 0 1px rgba(40, 25, 10, 0.05);
+  --perf-card-shadow-hover: 0 26px 56px -30px rgba(40, 25, 10, 0.34), 0 0 0 1px rgba(217, 119, 6, 0.16);
+}
+
+/* shared utility — buttons (scoped to the perf views via .perf-scope) */
+.perf-scope .perf-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 9px 15px; border-radius: 11px; cursor: pointer; font: inherit; font-size: 13px; font-weight: 650;
+  border: 1px solid var(--perf-border-strong); background: var(--perf-surface); color: var(--perf-text-secondary);
+  transition: background .2s var(--perf-spring), border-color .2s var(--perf-spring), color .2s var(--perf-spring), transform .2s var(--perf-spring), box-shadow .25s;
+}
+.perf-scope .perf-btn:hover { color: var(--perf-text); border-color: var(--perf-border-warm); }
+.perf-scope .perf-btn-primary { border: none; color: #1a1206; background: var(--perf-grad-hero); box-shadow: 0 10px 26px -12px rgba(251, 146, 60, 0.55); }
+.perf-scope .perf-btn-primary:hover { color: #1a1206; }
+.perf-scope .perf-btn-ghost { background: transparent; }
+.perf-scope .perf-btn-steel { color: var(--perf-text); background: var(--perf-surface-elevated); border-color: var(--perf-border-strong); }
+.perf-scope .perf-btn-steel:hover { border-color: var(--perf-border-warm); background: color-mix(in srgb, var(--perf-gold) 8%, var(--perf-surface-elevated)); }
+.perf-scope .perf-btn:disabled, .perf-scope .perf-btn.disabled { opacity: .5; cursor: not-allowed; }
+
+@keyframes perf-deal { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes perf-spin { to { transform: rotate(360deg); } }
+.perf-scope .perf-spin { animation: perf-spin .9s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .perf-scope .perf-spin { animation: none !important; }
+}

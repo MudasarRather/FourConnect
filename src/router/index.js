@@ -109,12 +109,18 @@ const routes = [
             // ============================================
             // SUPPORT (USER SELF-SERVICE) — Phase 1 scaffolding
             // ============================================
-            { path: 'support', redirect: '/user/support/tickets' },
+            // Self-service pattern: TopNav-driven surfaces, no in-page tabs. "New"
+            // is an action (Raise-a-ticket modal) on the My Support surface, not a route.
+            // Employee (agent) panel = the FULL operational support workspace.
+            // Each module is its own page (HR-style) with its own internal tabs.
+            { path: 'support', redirect: '/user/support/tickets/my' },
+            // Tickets renders the vertical SdWorkspaceRail (driven by its registry tabs) via the generic workspace.
             {
-                path: 'support/:tab(tickets|new|knowledge-base|announcements)',
-                name: 'SupportSelfTab',
-                component: () => import('../views/support-desk/SupportDeskSelfPage.vue'),
+                path: 'support/:module(dashboards|tickets|queues|incidents|problems|service-requests|changes|knowledge-base|sla|communication|assets|team|automation|ai|approvals|surveys|monitoring|reports|clients)/:tab?',
+                name: 'SupportEmployee',
+                component: () => import('../views/support-desk/SupportModuleWorkspace.vue'),
             },
+            { path: 'support/:pathMatch(.*)*', redirect: '/user/support/tickets/my' },
             { path: 'expenses/new', name: 'NewExpense', component: () => import('../views/NewExpensePage.vue') },
             { path: 'expenses/all', name: 'AllExpenses', component: () => import('../views/AllExpensesPage.vue') },
             { path: 'expenses/draftexpenses', name: 'DraftExpenses', component: () => import('../views/DraftExpensesPage.vue') },
@@ -336,11 +342,14 @@ const routes = [
             // ============================================
             // SUPPORT DESK (ADMIN) — Phase 1 scaffolding
             // ============================================
+            // Admin = slim config + oversight (agent operations live on /user/support).
+            // Each module is its own page with internal tabs via SupportModuleWorkspace.
             { path: 'support-desk', redirect: '/admin/support-desk/dashboard' },
+            // Tickets renders the vertical SdWorkspaceRail (driven by its registry tabs) via the generic workspace.
             {
-                path: 'support-desk/:tab(dashboard|tickets|organizations|customers|contracts|sla|knowledge-base|service-catalog|change-requests|problem-management|customer-assets|announcements|reports|automation|settings|audit-logs)',
-                name: 'SupportDeskTab',
-                component: () => import('../views/support-desk/SupportDeskWorkspacePage.vue'),
+                path: 'support-desk/:module(dashboard|dashboards|tickets|queues|incidents|problems|service-requests|changes|knowledge-base|sla|communication|assets|team|automation|ai|approvals|surveys|monitoring|reports|clients|service-catalog|announcements|channels|integrations|settings|audit)/:tab?',
+                name: 'SupportDeskAdmin',
+                component: () => import('../views/support-desk/SupportModuleWorkspace.vue'),
             },
             { path: 'support-desk/:pathMatch(.*)*', redirect: '/admin/support-desk/dashboard' },
 

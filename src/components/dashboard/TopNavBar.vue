@@ -118,6 +118,7 @@ import {
   Ticket, Gauge, Bug, Server, Megaphone, Building2, LayoutGrid, GitPullRequest,
   ScrollText, LifeBuoy, Headset
 } from 'lucide-vue-next'
+import { navGroups, defaultTabKey } from '@/views/support-desk/supportModules'
 
 const router = useRouter()
 const { info } = useToast()
@@ -336,6 +337,24 @@ const visibleMenuItems = computed(() => {
   }).filter(Boolean)
 })
 
+// Build a TopNav mega-menu `columns` structure from the Support module registry
+// (src/views/support-desk/supportModules.js) so the Support dropdowns never drift
+// from the source of truth. Groups are packed ~3 per column; each module links to
+// its default tab. The /dashboard→/admin|/user rewrite is handled by adjustPath().
+const buildSupportColumns = (panel, baseSeg) => {
+  const groups = navGroups(panel).map(g => ({
+    title: g.title,
+    items: g.items.map(m => ({ label: m.label, icon: m.icon, to: `/dashboard/${baseSeg}/${m.key}/${defaultTabKey(m)}` })),
+  }))
+  // Cap at 3 columns so the mega-menu never runs off the right edge of the
+  // viewport (admin now has ~12 groups; 4 columns pushed Channels/Integrations/
+  // Administration off-screen). Pack groups evenly across the 3 columns.
+  const perCol = Math.max(1, Math.ceil(groups.length / 3))
+  const cols = []
+  for (let i = 0; i < groups.length; i += perCol) cols.push(groups.slice(i, i + perCol))
+  return cols
+}
+
 // Menu Data Architecture (renamed to rawMenuItems)
 const rawMenuItems = [
   {
@@ -512,56 +531,27 @@ const rawMenuItems = [
     icon: LifeBuoy,
     children: true,
     adminOnlyMenu: true, // Customer support desk — admin/agent panel context only
-    columns: [[
-      { title: 'Overview', items: [
-         { label: 'Dashboard', to: '/dashboard/support-desk/dashboard', icon: LayoutDashboard }
-      ]},
-      { title: 'Tickets', items: [
-         { label: 'Tickets', to: '/dashboard/support-desk/tickets', icon: Ticket },
-         { label: 'Organizations', to: '/dashboard/support-desk/organizations', icon: Building2 },
-         { label: 'Customers', to: '/dashboard/support-desk/customers', icon: Users }
-      ]}
-    ], [
-      { title: 'Service', items: [
-         { label: 'Contracts', to: '/dashboard/support-desk/contracts', icon: FileSignature },
-         { label: 'SLA Management', to: '/dashboard/support-desk/sla', icon: Gauge },
-         { label: 'Knowledge Base', to: '/dashboard/support-desk/knowledge-base', icon: BookOpen },
-         { label: 'Service Catalog', to: '/dashboard/support-desk/service-catalog', icon: LayoutGrid }
-      ]},
-      { title: 'ITIL', items: [
-         { label: 'Change Requests', to: '/dashboard/support-desk/change-requests', icon: GitPullRequest },
-         { label: 'Problem Management', to: '/dashboard/support-desk/problem-management', icon: Bug }
-      ]}
-    ], [
-      { title: 'Assets & Comms', items: [
-         { label: 'Customer Assets', to: '/dashboard/support-desk/customer-assets', icon: Server },
-         { label: 'Announcements', to: '/dashboard/support-desk/announcements', icon: Megaphone }
-      ]},
-      { title: 'Administration', items: [
-         { label: 'Reports', to: '/dashboard/support-desk/reports', icon: BarChart3 },
-         { label: 'Automation Rules', to: '/dashboard/support-desk/automation', icon: Zap },
-         { label: 'Settings', to: '/dashboard/support-desk/settings', icon: Settings },
-         { label: 'Audit Logs', to: '/dashboard/support-desk/audit-logs', icon: ScrollText }
-      ]}
-    ]]
+    // Admin = slim config + oversight. Agent operations live on the employee panel
+    // (/user/support). These modules are the cross-panel config + content + governance
+    // that the employee and client portals consume.
+    // Registry-driven: the admin SUPERSET = operational modules + config/oversight.
+    columns: buildSupportColumns('admin', 'support-desk')
   },
   {
     // Employee-facing self-service helpdesk (user panel context only).
+    // Self-service pattern (like the HR Self Service Portal): TopNav-driven
+    // surfaces, no in-page tabs. "New Ticket" is an action (Raise-a-ticket modal)
+    // on the My Support surface, so it is not a menu item.
     label: 'Support',
     icon: Headset,
     children: true,
     userOnlyMenu: true,
-    columns: [[
-      { title: 'Help', items: [
-         { label: 'My Tickets', to: '/dashboard/support/tickets', icon: Ticket },
-         { label: 'New Ticket', to: '/dashboard/support/new', icon: Plus }
-      ]}
-    ], [
-      { title: 'Resources', items: [
-         { label: 'Knowledge Base', to: '/dashboard/support/knowledge-base', icon: BookOpen },
-         { label: 'Announcements', to: '/dashboard/support/announcements', icon: Megaphone }
-      ]}
-    ]]
+    // The 3 user-facing sub-modules, mirroring the admin Support menu structure
+    // (Tickets · Knowledge Base · Announcements — the surfaces with /me/* APIs).
+    // Full operational support workspace — each module is its own page with its
+    // own internal tabs (driven by src/views/support-desk/supportModules.js).
+    // Registry-driven: the full operational agent workspace (employee panel).
+    columns: buildSupportColumns('employee', 'support')
   },
    {
     label: 'Reports',

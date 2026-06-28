@@ -1,7 +1,7 @@
 <template>
-  <div class="sd-new">
+  <div class="sd-new" :class="{ embedded }">
     <Motion
-      as="div" class="sd-new-card sd-card"
+      as="div" class="sd-new-card sd-card" :class="{ bare: embedded }"
       :initial="{ opacity: 0, y: 16 }" :animate="{ opacity: 1, y: 0 }"
       :transition="{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }"
     >
@@ -16,7 +16,7 @@
       </div>
 
       <form v-else class="sd-form" @submit.prevent="submit">
-        <h3 class="sd-new-title">Raise a support ticket</h3>
+        <h3 v-if="!embedded" class="sd-new-title">Raise a support ticket</h3>
         <label class="sd-field"><span class="sd-label">Subject <em>*</em></span>
           <input v-model="form.subject" class="sd-input" placeholder="Brief summary of your issue" /></label>
         <label class="sd-field"><span class="sd-label">Description</span>
@@ -41,7 +41,7 @@ import { Send, CheckCircle2 } from 'lucide-vue-next'
 import SdSelect from '../components/SdSelect.vue'
 import { createMyTicket, PRIORITIES, TICKET_TYPES } from '@/composables/useSupportDesk'
 
-defineProps({ dashboard: { type: Object, default: null }, loading: { type: Boolean, default: false }, createSignal: { type: Number, default: 0 } })
+defineProps({ dashboard: { type: Object, default: null }, loading: { type: Boolean, default: false }, createSignal: { type: Number, default: 0 }, embedded: { type: Boolean, default: false } })
 const emit = defineEmits(['go', 'changed'])
 
 const blank = () => ({ subject: '', description: '', priority: 'medium', ticket_type: 'incident' })
@@ -63,7 +63,10 @@ const reset = () => { done.value = null; form.value = blank(); error.value = '' 
 
 <style scoped>
 .sd-new { display: grid; place-items: start center; padding-top: 8px; }
+.sd-new.embedded { padding-top: 0; }
 .sd-new-card { width: min(620px, 100%); padding: 28px 28px 30px; }
+/* In a modal the shell already supplies the card chrome + title. */
+.sd-new-card.bare { width: 100%; padding: 0; background: none; border: none; box-shadow: none; }
 .sd-new-title { font-size: 18px; font-weight: 800; color: var(--sd-text); margin: 0 0 18px; }
 .sd-form { display: flex; flex-direction: column; gap: 14px; }
 .sd-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }

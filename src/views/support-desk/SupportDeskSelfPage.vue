@@ -9,21 +9,19 @@
       :actions="heroActions"
       :priority-counts="priorityCounts"
       :loading="loading"
-      @go="selectTab"
+      @go="onGo"
       @action="onAction"
     />
-
-    <SdTabBar v-model="activeTab" :tabs="TABS" aria-label="My support sections" />
 
     <main class="sd-canvas">
       <transition :name="`sd-slide-${slideDir}`" mode="out-in">
         <component
           v-if="builtComp"
           :is="builtComp"
-          :key="activeTab"
+          :key="renderKey"
           :dashboard="dashboard"
           :loading="loading"
-          @go="selectTab"
+          @go="onGo"
           @changed="loadDashboard"
         />
         <SdSectionPlaceholder
@@ -32,6 +30,11 @@
         />
       </transition>
     </main>
+
+    <!-- Raise a ticket — self-service action (modal), like HR's Apply-modal pattern. -->
+    <SdModalShell :open="createOpen" eyebrow="HELP & SUPPORT" title="Raise a ticket" width="600px" @close="createOpen = false">
+      <SdNewTicketSection embedded @changed="onTicketCreated" @go="onCreateGo" />
+    </SdModalShell>
   </div>
 </template>
 
@@ -43,8 +46,8 @@ import { Ticket, Plus, BookOpen, Megaphone, CheckCircle2, Clock } from 'lucide-v
 import '../../styles/support-desk-theme.css'
 
 import SdLiquidBasin from './components/SdLiquidBasin.vue'
-import SdTabBar from './components/SdTabBar.vue'
 import SdSectionPlaceholder from './sections/SdSectionPlaceholder.vue'
+import SdModalShell from './components/SdModalShell.vue'
 import SdMyTicketsSection from './sections/SdMyTicketsSection.vue'
 import SdNewTicketSection from './sections/SdNewTicketSection.vue'
 import SdMyKnowledgeBaseSection from './sections/SdMyKnowledgeBaseSection.vue'
@@ -55,9 +58,10 @@ import { fetchSelfDashboard } from '@/composables/useSupportDesk'
 const route = useRoute()
 const router = useRouter()
 
+// Self-service surfaces — navigated via the TopNav "Support" menu (no in-page
+// tab bar). "New" is an action (Raise-a-ticket modal), not a surface.
 const TABS = [
-  { key: 'tickets',        label: 'My Tickets',     icon: Ticket,    blurb: 'Your requests with live status, conversation and resolution.', phase: 'SELF-SERVICE' },
-  { key: 'new',            label: 'New Ticket',     icon: Plus,      blurb: 'Raise a new support request.', phase: 'SELF-SERVICE' },
+  { key: 'tickets',        label: 'My Support',     icon: Ticket,    blurb: 'Your requests with live status, conversation and resolution.', phase: 'SELF-SERVICE' },
   { key: 'knowledge-base', label: 'Knowledge Base', icon: BookOpen,  blurb: 'Searchable guides and answers.', phase: 'SELF-SERVICE' },
   { key: 'announcements',  label: 'Announcements',  icon: Megaphone, blurb: 'Service notices and updates.', phase: 'SELF-SERVICE' },
 ]
@@ -65,7 +69,6 @@ const TAB_KEYS = TABS.map(t => t.key)
 const VALID = new Set(TAB_KEYS)
 const BUILT = {
   tickets: SdMyTicketsSection,
-  new: SdNewTicketSection,
   'knowledge-base': SdMyKnowledgeBaseSection,
   announcements: SdMyAnnouncementsSection,
 }
@@ -75,12 +78,26 @@ const slideDir = ref('forward')
 const activeMeta = computed(() => TABS.find(t => t.key === activeTab.value) || TABS[0])
 const builtComp = computed(() => BUILT[activeTab.value] || null)
 
+// Re-key the My Support surface after a ticket is raised so its list refetches.
+const listRefreshKey = ref(0)
+const renderKey = computed(() => activeTab.value === 'tickets' ? `tickets-${listRefreshKey.value}` : activeTab.value)
+
+// Raise-a-ticket modal
+const createOpen = ref(false)
+const onTicketCreated = () => { loadDashboard(); listRefreshKey.value++ }
+const onCreateGo = (key) => { createOpen.value = false; if (key === 'tickets') selectTab('tickets') }
+
 const selectTab = (key) => {
   if (!VALID.has(key) || key === activeTab.value) return
   router.replace({ name: 'SupportSelfTab', params: { tab: key } })
 }
+// `new` is intercepted into the modal; everything else is a surface switch.
+const onGo = (key) => {
+  if (key === 'new' || key === 'new-ticket') { createOpen.value = true; return }
+  selectTab(key)
+}
 const onAction = (key) => {
-  if (key === 'new-ticket') selectTab('new')
+  if (key === 'new-ticket') createOpen.value = true
   else if (key === 'knowledge-base') selectTab('knowledge-base')
 }
 

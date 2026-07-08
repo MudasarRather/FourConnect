@@ -19,6 +19,7 @@ const STATUS = {
   in_progress: ['--sd-st-progress', 'In Progress'],
   pending_customer: ['--sd-st-pending', 'Pending Customer'],
   pending_vendor: ['--sd-st-pending', 'Pending Vendor'],
+  on_hold: ['--sd-st-hold', 'On Hold'],
   escalated: ['--sd-st-escalated', 'Escalated'],
   resolved: ['--sd-st-resolved', 'Resolved'],
   closed: ['--sd-st-closed', 'Closed'],
@@ -53,7 +54,12 @@ const label = computed(() => entry.value[1])
   background: color-mix(in srgb, var(--pc) 13%, transparent);
   border: 1px solid color-mix(in srgb, var(--pc) 32%, transparent);
   white-space: nowrap;
+  /* In a clipping table cell, truncate INSIDE the pill (rounded edge intact) instead of
+     letting the cell chop the pill mid-shape. */
+  max-width: 100%;
 }
+.sd-pill-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.sd-pill-dot { flex-shrink: 0; }
 .sd-pill-dot {
   width: 6px; height: 6px; border-radius: 50%;
   background: var(--pc);

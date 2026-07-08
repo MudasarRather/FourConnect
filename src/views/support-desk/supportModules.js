@@ -27,7 +27,27 @@ import { defineAsyncComponent } from 'vue'
 const A = (loader) => defineAsyncComponent(loader)
 // Sections (reused as tab bodies)
 const SdDashboardSection = A(() => import('./sections/SdDashboardSection.vue'))
+const SdTicketDashboard = A(() => import('./sections/SdTicketDashboard.vue'))
 const SdTicketsSection = A(() => import('./sections/SdTicketsSection.vue'))
+const SdTicketListSection = A(() => import('./sections/SdTicketListSection.vue'))
+const SdAllTicketsSection = A(() => import('./sections/SdAllTicketsSection.vue'))
+const SdUnassignedSection = A(() => import('./sections/SdUnassignedSection.vue'))
+const SdOpenTicketsSection = A(() => import('./sections/SdOpenTicketsSection.vue'))
+const SdPendingCustomerSection = A(() => import('./sections/SdPendingCustomerSection.vue'))
+const SdPendingVendorSection = A(() => import('./sections/SdPendingVendorSection.vue'))
+const SdOnHoldSection = A(() => import('./sections/SdOnHoldSection.vue'))
+const SdCriticalTicketsSection = A(() => import('./sections/SdCriticalTicketsSection.vue'))
+const SdEscalatedSection = A(() => import('./sections/SdEscalatedSection.vue'))
+const SdBreachedSection = A(() => import('./sections/SdBreachedSection.vue'))
+const SdOverdueSection = A(() => import('./sections/SdOverdueSection.vue'))
+const SdReopenedSection = A(() => import('./sections/SdReopenedSection.vue'))
+const SdResolvedSection = A(() => import('./sections/SdResolvedSection.vue'))
+const SdClosedSection = A(() => import('./sections/SdClosedSection.vue'))
+const SdArchivedSection = A(() => import('./sections/SdArchivedSection.vue'))
+const SdTeamTicketsSection = A(() => import('./sections/SdTeamTicketsSection.vue'))
+const SdQueuesSection = A(() => import('./sections/SdQueuesSection.vue'))
+const SdTicketCalendarSection = A(() => import('./sections/SdTicketCalendarSection.vue'))
+const SdTemplatesSection = A(() => import('./sections/SdTemplatesSection.vue'))
 const SdMyTicketsSection = A(() => import('./sections/SdMyTicketsSection.vue'))
 const SdNewTicketSection = A(() => import('./sections/SdNewTicketSection.vue'))
 const SdProblemsSection = A(() => import('./sections/SdProblemsSection.vue'))
@@ -56,6 +76,10 @@ const self = (key, label, comp) => ({ key, label, kind: 'self', comp })
 const tickets = (key, label, scope) => ({ key, label, kind: 'tickets', comp: SdTicketsSection, scope })
 const feed = (key, label, comp) => ({ key, label, kind: 'feed', comp })
 const ph = (key, label, phase, blurb) => ({ key, label, kind: 'placeholder', phase, blurb })
+// Detailed per-scope list workspace (SdTicketListSection, descriptor-driven). scope = tab key.
+const list = (key, label) => ({ key, label, kind: 'ticket-list', comp: SdTicketListSection, scope: key })
+// Phase-3 workspace tools (team/queues/calendar/templates) — get { panel, agentReveal }.
+const tool = (key, label, comp) => ({ key, label, kind: 'ticket-tool', comp })
 
 export const SUPPORT_MODULES = [
   /* ───────────────────────── EMPLOYEE (full operational) ───────────────────────── */
@@ -76,33 +100,111 @@ export const SUPPORT_MODULES = [
     verticalRail: true, // renders the vertical SdWorkspaceRail menu instead of the horizontal tab bar
     sub: 'Triage, route and resolve — intake to closure against the SLA frontier.',
     tabs: [
+      // Dashboard renders DIFFERENTLY per panel (SdTicketDashboard dispatcher):
+      // admin/agent → crimson Operations Command Deck · employee → emerald Personal Console.
+      { key: 'dashboard', label: 'Dashboard', kind: 'ticket-dashboard', comp: SdTicketDashboard },
       self('my', 'My Tickets', SdMyTicketsSection),
-      tickets('all', 'All Tickets', 'all'),
-      tickets('unassigned', 'Unassigned', 'unassigned'),
-      tickets('open', 'Open / In Progress', 'in_progress'),
-      tickets('pending-customer', 'Pending Customer', 'pending_customer'),
-      tickets('pending-vendor', 'Pending Vendor', 'pending_vendor'),
-      tickets('critical', 'Critical', 'critical'),
-      tickets('escalated', 'Escalated', 'escalated'),
-      tickets('breached', 'SLA Breached', 'sla_breached'),
-      tickets('resolved', 'Resolved', 'resolved'),
-      tickets('closed', 'Closed', 'closed'),
       self('new', 'Create Ticket', SdNewTicketSection),
-      ph('team', 'Team Tickets', 'PHASE 3 · TEAMS', 'Per-team queues land with the Team Management module.'),
-      ph('assigned', 'Assigned', 'PHASE 1 · TICKETS'),
-      ph('on-hold', 'On Hold', 'PHASE 1 · TICKETS', 'A dedicated On-Hold state with SLA pause arrives in Phase 1.'),
-      ph('reopened', 'Reopened', 'PHASE 1 · TICKETS'),
-      ph('overdue', 'Overdue', 'PHASE 1 · TICKETS'),
-      ph('archived', 'Archived', 'PHASE 1 · TICKETS'),
-      ph('calendar', 'Calendar', 'PHASE 1 · TICKETS', 'Due / follow-up / escalation dates on a day-week-month calendar.'),
-      ph('templates', 'Templates', 'PHASE 2 · TICKETS', 'Reusable ticket templates that pre-fill the create form.'),
+      // Detailed per-scope list workspaces — full menu on BOTH panels. Each is a
+      // distinct descriptor-driven page (ticketScopes.js); data is agent-aware
+      // (agents → org-wide, plain employees → their own tickets in that status).
+      // All Tickets = the cinematic "Team Operations Command Center" (its own section,
+      // team-scoped via /me/tickets/command-center). Keeps kind:'ticket-list' so the
+      // workspace passes {scope,panel,agentReveal,dashboard} exactly like the others.
+      { key: 'all', label: 'All Tickets', kind: 'ticket-list', comp: SdAllTicketsSection, scope: 'all' },
+      // Unassigned = the cinematic "Claim Field" (own section, team-sealed to my claimable
+      // pool via /me/tickets/unassigned-queue). Keeps kind:'ticket-list' so the workspace
+      // passes {scope,panel,agentReveal,dashboard} exactly like the others.
+      { key: 'unassigned', label: 'Unassigned', kind: 'ticket-list', comp: SdUnassignedSection, scope: 'unassigned' },
+      // Open / In Progress = the cinematic "Live Operations Floor" (own section, Momentum
+      // Pipeline signature). Keeps kind:'ticket-list' so the workspace passes {scope,panel,
+      // agentReveal,dashboard} exactly like All/Unassigned. Strict scope = open + in_progress.
+      { key: 'open', label: 'Open / In Progress', kind: 'ticket-list', comp: SdOpenTicketsSection, scope: 'open' },
+      // Pending Customer = the cinematic "Silence Chronometer" awaiting-reply console (own
+      // section, SLA-paused workflow, silence-cadence). Keeps kind:'ticket-list' so the
+      // workspace passes {scope,panel,agentReveal,dashboard} exactly like Open/All/Unassigned.
+      { key: 'pending-customer', label: 'Pending Customer', kind: 'ticket-list', comp: SdPendingCustomerSection, scope: 'pending_customer' },
+      // Pending Vendor = the cinematic "Vendor Relay Station" — a 3D deep-space relay hero
+      // (three.js) + vendor hand-off lifecycle (dispatch / chase / OLA / bring-back). Keeps
+      // kind:'ticket-list' so the workspace passes {scope,panel,agentReveal,dashboard} exactly
+      // like Pending Customer. Strict scope = pending_vendor.
+      { key: 'pending-vendor', label: 'Pending Vendor', kind: 'ticket-list', comp: SdPendingVendorSection, scope: 'pending_vendor' },
+      // On Hold = the cinematic "Suspension Dock" — held tickets hang as crates from a
+      // gantry (hold-reason taxonomy, release runway, auto-resume + stale-review
+      // governance). Same {scope,panel,agentReveal,dashboard} contract as its siblings.
+      { key: 'on-hold', label: 'On Hold', kind: 'ticket-list', comp: SdOnHoldSection, scope: 'on_hold' },
+      // Critical = the cinematic "War Room" — criticals ∪ major incidents (include_major on
+      // the list, team-sealed /me/tickets/critical/stats rollup), ACK/MTTA, stakeholder
+      // update cadence, guided mode, presence + the war-room console. Same
+      // {scope,panel,agentReveal,dashboard} contract as its siblings.
+      { key: 'critical', label: 'Critical', kind: 'ticket-list', comp: SdCriticalTicketsSection, scope: 'critical' },
+      // Escalated = the cinematic "Thermal Updraft" — escalations ride a heat column
+      // (altitude = time at tier); tier ledger + reason spectrum, escalation ACK/eMTTA,
+      // response clock, reasoned de-escalation, auto-escalation sweep lenses. Same
+      // {scope,panel,agentReveal,dashboard} contract as its siblings.
+      { key: 'escalated', label: 'Escalated', kind: 'ticket-list', comp: SdEscalatedSection, scope: 'escalated' },
+      // SLA Breached = the cinematic "Time-Debt Meter" — every missed SLA accrues debt on
+      // a live compounding odometer; worst-debtors ledger, breach-kind/aging lenses, per-
+      // ticket SLA anatomy, RCA capture console, at-risk rail (prevent the NEXT breach),
+      // guided triage. Opening it runs the backend breach-flag sweep so idle past-due
+      // tickets surface. Same {scope,panel,agentReveal,dashboard} contract as its siblings.
+      { key: 'breached', label: 'SLA Breached', kind: 'ticket-list', comp: SdBreachedSection, scope: 'breached' },
+      // Overdue = the cinematic "Gravity Well" RECOVERY desk — open tickets with the clock
+      // RUNNING past either target (overdue_kind=any: resolution AND first-response misses)
+      // orbit a canvas singularity (depth = lateness); tipping-point strip (due ≤2h),
+      // recovery roster, ranked Recovery Run guided mode, owner-nudge (single + bulk,
+      // 24h-throttled), horizon view, sealed /me/tickets/overdue/stats. Opening it runs
+      // the backend breach-flag sweep. Distinct from Breached (the debt ledger/RCA desk):
+      // everything here is live and still savable. Same {scope,panel,agentReveal,dashboard}
+      // contract as its siblings.
+      { key: 'overdue', label: 'Overdue', kind: 'ticket-list', comp: SdOverdueSection, scope: 'overdue' },
+      // Reopened = the cinematic "Möbius Loop" RETURNS desk — resolved once, back again.
+      // Tickets ride a one-sided band (loops = reopen cycles); chronic rail (≥2×), reopen
+      // source/reason-code taxonomy, previous-fix context, fresh re-resolution clock,
+      // portal auto-reopen lens, ranked Quality Loop Run guided mode, sealed
+      // /me/tickets/reopened/stats. Same {scope,panel,agentReveal,dashboard} contract
+      // as its siblings.
+      { key: 'reopened', label: 'Reopened', kind: 'ticket-list', comp: SdReopenedSection, scope: 'reopened' },
+      // NOTE: no 'assigned' tab — for agents scope=my is exactly what My Tickets renders
+      // (see SdMyTicketsSection); /tickets/assigned redirects to /tickets/my in the router.
+      // Resolved = the cinematic "Closeout" quality-gate desk (sealed /resolved/stats,
+      // auto-close rail, CSAT/FCR quality board, resolver leaderboard, closeout run).
+      { key: 'resolved', label: 'Resolved', kind: 'ticket-list', comp: SdResolvedSection, scope: 'resolved' },
+      // Closed = the cinematic "Archive of Record" desk (sealed /closed/stats, closure
+      // provenance, follow-up chains, KCS knowledge harvest, closure certificates).
+      { key: 'closed', label: 'Closed', kind: 'ticket-list', comp: SdClosedSection, scope: 'closed' },
+      // Archived = the cinematic "Deep Storage" recovery-and-retention desk (sealed
+      // /archived/stats, coded archive reasons, restore/legal-hold/purge governance,
+      // recovery review). agentOnly: plain employees never see the tab — agents get
+      // their team's shelf (server-sealed), superusers the whole desk.
+      { key: 'archived', label: 'Archived', kind: 'ticket-list', comp: SdArchivedSection, scope: 'archived', agentOnly: true },
+      // Team Command is panel-split INSIDE the section: employee panel → the cinematic
+      // "Squad Command" Team Ops desk (sealed /me/tickets/team-queue + /stats: roster
+      // telemetry, take-next, audited handoffs, round-robin distribute, collision watch,
+      // flow balance); admin panel → the cinematic "Team Command" oversight desk
+      // (sealed /teams/overview + /teams/{id}/stats|tickets|rebalance: fleet board,
+      // per-team drill, guarded team CRUD). Key stays 'team' for URL stability.
+      tool('team', 'Team Command', SdTeamTicketsSection),
+      // Calendar = the cinematic "Chrono Desk" — the desk's TIME surface. Sealed
+      // /me/tickets/calendar feed (multi-kind events + local-day buckets + HR holidays +
+      // team business hours in ONE request), month/week/day/agenda views, layer toggles,
+      // conflict/overload warnings, personal reminders, ICS export. agentOnly: the feed
+      // is desk-scoped work telemetry — plain employees track their own tickets on My
+      // Tickets; the workspace's revealPending ensureRoute guard keeps deep links stable.
+      { ...tool('calendar', 'Calendar', SdTicketCalendarSection), agentOnly: true },
+      // Templates is panel-split INSIDE the section: admin panel → the "Copperplate
+      // Studio"; employee panel → the cinematic "Projection Room" agent desk (visibility-
+      // sealed library, personal templates, favorites, run-on-ticket macros, ⌘K apply).
+      // agentOnly: the list/apply API is get_support_agent-gated — before this flag a
+      // plain employee saw the tab but every fetch 403'd into a fake "No templates yet".
+      { ...tool('templates', 'Templates', SdTemplatesSection), agentOnly: true },
     ],
   },
   {
     key: 'queues', label: 'Queues', icon: Inbox, accent: 'var(--sd-gold)', group: 'Tickets', panels: ['employee', 'admin'],
     sub: 'Skill-based work queues — L1/L2/L3, technical, billing, infrastructure.',
     tabs: [
-      ph('overview', 'Queue Overview', 'PHASE 3 · QUEUES', 'Live load, critical count, avg resolution and SLA compliance per queue.'),
+      tool('overview', 'Queue Overview', SdQueuesSection),
       ph('l1', 'L1 Support', 'PHASE 3 · QUEUES'),
       ph('l2', 'L2 Support', 'PHASE 3 · QUEUES'),
       ph('l3', 'L3 Support', 'PHASE 3 · QUEUES'),

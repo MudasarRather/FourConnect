@@ -5,7 +5,7 @@
         v-for="col in columns"
         :key="col.key"
         class="bd-col"
-        :class="{ over: dragOver === col.key }"
+        :class="{ over: dragOver === col.key, resolve: col.resolve }"
         :style="{ '--cc': col.color }"
         @dragover.prevent="dragOver = col.key"
         @dragleave="dragOver === col.key && (dragOver = null)"
@@ -14,7 +14,8 @@
         <header class="bd-col-head">
           <span class="bd-col-rail" />
           <span class="bd-col-title">{{ col.label }}</span>
-          <span class="bd-col-count">{{ col.items.length }}</span>
+          <span v-if="col.resolve" class="bd-col-gate"><CheckCircle2 :size="13" /></span>
+          <span v-else class="bd-col-count">{{ col.items.length }}</span>
         </header>
 
         <div class="bd-col-body">
@@ -43,22 +44,27 @@
             <span class="bd-agent" :title="t.assigned_agent_name || 'Unassigned'">{{ initials(t.assigned_agent_name) }}</span>
           </article>
 
-          <p v-if="!col.items.length" class="bd-col-empty">Drop here</p>
+          <p v-if="col.resolve" class="bd-col-empty gate">Drop to resolve →</p>
+          <p v-else-if="!col.items.length" class="bd-col-empty">Drop here</p>
         </div>
       </section>
     </div>
-    <p class="bd-hint"><Waypoints :size="13" /> Drag a card across columns to change its status. {{ capNote }}</p>
+    <p class="bd-hint"><Waypoints :size="13" /> Drag a card across columns to advance its status. {{ capNote }}</p>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Flame, Timer, Waypoints } from 'lucide-vue-next'
+import { Flame, Timer, Waypoints, CheckCircle2 } from 'lucide-vue-next'
 
 const props = defineProps({
   tickets: { type: Array, default: () => [] },
   now: { type: Number, default: () => Date.now() },
   capped: { type: Boolean, default: false },
+  // Optional column set — lets a scope (e.g. Open/In-Progress) show a focused set of
+  // work-state lanes + a Resolve drop-target. Falls back to the full status board.
+  // Each: { key, label, color, resolve? }. A `resolve` column is a drop-only gate.
+  columns: { type: Array, default: null },
 })
 const emit = defineEmits(['open', 'move'])
 
@@ -74,7 +80,8 @@ const COLS = [
 const PRI = { critical: 'var(--sd-pri-critical)', urgent: 'var(--sd-pri-urgent)', high: 'var(--sd-pri-high)', medium: 'var(--sd-pri-medium)', low: 'var(--sd-pri-low)' }
 const priColor = (p) => PRI[p] || 'var(--sd-steel)'
 
-const columns = computed(() => COLS.map(c => ({ ...c, items: props.tickets.filter(t => t.status === c.key) })))
+const columns = computed(() => (props.columns && props.columns.length ? props.columns : COLS)
+  .map(c => ({ ...c, items: c.resolve ? [] : props.tickets.filter(t => t.status === c.key) })))
 const capNote = computed(() => props.capped ? 'Showing the first 100 — refine with filters to narrow the board.' : '')
 
 const dragId = ref(null)
@@ -122,6 +129,11 @@ const slaTitle = (t) => { const d = t.resolution_due_at || t.response_due_at; re
 }
 .sd-board.dragging .bd-col { border-style: dashed; }
 .bd-col.over { border-color: var(--cc); background: color-mix(in srgb, var(--cc) 8%, var(--sd-surface-glass)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cc) 40%, transparent); }
+/* Resolve gate — a drop-only lane that opens the ITIL resolve modal on drop. */
+.bd-col.resolve { flex: 0 0 176px; border-style: dashed; border-color: color-mix(in srgb, var(--sd-success) 35%, var(--sd-border)); background: color-mix(in srgb, var(--sd-success) 6%, var(--sd-surface-glass)); }
+.bd-col.resolve.over { border-color: var(--sd-success); background: color-mix(in srgb, var(--sd-success) 12%, var(--sd-surface-glass)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sd-success) 45%, transparent); }
+.bd-col-gate { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; color: var(--sd-success); background: color-mix(in srgb, var(--sd-success) 16%, transparent); }
+.bd-col-empty.gate { color: var(--sd-success); border-color: color-mix(in srgb, var(--sd-success) 35%, transparent); font-weight: 700; }
 
 .bd-col-head { display: flex; align-items: center; gap: 8px; padding: 12px 14px 10px; position: relative; }
 .bd-col-rail { width: 8px; height: 8px; border-radius: 50%; background: var(--cc); box-shadow: 0 0 8px var(--cc); }

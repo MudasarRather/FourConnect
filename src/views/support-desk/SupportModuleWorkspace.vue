@@ -5,7 +5,7 @@
       <SdWorkspaceRail
         v-if="vertical"
         :model-value="activeTabKey"
-        :tabs="activeModule.tabs"
+        :tabs="visibleTabs"
         :mod="activeModule"
         :icons="TICKET_ICONS"
         :collapsed="railCollapsed"
@@ -17,7 +17,7 @@
       <template v-else>
         <SdModuleHeader :mod="activeModule" />
         <SdWorkspaceTabBar
-          :tabs="activeModule.tabs"
+          :tabs="visibleTabs"
           :model-value="activeTabKey"
           :accent="activeModule.accent"
           @update:modelValue="selectTab"
@@ -25,27 +25,34 @@
       </template>
 
       <main class="sw-main">
+        <!-- The transition's direct child MUST be a stable element, NOT the async
+             <component> itself — otherwise `mode="out-in"` animates the async loading
+             placeholder (a comment node) and the resolved section never enters until a
+             forced re-render (the "menu doesn't load until I reload" bug). Mirrors the
+             proven HR-workspace pattern: keyed wrapper element, async section inside. -->
         <transition name="sw-fade" mode="out-in">
-          <SdSectionPlaceholder
-            v-if="activeTab && activeTab.kind === 'placeholder'"
-            :key="tabKeyId + ':ph'"
-            v-bind="tabProps"
-          />
-          <component
-            v-else-if="activeTab && activeTab.comp"
-            :is="activeTab.comp"
-            :key="tabKeyId"
-            v-bind="tabProps"
-            @go="goModule"
-            @changed="onChanged"
-            @open="openDrawer"
-          />
+          <div class="sw-canvas" :key="tabKeyId">
+            <SdSectionPlaceholder
+              v-if="activeTab && activeTab.kind === 'placeholder'"
+              v-bind="tabProps"
+            />
+            <component
+              v-else-if="activeTab && activeTab.comp"
+              :is="activeTab.comp"
+              v-bind="tabProps"
+              @go="goModule"
+              @changed="onChanged"
+              @open="openDrawer"
+              @new="onNew"
+            />
+          </div>
         </transition>
       </main>
     </div>
 
-    <!-- Rail "New Ticket" + ?new= deep-link; ?ticket= drawer for feed-opened tickets. -->
-    <SdTicketCreateModal :open="createOpen" @close="createOpen = false" @created="onCreated" />
+    <!-- Rail "New Ticket" + ?new= deep-link; ?ticket= drawer for feed-opened tickets.
+         Panel-aware: admin/agents hit createTicket; self-service employees createMyTicket. -->
+    <SdTicketCreateModal :open="createOpen" :panel="panel" @close="createOpen = false" @created="onCreated" />
     <SdTicketDrawer :ticket-id="drawerId" @close="drawerId = null" @changed="onChanged" />
   </div>
 </template>
@@ -66,7 +73,7 @@ import SdSectionPlaceholder from './sections/SdSectionPlaceholder.vue'
 import SdTicketDrawer from './drawers/SdTicketDrawer.vue'
 import SdTicketCreateModal from './modals/SdTicketCreateModal.vue'
 import { getSupportModule, defaultTabKey } from './supportModules.js'
-import { fetchSupportDashboard, listTickets } from '@/composables/useSupportDesk'
+import { fetchSupportDashboard, fetchSelfDashboard, detectSupportAgent, listTickets } from '@/composables/useSupportDesk'
 
 // Per-tab icons for the vertical Tickets rail (registry tabs carry no icon of their own).
 const TICKET_ICONS = {
@@ -86,16 +93,36 @@ const base = computed(() => (panel.value === 'employee' ? '/user/support' : '/ad
 
 const activeModule = computed(() => getSupportModule(panel.value, route.params.module))
 const vertical = computed(() => !!activeModule.value.verticalRail)
+
+// Support-agent reveal (Hybrid): admin always; employee only after a successful ops probe.
+const agentReveal = ref(panel.value === 'admin')
+// True while the employee-panel agent probe is still in flight — ensureRoute must not
+// canonicalize a deep link to an agent-only tab (e.g. /tickets/archived) away to the
+// first visible tab before the reveal lands. bootDetect clears it and re-settles the URL.
+const revealPending = ref(panel.value !== 'admin')
+
+// Tabs visible for this panel + role. `adminOnly` tabs hide outside admin; `agentOnly`
+// tabs (the operational ticket views) hide for self-service employees until they're a
+// support agent — so a regular employee sees a slim self-service Tickets menu.
+const visibleTabs = computed(() => activeModule.value.tabs.filter(t => {
+  if (t.adminOnly && panel.value !== 'admin') return false
+  if (t.agentOnly && !(panel.value === 'admin' || agentReveal.value)) return false
+  return true
+}))
+
 const activeTabKey = computed(() => {
   const t = route.params.tab
-  return activeModule.value.tabs.some(x => x.key === t) ? t : defaultTabKey(activeModule.value)
+  return visibleTabs.value.some(x => x.key === t) ? t : (visibleTabs.value[0]?.key || defaultTabKey(activeModule.value))
 })
-const activeTab = computed(() => activeModule.value.tabs.find(t => t.key === activeTabKey.value) || activeModule.value.tabs[0])
+const activeTab = computed(() => visibleTabs.value.find(t => t.key === activeTabKey.value) || visibleTabs.value[0] || activeModule.value.tabs[0])
 const tabKeyId = computed(() => `${activeModule.value.key}:${activeTabKey.value}`)
 
 /* ── Canonicalise the URL (valid module + explicit tab) ── */
 const ensureRoute = () => {
   const m = activeModule.value
+  // Hold the URL steady while the agent probe decides whether an agent-only tab is
+  // about to reveal — otherwise a deep link bounces to the first tab and never returns.
+  if (revealPending.value && m.tabs.some(t => t.key === route.params.tab && t.agentOnly)) return
   const wantTab = activeTabKey.value
   if (route.params.module !== m.key || route.params.tab !== wantTab) {
     router.replace(`${base.value}/${m.key}/${wantTab}`)
@@ -111,32 +138,67 @@ const toggleRail = () => {
 }
 
 /* ── Data (only fetched for the kinds that need it) ── */
-const dashboard = ref(null)
+const dashboard = ref(null)          // ops dashboard (admin) / agent-cockpit data (employee)
+const selfDashboard = ref(null)      // personal dashboard (employee)
 const dashLoading = ref(false)
 const workingSet = ref([])
 const wsLoading = ref(false)
 const now = ref(Date.now())
 const drawerId = ref(null)
 let tick = null
+let dashPoll = null
 
-const loadDashboard = async () => {
-  dashLoading.value = true
-  try { dashboard.value = await fetchSupportDashboard() } catch { dashboard.value = null } finally { dashLoading.value = false }
+// `silent` = background re-poll: no skeleton flash, and a failed poll keeps the
+// last good payload instead of blanking the board.
+const loadDashboard = async (silent = false) => {
+  if (!silent) dashLoading.value = true
+  try { dashboard.value = await fetchSupportDashboard() } catch { if (!silent) dashboard.value = null } finally { dashLoading.value = false }
 }
 const loadWorkingSet = async () => {
   wsLoading.value = true
   try { workingSet.value = (await listTickets({ page: 1, limit: 100 })).items || [] } catch { workingSet.value = [] } finally { wsLoading.value = false }
 }
 
+// Ticket "Dashboard" tab — panel-aware so a non-agent employee never hits the
+// superuser-only ops endpoint (which would 403 → blank). Admin → ops dashboard;
+// employee → personal dashboard PLUS a shared one-time agent probe that both
+// reveals the Agent Cockpit and unlocks the operational tabs.
+const loadTicketDash = async (silent = false) => {
+  if (!silent) dashLoading.value = true
+  try {
+    if (panel.value === 'admin') {
+      agentReveal.value = true
+      dashboard.value = await fetchSupportDashboard()
+    } else {
+      selfDashboard.value = await fetchSelfDashboard()
+      const st = await detectSupportAgent(false)
+      agentReveal.value = st.isAgent
+      dashboard.value = st.ops || null
+    }
+  } catch { /* keep last good values */ } finally { dashLoading.value = false }
+}
+
+// Detect agent status on mount for employees, so the operational tabs reveal in
+// the rail even when the user lands on a non-dashboard tab (e.g. /tickets/my).
+const bootDetect = async () => {
+  if (panel.value === 'admin') { agentReveal.value = true; revealPending.value = false; return }
+  try { const st = await detectSupportAgent(false); agentReveal.value = st.isAgent } catch { /* self-service only */ }
+  finally { revealPending.value = false; ensureRoute() }
+}
+
 watch(() => activeTab.value?.kind, (kind) => {
-  if (kind === 'dashboard' || kind === 'tickets') loadDashboard()
-  if (kind === 'feed') loadWorkingSet()
+  if (kind === 'ticket-dashboard') loadTicketDash()
+  else if (kind === 'dashboard' || kind === 'tickets') loadDashboard()
+  else if (kind === 'feed') loadWorkingSet()
 }, { immediate: true })
 
 const tabProps = computed(() => {
   const t = activeTab.value
   if (!t) return {}
   switch (t.kind) {
+    case 'ticket-dashboard': return { panel: panel.value, dashboard: dashboard.value, selfDashboard: selfDashboard.value, agentReveal: agentReveal.value, loading: dashLoading.value }
+    case 'ticket-list': return { scope: t.scope, panel: panel.value, agentReveal: agentReveal.value, dashboard: dashboard.value }
+    case 'ticket-tool': return { panel: panel.value, agentReveal: agentReveal.value }
     case 'dashboard': return { dashboard: dashboard.value, loading: dashLoading.value }
     case 'tickets': return { dashboard: dashboard.value, scope: t.scope || 'all' }
     case 'feed': return { tickets: workingSet.value, now: now.value, loading: wsLoading.value }
@@ -149,27 +211,44 @@ const tabProps = computed(() => {
 const selectTab = (key) => { if (key !== activeTabKey.value) router.push(`${base.value}/${activeModule.value.key}/${key}`) }
 const goModule = (key) => { if (key) router.push(`${base.value}/${key}`) }
 const onChanged = () => {
-  if (['dashboard', 'tickets'].includes(activeTab.value?.kind)) loadDashboard()
-  if (activeTab.value?.kind === 'feed') loadWorkingSet()
+  const kind = activeTab.value?.kind
+  if (kind === 'ticket-dashboard') loadTicketDash()
+  else if (['dashboard', 'tickets'].includes(kind)) loadDashboard()
+  else if (kind === 'feed') loadWorkingSet()
 }
 const openDrawer = (id) => { drawerId.value = String(id) }
 
-/* ── create modal (rail "New Ticket" + ?new=1) ── */
+/* ── create (rail "New Ticket" + ?new=1) ── */
+// Admin/agents get the full admin create modal (createTicket endpoint). A non-agent
+// employee can't use it (403) — send them to the self-service "Create Ticket" tab.
 const createOpen = ref(false)
-const onNew = () => { createOpen.value = true }
+// Every "raise a ticket" entry point now lands on the full-page Intelligent
+// Intake console (`tickets/new`) — one canonical create experience, panel-aware
+// (employee → createMyTicket, agent → createTicket). The legacy quick-create
+// modal stays mounted below as an inert fallback (never auto-opened).
+const onNew = () => { router.push(`${base.value}/tickets/new`) }
 const onCreated = () => { createOpen.value = false; onChanged() }
 const fireCreate = () => {
-  createOpen.value = true
   const q = { ...route.query }; delete q.new
-  router.replace({ path: route.path, query: q })
+  router.replace({ path: `${base.value}/tickets/new`, query: q })
 }
 watch(() => route.query.new, (v) => { if (v) fireCreate() })
 
 onMounted(() => {
+  bootDetect()
   if (route.query.new) fireCreate()
   tick = setInterval(() => { now.value = Date.now() }, 1000)
+  // Live board: the Concourse's Solari rows read the legacy dashboard payload, which
+  // was fetched ONCE per tab activation — the intel poll inside SdIntelDashboard kept
+  // half the board fresh while these rows froze. Visibility-gated 60s silent re-poll.
+  dashPoll = setInterval(() => {
+    if (document.visibilityState !== 'visible') return
+    const kind = activeTab.value?.kind
+    if (kind === 'ticket-dashboard') loadTicketDash(true)
+    else if (kind === 'dashboard' || kind === 'tickets') loadDashboard(true)
+  }, 60000)
 })
-onUnmounted(() => clearInterval(tick))
+onUnmounted(() => { clearInterval(tick); clearInterval(dashPoll) })
 </script>
 
 <style scoped>
@@ -177,6 +256,7 @@ onUnmounted(() => clearInterval(tick))
 .sw-stack { display: flex; flex-direction: column; gap: 16px; }
 .sw-vert { display: flex; align-items: flex-start; gap: 0; }
 .sw-main { flex: 1; min-width: 0; }
+.sw-canvas { min-width: 0; }
 .sw-vert .sw-main { padding: 4px 2px 36px 8px; }
 
 .sw-fade-enter-active, .sw-fade-leave-active { transition: opacity 0.26s var(--sd-spring), transform 0.26s var(--sd-spring); }

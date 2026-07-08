@@ -114,6 +114,8 @@ const routes = [
             // Employee (agent) panel = the FULL operational support workspace.
             // Each module is its own page (HR-style) with its own internal tabs.
             { path: 'support', redirect: '/user/support/tickets/my' },
+            // 'Assigned' tab was removed — for agents scope=my duplicates My Tickets.
+            { path: 'support/tickets/assigned', redirect: '/user/support/tickets/my' },
             // Tickets renders the vertical SdWorkspaceRail (driven by its registry tabs) via the generic workspace.
             {
                 path: 'support/:module(dashboards|tickets|queues|incidents|problems|service-requests|changes|knowledge-base|sla|communication|assets|team|automation|ai|approvals|surveys|monitoring|reports|clients)/:tab?',
@@ -345,6 +347,8 @@ const routes = [
             // Admin = slim config + oversight (agent operations live on /user/support).
             // Each module is its own page with internal tabs via SupportModuleWorkspace.
             { path: 'support-desk', redirect: '/admin/support-desk/dashboard' },
+            // 'Assigned' tab was removed — for agents scope=my duplicates My Tickets.
+            { path: 'support-desk/tickets/assigned', redirect: '/admin/support-desk/tickets/my' },
             // Tickets renders the vertical SdWorkspaceRail (driven by its registry tabs) via the generic workspace.
             {
                 path: 'support-desk/:module(dashboard|dashboards|tickets|queues|incidents|problems|service-requests|changes|knowledge-base|sla|communication|assets|team|automation|ai|approvals|surveys|monitoring|reports|clients|service-catalog|announcements|channels|integrations|settings|audit)/:tab?',

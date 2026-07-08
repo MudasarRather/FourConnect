@@ -42,7 +42,8 @@
       "Skill(deep-research:*)",
       "Bash(cd /c/Projects/FourConnectService && sed -n '510,522p' app/utils/hr/attendance_logic.py)",
       "Read(//c/c/Projects/FourConnectService/app/utils/hr/**)",
-      "Read(//c/Projects/FourConnectService/app/models/hr/**)"
+      "Read(//c/Projects/FourConnectService/app/models/hr/**)",
+      "Read(//c/Projects/FourConnectService/app/utils/support_desk/**)"
     ]
   }
 }

@@ -53,6 +53,7 @@
   --sd-st-open:        #fbbf24;  --sd-st-open-soft:        rgba(251, 191, 36, 0.13);
   --sd-st-pending:     #d6b25e;  --sd-st-pending-soft:     rgba(214, 178, 94, 0.13);
   --sd-st-progress:    #fb923c;  --sd-st-progress-soft:    rgba(251, 146, 60, 0.13);
+  --sd-st-hold:        #b59e7d;  --sd-st-hold-soft:        rgba(181, 158, 125, 0.14);  /* warm dormant stone (parked) */
   --sd-st-escalated:   #f97316;  --sd-st-escalated-soft:   rgba(249, 115, 22, 0.13);
   --sd-st-resolved:    #34d399;  --sd-st-resolved-soft:    rgba(52, 211, 153, 0.13);
   --sd-st-closed:      #9ca3af;  --sd-st-closed-soft:      rgba(156, 163, 175, 0.12);
@@ -63,6 +64,237 @@
   --sd-danger:  #ef4444;        --sd-danger-soft:  rgba(239, 68, 68, 0.13);
   --sd-warning: #fbbf24;        --sd-warning-soft: rgba(251, 191, 36, 0.13);
   --sd-steel:   #9ca3af;        --sd-steel-soft:   rgba(156, 163, 175, 0.1);
+
+  /* Pending-Vendor "Relay Station" — cool steel structure (off-network / external) + warm
+     ember signal (our dispatch energy) + emerald return pulse. A brand-safe steel⇄ember
+     duotone, unmistakably distinct from pending-customer's gold and open's crimson.
+     Literal hex is read into the three.js scene (readVar) — keep these plain hex. */
+  --sd-vendor-steel:      #9aa3ac;   --sd-vendor-steel-soft: rgba(154, 163, 172, 0.14);
+  --sd-vendor-steel-brd:  rgba(154, 163, 172, 0.30);
+  --sd-vendor-signal:     #fb923c;   --sd-vendor-signal-soft: rgba(251, 146, 60, 0.14);
+  --sd-vendor-return:     #34d399;   /* emerald — vendor replied / came back */
+  --sd-vendor-overdue:    #ef4444;   --sd-vendor-overdue-soft: rgba(239, 68, 68, 0.14);
+  --sd-vendor-deep:       #2c333b;   /* deep-space void behind the relay */
+  --sd-vendor-grad:       linear-gradient(122deg, #c9d0d8 0%, #fb923c 58%, #ea580c 100%);
+  --sd-vendor-glow:       0 0 30px rgba(154, 163, 172, 0.26);
+
+  /* On-Hold "Suspension Dock" — a warm industrial night dock: dormant-stone crates hung on
+     steel cables under ember work-lamps; emerald = released back into work, red = overdue
+     release. Stone+ember reads warmer + lamp-lit vs the vendor page's cool steel duotone. */
+  --sd-dock-stone:     #b59e7d;   --sd-dock-stone-soft: rgba(181, 158, 125, 0.14);
+  --sd-dock-cable:     #8d949c;   --sd-dock-cable-soft: rgba(141, 148, 156, 0.24);
+  --sd-dock-ember:     #f59e0b;   --sd-dock-ember-soft: rgba(245, 158, 11, 0.14);
+  --sd-dock-lamp:      rgba(251, 191, 36, 0.30);   /* spotlight cone fill */
+  --sd-dock-release:   #34d399;   --sd-dock-release-soft: rgba(52, 211, 153, 0.14);
+  --sd-dock-overdue:   #ef4444;   --sd-dock-overdue-soft: rgba(239, 68, 68, 0.16);
+  --sd-dock-deep:      #14110c;   /* obsidian dock-panel night air (dark in BOTH themes) */
+  --sd-dock-grad:      linear-gradient(122deg, #e7d9c2 0%, #f59e0b 55%, #b45309 100%);
+  --sd-dock-glow:      0 0 30px rgba(181, 158, 125, 0.25);
+
+  /* Critical "War Room" — crimson-scarlet alarm ramp (deliberately hotter/redder than the
+     ops-dash rose). ack = responder-emerald, flare = active-mitigation orange, mi = deep
+     command crimson. Plain hex on the canvas-feeding tokens (instrument reads via readVar). */
+  --sd-crit-core:      #ef4444;   --sd-crit-soft: rgba(239, 68, 68, 0.13);
+  --sd-crit-deep:      #b91c1c;   --sd-crit-deep-soft: rgba(185, 28, 28, 0.18);
+  --sd-crit-flare:     #f97316;   --sd-crit-flare-soft: rgba(249, 115, 22, 0.13);
+  --sd-crit-ack:       #34d399;   --sd-crit-ack-soft: rgba(52, 211, 153, 0.14);
+  --sd-crit-mi:        #dc2626;   --sd-crit-mi-soft: rgba(220, 38, 38, 0.18);
+  --sd-crit-brd:       rgba(239, 68, 68, 0.30);
+  --sd-crit-deep-bg:   #120a0a;   /* obsidian war-room night air (dark in BOTH themes) */
+  --sd-crit-grad:      linear-gradient(122deg, #fca5a5 0%, #ef4444 48%, #b91c1c 100%);
+  --sd-crit-glow:      0 0 30px rgba(239, 68, 68, 0.28);
+
+  /* Escalated "Thermal Updraft" — ember/heat ramp (deliberately warmer/orange vs the
+     war-room crimson). ack = receiving-tier emerald, auto = sweep-amber. Plain hex on the
+     canvas-feeding tokens (the updraft instrument reads them via readVar). */
+  --sd-esc-core:       #f97316;   --sd-esc-soft: rgba(249, 115, 22, 0.13);
+  --sd-esc-hi:         #fb923c;   --sd-esc-hi-soft: rgba(251, 146, 60, 0.14);
+  --sd-esc-deep:       #c2410c;   --sd-esc-deep-soft: rgba(194, 65, 12, 0.18);
+  --sd-esc-ack:        #34d399;   --sd-esc-ack-soft: rgba(52, 211, 153, 0.14);
+  --sd-esc-auto:       #fbbf24;   --sd-esc-auto-soft: rgba(251, 191, 36, 0.15);
+  --sd-esc-brd:        rgba(249, 115, 22, 0.30);
+  --sd-esc-deep-bg:    #120b04;   /* obsidian heat-column night air (dark in BOTH themes) */
+  --sd-esc-grad:       linear-gradient(122deg, #fdba74 0%, #f97316 48%, #c2410c 100%);
+  --sd-esc-glow:       0 0 30px rgba(249, 115, 22, 0.28);
+
+  /* Breached "Time-Debt Meter" — crimson debt ink + tarnished-brass ledger (deliberately
+     darker/monetary vs the war-room red and the updraft ember). repair = emerald escape,
+     risk = amber at-risk rail. Plain hex on instrument-feeding tokens (readVar). */
+  --sd-brc-core:       #dc2626;   --sd-brc-soft: rgba(220, 38, 38, 0.13);
+  --sd-brc-hi:         #f87171;   --sd-brc-hi-soft: rgba(248, 113, 113, 0.14);
+  --sd-brc-deep:       #991b1b;   --sd-brc-deep-soft: rgba(153, 27, 27, 0.18);
+  --sd-brc-brass:      #eab308;   --sd-brc-brass-soft: rgba(234, 179, 8, 0.14);
+  --sd-brc-repair:     #34d399;   --sd-brc-repair-soft: rgba(52, 211, 153, 0.14);
+  --sd-brc-risk:       #fbbf24;   --sd-brc-risk-soft: rgba(251, 191, 36, 0.15);
+  --sd-brc-brd:        rgba(220, 38, 38, 0.30);
+  --sd-brc-deep-bg:    #120607;   /* vault night air behind the meter (dark in BOTH themes) */
+  --sd-brc-grad:       linear-gradient(122deg, #fca5a5 0%, #dc2626 48%, #7f1d1d 100%);
+  --sd-brc-glow:       0 0 30px rgba(220, 38, 38, 0.28);
+
+  /* Overdue "Gravity Well" — rose event-horizon physics for the RECOVERY desk (live,
+     savable lateness) vs the breach ledger's crimson debt ink. dust = amber infall,
+     escape = emerald recovery burn. Plain hex on instrument-feeding tokens (readVar). */
+  --sd-ovd-core:       #e11d48;   --sd-ovd-soft: rgba(225, 29, 72, 0.13);
+  --sd-ovd-hi:         #fb7185;   --sd-ovd-hi-soft: rgba(251, 113, 133, 0.14);
+  --sd-ovd-deep:       #9f1239;   --sd-ovd-deep-soft: rgba(159, 18, 57, 0.18);
+  --sd-ovd-dust:       #f59e0b;   --sd-ovd-dust-soft: rgba(245, 158, 11, 0.14);
+  --sd-ovd-escape:     #34d399;   --sd-ovd-escape-soft: rgba(52, 211, 153, 0.14);
+  --sd-ovd-risk:       #fbbf24;   --sd-ovd-risk-soft: rgba(251, 191, 36, 0.15);
+  --sd-ovd-brd:        rgba(225, 29, 72, 0.30);
+  --sd-ovd-deep-bg:    #0d0509;   /* the void behind the well (dark in BOTH themes) */
+  --sd-ovd-grad:       linear-gradient(122deg, #fda4af 0%, #e11d48 48%, #881337 100%);
+  --sd-ovd-glow:       0 0 30px rgba(225, 29, 72, 0.28);
+
+  /* Reopened "Möbius Loop" — orchid-magenta one-sided-band physics for the RETURNS desk
+     (resolved once, back again) vs the overdue desk's rose event-horizon. band = the
+     amber desk-crossing, offramp = emerald re-resolution (a rider leaving the loop).
+     Plain hex on instrument-feeding tokens (readVar). */
+  --sd-rop-core:       #e0509b;   --sd-rop-soft: rgba(224, 80, 155, 0.13);
+  --sd-rop-hi:         #ff8fc6;   --sd-rop-hi-soft: rgba(255, 143, 198, 0.14);
+  --sd-rop-deep:       #93275f;   --sd-rop-deep-soft: rgba(147, 39, 95, 0.18);
+  --sd-rop-band:       #f6b352;   --sd-rop-band-soft: rgba(246, 179, 82, 0.14);
+  --sd-rop-offramp:    #34d399;   --sd-rop-offramp-soft: rgba(52, 211, 153, 0.14);
+  --sd-rop-risk:       #fbbf24;   --sd-rop-risk-soft: rgba(251, 191, 36, 0.15);
+  --sd-rop-brd:        rgba(224, 80, 155, 0.30);
+  --sd-rop-deep-bg:    #12060e;   /* the night air behind the band (dark in BOTH themes) */
+  --sd-rop-grad:       linear-gradient(122deg, #ffc2de 0%, #e0509b 48%, #7c1d4f 100%);
+  --sd-rop-glow:       0 0 30px rgba(224, 80, 155, 0.28);
+
+  /* Resolved "Closeout" — deep-emerald resolution ink + warm brass seal for the QUALITY-GATE
+     desk (work preserved, CSAT measured, the 3-day auto-close window ticking) vs the generic
+     --sd-success chip green. brass = the seal / CSAT voice, close = the auto-close countdown
+     amber, risk = low-CSAT / bounced-fix rose. Plain hex on instrument-feeding tokens (readVar). */
+  --sd-res-core:       #10b981;   --sd-res-soft: rgba(16, 185, 129, 0.13);
+  --sd-res-hi:         #5eead4;   --sd-res-hi-soft: rgba(94, 234, 212, 0.14);
+  --sd-res-deep:       #047857;   --sd-res-deep-soft: rgba(4, 120, 87, 0.18);
+  --sd-res-brass:      #d9a441;   --sd-res-brass-soft: rgba(217, 164, 65, 0.15);
+  --sd-res-close:      #fbbf24;   --sd-res-close-soft: rgba(251, 191, 36, 0.15);
+  --sd-res-risk:       #fb7185;   --sd-res-risk-soft: rgba(251, 113, 133, 0.14);
+  --sd-res-brd:        rgba(16, 185, 129, 0.30);
+  --sd-res-deep-bg:    #04120c;   /* the vault night air behind the instrument (dark in BOTH themes) */
+  --sd-res-grad:       linear-gradient(122deg, #a7f3d0 0%, #10b981 48%, #065f46 100%);
+  --sd-res-glow:       0 0 30px rgba(16, 185, 129, 0.28);
+
+  /* Closed "Archive of Record" — silver-frost record ink + warm brass seal for the ARCHIVE
+     desk (terminal records, closure provenance, permanence) vs Resolved's living emerald
+     shelf. frost = the preserved record, seal = the brass closure wax / knowledge harvest,
+     risk = exhumed / low-CSAT rose. Stays in the house neutral+warm family (no blue/indigo).
+     Plain hex on instrument-feeding tokens (readVar). */
+  --sd-cls-core:       #c9cfd8;   --sd-cls-soft: rgba(201, 207, 216, 0.13);
+  --sd-cls-hi:         #eef1f6;   --sd-cls-hi-soft: rgba(238, 241, 246, 0.14);
+  --sd-cls-deep:       #767e8c;   --sd-cls-deep-soft: rgba(118, 126, 140, 0.18);
+  --sd-cls-seal:       #d9a441;   --sd-cls-seal-soft: rgba(217, 164, 65, 0.15);
+  --sd-cls-frost:      #a8b6c4;   --sd-cls-frost-soft: rgba(168, 182, 196, 0.14);
+  --sd-cls-risk:       #fb7185;   --sd-cls-risk-soft: rgba(251, 113, 133, 0.14);
+  --sd-cls-brd:        rgba(201, 207, 216, 0.28);
+  --sd-cls-deep-bg:    #0a0b0e;   /* the archive night air (dark in BOTH themes) */
+  --sd-cls-grad:       linear-gradient(122deg, #f4f6f9 0%, #c9cfd8 46%, #6f7885 100%);
+  --sd-cls-glow:       0 0 30px rgba(201, 207, 216, 0.22);
+
+  /* Archived "Deep Storage" — bone/parchment record ink + oxidized bronze hardware for
+     the RECOVERY & RETENTION desk (tombstones, restore, legal hold, purge governance) vs
+     Closed's cool silver-and-brass record of record. hold = statute gold (⚖), purge =
+     ember danger, restore = emerald return-to-circulation. Warm house family, no blue.
+     THEME-NATIVE: the hero stage is sepia-night on dark, parchment on light (deep-bg is
+     the dark stage; components must go parchment on light — not dark-in-both-themes). */
+  --sd-arc-core:       #cbbfa4;   --sd-arc-soft: rgba(203, 191, 164, 0.13);
+  --sd-arc-hi:         #efe6d0;   --sd-arc-hi-soft: rgba(239, 230, 208, 0.14);
+  --sd-arc-deep:       #8a7a5c;   --sd-arc-deep-soft: rgba(138, 122, 92, 0.18);
+  --sd-arc-bronze:     #b08d57;   --sd-arc-bronze-soft: rgba(176, 141, 87, 0.15);
+  --sd-arc-hold:       #eab308;   --sd-arc-hold-soft: rgba(234, 179, 8, 0.15);
+  --sd-arc-purge:      #f97316;   --sd-arc-purge-soft: rgba(249, 115, 22, 0.14);
+  --sd-arc-restore:    #34d399;   --sd-arc-restore-soft: rgba(52, 211, 153, 0.14);
+  --sd-arc-brd:        rgba(203, 191, 164, 0.28);
+  --sd-arc-deep-bg:    #0e0c08;   /* sepia-night stacks air (dark stage; light theme goes parchment) */
+  --sd-arc-stage:      #0e0c08;   /* the hero stage — THEME-NATIVE (parchment on light) */
+  --sd-arc-grad:       linear-gradient(122deg, #efe6d0 0%, #cbbfa4 46%, #8a7a5c 100%);
+  --sd-arc-glow:       0 0 30px rgba(203, 191, 164, 0.22);
+
+  /* ── Team Ops desk ("Squad Command" — /tickets/team, agent side): burnished GOLD is
+     the work, EMERALD sync is the crew keeping cadence, ROSE strain is an overloaded
+     lane, STONE idle is a stalled one. Warm house family, no blue. THEME-NATIVE: the
+     hero stage is command-deck night on dark, warm linen on light. ── */
+  --sd-team-core:      #e8b04b;   --sd-team-soft: rgba(232, 176, 75, 0.13);
+  --sd-team-hi:        #ffd98a;   --sd-team-hi-soft: rgba(255, 217, 138, 0.14);
+  --sd-team-deep:      #9a6d1f;   --sd-team-deep-soft: rgba(154, 109, 31, 0.18);
+  --sd-team-sync:      #34d399;   --sd-team-sync-soft: rgba(52, 211, 153, 0.14);
+  --sd-team-strain:    #fb7185;   --sd-team-strain-soft: rgba(251, 113, 133, 0.14);
+  --sd-team-idle:      #a8a29e;   --sd-team-idle-soft: rgba(168, 162, 158, 0.13);
+  --sd-team-brd:       rgba(232, 176, 75, 0.30);
+  --sd-team-deep-bg:   #0b0904;   /* command-deck night air (stays dark for inset glow panels) */
+  --sd-team-stage:     #0b0904;   /* the hero stage — THEME-NATIVE (warm linen on light) */
+  --sd-team-grad:      linear-gradient(122deg, #ffd98a 0%, #e8b04b 46%, #9a6d1f 100%);
+  --sd-team-glow:      0 0 30px rgba(232, 176, 75, 0.26);
+
+  /* ── Chrono Desk ("/tickets/calendar", agent side): the TIME desk. SAFFRON is the
+     deadline sun, MOONSTONE ivory is history/past days, STORM red is breach weather,
+     RESUME bronze is a hold coming back, PIN emerald is a personal reminder. Warm house
+     family, no blue. THEME-NATIVE: the hero stage is observatory night on dark, warm
+     vellum on light. Kind→color legend lives on these tokens — components must not
+     invent per-kind hex. ── */
+  --sd-cal-core:       #f0b429;   --sd-cal-soft: rgba(240, 180, 41, 0.13);
+  --sd-cal-hi:         #ffd98a;   --sd-cal-hi-soft: rgba(255, 217, 138, 0.14);
+  --sd-cal-deep:       #8a5f14;   --sd-cal-deep-soft: rgba(138, 95, 20, 0.18);
+  --sd-cal-moon:       #d8cfc0;   --sd-cal-moon-soft: rgba(216, 207, 192, 0.12);
+  --sd-cal-storm:      #f0564a;   --sd-cal-storm-soft: rgba(240, 86, 74, 0.14);
+  --sd-cal-resume:     #b08d57;   --sd-cal-resume-soft: rgba(176, 141, 87, 0.15);
+  --sd-cal-pin:        #34d399;   --sd-cal-pin-soft: rgba(52, 211, 153, 0.14);
+  --sd-cal-ember:      #fb923c;   --sd-cal-ember-soft: rgba(251, 146, 60, 0.14);
+  --sd-cal-rose:       #fb7185;   --sd-cal-rose-soft: rgba(251, 113, 133, 0.14);
+  --sd-cal-gold:       #eab308;   --sd-cal-gold-soft: rgba(234, 179, 8, 0.14);
+  --sd-cal-stone:      #a8a29e;   --sd-cal-stone-soft: rgba(168, 162, 158, 0.13);
+  --sd-cal-brd:        rgba(240, 180, 41, 0.30);
+  --sd-cal-deep-bg:    #0a0805;   /* observatory-night air (stays dark for inset glow panels) */
+  --sd-cal-stage:      #0a0805;   /* the hero stage — THEME-NATIVE (warm vellum on light) */
+  --sd-cal-band:       rgba(240, 180, 41, 0.05);   /* business-hours banding */
+  --sd-cal-holiday:    rgba(176, 141, 87, 0.13);   /* holiday day-cell wash */
+  --sd-cal-grad:       linear-gradient(122deg, #ffd98a 0%, #f0b429 46%, #8a5f14 100%);
+  --sd-cal-glow:       0 0 30px rgba(240, 180, 41, 0.26);
+
+  /* ── Copperplate Studio ("/tickets/templates", admin): the MASTER-PLATE desk.
+     Templates are engraved copper masters — machines of faithful reproduction.
+     COPPER is the struck plate, GRAPHITE-INK is the drafting neutral (drafts),
+     UMBER is retired plates (archived), VERDIGRIS-free: warm family only, no
+     blue/teal. THEME-NATIVE: the hero stage is press-room obsidian on dark,
+     warm proofing-paper cream on light. ── */
+  --sd-tpl-core:       #cf7f45;   --sd-tpl-soft: rgba(207, 127, 69, 0.13);
+  --sd-tpl-hi:         #eaa36c;   --sd-tpl-hi-soft: rgba(234, 163, 108, 0.15);
+  --sd-tpl-deep:       #8a4f26;   --sd-tpl-deep-soft: rgba(138, 79, 38, 0.18);
+  --sd-tpl-ink:        #9a948c;   --sd-tpl-ink-soft: rgba(154, 148, 140, 0.14);   /* graphite — drafts */
+  --sd-tpl-arch:       #7d7268;   --sd-tpl-arch-soft: rgba(125, 114, 104, 0.15);  /* umber — archived */
+  --sd-tpl-use:        #34d399;   --sd-tpl-use-soft: rgba(52, 211, 153, 0.13);    /* apply/usage pulse */
+  --sd-tpl-risk:       #f0564a;   --sd-tpl-risk-soft: rgba(240, 86, 74, 0.13);    /* delete friction */
+  --sd-tpl-brd:        rgba(207, 127, 69, 0.30);
+  --sd-tpl-deep-bg:    #0c0805;   /* press-room air (stays dark for inset display panels) */
+  --sd-tpl-stage:      #0c0805;   /* the hero stage — THEME-NATIVE (proofing paper on light) */
+  --sd-tpl-plate:      #16100a;   /* plate metal body (dark) */
+  --sd-tpl-etch:       rgba(234, 163, 108, 0.55);  /* engraved line glint */
+  --sd-tpl-grad:       linear-gradient(122deg, #eaa36c 0%, #cf7f45 46%, #6e3d1c 100%);
+  --sd-tpl-glow:       0 0 30px rgba(207, 127, 69, 0.26);
+
+  /* ── AGENT TEMPLATE DESK — "The Cassette Exchange" (gallery pick 06).
+     The agent's working library is a tape studio: templates are accent-tinted
+     CASSETTES; applying one PLAYS it into the intake. The core is hot filament/VU
+     amber (whiter/hotter than the studio's struck copper), INK is unlabeled-tape
+     graphite (drafts), ARCH is a shelved tape (archived), BEAM doubles as the
+     deck glow, SCAN is the playback-display shimmer, FAV is the mixtape star.
+     Warm family only — no blue/teal. THEME-NATIVE: the stage is studio black on
+     dark, daylight vellum on light. ── */
+  --sd-utpl-core:      #f0a83c;   --sd-utpl-soft: rgba(240, 168, 60, 0.13);
+  --sd-utpl-hi:        #ffd9a0;   --sd-utpl-hi-soft: rgba(255, 217, 160, 0.16);
+  --sd-utpl-deep:      #a86a14;   --sd-utpl-deep-soft: rgba(168, 106, 20, 0.18);
+  --sd-utpl-ink:       #98938a;   --sd-utpl-ink-soft: rgba(152, 147, 138, 0.14);   /* unexposed slide — drafts */
+  --sd-utpl-arch:      #7f7469;   --sd-utpl-arch-soft: rgba(127, 116, 105, 0.15);  /* boxed slide — archived */
+  --sd-utpl-use:       #34d399;   --sd-utpl-use-soft: rgba(52, 211, 153, 0.13);    /* develop-green apply pulse */
+  --sd-utpl-risk:      #f0564a;   --sd-utpl-risk-soft: rgba(240, 86, 74, 0.13);
+  --sd-utpl-fav:       #ffd700;   --sd-utpl-fav-soft: rgba(255, 215, 0, 0.15);     /* per-agent favorite star */
+  --sd-utpl-brd:       rgba(240, 168, 60, 0.30);
+  --sd-utpl-stage:     #0a0805;   /* dark-room air — THEME-NATIVE (screening vellum on light) */
+  --sd-utpl-plate:     #171208;   /* lantern housing / console panel */
+  --sd-utpl-beam:      rgba(255, 196, 107, 0.34);  /* projection cone */
+  --sd-utpl-scan:      rgba(255, 217, 160, 0.16);  /* scanline shimmer on the screen */
+  --sd-utpl-grad:      linear-gradient(122deg, #ffd9a0 0%, #f0a83c 48%, #a86a14 100%);
+  --sd-utpl-glow:      0 0 30px rgba(240, 168, 60, 0.26);
 
   /* Basin fluid (canvas-driven; literal hex for shader uniforms lives in JS) */
   --sd-fluid-core: #fb923c;
@@ -121,10 +353,189 @@
   --sd-st-open: #b45309;        --sd-st-pending: #a16207;
   --sd-st-progress: #ea580c;    --sd-st-escalated: #c2410c;
   --sd-st-resolved: #059669;    --sd-st-closed: #78716c;
+  --sd-st-hold: #7a6a52;        --sd-st-hold-soft: rgba(122, 106, 82, 0.14);
   --sd-st-breached: #b91c1c;
 
   --sd-success: #059669;        --sd-danger: #dc2626;
   --sd-warning: #b45309;        --sd-steel: #78716c;
+
+  --sd-vendor-steel:      #64707c;   --sd-vendor-steel-soft: rgba(100, 112, 124, 0.14);
+  --sd-vendor-steel-brd:  rgba(100, 112, 124, 0.34);
+  --sd-vendor-signal:     #ea580c;   --sd-vendor-signal-soft: rgba(234, 88, 12, 0.14);
+  --sd-vendor-return:     #059669;
+  --sd-vendor-overdue:    #dc2626;   --sd-vendor-overdue-soft: rgba(220, 38, 38, 0.14);
+  --sd-vendor-deep:       #cdd3da;
+  --sd-vendor-grad:       linear-gradient(122deg, #8b959f 0%, #ea580c 58%, #c2410c 100%);
+  --sd-vendor-glow:       0 0 26px rgba(100, 112, 124, 0.2);
+
+  /* Suspension Dock — cream-readable stone/ember; the dock panel itself stays obsidian
+     (display-panel trick) so lamps + glow always read, but chips/tags/timeline live on cream. */
+  --sd-dock-stone:     #8a7355;   --sd-dock-stone-soft: rgba(138, 115, 85, 0.15);
+  --sd-dock-cable:     #6d7681;   --sd-dock-cable-soft: rgba(109, 118, 129, 0.26);
+  --sd-dock-ember:     #d97706;   --sd-dock-ember-soft: rgba(217, 119, 6, 0.14);
+  --sd-dock-lamp:      rgba(217, 119, 6, 0.26);
+  --sd-dock-release:   #059669;   --sd-dock-release-soft: rgba(5, 150, 105, 0.14);
+  --sd-dock-overdue:   #dc2626;   --sd-dock-overdue-soft: rgba(220, 38, 38, 0.15);
+  --sd-dock-deep:      #171310;
+  --sd-dock-grad:      linear-gradient(122deg, #8a7355 0%, #d97706 55%, #92400e 100%);
+  --sd-dock-glow:      0 0 26px rgba(138, 115, 85, 0.22);
+
+  /* Critical "War Room" — day-ops variant: deepened crimson inks for AA on cream. */
+  --sd-crit-core:      #dc2626;   --sd-crit-soft: rgba(220, 38, 38, 0.11);
+  --sd-crit-deep:      #991b1b;   --sd-crit-deep-soft: rgba(153, 27, 27, 0.15);
+  --sd-crit-flare:     #ea580c;   --sd-crit-flare-soft: rgba(234, 88, 12, 0.12);
+  --sd-crit-ack:       #059669;   --sd-crit-ack-soft: rgba(5, 150, 105, 0.13);
+  --sd-crit-mi:        #b91c1c;   --sd-crit-mi-soft: rgba(185, 28, 28, 0.14);
+  --sd-crit-brd:       rgba(220, 38, 38, 0.32);
+  --sd-crit-deep-bg:   #171010;
+  --sd-crit-grad:      linear-gradient(122deg, #dc2626 0%, #b91c1c 52%, #7f1d1d 100%);
+  --sd-crit-glow:      0 0 24px rgba(220, 38, 38, 0.22);
+
+  --sd-esc-core:       #ea580c;   --sd-esc-soft: rgba(234, 88, 12, 0.11);
+  --sd-esc-hi:         #c2410c;   --sd-esc-hi-soft: rgba(194, 65, 12, 0.12);
+  --sd-esc-deep:       #9a3412;   --sd-esc-deep-soft: rgba(154, 52, 18, 0.14);
+  --sd-esc-ack:        #047857;   --sd-esc-ack-soft: rgba(4, 120, 87, 0.13);
+  --sd-esc-auto:       #b45309;   --sd-esc-auto-soft: rgba(180, 83, 9, 0.13);
+  --sd-esc-brd:        rgba(234, 88, 12, 0.32);
+  --sd-esc-deep-bg:    #170f06;
+  --sd-esc-grad:       linear-gradient(122deg, #ea580c 0%, #c2410c 52%, #7c2d12 100%);
+  --sd-esc-glow:       0 0 24px rgba(234, 88, 12, 0.22);
+
+  --sd-brc-core:       #b91c1c;   --sd-brc-soft: rgba(185, 28, 28, 0.11);
+  --sd-brc-hi:         #dc2626;   --sd-brc-hi-soft: rgba(220, 38, 38, 0.12);
+  --sd-brc-deep:       #7f1d1d;   --sd-brc-deep-soft: rgba(127, 29, 29, 0.14);
+  --sd-brc-brass:      #a16207;   --sd-brc-brass-soft: rgba(161, 98, 7, 0.13);
+  --sd-brc-repair:     #047857;   --sd-brc-repair-soft: rgba(4, 120, 87, 0.13);
+  --sd-brc-risk:       #b45309;   --sd-brc-risk-soft: rgba(180, 83, 9, 0.13);
+  --sd-brc-brd:        rgba(185, 28, 28, 0.32);
+  --sd-brc-deep-bg:    #170808;
+  --sd-brc-grad:       linear-gradient(122deg, #dc2626 0%, #991b1b 52%, #7f1d1d 100%);
+  --sd-brc-glow:       0 0 24px rgba(185, 28, 28, 0.22);
+
+  --sd-ovd-core:       #be123c;   --sd-ovd-soft: rgba(190, 18, 60, 0.11);
+  --sd-ovd-hi:         #e11d48;   --sd-ovd-hi-soft: rgba(225, 29, 72, 0.12);
+  --sd-ovd-deep:       #881337;   --sd-ovd-deep-soft: rgba(136, 19, 55, 0.14);
+  --sd-ovd-dust:       #b45309;   --sd-ovd-dust-soft: rgba(180, 83, 9, 0.13);
+  --sd-ovd-escape:     #047857;   --sd-ovd-escape-soft: rgba(4, 120, 87, 0.13);
+  --sd-ovd-risk:       #b45309;   --sd-ovd-risk-soft: rgba(180, 83, 9, 0.13);
+  --sd-ovd-brd:        rgba(190, 18, 60, 0.32);
+  --sd-ovd-deep-bg:    #150710;
+  --sd-ovd-grad:       linear-gradient(122deg, #e11d48 0%, #9f1239 52%, #881337 100%);
+  --sd-ovd-glow:       0 0 24px rgba(190, 18, 60, 0.22);
+
+  --sd-rop-core:       #b02472;   --sd-rop-soft: rgba(176, 36, 114, 0.11);
+  --sd-rop-hi:         #d33a8c;   --sd-rop-hi-soft: rgba(211, 58, 140, 0.12);
+  --sd-rop-deep:       #7c1d4f;   --sd-rop-deep-soft: rgba(124, 29, 79, 0.14);
+  --sd-rop-band:       #b45309;   --sd-rop-band-soft: rgba(180, 83, 9, 0.13);
+  --sd-rop-offramp:    #047857;   --sd-rop-offramp-soft: rgba(4, 120, 87, 0.13);
+  --sd-rop-risk:       #b45309;   --sd-rop-risk-soft: rgba(180, 83, 9, 0.13);
+  --sd-rop-brd:        rgba(176, 36, 114, 0.32);
+  --sd-rop-deep-bg:    #170a12;
+  --sd-rop-grad:       linear-gradient(122deg, #d33a8c 0%, #93275f 52%, #7c1d4f 100%);
+  --sd-rop-glow:       0 0 24px rgba(176, 36, 114, 0.22);
+
+  --sd-res-core:       #047857;   --sd-res-soft: rgba(4, 120, 87, 0.11);
+  --sd-res-hi:         #059669;   --sd-res-hi-soft: rgba(5, 150, 105, 0.12);
+  --sd-res-deep:       #065f46;   --sd-res-deep-soft: rgba(6, 95, 70, 0.14);
+  --sd-res-brass:      #a16207;   --sd-res-brass-soft: rgba(161, 98, 7, 0.13);
+  --sd-res-close:      #b45309;   --sd-res-close-soft: rgba(180, 83, 9, 0.13);
+  --sd-res-risk:       #be123c;   --sd-res-risk-soft: rgba(190, 18, 60, 0.12);
+  --sd-res-brd:        rgba(4, 120, 87, 0.32);
+  --sd-res-deep-bg:    #071009;
+  --sd-res-grad:       linear-gradient(122deg, #059669 0%, #047857 52%, #064e3b 100%);
+  --sd-res-glow:       0 0 24px rgba(4, 120, 87, 0.22);
+
+  --sd-cls-core:       #5c6674;   --sd-cls-soft: rgba(92, 102, 116, 0.11);
+  --sd-cls-hi:         #414a56;   --sd-cls-hi-soft: rgba(65, 74, 86, 0.12);
+  --sd-cls-deep:       #2f3742;   --sd-cls-deep-soft: rgba(47, 55, 66, 0.14);
+  --sd-cls-seal:       #a16207;   --sd-cls-seal-soft: rgba(161, 98, 7, 0.13);
+  --sd-cls-frost:      #6b7889;   --sd-cls-frost-soft: rgba(107, 120, 137, 0.12);
+  --sd-cls-risk:       #be123c;   --sd-cls-risk-soft: rgba(190, 18, 60, 0.12);
+  --sd-cls-brd:        rgba(92, 102, 116, 0.32);
+  --sd-cls-deep-bg:    #0c0d10;
+  --sd-cls-grad:       linear-gradient(122deg, #7b8494 0%, #5c6674 52%, #2f3742 100%);
+  --sd-cls-glow:       0 0 24px rgba(92, 102, 116, 0.22);
+
+  /* Archived "Deep Storage" — sepia inks on cream; the stage flips to PARCHMENT. */
+  --sd-arc-core:       #7a6a4f;   --sd-arc-soft: rgba(122, 106, 79, 0.11);
+  --sd-arc-hi:         #57492f;   --sd-arc-hi-soft: rgba(87, 73, 47, 0.12);
+  --sd-arc-deep:       #3e3524;   --sd-arc-deep-soft: rgba(62, 53, 36, 0.14);
+  --sd-arc-bronze:     #8a6a3b;   --sd-arc-bronze-soft: rgba(138, 106, 59, 0.13);
+  --sd-arc-hold:       #a16207;   --sd-arc-hold-soft: rgba(161, 98, 7, 0.13);
+  --sd-arc-purge:      #c2410c;   --sd-arc-purge-soft: rgba(194, 65, 12, 0.12);
+  --sd-arc-restore:    #047857;   --sd-arc-restore-soft: rgba(4, 120, 87, 0.13);
+  --sd-arc-brd:        rgba(122, 106, 79, 0.32);
+  --sd-arc-deep-bg:    #0f0d09;   /* kept dark for any additive-glow inset panels */
+  --sd-arc-stage:      #f1e9d8;   /* THEME-NATIVE parchment stage on cream */
+  --sd-arc-grad:       linear-gradient(122deg, #8a7a5c 0%, #6b5c42 52%, #3e3524 100%);
+  --sd-arc-glow:       0 0 24px rgba(122, 106, 79, 0.22);
+
+  /* Team Ops "Squad Command" — deep golds on cream; the stage flips to WARM LINEN. */
+  --sd-team-core:      #b47816;   --sd-team-soft: rgba(180, 120, 22, 0.11);
+  --sd-team-hi:        #92610d;   --sd-team-hi-soft: rgba(146, 97, 13, 0.12);
+  --sd-team-deep:      #6d4a0a;   --sd-team-deep-soft: rgba(109, 74, 10, 0.14);
+  --sd-team-sync:      #047857;   --sd-team-sync-soft: rgba(4, 120, 87, 0.13);
+  --sd-team-strain:    #be123c;   --sd-team-strain-soft: rgba(190, 18, 60, 0.12);
+  --sd-team-idle:      #78716c;   --sd-team-idle-soft: rgba(120, 113, 108, 0.12);
+  --sd-team-brd:       rgba(180, 120, 22, 0.32);
+  --sd-team-deep-bg:   #0d0a05;   /* kept dark for any additive-glow inset panels */
+  --sd-team-stage:     #f5edda;   /* THEME-NATIVE warm-linen stage on cream */
+  --sd-team-grad:      linear-gradient(122deg, #b47816 0%, #92610d 52%, #6d4a0a 100%);
+  --sd-team-glow:      0 0 24px rgba(180, 120, 22, 0.22);
+
+  /* Chrono Desk — deep saffrons on cream; the stage flips to WARM VELLUM. */
+  --sd-cal-core:       #a3690e;   --sd-cal-soft: rgba(163, 105, 14, 0.11);
+  --sd-cal-hi:         #7d5008;   --sd-cal-hi-soft: rgba(125, 80, 8, 0.12);
+  --sd-cal-deep:       #5f3e06;   --sd-cal-deep-soft: rgba(95, 62, 6, 0.14);
+  --sd-cal-moon:       #8a7a5c;   --sd-cal-moon-soft: rgba(138, 122, 92, 0.13);
+  --sd-cal-storm:      #c2352b;   --sd-cal-storm-soft: rgba(194, 53, 43, 0.12);
+  --sd-cal-resume:     #7d6134;   --sd-cal-resume-soft: rgba(125, 97, 52, 0.14);
+  --sd-cal-pin:        #047857;   --sd-cal-pin-soft: rgba(4, 120, 87, 0.13);
+  --sd-cal-ember:      #b45309;   --sd-cal-ember-soft: rgba(180, 83, 9, 0.12);
+  --sd-cal-rose:       #be123c;   --sd-cal-rose-soft: rgba(190, 18, 60, 0.12);
+  --sd-cal-gold:       #92610d;   --sd-cal-gold-soft: rgba(146, 97, 13, 0.12);
+  --sd-cal-stone:      #78716c;   --sd-cal-stone-soft: rgba(120, 113, 108, 0.12);
+  --sd-cal-brd:        rgba(163, 105, 14, 0.32);
+  --sd-cal-deep-bg:    #0c0903;   /* kept dark for any additive-glow inset panels */
+  --sd-cal-stage:      #f3ecdc;   /* THEME-NATIVE warm-vellum stage on cream */
+  --sd-cal-band:       rgba(163, 105, 14, 0.07);
+  --sd-cal-holiday:    rgba(138, 106, 60, 0.14);
+  --sd-cal-grad:       linear-gradient(122deg, #a3690e 0%, #7d5008 52%, #5f3e06 100%);
+  --sd-cal-glow:       0 0 24px rgba(163, 105, 14, 0.22);
+
+  /* Copperplate Studio — deep coppers on cream; the stage flips to PROOFING PAPER. */
+  --sd-tpl-core:       #9a5520;   --sd-tpl-soft: rgba(154, 85, 32, 0.11);
+  --sd-tpl-hi:         #7c421a;   --sd-tpl-hi-soft: rgba(124, 66, 26, 0.12);
+  --sd-tpl-deep:       #5e3213;   --sd-tpl-deep-soft: rgba(94, 50, 19, 0.14);
+  --sd-tpl-ink:        #6f6a62;   --sd-tpl-ink-soft: rgba(111, 106, 98, 0.13);
+  --sd-tpl-arch:       #7a6f63;   --sd-tpl-arch-soft: rgba(122, 111, 99, 0.14);
+  --sd-tpl-use:        #047857;   --sd-tpl-use-soft: rgba(4, 120, 87, 0.13);
+  --sd-tpl-risk:       #c2352b;   --sd-tpl-risk-soft: rgba(194, 53, 43, 0.12);
+  --sd-tpl-brd:        rgba(154, 85, 32, 0.32);
+  --sd-tpl-deep-bg:    #0e0905;   /* kept dark for any additive-glow inset panels */
+  --sd-tpl-stage:      #f4ecdf;   /* THEME-NATIVE proofing-paper stage on cream */
+  --sd-tpl-plate:      #ece1cd;   /* plate metal body flips to pale press-bed brass */
+  --sd-tpl-etch:       rgba(124, 66, 26, 0.55);
+  --sd-tpl-grad:       linear-gradient(122deg, #9a5520 0%, #7c421a 52%, #5e3213 100%);
+  --sd-tpl-glow:       0 0 24px rgba(154, 85, 32, 0.22);
+
+  /* Projection Room — daylight screening room: burnt lantern ambers on cream; the
+     stage flips to SCREENING VELLUM and the beam turns warm-subtractive. */
+  --sd-utpl-core:      #a86711;   --sd-utpl-soft: rgba(168, 103, 17, 0.11);
+  --sd-utpl-hi:        #7f4d0c;   --sd-utpl-hi-soft: rgba(127, 77, 12, 0.12);
+  --sd-utpl-deep:      #5f3a08;   --sd-utpl-deep-soft: rgba(95, 58, 8, 0.14);
+  --sd-utpl-ink:       #6f6a62;   --sd-utpl-ink-soft: rgba(111, 106, 98, 0.13);
+  --sd-utpl-arch:      #7a6f63;   --sd-utpl-arch-soft: rgba(122, 111, 99, 0.14);
+  --sd-utpl-use:       #047857;   --sd-utpl-use-soft: rgba(4, 120, 87, 0.13);
+  --sd-utpl-risk:      #c2352b;   --sd-utpl-risk-soft: rgba(194, 53, 43, 0.12);
+  --sd-utpl-fav:       #a3690e;   --sd-utpl-fav-soft: rgba(163, 105, 14, 0.16);
+  --sd-utpl-brd:       rgba(168, 103, 17, 0.32);
+  --sd-utpl-stage:     #f5eedf;
+  --sd-utpl-plate:     #ece2cd;
+  --sd-utpl-beam:      rgba(168, 103, 17, 0.16);
+  --sd-utpl-scan:      rgba(127, 77, 12, 0.10);
+  --sd-utpl-grad:      linear-gradient(122deg, #a86711 0%, #7f4d0c 52%, #5f3a08 100%);
+  --sd-utpl-glow:      0 0 24px rgba(168, 103, 17, 0.22);
 
   --sd-fluid-core: #ea580c;
   --sd-fluid-glow: rgba(234, 88, 12, 0.45);
@@ -187,6 +598,23 @@
 }
 @keyframes sd-spin-slow { to { transform: rotate(360deg); } }
 @keyframes sd-rail-flow { 0% { background-position: 0 0; } 100% { background-position: 200% 0; } }
+/* Vendor Relay Station — SVG relay-tube packet flow (CSS fallback) + node breathing. */
+@keyframes sd-relay-flow { to { stroke-dashoffset: -1000; } }
+@keyframes sd-relay-return { to { stroke-dashoffset: 1000; } }
+@keyframes sd-relay-pulse { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.14); } }
+@keyframes sd-relay-orbit { to { transform: rotate(360deg); } }
+@keyframes sd-relay-drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+/* Chrono Desk — calendar motion vocabulary (GLOBAL so SVG/canvas overlays resolve). */
+@keyframes sd-cal-rise { 0% { opacity: 0; transform: translateY(14px) scale(0.98); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes sd-cal-pop { 0% { opacity: 0; transform: scale(0.4); } 70% { transform: scale(1.18); } 100% { opacity: 1; transform: scale(1); } }
+@keyframes sd-cal-pulse { 0%, 100% { opacity: 0.55; transform: scale(1); } 50% { opacity: 1; transform: scale(1.16); } }
+@keyframes sd-cal-ring { 0% { transform: scale(0.5); opacity: 0.9; } 85% { transform: scale(1.7); opacity: 0; } 100% { opacity: 0; } }
+@keyframes sd-cal-sweep { 0% { transform: translateX(-30%); opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { transform: translateX(130%); opacity: 0; } }
+@keyframes sd-cal-drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes sd-cal-now { 0%, 100% { box-shadow: 0 0 10px var(--sd-cal-core); } 50% { box-shadow: 0 0 26px var(--sd-cal-core); } }
+@keyframes sd-cal-flow { to { stroke-dashoffset: -240; } }
+@keyframes sd-cal-storm-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(240, 86, 74, 0.45); } 50% { box-shadow: 0 0 0 7px rgba(240, 86, 74, 0); } }
 
 @property --sd-p { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 
@@ -204,6 +632,256 @@
   background-size: 3px 3px; border-radius: inherit;
 }
 
+/* Respect OS Reduce Motion — UNLESS the in-app Cinematic toggle is ON.
+   (Was an unconditional blanket that defeated the Cinematic override; now it
+   honours `html[data-cinematic="on"]` like every per-component guard does.) */
 @media (prefers-reduced-motion: reduce) {
-  .sd-card *, .sd-anim, [class*="sd-"] { animation: none !important; }
+  html:not([data-cinematic="on"]) .sd-card *,
+  html:not([data-cinematic="on"]) .sd-anim,
+  html:not([data-cinematic="on"]) [class*="sd-"] { animation: none !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TICKET DASHBOARDS — two page-scoped identities, deliberately NOT the module's
+   amber. Distinct from HR (gold/amber) and from each other. No blue/indigo/teal.
+   These tokens live ONLY under the dashboard page roots, so the rest of the
+   Support Desk keeps its --sd-* amber DNA untouched.
+   · .sd-ops-dash  → ADMIN "Operations Command Deck"  = crimson / rose plasma
+   · .sd-self-dash → USER  "Personal Support Console" = emerald / mint calm
+   Priority and status semantics still use the existing sd-priority + sd-status
+   ramps so ticket data reads consistently across the module.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.sd-ops-dash {
+  --ops:        #f43f5e;   /* rose-500 — primary */
+  --ops-deep:   #e11d48;   /* rose-600 */
+  --ops-rose:   #fb7185;   /* rose-400 */
+  --ops-bright: #fda4af;   /* rose-300 — highlight */
+  --ops-ink:    #4c0519;   /* deep maroon — text on bright fills */
+  --ops-soft:   rgba(244, 63, 94, 0.12);
+  --ops-faint:  rgba(244, 63, 94, 0.06);
+  --ops-border: rgba(244, 63, 94, 0.28);
+  --ops-glow:   rgba(244, 63, 94, 0.34);
+  --ops-grad:   linear-gradient(135deg, #fda4af 0%, #f43f5e 46%, #e11d48 100%);
+  --ops-grad-soft: radial-gradient(120% 120% at 0% 0%, rgba(244, 63, 94, 0.12), transparent 60%);
+  --ops-aura:   radial-gradient(60% 60% at 50% 0%, rgba(244, 63, 94, 0.22), transparent 70%);
+}
+[data-theme="light"] .sd-ops-dash {
+  --ops:        #e11d48;
+  --ops-deep:   #be123c;
+  --ops-rose:   #f43f5e;
+  --ops-bright: #fb7185;
+  --ops-ink:    #fff1f3;
+  --ops-soft:   rgba(225, 29, 72, 0.10);
+  --ops-faint:  rgba(225, 29, 72, 0.05);
+  --ops-border: rgba(225, 29, 72, 0.26);
+  --ops-glow:   rgba(225, 29, 72, 0.22);
+  --ops-grad:   linear-gradient(135deg, #f43f5e 0%, #e11d48 50%, #be123c 100%);
+  --ops-aura:   radial-gradient(60% 60% at 50% 0%, rgba(225, 29, 72, 0.14), transparent 70%);
+}
+
+.sd-self-dash {
+  --calm:       #10b981;   /* emerald-500 — primary */
+  --calm-deep:  #059669;   /* emerald-600 */
+  --calm-bright:#34d399;   /* emerald-400 */
+  --calm-mint:  #6ee7b7;   /* emerald-300 — highlight */
+  --calm-ink:   #022c22;   /* deep pine — text on bright fills */
+  --calm-soft:  rgba(16, 185, 129, 0.12);
+  --calm-faint: rgba(16, 185, 129, 0.06);
+  --calm-border:rgba(16, 185, 129, 0.26);
+  --calm-glow:  rgba(16, 185, 129, 0.30);
+  --calm-grad:  linear-gradient(135deg, #6ee7b7 0%, #34d399 46%, #10b981 100%);
+  --calm-grad-soft: radial-gradient(120% 120% at 0% 0%, rgba(16, 185, 129, 0.12), transparent 60%);
+  --calm-aura:  radial-gradient(70% 70% at 50% 0%, rgba(16, 185, 129, 0.20), transparent 72%);
+}
+[data-theme="light"] .sd-self-dash {
+  --calm:       #059669;
+  --calm-deep:  #047857;
+  --calm-bright:#10b981;
+  --calm-mint:  #34d399;
+  --calm-ink:   #ecfdf5;
+  --calm-soft:  rgba(5, 150, 105, 0.10);
+  --calm-faint: rgba(5, 150, 105, 0.05);
+  --calm-border:rgba(5, 150, 105, 0.24);
+  --calm-glow:  rgba(5, 150, 105, 0.20);
+  --calm-grad:  linear-gradient(135deg, #34d399 0%, #10b981 50%, #047857 100%);
+  --calm-aura:  radial-gradient(70% 70% at 50% 0%, rgba(5, 150, 105, 0.12), transparent 72%);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TICKET DASHBOARD v2 — "THE TERMINAL" (agent/employee tickets landing page).
+   A Bloomberg-grade desk exchange: amber phosphor primary, emerald=gains/resolved,
+   red=losses/breach. The instrument "screen" (--pulse-stage) stays dark in BOTH
+   themes on purpose — a trading terminal is a lit screen embedded in the desk;
+   only the surrounding cards flip with the theme. Priority/status data still uses
+   the shared priority + status ramps. Root class = .sd-pulse-dash.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.sd-pulse-dash {
+  --pulse:        #fbbf24;   /* amber phosphor — primary */
+  --pulse-deep:   #f59e0b;
+  --pulse-bright: #fde68a;
+  --pulse-ember:  #fb923c;
+  --pulse-ink:    #2a1a05;   /* deep brown — text on bright amber fills */
+  --pulse-up:     #34d399;   /* gains · resolved · on-track */
+  --pulse-dn:     #f87171;   /* losses · breach */
+  --pulse-soft:   rgba(251, 191, 36, 0.12);
+  --pulse-faint:  rgba(251, 191, 36, 0.05);
+  --pulse-border: rgba(251, 191, 36, 0.26);
+  --pulse-glow:   rgba(251, 191, 36, 0.34);
+  --pulse-grad:   linear-gradient(135deg, #fde68a 0%, #fbbf24 45%, #f59e0b 100%);
+  --pulse-grad-soft: radial-gradient(120% 120% at 0% 0%, rgba(251, 191, 36, 0.12), transparent 60%);
+  --pulse-aura:   radial-gradient(60% 60% at 50% 0%, rgba(251, 191, 36, 0.20), transparent 72%);
+  --pulse-stage:  #08090c;                       /* the terminal screen */
+  --pulse-stage-2:#0d0f13;
+  --pulse-grid:   rgba(148, 163, 184, 0.14);
+  --pulse-screen-txt: #e8ecf2;
+  --pulse-screen-dim: #8b95a3;
+  --pulse-screen-edge: rgba(251, 191, 36, 0.16);
+}
+[data-theme="light"] .sd-pulse-dash {
+  --pulse:        #d97706;
+  --pulse-deep:   #b45309;
+  --pulse-bright: #f59e0b;
+  --pulse-ember:  #ea580c;
+  --pulse-ink:    #fff7ec;
+  --pulse-up:     #047857;
+  --pulse-dn:     #b91c1c;
+  --pulse-soft:   rgba(217, 119, 6, 0.10);
+  --pulse-faint:  rgba(217, 119, 6, 0.05);
+  --pulse-border: rgba(217, 119, 6, 0.26);
+  --pulse-glow:   rgba(217, 119, 6, 0.22);
+  --pulse-grad:   linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+  --pulse-aura:   radial-gradient(60% 60% at 50% 0%, rgba(217, 119, 6, 0.14), transparent 72%);
+  /* the screen stays dark even in light mode — a terminal is a lit panel on the desk */
+  --pulse-stage:  #14100b;
+  --pulse-stage-2:#1b1610;
+  --pulse-grid:   rgba(120, 90, 40, 0.20);
+  --pulse-screen-txt: #f3ead9;
+  --pulse-screen-dim: #b0a084;
+  --pulse-screen-edge: rgba(217, 119, 6, 0.30);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ADMIN TICKETS DASHBOARD v2 — "THE CONCOURSE" (admin intel dashboard).
+   A grand terminal departures hall: a physical split-flap Solari board. Matte
+   charcoal flap cells, warm-ivory flap type, signage-amber wayfinding. The BOARD
+   surface (--intel-board) stays dark in BOTH themes on purpose — a Solari board
+   is a black machine bolted to the hall wall; only the hall around it re-lights.
+   Distinct from The Terminal (amber phosphor GLOW on a screen): the Concourse is
+   MATTE + mechanical — flip animation, not glow. Emerald = boarding/departed,
+   red = delayed/final-call. Root class = .sd-intel-dash.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.sd-intel-dash {
+  --intel:        #f2b13d;   /* signage amber — wayfinding primary */
+  --intel-deep:   #d3941f;
+  --intel-bright: #ffd97a;
+  --intel-ink:    #241704;   /* espresso — text on amber fills */
+  --intel-up:     #4fd396;   /* boarding · departed · met */
+  --intel-dn:     #ff7b6b;   /* delayed · final call · breach */
+  --intel-soft:   rgba(242, 177, 61, 0.12);
+  --intel-faint:  rgba(242, 177, 61, 0.05);
+  --intel-border: rgba(242, 177, 61, 0.26);
+  --intel-glow:   rgba(242, 177, 61, 0.32);
+  --intel-grad:   linear-gradient(135deg, #ffd97a 0%, #f2b13d 46%, #d3941f 100%);
+  --intel-grad-soft: radial-gradient(120% 120% at 0% 0%, rgba(242, 177, 61, 0.12), transparent 60%);
+  --intel-aura:   radial-gradient(60% 60% at 50% 0%, rgba(242, 177, 61, 0.18), transparent 72%);
+  /* the Solari board — a black machine in the hall (dark in both themes) */
+  --intel-board:  #101114;
+  --intel-board-2:#16181d;
+  --intel-flap:   #1d2026;   /* flap cell face */
+  --intel-flap-hi:#2b2f37;   /* flap face catching light mid-flip */
+  --intel-flap-edge: rgba(0, 0, 0, 0.9);  /* the split hinge line */
+  --intel-board-txt: #f4efe3; /* warm ivory flap type */
+  --intel-board-dim: #8f94a2;
+  --intel-board-line: rgba(244, 239, 227, 0.07);
+  /* SIGNAGE constants — ink that sits ON the black board/flaps/clock, so it must
+     stay BRIGHT in both themes (the light block deliberately does not override
+     these; the darkened light-mode --intel/--intel-up/--intel-dn are for the
+     daylit hall around the machine, not the machine itself). */
+  --intel-sig:    #f2b13d;
+  --intel-sig-up: #4fd396;
+  --intel-sig-dn: #ff7b6b;
+}
+[data-theme="light"] .sd-intel-dash {
+  --intel:        #c2860f;
+  --intel-deep:   #9a6a0a;
+  --intel-bright: #e3a81e;
+  --intel-ink:    #fff8e8;
+  --intel-up:     #0c8a5b;
+  --intel-dn:     #d24836;
+  --intel-soft:   rgba(194, 134, 15, 0.10);
+  --intel-faint:  rgba(194, 134, 15, 0.05);
+  --intel-border: rgba(194, 134, 15, 0.26);
+  --intel-glow:   rgba(194, 134, 15, 0.20);
+  --intel-grad:   linear-gradient(135deg, #e3a81e 0%, #c2860f 50%, #9a6a0a 100%);
+  --intel-aura:   radial-gradient(60% 60% at 50% 0%, rgba(194, 134, 15, 0.12), transparent 72%);
+  /* the board stays a black machine even in the daylit hall */
+  --intel-board:  #14151a;
+  --intel-board-2:#1a1c22;
+  --intel-flap:   #22252c;
+  --intel-flap-hi:#31353e;
+  --intel-flap-edge: rgba(0, 0, 0, 0.9);
+  --intel-board-txt: #f4efe3;
+  --intel-board-dim: #979caa;
+  --intel-board-line: rgba(244, 239, 227, 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ULTRA-MODERN SCROLLBARS — module-wide.
+   Applies to in-page surfaces under the tickets workspace root (.sd-tw) AND the
+   teleported drawer/modal shells (.tkd, .aam) which mount outside that root.
+   Thin, inset, amber, rounded thumb on a transparent track → rounded container
+   corners never read as square. `.sd-scroll` is an opt-in utility for any other
+   scroll container that wants the same treatment.
+   (Selectors are global — this file's rules are hoisted out of the scoped block.)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.sd-tw, .sd-tw *, .tkd, .tkd *, .aam, .aam *, .sd-scroll, .sd-scroll * {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--sd-amber) 52%, transparent) transparent;
+}
+.sd-tw::-webkit-scrollbar, .sd-tw *::-webkit-scrollbar,
+.tkd::-webkit-scrollbar, .tkd *::-webkit-scrollbar,
+.aam::-webkit-scrollbar, .aam *::-webkit-scrollbar,
+.sd-scroll::-webkit-scrollbar, .sd-scroll *::-webkit-scrollbar { width: 10px; height: 10px; }
+.sd-tw::-webkit-scrollbar-track, .sd-tw *::-webkit-scrollbar-track,
+.tkd::-webkit-scrollbar-track, .tkd *::-webkit-scrollbar-track,
+.aam::-webkit-scrollbar-track, .aam *::-webkit-scrollbar-track,
+.sd-scroll::-webkit-scrollbar-track, .sd-scroll *::-webkit-scrollbar-track { background: transparent; margin: 6px 0; }
+.sd-tw::-webkit-scrollbar-thumb, .sd-tw *::-webkit-scrollbar-thumb,
+.tkd::-webkit-scrollbar-thumb, .tkd *::-webkit-scrollbar-thumb,
+.aam::-webkit-scrollbar-thumb, .aam *::-webkit-scrollbar-thumb,
+.sd-scroll::-webkit-scrollbar-thumb, .sd-scroll *::-webkit-scrollbar-thumb {
+  border-radius: 999px; border: 3px solid transparent; background-clip: padding-box;
+  background-color: color-mix(in srgb, var(--sd-amber) 42%, var(--sd-border-strong));
+  transition: background-color 0.2s;
+}
+.sd-tw::-webkit-scrollbar-thumb:hover, .sd-tw *::-webkit-scrollbar-thumb:hover,
+.tkd::-webkit-scrollbar-thumb:hover, .tkd *::-webkit-scrollbar-thumb:hover,
+.aam::-webkit-scrollbar-thumb:hover, .aam *::-webkit-scrollbar-thumb:hover,
+.sd-scroll::-webkit-scrollbar-thumb:hover, .sd-scroll *::-webkit-scrollbar-thumb:hover {
+  background-color: var(--sd-amber); background-clip: padding-box;
+}
+.sd-tw::-webkit-scrollbar-corner, .sd-tw *::-webkit-scrollbar-corner,
+.tkd *::-webkit-scrollbar-corner, .aam *::-webkit-scrollbar-corner { background: transparent; }
+
+/* ═══ Input polish — smooth animated focus/hover baseline across the module ═══
+   Low-specificity so per-component bespoke focus rings still win; this only
+   guarantees every input/textarea/select animates its state change and exposes
+   an accent caret. */
+.sd-tw input, .sd-tw textarea, .sd-tw select,
+.tkd input, .tkd textarea, .tkd select,
+.aam input, .aam textarea, .aam select {
+  caret-color: var(--sd-amber);
+  transition: border-color 0.22s var(--sd-spring), box-shadow 0.28s var(--sd-spring), background-color 0.22s var(--sd-spring);
+}
+
+/* Dashboard-only keyframes (GLOBAL so canvas/SVG inline `animation:` strings resolve). */
+@keyframes sd-orbit-spin { to { transform: rotate(360deg); } }
+@keyframes sd-frontier-sweep { 0% { transform: translateX(-12%); opacity: 0.5; } 50% { opacity: 1; } 100% { transform: translateX(12%); opacity: 0.5; } }
+@keyframes sd-node-flare { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.5); opacity: 1; } }
+@keyframes sd-ribbon-flow { to { stroke-dashoffset: -1000; } }
+@keyframes sd-orb-ride { 0% { offset-distance: 0%; } 100% { offset-distance: 100%; } }
+@keyframes sd-breathe { 0%, 100% { transform: scale(1); opacity: 0.7; } 50% { transform: scale(1.06); opacity: 1; } }
+@keyframes sd-count-glow { 0%, 100% { text-shadow: 0 0 0 transparent; } 50% { text-shadow: 0 0 18px var(--sd-count-glow, transparent); } }
+@keyframes sd-tile-sheen { 0% { transform: translateX(-130%) skewX(-18deg); } 100% { transform: translateX(240%) skewX(-18deg); } }
+@keyframes sd-bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes sd-stream-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

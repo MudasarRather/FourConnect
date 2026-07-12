@@ -18,7 +18,7 @@
                   <SdPill kind="priority" :value="t.priority" />
                   <SdPill kind="status" :value="t.status" />
                   <span v-if="t.acknowledged_at" class="wrc-ackd"><ShieldCheck :size="11" /> ACK · {{ t.acknowledged_by_name || 'responder' }}</span>
-                  <button v-else-if="agent && !isTerminal" class="wrc-ack-btn" :disabled="busy.ack" @click="doAck">
+                  <button v-else-if="canAct && !isTerminal" class="wrc-ack-btn" :disabled="busy.ack" @click="doAck">
                     <ShieldCheck :size="11" /> Acknowledge
                   </button>
                 </div>
@@ -48,28 +48,28 @@
                   <label>Business impact</label>
                   <div class="wrc-seg">
                     <button v-for="b in BUSINESS_IMPACTS" :key="b.value" class="wrc-seg-btn" :class="{ on: draft.business_impact === b.value }"
-                      :disabled="!agent" @click="draft.business_impact = draft.business_impact === b.value ? '' : b.value">{{ b.label }}</button>
+                      :disabled="!canAct" @click="draft.business_impact = draft.business_impact === b.value ? '' : b.value">{{ b.label }}</button>
                   </div>
                 </div>
                 <div class="wrc-row">
                   <div class="wrc-field">
                     <label>Affected users</label>
-                    <input v-model.number="draft.affected_users" type="number" min="0" class="wrc-input" :disabled="!agent" placeholder="—" />
+                    <input v-model.number="draft.affected_users" type="number" min="0" class="wrc-input" :disabled="!canAct" placeholder="—" />
                   </div>
                   <div class="wrc-field grow">
                     <label>Revenue exposure</label>
-                    <input v-model="draft.revenue_impact" type="text" class="wrc-input" maxlength="160" :disabled="!agent" placeholder="—" />
+                    <input v-model="draft.revenue_impact" type="text" class="wrc-input" maxlength="160" :disabled="!canAct" placeholder="—" />
                   </div>
                 </div>
                 <div class="wrc-field">
                   <label>War-room link</label>
                   <div class="wrc-url">
                     <Link2 :size="13" />
-                    <input v-model="draft.war_room_url" type="url" class="wrc-input bare" maxlength="400" :disabled="!agent" placeholder="https://meet…  ·  #incident-channel" />
+                    <input v-model="draft.war_room_url" type="url" class="wrc-input bare" maxlength="400" :disabled="!canAct" placeholder="https://meet…  ·  #incident-channel" />
                     <a v-if="t.war_room_url" class="wrc-join" :href="t.war_room_url" target="_blank" rel="noopener">Join <ExternalLink :size="11" /></a>
                   </div>
                 </div>
-                <div v-if="agent && impactDirty" class="wrc-save-row">
+                <div v-if="canAct && impactDirty" class="wrc-save-row">
                   <button class="wrc-btn primary sm" :disabled="busy.impact" @click="saveImpact">
                     <Loader v-if="busy.impact" :size="12" class="wrc-spin" /><Check v-else :size="12" /> Save assessment
                   </button>
@@ -86,7 +86,7 @@
                 </span>
               </h4>
 
-              <template v-if="agent && !isTerminal">
+              <template v-if="canAct && !isTerminal">
                 <div class="wrc-templates">
                   <button v-for="tpl in CRITICAL_UPDATE_TEMPLATES" :key="tpl.key" class="wrc-tpl" :class="[tpl.phase, { on: pickedTpl === tpl.key }]"
                     @click="applyTemplate(tpl)">{{ tpl.label }}</button>
@@ -153,7 +153,7 @@
               <h4 class="wrc-p-title"><FileWarning :size="13" /> Post-incident review
                 <span v-if="!hasRca" class="wrc-rca-gap sd-mono">RCA MISSING</span>
               </h4>
-              <template v-if="agent">
+              <template v-if="canAct">
                 <div class="wrc-field"><label>What happened (root cause)</label>
                   <textarea v-model="rca.rca_summary" class="wrc-composer" rows="2" placeholder="Root cause of the incident…" /></div>
                 <div class="wrc-field"><label>Corrective action</label>
@@ -172,7 +172,7 @@
 
             <!-- ══ command actions ── -->
             <div class="wrc-cmds">
-              <button v-if="agent" class="wrc-btn danger" @click="$emit('declare', t)">
+              <button v-if="canAct" class="wrc-btn danger" @click="$emit('declare', t)">
                 <Siren :size="13" /> {{ t.is_major_incident ? 'Incident settings' : 'Declare major incident' }}
               </button>
               <button class="wrc-btn ghost" @click="$emit('open-ticket', t.id)"><PanelRightOpen :size="13" /> Full ticket &amp; conversation</button>
@@ -200,6 +200,7 @@ import SdPill from '../components/SdPill.vue'
 import SdSelect from '../components/SdSelect.vue'
 import {
   updateTicket, ackTicket, postStatusUpdate, setTicketRca,
+  useCapabilities, fetchCapabilities,
   BUSINESS_IMPACTS, CRITICAL_UPDATE_TEMPLATES, UPDATE_CADENCE_OPTIONS,
 } from '@/composables/useSupportDesk'
 
@@ -216,6 +217,21 @@ const toast = useToast()
 
 const t = computed(() => props.ticket)
 const isTerminal = computed(() => ['resolved', 'closed'].includes(t.value?.status))
+/* Owner-tier — the backend actor-gates ack / status-update / RCA / incident settings
+   (assignee ∪ collaborator ∪ team lead ∪ admin; unassigned = claim-eligible). On the
+   mine-scoped Critical desk this is true by construction; it matters if the console
+   is ever opened from a team-visible surface. */
+const caps = useCapabilities()
+watch(() => props.open, (v) => { if (v) fetchCapabilities().catch(() => {}) })
+const canAct = computed(() => {
+  const tk = t.value
+  if (!props.agent || !tk) return false
+  if (caps.isAdmin) return true
+  const my = String(props.me?.id || '')
+  if (!tk.assigned_agent_id || String(tk.assigned_agent_id) === my) return true
+  if ((tk.collaborators || []).map(String).includes(my)) return true
+  return (caps.leadTeamIds || []).map(String).includes(String(tk.team_id))
+})
 const others = computed(() => (props.viewers || []).filter(v => !v.is_me))
 const initials = (n) => (n ? n.trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase() : '—')
 const busy = reactive({ ack: false, impact: false, update: false, rca: false })

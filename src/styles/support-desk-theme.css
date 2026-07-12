@@ -160,6 +160,113 @@
   --sd-rop-grad:       linear-gradient(122deg, #ffc2de 0%, #e0509b 48%, #7c1d4f 100%);
   --sd-rop-glow:       0 0 30px rgba(224, 80, 155, 0.28);
 
+  /* Queues "THE SWITCHYARD" — brass signal-lanterns over night-steel rails for the ROUTING
+     desk (rules = switch points, queues = classification lanes, tiers = ascending platforms).
+     t1/t2/t3 = the tier accents (gold frontline → ember specialist → tempered-steel
+     engineering — house warm family, no blue/indigo). rail = track steel, go/halt = the
+     semaphore pair (emerald proceed / rose stop), amber warn rides --sd-qs-warn.
+     Plain hex on instrument-feeding tokens (readVar). */
+  --sd-qs-core:        #edb249;   --sd-qs-soft: rgba(237, 178, 73, 0.13);
+  --sd-qs-hi:          #ffd98a;   --sd-qs-hi-soft: rgba(255, 217, 138, 0.14);
+  --sd-qs-deep:        #9a6b1f;   --sd-qs-deep-soft: rgba(154, 107, 31, 0.18);
+  --sd-qs-t1:          #f5c04e;   --sd-qs-t1-soft: rgba(245, 192, 78, 0.14);
+  --sd-qs-t2:          #fb7d3c;   --sd-qs-t2-soft: rgba(251, 125, 60, 0.14);
+  --sd-qs-t3:          #b7841f;   --sd-qs-t3-soft: rgba(183, 132, 31, 0.16);
+  --sd-qs-rail:        #8b93a3;   --sd-qs-rail-soft: rgba(139, 147, 163, 0.14);
+  --sd-qs-go:          #34d399;   --sd-qs-go-soft: rgba(52, 211, 153, 0.14);
+  --sd-qs-warn:        #fbbf24;   --sd-qs-warn-soft: rgba(251, 191, 36, 0.15);
+  --sd-qs-halt:        #fb7185;   --sd-qs-halt-soft: rgba(251, 113, 133, 0.14);
+  --sd-qs-brd:         rgba(237, 178, 73, 0.30);
+  --sd-qs-deep-bg:     #0b0906;   /* the yard night behind the rails (dark in BOTH themes) */
+  --sd-qs-grad:        linear-gradient(122deg, #ffe3a8 0%, #edb249 48%, #8a5a14 100%);
+  --sd-qs-glow:        0 0 30px rgba(237, 178, 73, 0.28);
+
+  /* Queues Overview "THE VITALS BAY" — the supervisor board as an ICU telemetry wing:
+     every queue is a patient monitor (EKG rhythm = inflow, SpO₂ ring = SLA attainment,
+     blinking code tags = breach). Monitor SCREENS stay night-clinical phosphor in BOTH
+     themes (the --intel-board precedent); bezels + page surfaces re-skin per theme.
+     Plain hex on instrument-feeding tokens (readVar). */
+  --sd-qv-core:        #f2b64d;   --sd-qv-soft: rgba(242, 182, 77, 0.13);
+  --sd-qv-hi:          #ffd98a;   --sd-qv-hi-soft: rgba(255, 217, 138, 0.14);
+  --sd-qv-trace:       #f2b64d;   /* fleet EKG pen (admissions) */
+  --sd-qv-trace2:      #34d399;   /* discharge pen (outflow) */
+  --sd-qv-screen:      #050805;   /* monitor glass (dark in BOTH themes) */
+  --sd-qv-screen-ink:  #dff0dc;   /* phosphor text on the screen (both themes) */
+  --sd-qv-screen-dim:  #79947a;   /* phosphor labels (both themes) */
+  --sd-qv-grid:        rgba(120, 180, 120, 0.10);  /* EKG graticule (both themes) */
+  --sd-qv-bezel:       #151a15;   /* monitor housing */
+  --sd-qv-bezel-brd:   rgba(160, 200, 160, 0.14);
+  --sd-qv-go:          #34d399;   --sd-qv-go-soft: rgba(52, 211, 153, 0.14);
+  --sd-qv-warn:        #fbbf24;   --sd-qv-warn-soft: rgba(251, 191, 36, 0.15);
+  --sd-qv-halt:        #fb7185;   --sd-qv-halt-soft: rgba(251, 113, 133, 0.14);
+  --sd-qv-brd:         rgba(242, 182, 77, 0.28);
+  --sd-qv-grad:        linear-gradient(118deg, #ffe9bb 0%, #f2b64d 46%, #8a5a14 100%);
+  --sd-qv-glow:        0 0 30px rgba(242, 182, 77, 0.26);
+
+  /* Queue Config "THE DECISION GRAPH" — the routing engine rendered as a live glass
+     node-flow canvas (intake orb → rule nodes → lane terminals; packets ride the
+     edges). Signal amber over graph-void black; spill (overflow) is STEEL — a
+     neutral diversion, never a cool accent. The stage + node faces stay a dark
+     machine in BOTH themes (the --intel-board precedent); the page surfaces around
+     it re-skin per theme. Plain hex on instrument-feeding tokens (readVar). */
+  --sd-qc-core:        #f2b64d;   --sd-qc-soft: rgba(242, 182, 77, 0.13);
+  --sd-qc-hi:          #ffdf9e;   --sd-qc-hi-soft: rgba(255, 223, 158, 0.14);
+  --sd-qc-ink:         #f5ead6;   /* console/legible text ON the stage (both themes) */
+  --sd-qc-edge:        #6f5a30;   /* idle edge bronze (canvas applies own alpha) */
+  --sd-qc-packet:      #ffd98a;   /* traveling ticket packets */
+  --sd-qc-node:        #14100a;   /* node card face on the stage (dark both themes) */
+  --sd-qc-node-brd:    rgba(242, 182, 77, 0.38);
+  --sd-qc-go:          #34d399;   --sd-qc-go-soft: rgba(52, 211, 153, 0.14);
+  --sd-qc-warn:        #fbbf24;   --sd-qc-warn-soft: rgba(251, 191, 36, 0.15);
+  --sd-qc-halt:        #fb7185;   --sd-qc-halt-soft: rgba(251, 113, 133, 0.14);
+  --sd-qc-spill:       #8b93a3;   --sd-qc-spill-soft: rgba(139, 147, 163, 0.15);
+  --sd-qc-brd:         rgba(242, 182, 77, 0.28);
+  --sd-qc-stage:       #080604;   /* the graph void (dark in BOTH themes) */
+  --sd-qc-grad:        linear-gradient(118deg, #ffe9bb 0%, #f2b64d 46%, #8a5a14 100%);
+  --sd-qc-glow:        0 0 30px rgba(242, 182, 77, 0.26);
+
+  /* L2 desk "THE STORM BUREAU" — a meteorological chart room for the SPECIALIST tier:
+     drifting isobars over charcoal, storm cells = breaches, fronts = escalation inflow.
+     core rides the L2 ember (--sd-qs-t2 family); ink = the chart's warm-ivory pen line;
+     paper = chart vellum surfaces; front = the sweeping warm-front ribbon. Weather is
+     drawn in warm inks, never blues. Plain hex on instrument-feeding tokens (readVar). */
+  --sd-l2-core:        #fb7d3c;   --sd-l2-soft: rgba(251, 125, 60, 0.14);
+  --sd-l2-hi:          #ffb27e;   --sd-l2-hi-soft: rgba(255, 178, 126, 0.15);
+  --sd-l2-deep:        #b34a14;   --sd-l2-deep-soft: rgba(179, 74, 20, 0.18);
+  --sd-l2-ink:         #e8dcc3;   --sd-l2-ink-soft: rgba(232, 220, 195, 0.13);
+  --sd-l2-front:       #f5c04e;   --sd-l2-front-soft: rgba(245, 192, 78, 0.14);
+  --sd-l2-go:          #34d399;   --sd-l2-go-soft: rgba(52, 211, 153, 0.14);
+  --sd-l2-warn:        #fbbf24;   --sd-l2-warn-soft: rgba(251, 191, 36, 0.15);
+  --sd-l2-halt:        #fb7185;   --sd-l2-halt-soft: rgba(251, 113, 133, 0.14);
+  --sd-l2-brd:         rgba(251, 125, 60, 0.30);
+  --sd-l2-deep-bg:     #0d0805;   /* the chart room at night (dark in BOTH themes) */
+  --sd-l2-paper:       rgba(232, 220, 195, 0.05);
+  --sd-l2-grad:        linear-gradient(122deg, #ffcfa3 0%, #fb7d3c 48%, #9a3d0e 100%);
+  --sd-l2-glow:        0 0 30px rgba(251, 125, 60, 0.28);
+
+  /* L3 desk "THE EVIDENCE WALL" — a detective case room for the ENGINEERING tier:
+     incidents pin up as manila evidence cards on a cork night-wall, red strings run
+     to the suspect (the Problem record), the KEDB is the case archive. core rides
+     the L3 brass (--sd-qs-t3 family, brightened for the night stage); string = the
+     signature red twine; card/cardline = manila evidence paper (paper-cream in BOTH
+     themes, like a real card under a desk lamp); chalk = the wall's hand-lettered
+     ink. Plain hex on instrument-feeding tokens (readVar). */
+  --sd-l3-core:        #d9a441;   --sd-l3-soft: rgba(217, 164, 65, 0.14);
+  --sd-l3-hi:          #f0c878;   --sd-l3-hi-soft: rgba(240, 200, 120, 0.15);
+  --sd-l3-deep:        #8a5f14;   --sd-l3-deep-soft: rgba(138, 95, 20, 0.18);
+  --sd-l3-string:      #e0524f;   --sd-l3-string-soft: rgba(224, 82, 79, 0.16);
+  --sd-l3-chalk:       #e9ddc0;   --sd-l3-chalk-soft: rgba(233, 221, 192, 0.13);
+  --sd-l3-card:        #efe4c6;   --sd-l3-card-deep: #ddcda2;
+  --sd-l3-card-ink:    #33260f;   --sd-l3-card-dim: #7c6a49;
+  --sd-l3-go:          #34d399;   --sd-l3-go-soft: rgba(52, 211, 153, 0.14);
+  --sd-l3-warn:        #fbbf24;   --sd-l3-warn-soft: rgba(251, 191, 36, 0.15);
+  --sd-l3-halt:        #fb7185;   --sd-l3-halt-soft: rgba(251, 113, 133, 0.14);
+  --sd-l3-brd:         rgba(217, 164, 65, 0.30);
+  --sd-l3-deep-bg:     #100b06;   /* the cork wall after dark (dark in BOTH themes) */
+  --sd-l3-paper:       rgba(233, 221, 192, 0.05);
+  --sd-l3-grad:        linear-gradient(122deg, #ffe3a8 0%, #d9a441 48%, #7a5410 100%);
+  --sd-l3-glow:        0 0 30px rgba(217, 164, 65, 0.28);
+
   /* Resolved "Closeout" — deep-emerald resolution ink + warm brass seal for the QUALITY-GATE
      desk (work preserved, CSAT measured, the 3-day auto-close window ticking) vs the generic
      --sd-success chip green. brass = the seal / CSAT voice, close = the auto-close countdown
@@ -433,6 +540,79 @@
   --sd-rop-deep-bg:    #170a12;
   --sd-rop-grad:       linear-gradient(122deg, #d33a8c 0%, #93275f 52%, #7c1d4f 100%);
   --sd-rop-glow:       0 0 24px rgba(176, 36, 114, 0.22);
+
+  --sd-qs-core:        #b07f1a;   --sd-qs-soft: rgba(176, 127, 26, 0.11);
+  --sd-qs-hi:          #d97706;   --sd-qs-hi-soft: rgba(217, 119, 6, 0.12);
+  --sd-qs-deep:        #8a5a14;   --sd-qs-deep-soft: rgba(138, 90, 20, 0.14);
+  --sd-qs-t1:          #b45309;   --sd-qs-t1-soft: rgba(180, 83, 9, 0.13);
+  --sd-qs-t2:          #c2410c;   --sd-qs-t2-soft: rgba(194, 65, 12, 0.13);
+  --sd-qs-t3:          #92601a;   --sd-qs-t3-soft: rgba(146, 96, 26, 0.14);
+  --sd-qs-rail:        #5c6674;   --sd-qs-rail-soft: rgba(92, 102, 116, 0.12);
+  --sd-qs-go:          #047857;   --sd-qs-go-soft: rgba(4, 120, 87, 0.13);
+  --sd-qs-warn:        #b45309;   --sd-qs-warn-soft: rgba(180, 83, 9, 0.13);
+  --sd-qs-halt:        #be123c;   --sd-qs-halt-soft: rgba(190, 18, 60, 0.12);
+  --sd-qs-brd:         rgba(176, 127, 26, 0.32);
+  --sd-qs-deep-bg:     #100c05;
+  --sd-qs-grad:        linear-gradient(122deg, #d97706 0%, #b07f1a 52%, #8a5a14 100%);
+  --sd-qs-glow:        0 0 24px rgba(176, 127, 26, 0.22);
+
+  /* Vitals Bay — daylight ward. Screens/phosphor/graticule keep their night-clinical
+     values on purpose (screen/screen-ink/screen-dim/grid/trace pens un-overridden);
+     bezels, accents and semantic inks re-skin for cream. */
+  --sd-qv-core:        #b07f1a;   --sd-qv-soft: rgba(176, 127, 26, 0.11);
+  --sd-qv-hi:          #d97706;   --sd-qv-hi-soft: rgba(217, 119, 6, 0.12);
+  --sd-qv-bezel:       #ece9db;
+  --sd-qv-bezel-brd:   rgba(96, 116, 90, 0.22);
+  --sd-qv-go:          #047857;   --sd-qv-go-soft: rgba(4, 120, 87, 0.13);
+  --sd-qv-warn:        #b45309;   --sd-qv-warn-soft: rgba(180, 83, 9, 0.13);
+  --sd-qv-halt:        #be123c;   --sd-qv-halt-soft: rgba(190, 18, 60, 0.12);
+  --sd-qv-brd:         rgba(176, 127, 26, 0.32);
+  --sd-qv-grad:        linear-gradient(118deg, #d97706 0%, #b07f1a 52%, #8a5a14 100%);
+  --sd-qv-glow:        0 0 22px rgba(176, 127, 26, 0.2);
+
+  /* Decision Graph — cream-readable accents around a stage that stays night
+     (stage/node/ink/edge/packet keep their dark-machine values on purpose). */
+  --sd-qc-core:        #a8791b;   --sd-qc-soft: rgba(168, 121, 27, 0.12);
+  --sd-qc-hi:          #d97706;   --sd-qc-hi-soft: rgba(217, 119, 6, 0.12);
+  --sd-qc-go:          #047857;   --sd-qc-go-soft: rgba(4, 120, 87, 0.13);
+  --sd-qc-warn:        #b45309;   --sd-qc-warn-soft: rgba(180, 83, 9, 0.13);
+  --sd-qc-halt:        #be123c;   --sd-qc-halt-soft: rgba(190, 18, 60, 0.12);
+  --sd-qc-spill:       #5c6674;   --sd-qc-spill-soft: rgba(92, 102, 116, 0.13);
+  --sd-qc-brd:         rgba(168, 121, 27, 0.34);
+  --sd-qc-grad:        linear-gradient(118deg, #d97706 0%, #a8791b 52%, #8a5a14 100%);
+  --sd-qc-glow:        0 0 22px rgba(168, 121, 27, 0.2);
+
+  --sd-l2-core:        #c2410c;   --sd-l2-soft: rgba(194, 65, 12, 0.12);
+  --sd-l2-hi:          #ea580c;   --sd-l2-hi-soft: rgba(234, 88, 12, 0.12);
+  --sd-l2-deep:        #9a3412;   --sd-l2-deep-soft: rgba(154, 52, 18, 0.14);
+  --sd-l2-ink:         #4a3a24;   --sd-l2-ink-soft: rgba(74, 58, 36, 0.12);
+  --sd-l2-front:       #b45309;   --sd-l2-front-soft: rgba(180, 83, 9, 0.13);
+  --sd-l2-go:          #047857;   --sd-l2-go-soft: rgba(4, 120, 87, 0.13);
+  --sd-l2-warn:        #b45309;   --sd-l2-warn-soft: rgba(180, 83, 9, 0.13);
+  --sd-l2-halt:        #be123c;   --sd-l2-halt-soft: rgba(190, 18, 60, 0.12);
+  --sd-l2-brd:         rgba(194, 65, 12, 0.32);
+  --sd-l2-deep-bg:     #120a06;
+  --sd-l2-paper:       rgba(74, 58, 36, 0.05);
+  --sd-l2-grad:        linear-gradient(122deg, #ea580c 0%, #c2410c 52%, #9a3412 100%);
+  --sd-l2-glow:        0 0 24px rgba(194, 65, 12, 0.22);
+
+  /* L3 Evidence Wall — daylight case room. The hero stage stays night (re-pin block
+     at the end of this file); everything else reads these cream-legible inks. */
+  --sd-l3-core:        #92601a;   --sd-l3-soft: rgba(146, 96, 26, 0.13);
+  --sd-l3-hi:          #b7841f;   --sd-l3-hi-soft: rgba(183, 132, 31, 0.14);
+  --sd-l3-deep:        #6f4a10;   --sd-l3-deep-soft: rgba(111, 74, 16, 0.15);
+  --sd-l3-string:      #b91c1c;   --sd-l3-string-soft: rgba(185, 28, 28, 0.12);
+  --sd-l3-chalk:       #4a3a24;   --sd-l3-chalk-soft: rgba(74, 58, 36, 0.12);
+  --sd-l3-card:        #f7efd9;   --sd-l3-card-deep: #e7d9b4;
+  --sd-l3-card-ink:    #33260f;   --sd-l3-card-dim: #7c6a49;
+  --sd-l3-go:          #047857;   --sd-l3-go-soft: rgba(4, 120, 87, 0.13);
+  --sd-l3-warn:        #b45309;   --sd-l3-warn-soft: rgba(180, 83, 9, 0.13);
+  --sd-l3-halt:        #be123c;   --sd-l3-halt-soft: rgba(190, 18, 60, 0.12);
+  --sd-l3-brd:         rgba(146, 96, 26, 0.32);
+  --sd-l3-deep-bg:     #120c07;
+  --sd-l3-paper:       rgba(74, 58, 36, 0.05);
+  --sd-l3-grad:        linear-gradient(122deg, #b7841f 0%, #92601a 52%, #6f4a10 100%);
+  --sd-l3-glow:        0 0 24px rgba(146, 96, 26, 0.22);
 
   --sd-res-core:       #047857;   --sd-res-soft: rgba(4, 120, 87, 0.11);
   --sd-res-hi:         #059669;   --sd-res-hi-soft: rgba(5, 150, 105, 0.12);
@@ -885,3 +1065,45 @@
 @keyframes sd-tile-sheen { 0% { transform: translateX(-130%) skewX(-18deg); } 100% { transform: translateX(240%) skewX(-18deg); } }
 @keyframes sd-bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @keyframes sd-stream-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ═════ L2 STORM BUREAU hero — NIGHT STAGE RE-PIN (light theme) ═════
+   The hero (.sbh) deliberately stays a night chart room in both themes, but the
+   synoptic canvas + barometer resolve --sd-l2-* via getComputedStyle. In light mode
+   those tokens flip to dark inks (#4a3a24 isobars on a #0d0805 stage = invisible
+   chart, invisible needle). Re-pin the night values for everything INSIDE the hero
+   stage only — the rest of the L2 desk keeps the light tokens. */
+[data-theme="light"] .sbh {
+  --sd-l2-core:      #fb7d3c;   --sd-l2-soft: rgba(251, 125, 60, 0.14);
+  --sd-l2-hi:        #ffb27e;   --sd-l2-hi-soft: rgba(255, 178, 126, 0.15);
+  --sd-l2-deep:      #b34a14;   --sd-l2-deep-soft: rgba(179, 74, 20, 0.18);
+  --sd-l2-ink:       #e8dcc3;   --sd-l2-ink-soft: rgba(232, 220, 195, 0.13);
+  --sd-l2-front:     #f5c04e;   --sd-l2-front-soft: rgba(245, 192, 78, 0.14);
+  --sd-l2-go:        #34d399;   --sd-l2-go-soft: rgba(52, 211, 153, 0.14);
+  --sd-l2-warn:      #fbbf24;   --sd-l2-warn-soft: rgba(251, 191, 36, 0.15);
+  --sd-l2-halt:      #fb7185;   --sd-l2-halt-soft: rgba(251, 113, 133, 0.14);
+  --sd-l2-brd:       rgba(251, 125, 60, 0.30);
+  --sd-l2-paper:     rgba(232, 220, 195, 0.05);
+  --sd-l2-grad:      linear-gradient(122deg, #ffcfa3 0%, #fb7d3c 48%, #9a3d0e 100%);
+  --sd-l2-glow:      0 0 30px rgba(251, 125, 60, 0.28);
+}
+
+/* ═════ L3 EVIDENCE WALL hero — NIGHT STAGE RE-PIN (light theme) ═════
+   The hero (.ewh) stays a cork case-wall after dark in both themes — same rule as
+   the L2 chart room above. The string SVG + chalk labels resolve --sd-l3-* tokens,
+   and the light values (#4a3a24 chalk on a #100b06 wall) would vanish. Re-pin the
+   night values INSIDE the hero stage only. */
+[data-theme="light"] .ewh {
+  --sd-l3-core:      #d9a441;   --sd-l3-soft: rgba(217, 164, 65, 0.14);
+  --sd-l3-hi:        #f0c878;   --sd-l3-hi-soft: rgba(240, 200, 120, 0.15);
+  --sd-l3-deep:      #8a5f14;   --sd-l3-deep-soft: rgba(138, 95, 20, 0.18);
+  --sd-l3-string:    #e0524f;   --sd-l3-string-soft: rgba(224, 82, 79, 0.16);
+  --sd-l3-chalk:     #e9ddc0;   --sd-l3-chalk-soft: rgba(233, 221, 192, 0.13);
+  --sd-l3-card:      #efe4c6;   --sd-l3-card-deep: #ddcda2;
+  --sd-l3-go:        #34d399;   --sd-l3-go-soft: rgba(52, 211, 153, 0.14);
+  --sd-l3-warn:      #fbbf24;   --sd-l3-warn-soft: rgba(251, 191, 36, 0.15);
+  --sd-l3-halt:      #fb7185;   --sd-l3-halt-soft: rgba(251, 113, 133, 0.14);
+  --sd-l3-brd:       rgba(217, 164, 65, 0.30);
+  --sd-l3-paper:     rgba(233, 221, 192, 0.05);
+  --sd-l3-grad:      linear-gradient(122deg, #ffe3a8 0%, #d9a441 48%, #7a5410 100%);
+  --sd-l3-glow:      0 0 30px rgba(217, 164, 65, 0.28);
+}

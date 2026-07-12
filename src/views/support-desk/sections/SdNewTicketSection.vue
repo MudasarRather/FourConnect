@@ -38,7 +38,7 @@
         <div ref="stepWrapRef" class="itk-step-wrap">
           <Presence mode="wait">
             <!-- 1 · REQUESTER & CLIENT -->
-            <Motion v-if="currentKey === 'requester'" key="requester" class="itk-step" :initial="stepIn" :animate="{ opacity: 1, x: 0 }" :exit="stepOut" :transition="stepT">
+            <Motion v-if="currentKey === 'requester'" key="requester" class="itk-step" :initial="stepIn" :animate="stepAnimate" :exit="stepOut" :transition="stepT">
               <div class="step-head"><span class="step-no">{{ stepNo('requester') }}</span><div><h3>Requester information</h3><p>Who this ticket is for — bind the client so the contract &amp; SLA follow.</p></div></div>
 
               <!-- raised-by identity strip -->
@@ -86,7 +86,7 @@
             </Motion>
 
             <!-- 2 · DESCRIBE -->
-            <Motion v-else-if="currentKey === 'describe'" key="describe" class="itk-step" :initial="stepIn" :animate="{ opacity: 1, x: 0 }" :exit="stepOut" :transition="stepT">
+            <Motion v-else-if="currentKey === 'describe'" key="describe" class="itk-step" :initial="stepIn" :animate="stepAnimate" :exit="stepOut" :transition="stepT">
               <div class="step-head"><span class="step-no">{{ stepNo('describe') }}</span><div><h3>The issue</h3><p>A sharp subject and rich detail resolve faster.</p></div></div>
               <label class="f">
                 <span>Subject <em>*</em></span>
@@ -109,11 +109,31 @@
                   </button>
                 </div>
               </div>
+
+              <!-- SIGNAL PRISM — the intake intelligence, woven into the form -->
+              <SdSignalRead
+                variant="live"
+                :subject="form.subject" :description="form.description"
+                :ticket-type="form.ticket_type" :priority="form.priority"
+                :impact="form.impact" :urgency="form.urgency"
+                :category-id="form.category_id" :subcategory-id="form.subcategory_id"
+                :categories="pickers.categories" :recent-tickets="recent"
+                @apply="applySuggestion" @open="goTicket" @article="goArticle" @focus-desc="focusDesc"
+              />
             </Motion>
 
             <!-- 3 · CLASSIFY -->
-            <Motion v-else-if="currentKey === 'classify'" key="classify" class="itk-step" :initial="stepIn" :animate="{ opacity: 1, x: 0 }" :exit="stepOut" :transition="stepT">
+            <Motion v-else-if="currentKey === 'classify'" key="classify" class="itk-step" :initial="stepIn" :animate="stepAnimate" :exit="stepOut" :transition="stepT">
               <div class="step-head"><span class="step-no">{{ stepNo('classify') }}</span><div><h3>Classification &amp; priority</h3><p>Plot impact against urgency — the priority computes itself.</p></div></div>
+              <SdSignalRead
+                variant="banner" class="itk-banner"
+                :subject="form.subject" :description="form.description"
+                :ticket-type="form.ticket_type" :priority="form.priority"
+                :impact="form.impact" :urgency="form.urgency"
+                :category-id="form.category_id" :subcategory-id="form.subcategory_id"
+                :categories="pickers.categories" :recent-tickets="recent"
+                @apply="applySuggestion"
+              />
               <div class="f-grid2">
                 <div class="f"><label>Category <em>*</em></label><SdSelect v-model="form.category_id" :options="mainCatOpts" placeholder="Select a category…" /></div>
                 <div class="f"><label>Subcategory</label><SdSelect v-model="form.subcategory_id" :options="subCatOpts" :disabled="!hasSubs" :placeholder="hasSubs ? 'Select a subcategory…' : 'No subcategories'" /></div>
@@ -133,14 +153,14 @@
             </Motion>
 
             <!-- 4 · ROUTING & SLA / ASSIGNMENT -->
-            <Motion v-else-if="currentKey === 'routing'" key="routing" class="itk-step" :initial="stepIn" :animate="{ opacity: 1, x: 0 }" :exit="stepOut" :transition="stepT">
+            <Motion v-else-if="currentKey === 'routing'" key="routing" class="itk-step" :initial="stepIn" :animate="stepAnimate" :exit="stepOut" :transition="stepT">
               <div class="step-head"><span class="step-no">{{ stepNo('routing') }}</span><div><h3>{{ isAgent ? 'Routing & SLA' : 'Assignment' }}</h3><p>Where it goes, the SLA it’s bound to, and who owns it.</p></div></div>
               <div v-if="isAgent" class="f">
                 <label>SLA package <i class="opt">defaults to the client / global policy</i></label>
                 <SdSelect v-model="form.sla_package_id" :options="slaOpts" placeholder="Auto (org / default)" />
               </div>
               <SdRoutingPreview
-                :category-id="form.category_id" :ticket-type="form.ticket_type" :organization-id="form.organization_id"
+                :category-id="form.category_id" :subcategory-id="form.subcategory_id" :ticket-type="form.ticket_type" :organization-id="form.organization_id"
                 :priority="form.priority" :sla-package-id="form.sla_package_id"
                 :is-agent="isAgent" :is-manager="isAgent && isManager" :is-admin="isAdmin"
                 v-model:assign-me="form.assign_me" v-model:team-id="form.team_id" v-model:assigned-agent-id="form.assigned_agent_id"
@@ -157,7 +177,7 @@
             </Motion>
 
             <!-- 5 · CONTEXT (agent only) — impact / vendor / related -->
-            <Motion v-else-if="currentKey === 'context'" key="context" class="itk-step" :initial="stepIn" :animate="{ opacity: 1, x: 0 }" :exit="stepOut" :transition="stepT">
+            <Motion v-else-if="currentKey === 'context'" key="context" class="itk-step" :initial="stepIn" :animate="stepAnimate" :exit="stepOut" :transition="stepT">
               <div class="step-head"><span class="step-no">{{ stepNo('context') }}</span><div><h3>Business impact &amp; links <i class="opt-h">optional</i></h3><p>Quantify the blast radius and connect related records.</p></div></div>
               <div class="f">
                 <span class="f-lbl">Business impact</span>
@@ -179,7 +199,7 @@
             </Motion>
 
             <!-- 6 · ATTACH -->
-            <Motion v-else-if="currentKey === 'attach'" key="attach" class="itk-step" :initial="stepIn" :animate="{ opacity: 1, x: 0 }" :exit="stepOut" :transition="stepT">
+            <Motion v-else-if="currentKey === 'attach'" key="attach" class="itk-step" :initial="stepIn" :animate="stepAnimate" :exit="stepOut" :transition="stepT">
               <div class="step-head"><span class="step-no">{{ stepNo('attach') }}</span><div><h3>Evidence &amp; tags</h3><p>Screenshots, logs and labels that speed up triage.</p></div></div>
               <div class="f">
                 <span class="f-lbl">Attachments <i class="opt">PDF / image · ≤5MB each</i></span>
@@ -203,7 +223,7 @@
             </Motion>
 
             <!-- 7 · REVIEW -->
-            <Motion v-else key="review" class="itk-step" :initial="stepIn" :animate="{ opacity: 1, x: 0 }" :exit="stepOut" :transition="stepT">
+            <Motion v-else key="review" class="itk-step" :initial="stepIn" :animate="stepAnimate" :exit="stepOut" :transition="stepT">
               <div class="step-head"><span class="step-no">{{ stepNo('review') }}</span><div><h3>Review &amp; submit</h3><p>One last look before the SLA clock starts.</p></div></div>
               <ul class="rev">
                 <li><span><Tag :size="13" /> Type</span><b>{{ typeLabelOf(form.ticket_type) }}</b></li>
@@ -215,6 +235,15 @@
                 <li v-if="form.collaborators.length"><span><Star :size="13" /> Watchers</span><b>{{ form.collaborators.length }}</b></li>
                 <li><span><Paperclip :size="13" /> Attachments</span><b>{{ form.attachments.length || 'None' }}</b></li>
               </ul>
+              <SdSignalRead
+                variant="digest" class="itk-digest"
+                :subject="form.subject" :description="form.description"
+                :ticket-type="form.ticket_type" :priority="form.priority"
+                :impact="form.impact" :urgency="form.urgency"
+                :category-id="form.category_id" :subcategory-id="form.subcategory_id"
+                :categories="pickers.categories" :recent-tickets="recent"
+                @apply="applySuggestion"
+              />
               <p v-if="error" class="itk-err"><AlertCircle :size="14" /> {{ error }}</p>
               <Motion as="button" type="button" class="itk-submit" :class="{ off: !canSubmit }" :disabled="!canSubmit || saving"
                 :whileHover="canSubmit ? { y: -2, scale: 1.01 } : {}" :whileTap="canSubmit ? { scale: 0.98 } : {}" @click="submit">
@@ -251,12 +280,6 @@
           </Motion>
         </footer>
       </main>
-
-      <!-- RIGHT — intake intelligence -->
-      <div class="itk-copilot">
-        <SdIntakeCopilot :subject="form.subject" :description="form.description" :ticket-type="form.ticket_type" :priority="form.priority"
-          :category-id="form.category_id" :categories="pickers.categories" :recent-tickets="recent" @apply="applySuggestion" @open="goTicket" @article="goArticle" />
-      </div>
     </div>
 
     <!-- ══ SAVE DRAFT MODAL ══ -->
@@ -340,7 +363,7 @@ import {
 } from 'lucide-vue-next'
 import SdIntakeHero from '../components/SdIntakeHero.vue'
 import SdIntakeCrystal from '../components/SdIntakeCrystal.vue'
-import SdIntakeCopilot from '../components/SdIntakeCopilot.vue'
+import SdSignalRead from '../components/SdSignalRead.vue'
 import SdRoutingPreview from '../components/SdRoutingPreview.vue'
 import SdPriorityMatrix from '../components/SdPriorityMatrix.vue'
 import SdSelect from '../components/SdSelect.vue'
@@ -480,9 +503,22 @@ const PRIORITY_TO_MATRIX = {
 const setPriority = (p) => { form.priority = p; const m = PRIORITY_TO_MATRIX[p]; if (m) { form.impact = m.impact; form.urgency = m.urgency } }
 const applySuggestion = (patch) => {
   if (patch.ticket_type) form.ticket_type = patch.ticket_type
-  if (patch.priority) setPriority(patch.priority)
-  if (patch.category_id) { form.category_id = patch.category_id; form.subcategory_id = '' }
+  // Impact × Urgency travel WITH the priority when the engine derived it through the
+  // matrix — the matrix lights up exactly as if the user plotted it by hand.
+  if (patch.impact && patch.urgency) {
+    form.impact = patch.impact; form.urgency = patch.urgency
+    if (patch.priority) form.priority = patch.priority
+  } else if (patch.priority) setPriority(patch.priority)
+  if (patch.category_id) {
+    form.category_id = String(patch.category_id)
+    form.subcategory_id = patch.subcategory_id ? String(patch.subcategory_id) : ''
+  } else if (patch.subcategory_id) form.subcategory_id = String(patch.subcategory_id)
   toast.success('Applied suggestion', { timeout: 1400 })
+}
+const focusDesc = () => {
+  const i = stepKeys.value.indexOf('describe')
+  if (currentStep.value !== i) goStep(i)
+  nextTick(() => descEl.value?.focus())
 }
 
 /* ── validity + role-adaptive team gate + ledger ── */
@@ -577,9 +613,10 @@ const blockStep = (msg) => { stepError.value = msg; toast.warning(msg, { timeout
 watch(() => [form.contact_name, form.subject, form.description, form.category_id, form.impact, form.urgency, form.ticket_type, form.assigned_agent_id, form.team_id], () => { stepError.value = '' })
 const currentKey = computed(() => stepKeys.value[Math.min(currentStep.value, stepKeys.value.length - 1)])
 const stepNo = (k) => String(stepKeys.value.indexOf(k) + 1).padStart(2, '0')
-const stepIn = computed(() => ({ opacity: 0, x: dir.value * 26 }))
-const stepOut = computed(() => ({ opacity: 0, x: dir.value * -26 }))
-const stepT = { duration: 0.34, ease: [0.16, 1, 0.3, 1] }
+const stepIn = computed(() => ({ opacity: 0, x: dir.value * 34, y: 10, scale: 0.985, filter: 'blur(6px)' }))
+const stepOut = computed(() => ({ opacity: 0, x: dir.value * -34, y: -6, scale: 0.985, filter: 'blur(6px)' }))
+const stepAnimate = { opacity: 1, x: 0, y: 0, scale: 1, filter: 'blur(0px)' }
+const stepT = { duration: 0.38, ease: [0.16, 1, 0.3, 1] }
 
 const stepWrapRef = ref(null)
 const resetStepScroll = () => {
@@ -884,20 +921,24 @@ const loadRoutingPickers = () => {
 [data-theme="light"] .rs-btn { color: #fff8ec; }
 .rs-btn.ghost { margin-left: 0; color: var(--sd-text-secondary); background: var(--sd-surface); border: 1px solid var(--sd-border-strong); }
 
-/* ── body — stretched step stage (left) + intake intelligence (right); fits the
-   viewport, columns scroll internally so both stay visible without a page scroll ── */
-.itk-body { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: stretch;
-  height: calc(100vh - var(--nav-h) - var(--hero-h, 240px) - 48px); min-height: 420px; }
+/* ── body — ONE full-width step stage; the intelligence is woven INTO the steps
+   (Signal Prism inside Describe, banner inside Classify, digest inside Review).
+   Fits the viewport; the step content scrolls internally, never the page. ── */
+.itk-body { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch;
+  height: calc(100vh - var(--nav-h) - var(--hero-h, 240px) - 48px); min-height: 440px; }
 .itk-stage { animation: itk-rise 0.5s var(--sd-spring) both; }
-.itk-copilot { min-width: 0; min-height: 0; overflow: hidden; animation: itk-rise 0.5s 0.1s var(--sd-spring) both; }
-.itk-copilot :deep(.sd-cop) { max-height: 100%; }
 @keyframes itk-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 
+/* full-width steps read better with a measured line length + two-column room */
+.itk-step { max-width: 1060px; width: 100%; margin: 0 auto; }
+.itk-banner { margin-bottom: 14px; }
+.itk-digest { margin-bottom: 14px; }
+
 /* ── ultra-modern scrollbars (scoped to this page's scroll surfaces) ── */
-.itk-step-wrap, .itk-aside, .itk :deep(.sd-cop), .itk :deep(.sd-select-pop) { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--sd-amber) 55%, transparent) transparent; }
-.itk-step-wrap::-webkit-scrollbar, .itk-aside::-webkit-scrollbar, .itk :deep(.sd-cop)::-webkit-scrollbar, .itk :deep(.sd-select-pop)::-webkit-scrollbar { width: 9px; height: 9px; }
-.itk-step-wrap::-webkit-scrollbar-track, .itk-aside::-webkit-scrollbar-track, .itk :deep(.sd-cop)::-webkit-scrollbar-track, .itk :deep(.sd-select-pop)::-webkit-scrollbar-track { background: transparent; margin: 6px 0; }
-.itk-step-wrap::-webkit-scrollbar-thumb, .itk-aside::-webkit-scrollbar-thumb, .itk :deep(.sd-cop)::-webkit-scrollbar-thumb, .itk :deep(.sd-select-pop)::-webkit-scrollbar-thumb {
+.itk-step-wrap, .itk-aside, .itk :deep(.sd-select-pop) { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--sd-amber) 55%, transparent) transparent; }
+.itk-step-wrap::-webkit-scrollbar, .itk-aside::-webkit-scrollbar, .itk :deep(.sd-select-pop)::-webkit-scrollbar { width: 9px; height: 9px; }
+.itk-step-wrap::-webkit-scrollbar-track, .itk-aside::-webkit-scrollbar-track, .itk :deep(.sd-select-pop)::-webkit-scrollbar-track { background: transparent; margin: 6px 0; }
+.itk-step-wrap::-webkit-scrollbar-thumb, .itk-aside::-webkit-scrollbar-thumb, .itk :deep(.sd-select-pop)::-webkit-scrollbar-thumb {
   border-radius: 999px; border: 2px solid transparent; background-clip: padding-box;
   background-color: color-mix(in srgb, var(--sd-ember) 55%, transparent);
   transition: background-color 0.2s;
@@ -911,6 +952,20 @@ const loadRoutingPickers = () => {
 .itk-step-wrap { position: relative; flex: 1; min-height: 0; padding: 24px 26px; overflow-y: auto; }
 .itk-step { display: flex; flex-direction: column; }
 
+/* field cascade — every step's controls deal in like cards (replays per step because
+   Presence mode="wait" remounts the step) */
+.itk-step > * { animation: itk-field-in 0.5s var(--sd-spring) both; }
+.itk-step > *:nth-child(1) { animation-delay: 0.03s; } .itk-step > *:nth-child(2) { animation-delay: 0.08s; }
+.itk-step > *:nth-child(3) { animation-delay: 0.13s; } .itk-step > *:nth-child(4) { animation-delay: 0.18s; }
+.itk-step > *:nth-child(5) { animation-delay: 0.23s; } .itk-step > *:nth-child(6) { animation-delay: 0.28s; }
+.itk-step > *:nth-child(7) { animation-delay: 0.33s; } .itk-step > *:nth-child(n+8) { animation-delay: 0.38s; }
+@keyframes itk-field-in { from { opacity: 0; transform: translateY(12px) scale(0.995); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-cinematic="on"]) .itk-step > *,
+  html:not([data-cinematic="on"]) .step-head::after,
+  html:not([data-cinematic="on"]) .step-no { animation: none; }
+}
+
 /* left cards */
 .itk-next { padding: 14px 15px; }
 .itk-next h4 { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; color: var(--sd-text-muted); margin: 0 0 11px; }
@@ -919,9 +974,14 @@ const loadRoutingPickers = () => {
 .itk-next li { display: flex; align-items: center; gap: 9px; font-size: 12px; color: var(--sd-text-secondary); }
 .itk-next li svg { color: var(--sd-text-dim); flex-shrink: 0; }
 
-/* step header */
-.step-head { display: flex; align-items: center; gap: 13px; margin-bottom: 18px; }
-.step-no { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; font-family: var(--sd-mono); font-size: 13px; font-weight: 800; color: var(--sd-amber); background: var(--sd-amber-soft); border: 1px solid var(--sd-amber-border); flex-shrink: 0; }
+/* step header — the number tile pops in, a hairline sweep draws under the title */
+.step-head { position: relative; display: flex; align-items: center; gap: 13px; margin-bottom: 18px; padding-bottom: 12px; }
+.step-head::after { content: ""; position: absolute; left: 0; bottom: 0; height: 1.5px; width: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--sd-amber-border), transparent 70%);
+  transform-origin: left; animation: itk-sweep 0.7s 0.1s var(--sd-spring) both; }
+@keyframes itk-sweep { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+.step-no { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; font-family: var(--sd-mono); font-size: 13px; font-weight: 800; color: var(--sd-amber); background: var(--sd-amber-soft); border: 1px solid var(--sd-amber-border); flex-shrink: 0; animation: itk-no-pop 0.5s 0.05s var(--sd-spring) both; }
+@keyframes itk-no-pop { from { transform: scale(0.7) rotate(-6deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
 .step-head h3 { font-size: 17px; font-weight: 800; color: var(--sd-text); margin: 0; display: flex; align-items: center; gap: 9px; }
 .step-head p { font-size: 12.5px; color: var(--sd-text-muted); margin: 1px 0 0; }
 .opt-h { font-style: normal; font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sd-text-dim); padding: 2px 7px; border-radius: 6px; background: var(--sd-surface-glass); border: 1px solid var(--sd-border); }
@@ -934,9 +994,15 @@ const loadRoutingPickers = () => {
 .f .opt { font-style: normal; font-weight: 500; color: var(--sd-text-dim); font-size: 11px; }
 .f-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
 .f-grid2 .f { margin-bottom: 0; }
-.f-in { width: 100%; padding: 11px 13px; border-radius: 11px; font-size: 14px; font-family: inherit; background: var(--sd-surface-glass); border: 1px solid var(--sd-border-strong); color: var(--sd-text); transition: border-color 0.2s, box-shadow 0.2s; }
-.f-in::placeholder { color: var(--sd-text-dim); }
-.f-in:focus { outline: none; border-color: var(--sd-amber-border); box-shadow: 0 0 0 3px var(--sd-amber-soft); }
+.f-in { width: 100%; padding: 11px 13px; border-radius: 11px; font-size: 14px; font-family: inherit; background: var(--sd-surface-glass); border: 1px solid var(--sd-border-strong); color: var(--sd-text); transition: border-color 0.22s, box-shadow 0.22s, transform 0.22s var(--sd-spring), background 0.22s; }
+.f-in::placeholder { color: var(--sd-text-dim); transition: opacity 0.2s; }
+.f-in:hover { border-color: color-mix(in srgb, var(--sd-amber) 30%, var(--sd-border-strong)); }
+.f-in:focus { outline: none; border-color: var(--sd-amber-border); box-shadow: 0 0 0 3px var(--sd-amber-soft), 0 10px 26px -14px color-mix(in srgb, var(--sd-amber) 45%, transparent); transform: translateY(-1px); background: var(--sd-surface); }
+.f-in:focus::placeholder { opacity: 0.55; }
+/* the field LABEL ignites while its input holds focus */
+.f:focus-within > label, .f:focus-within > span, label.f:focus-within > span { color: var(--sd-amber); }
+.f em { display: inline-block; transition: transform 0.2s var(--sd-spring); }
+.f:focus-within em { transform: scale(1.25); }
 .f-area { resize: vertical; line-height: 1.55; min-height: 96px; }
 .f-subj { position: relative; }
 .f-count { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 10px; font-family: var(--sd-mono); color: var(--sd-text-dim); pointer-events: none; }
@@ -1086,15 +1152,14 @@ const loadRoutingPickers = () => {
 
 /* ── responsive ── */
 @media (max-width: 1040px) {
-  .itk-body { grid-template-columns: 1fr; height: auto; }
+  .itk-body { height: auto; }
   .itk-stage { min-height: 440px; }
-  .itk-copilot { min-height: 320px; overflow: visible; order: 3; }
 }
 @media (max-width: 620px) { .f-grid2 { grid-template-columns: 1fr; } .itk-step-wrap { padding: 20px 18px; } }
 
 @media (prefers-reduced-motion: reduce) {
   html:not([data-cinematic="on"]) .cf-burst { animation: none; }
-  html:not([data-cinematic="on"]) .itk-stage, html:not([data-cinematic="on"]) .itk-copilot { animation: none; }
+  html:not([data-cinematic="on"]) .itk-stage { animation: none; }
   html:not([data-cinematic="on"]) .dropzone .spin, html:not([data-cinematic="on"]) .itk-submit .spin, html:not([data-cinematic="on"]) .nav-btn .spin { animation: sd-spin-slow 1s linear infinite; }
 }
 </style>

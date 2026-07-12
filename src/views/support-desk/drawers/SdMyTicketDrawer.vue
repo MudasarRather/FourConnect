@@ -119,7 +119,7 @@
                 <p v-else class="mp-hint">No collaborators yet — add a teammate to work this together.</p>
                 <div v-if="canWork" class="mp-search">
                   <Search :size="14" />
-                  <input v-model="collabQuery" placeholder="Search a colleague to add…" @focus="ensurePeople" />
+                  <input v-model="collabQuery" placeholder="Type 2+ letters to search colleagues…" />
                 </div>
                 <div v-if="canWork && collabQuery.trim()" class="mp-results">
                   <button v-for="p in collabMatches" :key="p.id" class="mp-person" @click="addCollab(p)">
@@ -581,13 +581,24 @@ const refresh = async () => { if (props.ticketId) { await load(props.ticketId); 
 const togglePanel = (p) => {
   panel.value = panel.value === p ? null : p
   if (panel.value === 'assign') loadAssignees()
-  if (panel.value === 'collab') ensurePeople()
 }
 const loadAssignees = async () => {
   assigneesLoading.value = true
   try { assignees.value = await listTicketAssignees(props.ticketId) } catch { assignees.value = [] } finally { assigneesLoading.value = false }
 }
-const ensurePeople = () => { if (!people.value.length) listTeamPeople({ limit: 500 }).then(r => { people.value = r || [] }).catch(() => {}) }
+/* Server-driven typeahead — the backend search-gates /teams/people for agents
+   (a 2+ char query, small page); bulk directory dumps are superuser-only now. */
+let peopleTimer = null
+watch(collabQuery, (v) => {
+  clearTimeout(peopleTimer)
+  const term = (v || '').trim()
+  if (term.length < 2) { people.value = []; return }
+  peopleTimer = setTimeout(() => {
+    listTeamPeople({ q: term, limit: 8 })
+      .then(r => { people.value = r || [] })
+      .catch(() => { people.value = [] })
+  }, 220)
+})
 
 /* ── actions ── */
 const goReply = () => { tab.value = 'conversation'; nextTick(() => composerRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' })) }

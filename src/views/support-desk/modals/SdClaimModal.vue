@@ -198,7 +198,8 @@ const loadRouting = async () => {
   loadingRoute.value = true; routing.value = {}
   try {
     routing.value = await routingPreview({
-      category_id: t.category_id || undefined, ticket_type: t.ticket_type || 'incident',
+      category_id: t.category_id || undefined, subcategory_id: t.subcategory_id || undefined,
+      ticket_type: t.ticket_type || 'incident',
       organization_id: t.organization_id || undefined, priority: t.priority || 'medium',
     }) || {}
   } catch { routing.value = {} } finally { loadingRoute.value = false }

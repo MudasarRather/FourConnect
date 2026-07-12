@@ -307,7 +307,7 @@ const load = async () => {
     workingSet.value = r.items || []
     total.value = r.total || 0
     wsCapped.value = (r.total || 0) > 100
-  } catch { workingSet.value = []; total.value = 0; wsCapped.value = false }
+  } catch { workingSet.value = []; total.value = 0; wsCapped.value = false; toast.error('Could not load this desk — check the connection and press Refresh.') }
   finally { loading.value = false }
 }
 const loadStats = async () => { try { stats.value = await fetchUnassignedQueueStats() } catch { stats.value = {} } }

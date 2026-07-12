@@ -221,7 +221,7 @@ const loadWorkingSet = async () => {
     const r = await listScoped({ agent: agent.value, ...params(), page: 1, limit: 100 })
     workingSet.value = r.items || []
     wsCapped.value = (r.total || 0) > 100
-  } catch { workingSet.value = []; wsCapped.value = false } finally { wsLoading.value = false }
+  } catch { workingSet.value = []; wsCapped.value = false; toast.error('Could not load this desk — check the connection and press Refresh.') } finally { wsLoading.value = false }
 }
 const reload = () => { page.value = 1; loadTable(); loadWorkingSet() }
 const go = (p) => { page.value = Math.min(Math.max(1, p), pages.value); loadTable() }

@@ -461,7 +461,8 @@
                   <button v-if="canMerge" class="tk-more-item" @click="openForm('merge')"><GitMerge :size="14" /> Merge into another ticket</button>
                   <button v-if="canFollowUp" class="tk-more-item" @click="openForm('followup')"><GitPullRequest :size="14" /> Create follow-up ticket</button>
                   <button v-if="canPromoteKb" class="tk-more-item" :disabled="busy" @click="promoteKb"><Sparkles :size="14" /> Promote to knowledge base</button>
-                  <button class="tk-more-item" :disabled="busy || !!t.links?.task_id" @click="createTaskFromTicket">
+                  <!-- Owner-tier gated: /tickets/{id}/to-task requires the actor tier server-side -->
+                  <button v-if="canCommand" class="tk-more-item" :disabled="busy || !!t.links?.task_id" @click="createTaskFromTicket">
                     <ListPlus :size="14" /> {{ t.links?.task_id ? 'Task already created' : 'Create task' }}
                   </button>
                   <!-- Superuser governance: re-home a mis-filed ticket to the right requester -->
@@ -1338,7 +1339,7 @@ const searchRequester = () => {
   clearTimeout(reqTimer)
   reqTimer = setTimeout(async () => {
     const q = reqQuery.value.trim()
-    if (!q) { reqResults.value = []; return }
+    if (q.length < 2) { reqResults.value = []; return }  // backend search-gate: 2+ chars for agents
     reqSearching.value = true
     try {
       const r = await listTeamPeople({ q, limit: 8 })

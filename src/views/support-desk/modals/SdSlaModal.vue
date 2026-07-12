@@ -42,6 +42,67 @@
 
       <div class="sd-section">
         <div class="sd-section-head">
+          <span class="sd-section-title">Coverage calendar</span>
+          <span class="sd-section-hint">when the SLA clock runs</span>
+        </div>
+        <div class="sd-cov-mode" role="tablist" aria-label="Coverage mode">
+          <button type="button" class="sd-cov-seg" :class="{ on: covMode === '24x7' }" role="tab"
+            :aria-selected="covMode === '24x7'" @click="covMode = '24x7'">
+            <Clock :size="13" /> 24×7 <i>clock never stops</i></button>
+          <button type="button" class="sd-cov-seg" :class="{ on: covMode === 'business_hours' }" role="tab"
+            :aria-selected="covMode === 'business_hours'" @click="covMode = 'business_hours'">
+            <Sunrise :size="13" /> Business hours <i>pauses nights · week-offs · holidays</i></button>
+        </div>
+
+        <template v-if="covMode === 'business_hours'">
+          <div class="sd-cov-grid">
+            <label class="sd-field"><span class="sd-label">Timezone</span>
+              <input v-model.trim="cov.tz" class="sd-input" placeholder="Asia/Kolkata" list="sd-cov-tzs" />
+              <datalist id="sd-cov-tzs">
+                <option v-for="z in TZ_SUGGESTIONS" :key="z" :value="z" />
+              </datalist>
+            </label>
+            <label class="sd-field"><span class="sd-label">Window start</span>
+              <input v-model="cov.start" type="time" class="sd-input sd-input-num" /></label>
+            <label class="sd-field"><span class="sd-label">Window end</span>
+              <input v-model="cov.end" type="time" class="sd-input sd-input-num" /></label>
+          </div>
+
+          <div class="sd-field">
+            <span class="sd-label">Working days</span>
+            <div class="sd-cov-days">
+              <button v-for="d in DAYS" :key="d.n" type="button" class="sd-cov-day"
+                :class="{ on: cov.days.includes(d.n) }" @click="toggleDay(d.n)">{{ d.label }}</button>
+            </div>
+          </div>
+
+          <div class="sd-field">
+            <span class="sd-label">Holidays <em class="sd-cov-hint">— clock skips these dates entirely</em></span>
+            <div class="sd-cov-holidays">
+              <span v-for="(h, i) in cov.holidays" :key="h" class="sd-cov-holi sd-input-num">
+                {{ h }} <button type="button" aria-label="Remove holiday" @click="cov.holidays.splice(i, 1)"><X :size="11" /></button>
+              </span>
+              <input v-model="holidayDraft" type="date" class="sd-input sd-input-num sd-cov-holi-add"
+                @change="addHoliday" />
+            </div>
+          </div>
+
+          <div class="sd-field">
+            <span class="sd-label">Keep running 24×7 for <em class="sd-cov-hint">— severities that must not wait for morning</em></span>
+            <div class="sd-cov-days">
+              <button v-for="p in PRIORITY_ORDER" :key="p.key" type="button" class="sd-cov-day ovr"
+                :class="{ on: cov.overrides.includes(p.key) }" :style="{ '--pc': `var(--sd-pri-${p.key})` }"
+                @click="toggleOverride(p.key)">{{ p.label }}</button>
+            </div>
+          </div>
+
+          <p class="sd-cov-note">A ticket raised outside this window (night, week-off, holiday) starts its
+            clock at the next covered minute — deadlines always land inside working hours.</p>
+        </template>
+      </div>
+
+      <div class="sd-section">
+        <div class="sd-section-head">
           <span class="sd-section-title">Escalation ladder</span>
           <button type="button" class="sd-mini-btn" @click="addLevel"><Plus :size="13" /> Add level</button>
         </div>
@@ -77,7 +138,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { Plus, Trash2 } from 'lucide-vue-next'
+import { Plus, Trash2, Clock, Sunrise, X } from 'lucide-vue-next'
 import SdModalShell from '../components/SdModalShell.vue'
 import { createSlaPackage, updateSlaPackage, deleteSlaPackage } from '@/composables/useSupportDesk'
 
@@ -99,6 +160,60 @@ const DEFAULT_MATRIX = {
   high: { response_mins: 60, resolution_mins: 1440 },
   medium: { response_mins: 240, resolution_mins: 2880 },
   low: { response_mins: 480, resolution_mins: 4320 },
+}
+
+// Coverage calendar (when the SLA clock runs). 24x7 = legacy wall-clock.
+const DAYS = [
+  { n: 1, label: 'Mon' }, { n: 2, label: 'Tue' }, { n: 3, label: 'Wed' }, { n: 4, label: 'Thu' },
+  { n: 5, label: 'Fri' }, { n: 6, label: 'Sat' }, { n: 7, label: 'Sun' },
+]
+const TZ_SUGGESTIONS = ['Asia/Kolkata', 'Asia/Dubai', 'Europe/London', 'America/New_York', 'UTC']
+const covMode = ref('24x7')
+const cov = ref({ tz: 'Asia/Kolkata', start: '09:00', end: '18:00', days: [1, 2, 3, 4, 5], holidays: [], overrides: [] })
+const holidayDraft = ref('')
+
+const blankCov = (src) => {
+  const c = src && typeof src === 'object' ? src : {}
+  covMode.value = c.mode === 'business_hours' ? 'business_hours' : '24x7'
+  const over = c.priority_overrides || {}
+  cov.value = {
+    tz: c.tz || 'Asia/Kolkata',
+    start: c.start || '09:00',
+    end: c.end || '18:00',
+    days: Array.isArray(c.days) && c.days.length ? c.days.map(Number) : [1, 2, 3, 4, 5],
+    holidays: Array.isArray(c.holidays) ? [...c.holidays].sort() : [],
+    overrides: Object.keys(over).filter(k => over[k] === '24x7'),
+  }
+}
+const toggleDay = (n) => {
+  const i = cov.value.days.indexOf(n)
+  if (i >= 0) cov.value.days.splice(i, 1)
+  else cov.value.days.push(n)
+}
+const toggleOverride = (key) => {
+  const i = cov.value.overrides.indexOf(key)
+  if (i >= 0) cov.value.overrides.splice(i, 1)
+  else cov.value.overrides.push(key)
+}
+const addHoliday = () => {
+  const d = holidayDraft.value
+  if (d && !cov.value.holidays.includes(d)) { cov.value.holidays.push(d); cov.value.holidays.sort() }
+  holidayDraft.value = ''
+}
+const buildCoverage = () => {
+  if (covMode.value !== 'business_hours') return {}
+  const out = {
+    mode: 'business_hours',
+    tz: cov.value.tz || 'UTC',
+    days: [...cov.value.days].sort((a, b) => a - b),
+    start: cov.value.start || '09:00',
+    end: cov.value.end || '18:00',
+    holidays: cov.value.holidays,
+  }
+  if (cov.value.overrides.length) {
+    out.priority_overrides = Object.fromEntries(cov.value.overrides.map(k => [k, '24x7']))
+  }
+  return out
 }
 
 const saving = ref(false)
@@ -128,6 +243,8 @@ const form = ref(blank())
 watch(() => props.open, (v) => {
   if (!v) return
   error.value = ''
+  holidayDraft.value = ''
+  blankCov(props.package?.coverage)
   if (props.package) {
     const src = props.package
     form.value = {
@@ -161,6 +278,7 @@ const buildPayload = () => ({
   is_default: form.value.is_default,
   is_active: form.value.is_active,
   matrix: form.value.matrix,
+  coverage: buildCoverage(),
   escalation_levels: form.value.escalation_levels.map(l => ({
     level: Number(l.level) || 0,
     after_mins: Number(l.after_mins) || 0,
@@ -170,6 +288,9 @@ const buildPayload = () => ({
 
 const submit = async () => {
   if (!form.value.name.trim()) { error.value = 'Name is required.'; return }
+  if (covMode.value === 'business_hours' && !cov.value.days.length) {
+    error.value = 'Business-hours coverage needs at least one working day.'; return
+  }
   saving.value = true; error.value = ''
   try {
     const payload = buildPayload()
@@ -212,6 +333,35 @@ const remove = async () => {
 .sd-matrix-head { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--sd-text-dim); padding: 0 2px; }
 .sd-matrix-prio { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--pc); }
 .sd-matrix-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--pc); box-shadow: 0 0 8px color-mix(in srgb, var(--pc) 55%, transparent); flex-shrink: 0; }
+
+/* coverage calendar */
+.sd-cov-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.sd-cov-seg { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 11px 13px;
+  border-radius: 12px; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 700; text-align: left;
+  background: var(--sd-surface-glass); border: 1px solid var(--sd-border-strong); color: var(--sd-text-secondary);
+  transition: border-color 0.18s, box-shadow 0.2s; }
+.sd-cov-seg :deep(svg) { color: var(--sd-text-dim); }
+.sd-cov-seg i { font-style: normal; font-size: 10.5px; font-weight: 500; color: var(--sd-text-dim); }
+.sd-cov-seg.on { border-color: var(--sd-amber-border); color: var(--sd-text); box-shadow: 0 0 0 3px var(--sd-amber-soft); }
+.sd-cov-seg.on :deep(svg) { color: var(--sd-amber); }
+.sd-cov-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; }
+@media (max-width: 560px) { .sd-cov-grid { grid-template-columns: 1fr; } }
+.sd-cov-days { display: flex; flex-wrap: wrap; gap: 7px; }
+.sd-cov-day { padding: 6px 12px; border-radius: 999px; cursor: pointer; font-family: var(--sd-mono); font-size: 11px;
+  font-weight: 700; background: var(--sd-surface-glass); border: 1px solid var(--sd-border-strong); color: var(--sd-text-muted);
+  transition: all 0.16s; }
+.sd-cov-day.on { background: var(--sd-amber-soft); border-color: var(--sd-amber-border); color: var(--sd-amber); }
+.sd-cov-day.ovr.on { background: color-mix(in srgb, var(--pc) 14%, transparent); border-color: color-mix(in srgb, var(--pc) 45%, transparent); color: var(--pc); }
+.sd-cov-hint { font-style: normal; font-weight: 500; color: var(--sd-text-dim); }
+.sd-cov-holidays { display: flex; flex-wrap: wrap; gap: 7px; align-items: center; }
+.sd-cov-holi { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px 5px 11px; border-radius: 999px;
+  font-size: 11.5px; background: var(--sd-surface-glass); border: 1px solid var(--sd-border-strong); color: var(--sd-text); }
+.sd-cov-holi button { display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; cursor: pointer;
+  background: transparent; border: none; color: var(--sd-text-dim); }
+.sd-cov-holi button:hover { color: var(--sd-danger); }
+.sd-cov-holi-add { width: 150px; padding: 6px 10px; }
+.sd-cov-note { margin: 0; font-size: 11.5px; color: var(--sd-text-muted); border-left: 2px solid var(--sd-amber-border);
+  padding-left: 10px; }
 
 .sd-esc { display: flex; flex-direction: column; gap: 8px; }
 .sd-esc-head, .sd-esc-row { display: grid; grid-template-columns: 0.7fr 0.9fr 1.6fr 36px; gap: 9px; align-items: center; }

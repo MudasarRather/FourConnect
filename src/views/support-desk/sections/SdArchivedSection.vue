@@ -79,7 +79,7 @@
         :initial="{ opacity: 0, y: 12 }" :animate="{ opacity: 1, y: 0 }" :exit="{ opacity: 0, y: 12 }" :transition="{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }">
         <span class="bulk-n">{{ selected.length }} selected</span>
         <div class="bulk-actions">
-          <button class="arc-btn sm restore" @click="restoreTarget = bulkTicketObjs"><ArchiveRestore :size="13" /> Restore</button>
+          <button class="arc-btn sm restore" @click="openRestore(bulkTicketObjs)"><ArchiveRestore :size="13" /> Restore</button>
           <button class="arc-btn sm" @click="openBulk('tag')"><Tag :size="13" /> Add tag</button>
           <button class="arc-btn sm hold" title="Place a legal hold — suspends retention on these records" @click="doBulkHold(true)"><Scale :size="13" /> Hold</button>
           <button v-if="superuser" class="arc-btn sm hold ghost" title="Release legal holds (superuser)" @click="doBulkHold(false)"><Scale :size="13" /> Release</button>
@@ -96,12 +96,12 @@
         :selected="selected" :sort-by="sortBy" :sort-dir="sortDir" :now="now"
         :density="density" :accent="ACCENT" :empty="emptyText" :empty-icon="Archive"
         @open="openTicket" @toggle="toggleSel" @toggle-all="toggleAll" @sort="onSort"
-        @restore="(t) => (restoreTarget = [t])" />
+        @restore="(t) => openRestore(t)" />
 
       <!-- LEDGER — every tombstone as one storage story (unique to this desk) -->
       <SdArchiveLedger v-else :tickets="pagedRows" :now="now" :loading="wsLoading" :reduced="reduced"
         :agent="agent" :superuser="superuser"
-        @open="openTicket" @restore="(t) => (restoreTarget = [t])" @hold="doHold"
+        @open="openTicket" @restore="(t) => openRestore(t)" @hold="doHold"
         @purge="(t) => (purgeTarget = [t])" />
     </div>
 
@@ -115,7 +115,7 @@
     <!-- ══════════════════ RETENTION WATCH (the burn-down rail) ══════════════════ -->
     <SdRetentionRail ref="railEl" v-if="retentionRows.length" :tickets="retentionRows" :now="now"
       :reduced="reduced" :agent="agent" :superuser="superuser" :retention-days="retentionDays"
-      @open="openTicket" @restore="(t) => (restoreTarget = [t])" @hold="doHold"
+      @open="openTicket" @restore="(t) => openRestore(t)" @hold="doHold"
       @purge="(t) => (purgeTarget = [t])" />
 
     <!-- ══════════════════ RECOVERY REVIEW (guided sweep over likely mistakes) ══════════════════ -->
@@ -140,7 +140,7 @@
               SHELVED {{ agoLabel(runCurrent.archived_at) }} · BY {{ runCurrent.archived_by_name || 'System' }}
             </div>
             <div class="arr-actions">
-              <button class="arr-btn primary" @click="restoreTarget = [runCurrent]"><ArchiveRestore :size="14" /> Restore</button>
+              <button class="arr-btn primary" @click="openRestore(runCurrent)"><ArchiveRestore :size="14" /> Restore</button>
               <button class="arr-btn" @click="openTicket(runCurrent.id)"><PanelRight :size="14" /> Open console</button>
               <button class="arr-btn keep" @click="keepArchived"><Check :size="14" /> Keep archived</button>
               <button class="arr-btn ghost" @click="runNext"><ChevronRight :size="14" /> Skip</button>
@@ -291,7 +291,7 @@ const loadWorkingSet = async () => {
     workingSet.value = r.items || []
     total.value = r.total || workingSet.value.length
     wsCapped.value = (r.total || 0) > 100
-  } catch { workingSet.value = []; total.value = 0; wsCapped.value = false } finally { wsLoading.value = false }
+  } catch { workingSet.value = []; total.value = 0; wsCapped.value = false; toast.error('Could not load this desk — check the connection and press Refresh.') } finally { wsLoading.value = false }
 }
 const loadStats = async () => {
   try { stats.value = await fetchArchivedStats(mineParams()) } catch { stats.value = {} }
@@ -530,6 +530,18 @@ const doBulkHold = async (want) => {
 
 /* ── restore + purge modal outcomes ── */
 const restoreTarget = ref([])
+/* Restore entry gate — legal-held tombstones 409 on restore for non-superusers;
+   filter them here with the reason instead of letting the modal run fail. */
+const openRestore = (list) => {
+  const rows = Array.isArray(list) ? list : [list]
+  if (superuser.value) { restoreTarget.value = rows; return }
+  const held = rows.filter(t => t.legal_hold)
+  const free = rows.filter(t => !t.legal_hold)
+  if (held.length) toast.info(held.length > 1
+    ? `${held.length} records are under legal hold — a superuser must release the hold before they can restore.`
+    : `${held[0].ticket_number} is under legal hold — a superuser must release the hold before it can restore.`)
+  if (free.length) restoreTarget.value = free
+}
 const purgeTarget = ref([])
 const onRestored = (n) => {
   restoreTarget.value = []

@@ -272,7 +272,7 @@ const reloadWorkingSet = async () => {
     const res = await listTickets({ ...baseParams(), page: 1, limit: 100 })
     workingSet.value = res.items || []
     wsCapped.value = (res.total || 0) > 100
-  } catch { workingSet.value = []; wsCapped.value = false } finally { wsLoading.value = false }
+  } catch { workingSet.value = []; wsCapped.value = false; toast.error('Could not load this desk — check the connection and press Refresh.') } finally { wsLoading.value = false }
 }
 const reloadMyCount = async () => {
   try { myCount.value = (await listTickets({ scope: 'my', limit: 1 })).total || 0 } catch { /* keep */ }

@@ -210,7 +210,7 @@
                 </span>
               </div>
               <p v-else class="aam-empty">No collaborators yet.</p>
-              <div class="aam-search"><Search :size="14" /><input v-model="collabQuery" placeholder="Search a colleague to add…" @focus="ensurePeople" /></div>
+              <div class="aam-search"><Search :size="14" /><input v-model="collabQuery" placeholder="Type 2+ letters to search colleagues…" /></div>
               <div v-if="collabQuery.trim()" class="aam-people">
                 <button v-for="p in collabMatches" :key="p.id" type="button" class="aam-person" :disabled="busy" @click="doAddCollab(p)">
                   <span class="ap-ava">{{ initials(p.name) }}</span>
@@ -364,9 +364,23 @@ const resetState = () => {
   liveCollabs.value = [...(props.ticket?.collaborator_people || [])]
 }
 
-const ensurePeople = () => { if (!collabPeople.value.length) listTeamPeople({ limit: 500 }).then(r => { collabPeople.value = r || [] }).catch(() => {}) }
+/* Server-driven typeahead — the backend search-gates /teams/people for agents
+   (a 2+ char query, small page); bulk directory dumps are superuser-only now. */
+let collabTimer = null
+watch(collabQuery, (v) => {
+  clearTimeout(collabTimer)
+  const term = (v || '').trim()
+  if (term.length < 2) { collabPeople.value = []; return }
+  collabTimer = setTimeout(() => {
+    listTeamPeople({ q: term, limit: 8 })
+      .then(r => { collabPeople.value = r || [] })
+      .catch(() => { collabPeople.value = [] })
+  }, 220)
+})
 const loadRoutePool = async () => {
   peopleLoading.value = true
+  // Primary = the ticket's eligible-assignee pool. The bulk-people fallback only
+  // still works for superusers (agents get the search-gated 422 → empty list).
   try { routePool.value = await listTicketAssignees(tid.value) }
   catch { try { routePool.value = await listTeamPeople({ limit: 500 }) } catch { routePool.value = [] } }
   finally { peopleLoading.value = false }
@@ -376,7 +390,6 @@ watch(() => props.open, (o) => {
   if (o) {
     resetState()
     if (props.mode === 'route') loadRoutePool()
-    if (props.mode === 'collab') ensurePeople()
   }
 }, { immediate: true })
 

@@ -72,6 +72,7 @@ import { routingPreview } from '@/composables/useSupportDesk'
 
 const props = defineProps({
   categoryId: { type: String, default: '' },
+  subcategoryId: { type: String, default: '' },
   ticketType: { type: String, default: 'incident' },
   organizationId: { type: String, default: '' },
   priority: { type: String, default: 'medium' },
@@ -114,6 +115,7 @@ const fetchPreview = () => {
   loading.value = true
   routingPreview({
     category_id: props.categoryId || undefined,
+    subcategory_id: props.subcategoryId || undefined,
     ticket_type: props.ticketType || 'incident',
     organization_id: props.organizationId || undefined,
     priority: props.priority || 'medium',
@@ -125,7 +127,7 @@ const fetchPreview = () => {
 }
 const schedule = () => { clearTimeout(timer); timer = setTimeout(fetchPreview, 280) }
 
-watch(() => [props.categoryId, props.ticketType, props.organizationId, props.priority, props.slaPackageId], schedule, { immediate: true })
+watch(() => [props.categoryId, props.subcategoryId, props.ticketType, props.organizationId, props.priority, props.slaPackageId], schedule, { immediate: true })
 onBeforeUnmount(() => clearTimeout(timer))
 </script>
 

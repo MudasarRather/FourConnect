@@ -31,7 +31,7 @@
               <b class="rd-name">{{ a.name || 'Member' }} <Crown v-if="a.is_lead" :size="11" class="rd-crown" /></b>
               <i class="rd-role">{{ roleLabel(a) }}</i>
             </span>
-            <span class="rd-open sd-mono" :title="`${a.open} active ticket(s)`">{{ a.open }}</span>
+            <span class="rd-open" :title="`${a.open} active ticket(s)`"><SdCountUp :value="a.open || 0" /></span>
           </div>
           <!-- strain pips -->
           <div class="rd-pips">
@@ -69,6 +69,7 @@
    tile = open the handoff console pre-aimed at them. Accent = --sd-team-*. */
 import { ref, computed } from 'vue'
 import { UsersRound, Crown, Flame, Siren, Timer, MoonStar, Check, CircleCheck, Star, X } from 'lucide-vue-next'
+import SdCountUp from './SdCountUp.vue'
 
 const props = defineProps({
   roster: { type: Array, default: () => [] },     // TeamRosterEntry[]
@@ -133,6 +134,11 @@ const onDrop = (e, a) => {
 .rd-tile.strain { border-left: 3px solid var(--sd-team-strain); }
 .rd-tile.busy { border-left: 3px solid var(--sd-team-core); }
 .rd-tile.sync { border-left: 3px solid color-mix(in srgb, var(--sd-team-sync) 65%, transparent); }
+/* live strain pulse — an inset rose ring breathing behind a tile under SLA pressure (no layout shift) */
+.rd-tile.strain::after { content: ''; position: absolute; inset: 0; border-radius: 16px; pointer-events: none;
+  box-shadow: inset 0 0 0 1px var(--sd-team-strain); opacity: 0; animation: rd-strain 2.8s ease-in-out infinite; }
+.rd-tile.strain.on::after, .rd-tile.strain:hover::after { animation: none; }
+@keyframes rd-strain { 0%, 100% { opacity: 0; } 50% { opacity: 0.5; } }
 
 .rd-id { display: flex; align-items: center; gap: 10px; }
 /* conic load ring — @property --sd-p lives in the theme file */
@@ -186,6 +192,7 @@ const onDrop = (e, a) => {
 
 @media (prefers-reduced-motion: reduce) {
   html:not([data-cinematic="on"]) .rd-shell,
+  html:not([data-cinematic="on"]) .rd-tile.strain::after,
   html:not([data-cinematic="on"]) .rd-skel-bar { animation: none; }
   html:not([data-cinematic="on"]) .rd-tile:hover { transform: none; }
 }

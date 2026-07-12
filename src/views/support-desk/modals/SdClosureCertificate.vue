@@ -128,7 +128,9 @@
                 <BookMarked :size="13" /> Promote to KB
               </Motion>
               <Motion as="button" class="cc-btn risk" :while-hover="{ y: -2 }" :while-tap="{ scale: 0.97 }"
-                title="Agent-only: exhume this record — reopens the case with a fresh SLA" @click="$emit('reopen', ticket)">
+                :disabled="src === 'merged'"
+                :title="src === 'merged' ? 'Merged tombstones can\'t reopen — reopen the master record instead' : 'Agent-only: exhume this record — reopens the case with a fresh SLA'"
+                @click="$emit('reopen', ticket)">
                 <Shovel :size="13" /> Reopen
               </Motion>
             </div>

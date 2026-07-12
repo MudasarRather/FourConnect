@@ -195,6 +195,7 @@ import { getTicketScope } from '../tickets/ticketScopes'
 import {
   listCommandCenter, fetchCommandCenterStats, managerAssignTicket, bulkTickets, changeTicketStatus,
   getMe, loadPickers, usePickers, listSavedViews, createSavedView, deleteSavedView,
+  fetchCapabilities, useCapabilities,
   PRIORITIES, TICKET_TYPES, TICKET_STATUSES, typeLabel, statusLabel,
 } from '@/composables/useSupportDesk'
 
@@ -264,7 +265,21 @@ const stats = ref({})
 const now = ref(Date.now())
 const myId = ref(null)
 const me = ref({})
+const caps = useCapabilities()
 let tick = null
+
+/* Owner-tier pre-gate — this desk is TEAM-sealed, so rows owned by OTHER agents are
+   normal here; mirrors the backend _require_ticket_actor (assignee ∪ collaborator ∪
+   team lead ∪ admin; unassigned = claim-eligible) so drag/drop explains instead of
+   surfacing a rejected request. */
+const canCommandRow = (t) => {
+  if (!t) return false
+  if (caps.isAdmin) return true
+  const my = String(myId.value || '')
+  if (!t.assigned_agent_id || String(t.assigned_agent_id) === my) return true
+  if ((t.collaborators || []).map(String).includes(my)) return true
+  return (caps.leadTeamIds || []).map(String).includes(String(t.team_id))
+}
 
 const params = () => ({
   scope: LENS_SCOPE[lens.value] || undefined,
@@ -285,7 +300,7 @@ const loadTable = async () => {
 const loadWorkingSet = async () => {
   wsLoading.value = true
   try { const r = await listCommandCenter({ ...params(), page: 1, limit: 150 }); workingSet.value = r.items || []; wsCapped.value = (r.total || 0) > 150 }
-  catch { workingSet.value = []; wsCapped.value = false } finally { wsLoading.value = false }
+  catch { workingSet.value = []; wsCapped.value = false; toast.error('Could not load this desk — check the connection and press Refresh.') } finally { wsLoading.value = false }
 }
 const loadStats = async () => { try { stats.value = await fetchCommandCenterStats() } catch { stats.value = {} } }
 const reload = () => { page.value = 1; loadTable(); loadWorkingSet() }
@@ -356,7 +371,15 @@ const doBulk = async (action, payload = {}) => {
   if (!selected.value.length) return
   try {
     const r = await bulkTickets({ ids: selected.value, action, ...payload })
-    toast.success(`${r.updated ?? selected.value.length} ticket${(r.updated ?? 2) === 1 ? '' : 's'} updated`)
+    // Honest count — the backend skips ineligible rows per ticket (owner tier,
+    // terminal state); folding those into "updated" read as a silent success.
+    const updated = r.updated ?? 0
+    const skipped = r.skipped ?? (r.results || []).filter(x => x.skipped).length
+    const failed = (r.results || []).filter(x => !x.ok).length
+    let msg = `${updated} ticket${updated === 1 ? '' : 's'} updated`
+    if (skipped) msg += ` · ${skipped} skipped (not yours to move)`
+    if (failed) msg += ` · ${failed} failed`
+    ;(updated ? toast.success : toast.info)(msg)
     selected.value = []; bulkStatus.value = ''; refreshAll()
   } catch (e) { toast.error(e?.response?.data?.detail || 'Bulk action failed') }
 }
@@ -381,12 +404,20 @@ const onBulkDone = ({ updated = 0, skipped = 0 } = {}) => {
 const onEscalated = () => { escalateTarget.value = null; selected.value = []; toast.success('Ticket escalated'); refreshAll() }
 
 /* swimlane drag → assign (squad-guarded, stamps triage team) / status move */
+const rowBlocked = (id) => {
+  const t = workingSet.value.find(x => String(x.id) === String(id))
+  if (!t || canCommandRow(t)) return false
+  toast.info(`${t.ticket_number} is owned by ${t.assigned_agent_name || 'another agent'} — only the owner, a collaborator, or the team lead can move it.`)
+  return true
+}
 const onAssign = async ({ id, agentId }) => {
   if (!agentId) { toast.info('Drop a ticket onto an agent to assign it.'); return }
+  if (rowBlocked(id)) { refreshAll(); return }
   try { await managerAssignTicket(id, { assigned_agent_id: agentId }); toast.success('Ticket assigned'); refreshAll() }
   catch (e) { toast.error(e?.response?.data?.detail || 'Could not assign'); refreshAll() }
 }
 const onMove = async ({ id, status }) => {
+  if (rowBlocked(id)) { refreshAll(); return }
   try { await changeTicketStatus(id, { status }); refreshAll() }
   catch (e) { toast.error(e?.response?.data?.detail || 'Could not move ticket'); refreshAll() }
 }
@@ -470,6 +501,10 @@ const onKey = (e) => {
 
 onMounted(async () => {
   refreshAll(); loadViews(); loadPickers().catch(() => {})
+  // Hydrate the caps singleton up front — the bulk modal's owner-tier precheck and
+  // the swimlane pre-gate read it; without this a LEAD deep-linking here saw every
+  // teammate row falsely skipped as "Owned by another agent".
+  fetchCapabilities().catch(() => {})
   try { const m = await getMe(); me.value = m || {}; myId.value = m?.id || null } catch { /* non-fatal */ }
   if (route.query.ticket) openTicket(route.query.ticket)
   tick = setInterval(() => { now.value = Date.now() }, 1000)

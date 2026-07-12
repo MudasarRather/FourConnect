@@ -168,6 +168,16 @@
                   </div>
                 </template>
 
+                <!-- TAG -->
+                <template v-else-if="mode === 'tag'">
+                  <section class="f">
+                    <label class="fl"><Tag :size="12" /> Tag to add <em>*</em></label>
+                    <input v-model="form.tag" class="fi" type="text" maxlength="40"
+                      placeholder="e.g. printer-outage, q3-audit, vip" autofocus />
+                    <p class="fhint"><Info :size="12" /> One tag per run. Tickets that already carry it are skipped; works on sealed and archived records too.</p>
+                  </section>
+                </template>
+
                 <!-- MERGE -->
                 <template v-else-if="mode === 'merge'">
                   <section class="f">
@@ -287,13 +297,13 @@ import {
   X, UserCheck, RefreshCw, Flag, Flame, CircleCheck, GitMerge, TriangleAlert, Info,
   LoaderCircle, Check, ArrowRight, Bell, Lock, Crown, ShieldCheck, Wrench, SearchX, Copy,
   Settings2, BookOpen, Ban, Clock, ChevronRight, Users, Zap, Lightbulb, ArrowUpFromLine, Share2, UserPlus,
-  Pause, Truck,
+  Pause, Truck, Tag,
 } from 'lucide-vue-next'
 import SdSelect from '../components/SdSelect.vue'
 import SdPill from '../components/SdPill.vue'
 import SdDateTimePicker from '../components/SdDateTimePicker.vue'
 import {
-  bulkTickets, mergeTicket, listTeams, vendorDispatch,
+  bulkTickets, mergeTicket, listTeams, vendorDispatch, useCapabilities, fetchCapabilities,
   RESOLUTION_CODES, ROOT_CAUSES, PRIORITIES, HOLD_REASON_CODES, VENDOR_WAIT_REASONS,
   statusColor, priorityColor, statusLabel, priorityLabel,
 } from '@/composables/useSupportDesk'
@@ -315,6 +325,7 @@ const blank = () => ({
   time_spent_minutes: 0, note: '', notify_customer: false, close: false, master_id: '',
   hold_reason_code: '', hold_until: '',
   vendor_name: '', vendor_wait_reason: '', vendor_due_at: '',
+  tag: '',
 })
 const form = ref(blank())
 const busy = ref(false)
@@ -328,6 +339,10 @@ const addReason = (r) => { form.value.reason = form.value.reason.trim() ? `${for
 
 watch(() => props.open, (v) => {
   if (!v) return
+  // Hydrate the caps singleton the ownerTier precheck reads — sections that open
+  // this modal without ever opening a drawer would otherwise leave a LEAD's caps
+  // empty and every teammate row falsely skipped as "Owned by another agent".
+  fetchCapabilities().catch(() => {})
   form.value = blank()
   busy.value = false; done.value = false; err.value = ''; result.value = { updated: 0, skipped: 0, rows: [] }
   if (props.mode === 'assign') form.value.assignee = props.me?.id || ''
@@ -357,6 +372,7 @@ const META = {
   escalate: { eyebrow: 'ESCALATE', title: 'Escalate tickets', sub: 'Raise a level and flag for a senior. A reason is required and kept on the record.', icon: Flame, accent: 'var(--sd-st-escalated)',  cta: 'Escalate',      verb: 'escalated' },
   resolve:  { eyebrow: 'RESOLVE',  title: 'Resolve tickets',  sub: 'Close the loop with an ITIL resolution. Only assigned tickets can be resolved.', icon: CircleCheck, accent: 'var(--sd-success)',   cta: 'Resolve',       verb: 'resolved' },
   merge:    { eyebrow: 'MERGE',    title: 'Merge duplicates', sub: 'Fold duplicates into one master ticket and close the rest.', icon: GitMerge,        accent: 'var(--sd-amber)',         cta: 'Merge',         verb: 'merged' },
+  tag:      { eyebrow: 'TAG',      title: 'Add a tag',        sub: 'Stamp one label on every selected ticket — filters, reports and sweeps read it.', icon: Tag, accent: 'var(--sd-amber)',    cta: 'Add tag',       verb: 'tagged' },
 }
 const meta = computed(() => META[props.mode] || META.status)
 
@@ -397,36 +413,62 @@ function defaultMaster() {
 const ready = (reason) => ({ state: 'ready', reason })
 const skip = (reason) => ({ state: 'skip', reason })
 const pending = (reason) => ({ state: 'pending', reason })
+/* Owner-tier (backend _BULK_OWNER_TIER): assignee ∪ collaborator ∪ team lead ∪
+   admin; unassigned rows are claim-eligible triage. The backend skips rows
+   outside the tier per-ticket — mirror it here so the impact ledger says
+   'Owned by another agent' up front instead of promising 'ready' and failing. */
+const capsBulk = useCapabilities()
+const ownerTier = (t) => {
+  if (capsBulk.isAdmin) return true
+  const my = String(props.me?.id || '')
+  if (!t.assigned_agent_id || String(t.assigned_agent_id) === my) return true
+  if ((t.collaborators || []).map(String).includes(my)) return true
+  return (capsBulk.leadTeamIds || []).map(String).includes(String(t.team_id))
+}
+const notMine = (t) => skip(`Owned by ${t.assigned_agent_name || 'another agent'}`)
 function evalTicket(t) {
   const f = form.value
   switch (props.mode) {
     case 'assign':
       if (isTerminal(t)) return skip('Resolved/closed')
       if (String(t.assigned_agent_id) === String(f.assignee)) return skip('Already owns it')
+      if (!ownerTier(t)) return notMine(t)
       return ready('Will be assigned')
     case 'status':
       if (!f.status) return pending('Choose a status')
       if (isTerminal(t)) return skip('Reopen first')
       if (t.status === f.status) return skip(`Already ${statusLabel(f.status)}`)
       if (f.status === 'in_progress' && !t.assigned_agent_id) return skip('Assign an owner first')
+      if (!ownerTier(t)) return notMine(t)
       return ready(`→ ${statusLabel(f.status)}`)
     case 'priority':
       if (isTerminal(t)) return skip('Resolved/closed')
       if (!f.priority) return pending('Choose a priority')
       if (t.priority === f.priority) return skip(`Already ${priorityLabel(f.priority)}`)
+      if (!ownerTier(t)) return notMine(t)
       return ready(`→ ${priorityLabel(f.priority)}`)
     case 'escalate':
       if (isTerminal(t)) return skip('Resolved/closed')
       if (!t.assigned_agent_id && !f.assignee) return skip('Assign an owner first')
+      if (!ownerTier(t)) return notMine(t)
       return ready(`L${t.escalation_level || 0} → L${(t.escalation_level || 0) + 1}`)
     case 'resolve':
       if (isTerminal(t)) return skip('Already resolved/closed')
       if (!t.assigned_agent_id) return skip('Assign an owner first')
+      if (!ownerTier(t)) return notMine(t)
       return ready(f.close ? 'Resolve & close' : 'Will resolve')
     case 'merge':
       if (String(t.id) === String(f.master_id)) return { state: 'master', reason: 'Master · survives' }
       if (t.merged_into_id && String(t.merged_into_id) === String(f.master_id)) return skip('Already merged')
+      if (!ownerTier(t)) return notMine(t)
       return ready('Folds into master')
+    case 'tag': {
+      // add_tag is team-open server-side (excluded from _BULK_OWNER_TIER) — no ownerTier gate.
+      const tagv = f.tag.trim()
+      if (!tagv) return pending('Type a tag')
+      if ((t.tags || []).includes(tagv)) return skip('Tag already present')
+      return ready(`+ ${tagv}`)
+    }
     default:
       return pending('')
   }
@@ -506,6 +548,7 @@ const valid = computed(() => {
     }
     case 'resolve': return !!f.resolution_code && f.resolution_summary.trim().length >= 3 && readyCount.value > 0
     case 'merge': return !!f.master_id && readyCount.value >= 1
+    case 'tag': return f.tag.trim().length >= 2 && readyCount.value > 0
     default: return false
   }
 })
@@ -539,6 +582,7 @@ function buildPayload(ids) {
       time_spent_minutes: f.time_spent_minutes || undefined,
       note: f.note.trim() || undefined, notify_customer: f.notify_customer,
     }
+    case 'tag': return { ids, action: 'add_tag', tag: f.tag.trim() }
     default: return { ids, action: props.mode }
   }
 }

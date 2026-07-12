@@ -252,7 +252,7 @@ const loadWorkingSet = async () => {
     workingSet.value = (r.items || []).filter(t => !t.merged_into_id)
     total.value = r.total || workingSet.value.length
     wsCapped.value = (r.total || 0) > 100
-  } catch { workingSet.value = []; total.value = 0; wsCapped.value = false } finally { wsLoading.value = false }
+  } catch { workingSet.value = []; total.value = 0; wsCapped.value = false; toast.error('Could not load this desk — check the connection and press Refresh.') } finally { wsLoading.value = false }
 }
 const loadStats = async () => {
   try { stats.value = agent.value ? await fetchCommandCenterStats(mineParams()) : await fetchMyWorkbench() }
@@ -359,8 +359,9 @@ const onSort = (key) => {
 const doNudge = async (ids, label) => {
   if (!ids.length) { toast.info(`Nothing to nudge — ${label} is empty.`); return }
   toast.info(`Sending ${ids.length} reminder${ids.length === 1 ? '' : 's'}…`)
-  const { ok, failed } = await bulkRemind(ids)
+  const { ok, skipped, failed } = await bulkRemind(ids)
   if (ok) toast.success(`${ok} reminder${ok === 1 ? '' : 's'} sent`)
+  if (skipped) toast.info(`${skipped} skipped — already reminded recently (the throttle protects the requester).`)
   if (failed) toast.error(`${failed} could not be sent`)
   selected.value = []
   refreshAll()

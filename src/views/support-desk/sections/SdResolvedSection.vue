@@ -92,7 +92,9 @@
         :initial="{ opacity: 0, y: 12 }" :animate="{ opacity: 1, y: 0 }" :exit="{ opacity: 0, y: 12 }" :transition="{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }">
         <span class="bulk-n">{{ selected.length }} selected</span>
         <div class="bulk-actions">
-          <button class="res-btn sm accent" @click="openBulk('close')"><Archive :size="13" /> Close now</button>
+          <!-- No bulk close: this desk IS the quality gate — sealing goes through the
+               per-ticket "Verify & close" flow (rail / Closeout Run), and the backend
+               bulk 'close' action skips already-resolved rows anyway. -->
           <button class="res-btn sm" :disabled="ratingBusy" @click="bulkRequestRating"><Star :size="13" /> Request rating</button>
           <button class="res-btn sm" @click="openBulk('tag')"><Tag :size="13" /> Add tag</button>
         </div>
@@ -327,7 +329,7 @@ const loadWorkingSet = async () => {
     workingSet.value = (r.items || []).filter(t => !t.merged_into_id)
     total.value = r.total || workingSet.value.length
     wsCapped.value = (r.total || 0) > 100
-  } catch { workingSet.value = []; total.value = 0; wsCapped.value = false } finally { wsLoading.value = false }
+  } catch { workingSet.value = []; total.value = 0; wsCapped.value = false; toast.error('Could not load this desk — check the connection and press Refresh.') } finally { wsLoading.value = false }
 }
 const loadStats = async () => {
   try { stats.value = await fetchResolvedStats(mineParams()) } catch { stats.value = {} }

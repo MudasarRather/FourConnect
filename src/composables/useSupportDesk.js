@@ -183,7 +183,10 @@ export const removeMyCollaborator = (id, memberId) => _del(`${SD}/me/tickets/${i
 export const listMyTeam = () => _get(`${SD}/me/tickets/team`)
 export const listMyCategories = () => _get(`${SD}/me/tickets/categories`)
 // A reporting manager's team board — direct reports' tickets (raised-by or assigned-to).
+// Pass { report_id } to drill down to a single direct report's tickets.
 export const listMyTeamTickets = (params) => _get(`${SD}/me/tickets/team-tickets`, params)
+// Reporting-line oversight — each direct report with their live support workload + totals.
+export const getReportsOverview = () => _get(`${SD}/me/tickets/reports-overview`)
 // Team Operations Command Center (All Tickets) — backend-sealed: an agent sees only their
 // team(s)' tickets + the triage pool routing to them + their own work; a superuser sees the
 // whole desk. `stats` adds the F1 flag board, fastest-lap + per-agent squad load.
@@ -460,7 +463,125 @@ export const fetchTeamMemberImpact = (id, removeIds) =>
 export const listQueues = (params) => _get(`${SD}/queues/`, params)
 export const createQueue = (p) => _post(`${SD}/queues/`, p)
 export const updateQueue = (id, p) => _patch(`${SD}/queues/${id}`, p)
-export const deleteQueue = (id) => _del(`${SD}/queues/${id}`)
+// DELETE may 409 when the queue still holds active tickets — resend with
+// { reassign_to: <queue_id> } (query param) and the backend re-parks them atomically.
+// The default (fallback) queue is undeletable by design.
+export const deleteQueue = (id, params) => _del(`${SD}/queues/${id}`, params)
+
+/* ─── Queue Engine ("The Switchyard") — overview / tier boards / play mode ───
+   All agent surfaces are TEAM-SEALED server-side: an agent sees only queues owned
+   by teams they're on; superusers see the whole desk. */
+// One-call supervisor board: per-queue live counts + wait + SLA health + presence,
+// tier rollups, the L1→L2→L3 escalation flow (Sankey edges) and fleet totals.
+// Opens with the breach-flag + time-based-rule sweeps, so it's live truth.
+export const queuesOverview = (params) => _get(`${SD}/queues/overview`, params)
+// Queue drawer drill: card + status/priority mix, roster load, routing surface
+// (categories/skills/rules-in) and recent activity.
+export const queueStats = (id, params) => _get(`${SD}/queues/${id}/stats`, params)
+// One tier's working queue: tickets across every visible queue at the tier + the
+// stats block, in one request. Filters: status/priority/queue_id/unassigned_only/
+// mine/escalated_only/q; sort_by serve|created_at|sla|priority|updated_at.
+export const tierBoard = (tier, params) => _get(`${SD}/queues/tier/${tier}/board`, params)
+// Backfill router (superuser): run the create-time routing chain (rules → category →
+// team lane → default) over every open ticket with NO queue. Route-only — never touches
+// assignee/priority/SLA. dryRun=true previews the plan without writing.
+export const routeUnrouted = (dryRun = false) =>
+  _post(`${SD}/queues/route-unrouted?dry_run=${dryRun ? 'true' : 'false'}`, {})
+// Play mode: claim the next unowned ticket per queue serve_order (cross-queue drain
+// by queue_priority), skipping presence-viewed tickets + my skips today. Returns
+// { ticket|null, remaining, reason }.
+export const serveNext = (tier, queueId) =>
+  _post(`${SD}/queues/tier/${tier}/serve-next${queueId ? `?queue_id=${queueId}` : ''}`, {})
+// Play-mode skip — reason REQUIRED (Zendesk skip governance); un-assigns a just-served
+// ticket and excludes it from my rotation for the day.
+export const skipTicket = (id, p) => _post(`${SD}/tickets/${id}/skip`, p)
+// Supervisor skip report (who skipped what, why) — sealed to visible queues.
+export const fetchSkipReport = (params) => _get(`${SD}/tickets/skip-report`, params)
+// Tier ladder: escalate UP (re-parks on the target tier's queue + writes the standard
+// escalation record; L3 requires a `diagnosis`), descend DOWN (reason-coded send-back;
+// un-assigns when the owner isn't on the receiving team).
+export const tierEscalate = (id, p) => _post(`${SD}/tickets/${id}/tier-escalate`, p)
+export const tierDescend = (id, p) => _post(`${SD}/tickets/${id}/tier-descend`, p)
+
+/* ─── L2 Workbench ("The Storm Bureau") — worklogs, watchers, swarm ───
+   All routes team-sealed server-side (404 outside the seal). Worklog create keeps
+   the legacy ticket.time_spent_minutes counter in sync; watch/unwatch are
+   idempotent; one ACTIVE swarm per ticket (start 409s on a double). */
+export const listWorklogs = (id, params) => _get(`${SD}/tickets/${id}/worklogs`, params)
+export const addWorklog = (id, p) => _post(`${SD}/tickets/${id}/worklogs`, p)
+export const deleteWorklog = (id, worklogId) => _del(`${SD}/tickets/${id}/worklogs/${worklogId}`)
+export const watchTicket = (id) => _post(`${SD}/tickets/${id}/watch`, {})
+export const unwatchTicket = (id) => _del(`${SD}/tickets/${id}/watch`)
+export const listWatchers = (id) => _get(`${SD}/tickets/${id}/watchers`)
+export const getSwarm = (id) => _get(`${SD}/tickets/${id}/swarm`)
+export const swarmStart = (id, p) => _post(`${SD}/tickets/${id}/swarm`, p || {})
+export const swarmJoin = (id) => _post(`${SD}/tickets/${id}/swarm/join`, {})
+export const swarmEnd = (id, p) => _post(`${SD}/tickets/${id}/swarm/end`, p || {})
+// Worklog entry kinds (mirror backend WORK_TYPES).
+export const WORK_TYPES = [
+  { value: 'work', label: 'Hands-on work' },
+  { value: 'diagnosis', label: 'Diagnosis' },
+  { value: 'research', label: 'Research' },
+  { value: 'comms', label: 'Comms / updates' },
+  { value: 'handoff', label: 'Handoff prep' },
+]
+
+/* ─── L3 Workbench ("The Evidence Wall") — handoff dossier, KEDB, cascade solve ───
+   Dossier = one sealed read: escalation record + esc-ACK state, every lower-tier
+   technical-diagnosis note, the tier path, banked worklog minutes and linked
+   problem/change snapshots. Cascade = Zendesk problem→incident solve: per-ticket
+   eligibility evaluated server-side and reported back ({ticket_id, ok, reason}[]).
+   KEDB lookup rides listProblems({ q, known_only: true }). */
+export const getHandoffDossier = (id) => _get(`${SD}/tickets/${id}/handoff-dossier`)
+export const resolveLinkedProblemTickets = (pid, p) => _post(`${SD}/problems/${pid}/resolve-linked`, p)
+// Problem lifecycle (mirror backend ProblemStatus).
+export const PROBLEM_STATUSES = [
+  { value: 'open', label: 'Open' },
+  { value: 'investigating', label: 'Investigating' },
+  { value: 'known_error', label: 'Known error' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'closed', label: 'Closed' },
+]
+export const PROBLEM_SEVERITIES = [
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
+]
+// Change-request lifecycle (mirror backend ChangeStatus) + risk rungs.
+export const CHANGE_STATUSES = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'review', label: 'Review' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'scheduled', label: 'Scheduled' },
+  { value: 'implemented', label: 'Implemented' },
+  { value: 'closed', label: 'Closed' },
+  { value: 'rejected', label: 'Rejected' },
+]
+export const CHANGE_RISKS = [
+  { value: 'low', label: 'Low risk' },
+  { value: 'medium', label: 'Medium risk' },
+  { value: 'high', label: 'High risk' },
+]
+
+/* ─── Skills (agent↔skill roster; queues require skills via skill_ids) ─── */
+export const listSkills = (params) => _get(`${SD}/skills/`, params)
+export const createSkill = (p) => _post(`${SD}/skills/`, p)
+export const updateSkill = (id, p) => _patch(`${SD}/skills/${id}`, p)
+export const deleteSkill = (id) => _del(`${SD}/skills/${id}`)
+
+/* ─── Agent availability (unified agent status — gates auto-assignment) ─── */
+export const agentStatusRoster = () => _get(`${SD}/agent-status`)
+export const setMyStatus = (p) => _put(`${SD}/me/status`, p)
+
+/* ─── Routing rules: drag-reorder + dry-run simulator ─── */
+export const reorderRules = (order) => _patch(`${SD}/automation-rules/reorder`, { order })
+export const simulateRule = (p) => _post(`${SD}/automation-rules/simulate`, p)
+// Config versioning (superuser): every rule create/update/delete snapshots a revision —
+// works for deleted rules too (the Ledger links from tombstoned audit rows).
+export const listRuleRevisions = (id) => _get(`${SD}/automation-rules/${id}/revisions`)
+// The Queue Config change ledger: audited config mutations across queues / rules /
+// skills / SLA packages / settings, newest first. params: { page, limit, entity }.
+export const configLedger = (params) => _get(`${SD}/queues/config-ledger`, params)
 
 export const listSavedViews = (params) => _get(`${SD}/saved-views/`, params)
 export const createSavedView = (p) => _post(`${SD}/saved-views/`, p)
@@ -597,9 +718,11 @@ export const deleteAnnouncement = (id) => _del(`${SD}/announcements/${id}`)
 export const listAutomationRules = () => _get(`${SD}/automation-rules/`)
 export const createAutomationRule = (p) => _post(`${SD}/automation-rules/`, p)
 export const updateAutomationRule = (id, p) => _patch(`${SD}/automation-rules/${id}`, p)
-export const deleteAutomationRule = (id) => _del(`${SD}/automation-rules/${id}`)
+export const deleteAutomationRule = (id, params) => _del(`${SD}/automation-rules/${id}`, params)
 export const listSettings = () => _get(`${SD}/settings/`)
 export const upsertSetting = (p) => _put(`${SD}/settings/`, p)
+// Uplink Array TEST TRANSMISSION — POSTs the Slack-compatible test payload to the webhook.
+export const testWebhook = (p) => _post(`${SD}/settings/test-webhook`, p)
 export const listAuditLogs = (params) => _get(`${SD}/audit-logs/`, params)
 
 /* ─────────────────────────── Public client portal (no auth) ─────────────────────────── */
@@ -777,6 +900,86 @@ export const PENDING_WARN_DAYS = 4
 // authoritative when present.
 export const STALE_HOLD_DAYS = 7
 
+/* ── Queue Engine vocabularies (mirror backend constants + queue-engine columns) ── */
+export const TIER_META = {
+  1: { key: 'l1', label: 'L1 · Frontline', short: 'L1', accent: 'var(--sd-qs-t1)', blurb: 'First response — intake, known fixes, triage.' },
+  2: { key: 'l2', label: 'L2 · Specialist', short: 'L2', accent: 'var(--sd-qs-t2)', blurb: 'Deep troubleshooting — escalated and complex work.' },
+  3: { key: 'l3', label: 'L3 · Engineering', short: 'L3', accent: 'var(--sd-qs-t3)', blurb: 'Root cause — engineering-adjacent, critical fixes.' },
+}
+export const tierMeta = (t) => TIER_META[t] || { key: 'untiered', label: 'Untiered', short: '—', accent: 'var(--sd-steel)', blurb: 'Specialty queue outside the ladder.' }
+// Play-mode skip reasons (mirror backend SkipReason — reason is REQUIRED to skip).
+export const SKIP_REASONS = [
+  { value: 'not_my_skill', label: 'Not my skill set' },
+  { value: 'need_info', label: 'Missing information' },
+  { value: 'duplicate_suspect', label: 'Looks like a duplicate' },
+  { value: 'blocked', label: 'Blocked on something else' },
+  { value: 'other', label: 'Other' },
+]
+// Tier send-back reasons (mirror backend TierDescendReason).
+export const TIER_DESCEND_REASONS = [
+  { value: 'resolved_at_tier', label: 'Resolved at this tier' },
+  { value: 'misrouted', label: 'Misrouted — belongs lower' },
+  { value: 'needs_basic_troubleshooting', label: 'Needs basic troubleshooting first' },
+  { value: 'customer_action_done', label: 'Customer action completed' },
+  { value: 'other', label: 'Other' },
+]
+// Unified agent status (mirror backend SdAgentStatus.status — gates auto-assignment).
+export const AGENT_STATUS_META = {
+  online: { label: 'Online', color: 'var(--sd-success)', blurb: 'Receiving auto-assigned work' },
+  focus: { label: 'Focus', color: 'var(--sd-amber)', blurb: 'Working — still receives work, mutes chatter' },
+  away: { label: 'Away', color: 'var(--sd-warning)', blurb: 'No auto-assignment' },
+  offline: { label: 'Offline', color: 'var(--sd-steel)', blurb: 'Signed off — no auto-assignment' },
+}
+// Rule-builder vocab (mirror the evaluator's safe whitelists in utils/support_desk/rules.py).
+export const RULE_FIELDS = [
+  { value: 'ticket_type', label: 'Request type' },
+  { value: 'priority', label: 'Priority' },
+  { value: 'source', label: 'Source channel' },
+  { value: 'impact', label: 'Impact' },
+  { value: 'urgency', label: 'Urgency' },
+  { value: 'category_id', label: 'Category' },
+  { value: 'subcategory_id', label: 'Subcategory' },
+  { value: 'organization_id', label: 'Organization' },
+  { value: 'subject', label: 'Subject text' },
+  { value: 'description', label: 'Description text' },
+  { value: 'tags', label: 'Tags' },
+  { value: 'contact_email', label: 'Contact email' },
+  { value: 'department', label: 'Department' },
+  { value: 'location', label: 'Location' },
+  { value: 'is_major_incident', label: 'Major incident flag' },
+  // Virtual field (config v2): evaluated against the desk schedule + holiday list,
+  // not a ticket column. Values: in_hours | out_of_hours.
+  { value: 'business_hours', label: 'Business hours' },
+]
+export const RULE_OPS = [
+  { value: 'eq', label: 'is' },
+  { value: 'neq', label: 'is not' },
+  { value: 'in', label: 'is any of' },
+  { value: 'not_in', label: 'is none of' },
+  { value: 'contains', label: 'contains' },
+  { value: 'not_contains', label: "doesn't contain" },
+  { value: 'matches_keywords', label: 'matches any keyword' },
+  { value: 'gte', label: 'is at least' },
+  { value: 'lte', label: 'is at most' },
+  { value: 'is_empty', label: 'is empty' },
+  { value: 'not_empty', label: 'is set' },
+]
+export const RULE_ACTIONS = [
+  { value: 'route_queue', label: 'Route to queue', needs: 'queue' },
+  { value: 'route_team', label: 'Route to team', needs: 'team' },
+  { value: 'set_priority', label: 'Set priority', needs: 'priority' },
+  { value: 'set_sla_package', label: 'Apply SLA package', needs: 'sla' },
+  { value: 'add_tags', label: 'Add tags', needs: 'tags' },
+  { value: 'set_assignee', label: 'Assign to agent', needs: 'agent' },
+  { value: 'escalate_tier', label: 'Escalate to tier (time-based)', needs: 'tier' },
+  { value: 'notify_team_lead', label: 'Notify team lead', needs: null },
+  { value: 'notify_assignee', label: 'Notify assignee', needs: null },
+]
+export const SERVE_ORDERS = [
+  { value: 'priority_age', label: 'Priority, then age', blurb: 'Most urgent first; oldest breaks ties.' },
+  { value: 'sla_breach', label: 'Time to SLA breach', blurb: 'Closest to breaching first (SLA-target tickets ahead).' },
+]
+
 /* ── Hold-reason taxonomy (mirrors backend HoldReason / HOLD_REASON_CODES). The coded
    category drives the Suspension Dock's reason analytics; free-text detail rides along
    in hold_reason. `tone` picks the crate-tag tint on the dock. ── */
@@ -842,14 +1045,17 @@ export const escReasonShort = (v) => ESCALATION_REASON_CODES.find(r => r.value =
 export const STALE_ESCALATION_HOURS = 24
 
 /* ── Bulk client-side reminder loop — the /bulk endpoint has no `remind` action, so a
-   "nudge selected" fans out one-per-ticket remind() calls (the merge-loop pattern). Returns
-   { ok, failed }. ── */
+   "nudge selected" fans out one-per-ticket remind() calls (the merge-loop pattern).
+   409s = workflow refusals (reminder throttle / wrong state) counted as `skipped`, not
+   failures — mirrors bulkNudgeOwners so the toast can say WHY nothing went out. Returns
+   { ok, skipped, failed }. ── */
 export const bulkRemind = async (ids, message) => {
-  let ok = 0, failed = 0
+  let ok = 0, skipped = 0, failed = 0
   for (const id of ids) {
-    try { await remindTicket(id, message ? { message } : {}); ok++ } catch { failed++ }
+    try { await remindTicket(id, message ? { message } : {}); ok++ }
+    catch (e) { (e?.response?.status === 409 ? skipped++ : failed++) }
   }
-  return { ok, failed }
+  return { ok, skipped, failed }
 }
 
 /* ── Agent-aware list: agents/superusers see the org-wide desk; plain employees

@@ -307,7 +307,7 @@ const loadWorkingSet = async () => {
     workingSet.value = r.items || []          // merged tombstones ARE records here
     total.value = r.total || workingSet.value.length
     wsCapped.value = (r.total || 0) > 100
-  } catch { workingSet.value = []; total.value = 0; wsCapped.value = false } finally { wsLoading.value = false }
+  } catch { workingSet.value = []; total.value = 0; wsCapped.value = false; toast.error('Could not load this desk — check the connection and press Refresh.') } finally { wsLoading.value = false }
 }
 const loadStats = async () => {
   try { stats.value = await fetchClosedStats(mineParams()) } catch { stats.value = {} }
@@ -483,6 +483,8 @@ const exhumeNote = ref('')
 const exhumeBusy = ref(false)
 const startExhume = (t) => {
   if (!agent.value) { toast.info('Closed records need a support agent to reopen them.'); return }
+  // Merged tombstones can't reopen (backend 409s) — the story continues on the master.
+  if (t?.merged_into_id) { toast.info(`${t.ticket_number} was merged — reopen the master record instead.`); return }
   certTarget.value = null
   exhumeFor.value = t; exhumeCode.value = ''; exhumeNote.value = ''
 }

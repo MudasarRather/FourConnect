@@ -45,7 +45,16 @@ const SdResolvedSection = A(() => import('./sections/SdResolvedSection.vue'))
 const SdClosedSection = A(() => import('./sections/SdClosedSection.vue'))
 const SdArchivedSection = A(() => import('./sections/SdArchivedSection.vue'))
 const SdTeamTicketsSection = A(() => import('./sections/SdTeamTicketsSection.vue'))
-const SdQueuesSection = A(() => import('./sections/SdQueuesSection.vue'))
+// Queue Engine ("The Switchyard") — supersedes the old SdQueuesSection queue manager;
+// its CRUD now lives inside SdQueueConfigSection (admin) + the overview drawer.
+const SdQueueOverviewSection = A(() => import('./sections/SdQueueOverviewSection.vue'))
+const SdTierQueueSection = A(() => import('./sections/SdTierQueueSection.vue'))
+// L2's bespoke "Storm Bureau" specialist desk (L1 keeps the shared pit wall).
+const SdL2StormSection = A(() => import('./sections/SdL2StormSection.vue'))
+// L3's bespoke "Evidence Wall" engineering desk: string-wall hero, handoff-dossier
+// console, problem workbench + KEDB search, RCA console, change linkage, cascade solve.
+const SdL3EvidenceSection = A(() => import('./sections/SdL3EvidenceSection.vue'))
+const SdQueueConfigSection = A(() => import('./sections/SdQueueConfigSection.vue'))
 const SdTicketCalendarSection = A(() => import('./sections/SdTicketCalendarSection.vue'))
 const SdTemplatesSection = A(() => import('./sections/SdTemplatesSection.vue'))
 const SdMyTicketsSection = A(() => import('./sections/SdMyTicketsSection.vue'))
@@ -202,13 +211,31 @@ export const SUPPORT_MODULES = [
   },
   {
     key: 'queues', label: 'Queues', icon: Inbox, accent: 'var(--sd-gold)', group: 'Tickets', panels: ['employee', 'admin'],
-    sub: 'Skill-based work queues — L1/L2/L3, technical, billing, infrastructure.',
+    // 'switchyard' → the vertical "Lever Frame" rail (SdSwitchyardRail: track diagram,
+    // switch nodes, signal lamps) — its own instrument, distinct from the Tickets rail.
+    verticalRail: 'switchyard',
+    sub: 'The Switchyard — routed work queues, tier ladders and the rules that drive them.',
     tabs: [
-      tool('overview', 'Queue Overview', SdQueuesSection),
-      ph('l1', 'L1 Support', 'PHASE 3 · QUEUES'),
-      ph('l2', 'L2 Support', 'PHASE 3 · QUEUES'),
-      ph('l3', 'L3 Support', 'PHASE 3 · QUEUES'),
-      ph('config', 'Queue Config', 'PHASE 3 · QUEUES'),
+      // Queue Overview = the cinematic "SWITCHYARD" supervisor board (sealed
+      // /queues/overview: per-queue live counts + wait + SLA health + presence,
+      // tier rollups, L1→L2→L3 escalation flow, queue drawer). Visible to all —
+      // the section itself shows an agent-access notice for plain employees.
+      tool('overview', 'Queue Overview', SdQueueOverviewSection),
+      // L1/L3 = the shared PIT WALL working-queue section parameterised by tier (sealed
+      // /queues/tier/{n}/board): serve-next play mode w/ skip governance, list ⇄
+      // kanban, bulk bar, tier escalate/descend. agentOnly — these are work desks.
+      { ...tool('l1', 'L1 · Frontline', SdTierQueueSection), agentOnly: true, props: { tier: 1 } },
+      // L2 = THE STORM BUREAU — its own bespoke specialist desk (same sealed board
+      // contract) + the L2 workbench: worklogs, watchers, swarm, esc-ACK clock and
+      // the L3 diagnosis dossier. Deliberately NOT the pit wall.
+      { ...tool('l2', 'L2 · Specialist', SdL2StormSection), agentOnly: true, props: { tier: 2 } },
+      { ...tool('l3', 'L3 · Engineering', SdL3EvidenceSection), agentOnly: true, props: { tier: 3 } },
+      // Queue Config = the admin "INTERLOCKING TOWER": queue CRUD (tier/skills/
+      // serve-order/default), routing-rule builder + drag order + simulator, SLA
+      // packages, skills matrix, business hours, escalation policies, notifications.
+      // All backing endpoints are superuser-gated — adminOnly keeps the tab off the
+      // agent panel entirely.
+      { ...tool('config', 'Queue Config', SdQueueConfigSection), adminOnly: true },
     ],
   },
   {
@@ -488,8 +515,11 @@ export const SUPPORT_MODULES = [
 // tab as its first item — a module-scoped overview, distinct from the main support
 // dashboard. Placeholder for now; specialised per-module dashboards land in a later phase.
 const _MAIN_DASH = new Set(['dashboards', 'dashboard'])
+// Modules whose FIRST tab already IS the module dashboard — no placeholder injection
+// (queues: the Switchyard overview is the queue dashboard).
+const _OWN_DASH = new Set(['queues'])
 for (const _m of SUPPORT_MODULES) {
-  if (_MAIN_DASH.has(_m.key)) continue
+  if (_MAIN_DASH.has(_m.key) || _OWN_DASH.has(_m.key)) continue
   if (_m.tabs.some(t => t.key === 'dashboard')) continue
   _m.tabs.unshift(ph('dashboard', 'Dashboard', `${(_m.group || 'SUPPORT').toUpperCase()} · DASHBOARD`,
     `${_m.label} KPIs, trends and live state — separate from the main support dashboard.`))

@@ -1,13 +1,17 @@
 <template>
   <div class="sw-page">
     <div :class="vertical ? 'sw-vert' : 'sw-stack'">
-      <!-- Vertical in-page menu (e.g. Tickets) — the rail carries the brand header -->
-      <SdWorkspaceRail
+      <!-- Vertical in-page menu (e.g. Tickets, Queues) — the rail carries the brand
+           header. Each vertical module owns its OWN rail instrument: Tickets → the
+           console rail (SdWorkspaceRail), Queues → the Switchyard lever frame
+           (SdSwitchyardRail). Registry picks via `verticalRail: true | 'switchyard'`. -->
+      <component
+        :is="railComp"
         v-if="vertical"
         :model-value="activeTabKey"
         :tabs="visibleTabs"
         :mod="activeModule"
-        :icons="TICKET_ICONS"
+        :icons="railIcons"
         :collapsed="railCollapsed"
         @update:modelValue="selectTab"
         @toggle-collapsed="toggleRail"
@@ -63,12 +67,13 @@ import { useRoute, useRouter } from 'vue-router'
 import {
   LayoutDashboard, UserCheck, Layers, Inbox, Activity, Hourglass, Truck, AlertTriangle, Flame, Timer,
   CircleCheck, CircleSlash, Plus, Users, UserPlus, Pause, RotateCcw, AlarmClock, Archive,
-  CalendarDays, ClipboardList,
+  CalendarDays, ClipboardList, TowerControl, Headset, Wrench, Cpu, SlidersHorizontal,
 } from 'lucide-vue-next'
 import '../../styles/support-desk-theme.css'
 import SdModuleHeader from './components/SdModuleHeader.vue'
 import SdWorkspaceTabBar from './components/SdWorkspaceTabBar.vue'
 import SdWorkspaceRail from './components/SdWorkspaceRail.vue'
+import SdSwitchyardRail from './components/SdSwitchyardRail.vue'
 import SdSectionPlaceholder from './sections/SdSectionPlaceholder.vue'
 import SdTicketDrawer from './drawers/SdTicketDrawer.vue'
 import SdTicketCreateModal from './modals/SdTicketCreateModal.vue'
@@ -84,6 +89,11 @@ const TICKET_ICONS = {
   new: Plus, team: Users, assigned: UserPlus, 'on-hold': Pause, reopened: RotateCcw,
   overdue: AlarmClock, archived: Archive, calendar: CalendarDays, templates: ClipboardList,
 }
+// Per-tab icons for the vertical Queues "Switchyard" lever frame.
+const QUEUE_ICONS = {
+  overview: TowerControl, l1: Headset, l2: Wrench, l3: Cpu, config: SlidersHorizontal,
+}
+const RAIL_ICONS = { tickets: TICKET_ICONS, queues: QUEUE_ICONS }
 
 const route = useRoute()
 const router = useRouter()
@@ -93,6 +103,8 @@ const base = computed(() => (panel.value === 'employee' ? '/user/support' : '/ad
 
 const activeModule = computed(() => getSupportModule(panel.value, route.params.module))
 const vertical = computed(() => !!activeModule.value.verticalRail)
+const railComp = computed(() => (activeModule.value.verticalRail === 'switchyard' ? SdSwitchyardRail : SdWorkspaceRail))
+const railIcons = computed(() => RAIL_ICONS[activeModule.value.key] || {})
 
 // Support-agent reveal (Hybrid): admin always; employee only after a successful ops probe.
 const agentReveal = ref(panel.value === 'admin')
@@ -198,7 +210,8 @@ const tabProps = computed(() => {
   switch (t.kind) {
     case 'ticket-dashboard': return { panel: panel.value, dashboard: dashboard.value, selfDashboard: selfDashboard.value, agentReveal: agentReveal.value, loading: dashLoading.value }
     case 'ticket-list': return { scope: t.scope, panel: panel.value, agentReveal: agentReveal.value, dashboard: dashboard.value }
-    case 'ticket-tool': return { panel: panel.value, agentReveal: agentReveal.value }
+    // `t.props` = static per-tab extras from the registry (e.g. the queue tier).
+    case 'ticket-tool': return { panel: panel.value, agentReveal: agentReveal.value, ...(t.props || {}) }
     case 'dashboard': return { dashboard: dashboard.value, loading: dashLoading.value }
     case 'tickets': return { dashboard: dashboard.value, scope: t.scope || 'all' }
     case 'feed': return { tickets: workingSet.value, now: now.value, loading: wsLoading.value }

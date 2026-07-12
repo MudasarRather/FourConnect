@@ -11,17 +11,10 @@
 
     <!-- ═══════════════ MANAGER LENS (reports, but no support team) ═══════════════ -->
     <template v-else-if="mode === 'manager'">
-      <header class="to-mgr-hero sd-card">
-        <div>
-          <p class="to-eyebrow"><span class="to-dot" /> TEAM OPS · MANAGER LENS</p>
-          <h2 class="to-mgr-title"><UsersRound :size="20" /> Your reports' tickets</h2>
-          <p class="to-mgr-sub">You're not on a support team, so this board tracks tickets raised by or assigned to your direct reports.</p>
-        </div>
-        <button class="to-btn ghost sm" :class="{ spin: mgrLoading }" title="Refresh" @click="loadManagerBoard"><RefreshCw :size="14" /></button>
-      </header>
-      <SdTicketTable :rows="mgrRows" :columns="MGR_COLS" :loading="mgrLoading" :now="now"
-        accent="var(--sd-team-core)" :empty="{ title: 'No team tickets', blurb: 'Your reports have no active tickets right now.' }" :empty-icon="UsersRound"
-        @open="openDrawer" />
+      <SdReportsPanel :reports="reportsOverview.reports || []" :totals="reportsOverview.totals"
+        :loading="reportsLoading" :now="now" :selected-id="reportFocus"
+        :drill-rows="drillRows" :drill-loading="drillLoading" :always-table="true"
+        @pick="pickReport" @open="openDrawer" @refresh="refreshReports" />
     </template>
 
     <!-- ═══════════════ THE SQUAD COMMAND DESK ═══════════════ -->
@@ -49,6 +42,14 @@
           <SdTeamInstrument :stats="stats" :tickets="rows" :now="now" :reduced="reduced" />
         </template>
       </SdTeamOpsHero>
+
+      <!-- reporting-line oversight for a manager who is ALSO on a support team — a
+           compact strip UNDER the Squad Command hero (not a second hero) -->
+      <SdReportsPanel v-if="caps.isManager && (reportsOverview.reports || []).length" compact
+        :reports="reportsOverview.reports" :totals="reportsOverview.totals"
+        :loading="reportsLoading" :now="now" :selected-id="reportFocus"
+        :drill-rows="drillRows" :drill-loading="drillLoading"
+        @pick="pickReport" @open="openDrawer" @refresh="refreshReports" />
 
       <!-- smart insights -->
       <SdInsightTicker v-if="insights.length" :insights="insights" @act="onInsight" />
@@ -197,6 +198,7 @@ import SdRosterDeck from '../components/SdRosterDeck.vue'
 import SdFlowBalance from '../components/SdFlowBalance.vue'
 import SdInsightTicker from '../components/SdInsightTicker.vue'
 import SdTicketTable from '../components/SdTicketTable.vue'
+import SdReportsPanel from '../components/SdReportsPanel.vue'
 import SdSquadBoard from '../components/SdSquadBoard.vue'
 import SdCommandPalette from '../components/SdCommandPalette.vue'
 import SdModalShell from '../components/SdModalShell.vue'
@@ -206,7 +208,7 @@ import SdBulkActionModal from '../modals/SdBulkActionModal.vue'
 import SdFlowMoveModal from '../modals/SdFlowMoveModal.vue'
 import {
   listTeamQueue, fetchTeamQueueStats, claimNextTicket, distributeTeamQueue,
-  listMyTeamTickets, fetchCapabilities, useCapabilities, getMe,
+  listMyTeamTickets, getReportsOverview, fetchCapabilities, useCapabilities, getMe,
 } from '@/composables/useSupportDesk'
 import { useToast } from 'vue-toastification'
 
@@ -250,7 +252,6 @@ let qTimer = null
 const canWork = computed(() => caps.isAgent || caps.isAdmin || (stats.value.teams || []).length > 0)
 
 const COLS = ['flag', 'number', 'subject', 'priority', 'status', 'agent', 'viewers', 'sla', 'updated', 'handoff']
-const MGR_COLS = ['flag', 'number', 'subject', 'priority', 'status', 'agent', 'sla', 'updated']
 
 /* ── hero lenses (counts ≡ stats; ≡ list filters server-side) ── */
 const lenses = computed(() => {
@@ -482,13 +483,35 @@ const onKey = (e) => {
 }
 
 /* ── manager lens (fallback) ── */
-const mgrRows = ref([])
-const mgrLoading = ref(false)
-const loadManagerBoard = async () => {
-  mgrLoading.value = true
-  try { const r = await listMyTeamTickets({ page: 1, limit: 100, sort_by: 'updated_at', sort_dir: 'desc' }); mgrRows.value = r.items || [] }
-  catch { mgrRows.value = [] } finally { mgrLoading.value = false }
+/* ── reporting-line oversight (manager) — reports' workload + per-report drill ── */
+const reportsOverview = ref({ reports: [], totals: null, is_manager: false })
+const reportsLoading = ref(false)
+const reportFocus = ref(null)          // selected report user_id (null ⇒ all reports)
+const drillRows = ref([])
+const drillLoading = ref(false)
+
+const loadReports = async () => {
+  if (!caps.isManager) return
+  reportsLoading.value = true
+  try { reportsOverview.value = await getReportsOverview() || { reports: [], totals: null } }
+  catch { reportsOverview.value = { reports: [], totals: null } }
+  finally { reportsLoading.value = false }
 }
+const loadDrill = async () => {
+  drillLoading.value = true
+  try {
+    const params = { page: 1, limit: 100, sort_by: 'updated_at', sort_dir: 'desc' }
+    if (reportFocus.value) params.report_id = reportFocus.value
+    const r = await listMyTeamTickets(params)
+    drillRows.value = r.items || []
+  } catch { drillRows.value = [] } finally { drillLoading.value = false }
+}
+const pickReport = async (uid) => {
+  reportFocus.value = uid ? String(uid) : null
+  await loadDrill()
+}
+// Manager surface refresh: reports strip + current drill together.
+const refreshReports = async () => { await Promise.all([loadReports(), loadDrill()]) }
 
 /* ── boot ── */
 onMounted(async () => {
@@ -508,10 +531,13 @@ onMounted(async () => {
       teamId.value = null; syncQuery(); await loadStats()
     }
     loadList()
+    // A manager who is ALSO on a support team still gets their reporting-line oversight
+    // (the reports strip renders atop the Squad desk — it no longer vanishes on joining a team).
+    if (caps.isManager) loadReports()
     softTimer = setInterval(() => { if (!document.hidden) { loadStats(); loadList() } }, 30000)
   } else if (caps.isManager) {
     mode.value = 'manager'
-    loadManagerBoard()
+    await refreshReports()
   } else {
     mode.value = 'locked'
   }
@@ -560,29 +586,57 @@ onBeforeUnmount(() => { clearInterval(tick); clearInterval(softTimer); clearTime
 
 /* mid row */
 .to-mid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); gap: 14px; align-items: start; }
-.to-mid-main { padding: 16px 18px; }
+.to-mid-main { position: relative; overflow: hidden; padding: 17px 19px; }
+/* cinematic frame: top accent hairline + a slow corner aura behind the crew deck */
+.to-mid-main::before { content: ''; position: absolute; inset: 0 0 auto; height: 2px; pointer-events: none; z-index: 1;
+  background: linear-gradient(90deg, transparent, var(--sd-team-core), var(--sd-team-hi), transparent); opacity: 0.6; }
+.to-mid-main::after { content: ''; position: absolute; top: -120px; left: -60px; width: 320px; height: 260px; pointer-events: none; z-index: 0;
+  background: radial-gradient(circle, var(--sd-team-soft), transparent 68%); filter: blur(6px); animation: to-drift 24s ease-in-out infinite; }
+.to-mid-main > * { position: relative; z-index: 1; }
 .to-mid-side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 @media (max-width: 1080px) { .to-mid { grid-template-columns: 1fr; } }
 
-/* collision watch + podium */
-.to-hot { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+/* collision watch + podium — cinematic mini-consoles */
+.to-hot, .to-podium { position: relative; overflow: hidden; padding: 15px 16px; display: flex; flex-direction: column; gap: 9px; }
+.to-hot::before, .to-podium::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(var(--sd-team-strain), transparent); opacity: 0.8; }
+.to-podium::before { background: linear-gradient(var(--sd-team-core), transparent); }
 .to-hot-eyebrow { display: inline-flex; align-items: center; gap: 7px; margin: 0; font-family: var(--sd-mono);
   font-size: 10px; font-weight: 800; letter-spacing: 0.2em; color: var(--sd-team-core); }
-.to-hot-row { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 10px; cursor: pointer;
-  font-family: inherit; text-align: left; background: var(--sd-surface-glass); border: 1px solid var(--sd-border); transition: border-color 0.16s; }
-.to-hot-row:hover { border-color: var(--sd-team-brd); }
+.to-hot-eyebrow :deep(svg) { animation: to-eye-pulse 2.4s ease-in-out infinite; }
+.to-hot-row { position: relative; display: flex; align-items: center; gap: 9px; padding: 9px 11px; border-radius: 11px; cursor: pointer;
+  font-family: inherit; text-align: left; background: var(--sd-surface-glass); border: 1px solid var(--sd-border);
+  transition: transform 0.18s var(--sd-spring), border-color 0.16s, box-shadow 0.2s; }
+.to-hot-row:hover { border-color: var(--sd-team-brd); transform: translateX(3px); box-shadow: -3px 0 0 -1px var(--sd-team-strain); }
 .to-hot-no { font-size: 10.5px; font-weight: 700; color: var(--sd-team-core); flex: 0 0 auto; }
 .to-hot-subj { flex: 1; min-width: 0; font-size: 12px; color: var(--sd-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .to-hot-n { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 750; color: var(--sd-team-strain); }
-.to-podium { padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; }
+.to-hot-n :deep(svg) { animation: to-eye-pulse 1.8s ease-in-out infinite; }
 .to-podium-rows { display: flex; flex-direction: column; gap: 7px; }
-.to-podium-row { display: flex; align-items: center; gap: 10px; }
-.to-medal { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #1c1204; }
-.to-medal.p0 { background: var(--sd-team-grad); }
-.to-medal.p1 { background: #c0c0c0; }
-.to-medal.p2 { background: #b08d57; }
+.to-podium-row { display: flex; align-items: center; gap: 10px; padding: 4px 6px; border-radius: 9px; transition: background 0.18s; }
+.to-podium-row:hover { background: var(--sd-team-soft); }
+.to-medal { position: relative; overflow: hidden; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 11px; font-weight: 800; color: #1c1204; flex: 0 0 auto; }
+/* medal shine sweep */
+.to-medal::after { content: ''; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.7) 50%, transparent 60%);
+  background-size: 250% 100%; animation: to-shine 3.6s ease-in-out infinite; }
+.to-medal.p0 { background: var(--sd-team-grad); box-shadow: 0 0 12px -2px var(--sd-team-core); }
+.to-medal.p1 { background: linear-gradient(150deg, #e8e8e8, #b8b8b8); }
+.to-medal.p2 { background: linear-gradient(150deg, #cfa46a, #a8794a); }
+.to-medal.p1::after { animation-delay: 0.5s; }
+.to-medal.p2::after { animation-delay: 1s; }
 .to-podium-name { flex: 1; font-size: 12.5px; font-weight: 650; color: var(--sd-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .to-podium-n { font-size: 10.5px; color: var(--sd-text-muted); }
+
+@keyframes to-drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(20px, 16px); } }
+@keyframes to-eye-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@keyframes to-shine { 0% { background-position: 150% 0; } 100% { background-position: -150% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-cinematic="on"]) .to-mid-main::after,
+  html:not([data-cinematic="on"]) .to-hot-eyebrow :deep(svg),
+  html:not([data-cinematic="on"]) .to-hot-n :deep(svg),
+  html:not([data-cinematic="on"]) .to-medal::after { animation: none; }
+}
 
 /* toolbar */
 .to-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }

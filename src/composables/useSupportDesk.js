@@ -80,6 +80,18 @@ export async function fetchCapabilities(force = false) {
 }
 export function useCapabilities() { return capState }
 
+/* ─────────────────────────── Signed-in identity (shared cache) ───────────────────────────
+   Who is acting right now — used by command modals (decision ledger, rosters) to stamp
+   the actor. Path-aware token via the same authHeader; module-cached + single-inflight;
+   a failed probe is NOT cached so a later login can retry. */
+let _mePromise = null
+export const fetchMe = (force = false) => {
+  if (force || !_mePromise) {
+    _mePromise = _get('/auth/me').catch(() => { _mePromise = null; return null })
+  }
+  return _mePromise
+}
+
 /* ─────────────────────────── Tickets (admin) ─────────────────────────── */
 export const listTickets = (params) => _get(`${SD}/tickets/`, params)
 export const bulkTickets = (payload) => _post(`${SD}/tickets/bulk`, payload)
@@ -101,7 +113,30 @@ export const ackEscalation = (id, payload) => _post(`${SD}/tickets/${id}/escalat
 // Tier timeline — every escalate/de-escalate rung with actor/reason/direction/target/dwell.
 export const fetchEscalationHistory = (id) => _get(`${SD}/tickets/${id}/escalation-history`)
 export const remindTicket = (id, payload) => _post(`${SD}/tickets/${id}/remind`, payload || {})
+// RCA v2 capture — payload: { breach_reason?, rca_summary?, rca_corrective?, rca_preventive?,
+// rca_category?, rca_five_whys?: [..≤5], rca_factors?: [..≤10] }. Server 422s empty strings /
+// summary <10 chars / bad category / ancillary-without-summary; 409 on merged tombstones.
+// Content payloads (re-)FILE the record (rca_status 'filed', review stamps cleared);
+// a breach_reason-only payload is an annotation that never touches the review machine.
 export const setTicketRca = (id, payload) => _post(`${SD}/tickets/${id}/rca`, payload || {})
+// RCA review verbs (team lead ∪ superuser; four-eyes: filer can't validate own filing).
+// validate: { note? } · return: { note } REQUIRED (422 without) — both 409 unless FILED.
+export const validateTicketRca = (id, payload) => _post(`${SD}/tickets/${id}/rca/validate`, payload || {})
+export const returnTicketRca = (id, payload) => _post(`${SD}/tickets/${id}/rca/return`, payload)
+// RCA desk board — ONE sealed response: items + stats{owed,pending,returned,validated,stale,
+// eligible,coverage_pct,aging} in LOCKSTEP + generated_at. Params: lens owed|pending|returned|
+// validated|stale|all, sev, q, days(7-365), incident_only, page, limit≤100,
+// sort owed_age|resolved_at|filed_at|sev.
+export const fetchRcaBoard = (params) => _get(`${SD}/incidents/rca/board`, params)
+// RCA program analytics: coverage, category/breach-reason mix, cycle_time + review_latency
+// (median/p90), debt_aging, actions_follow_through, kedb deflection, weekly trend.
+export const fetchRcaAnalytics = (params) => _get(`${SD}/incidents/rca/analytics`, params)
+// Recurrence clusters (proactive problem mgmt): { days, min_size≥2, limit } → cluster
+// families w/ signature, has_open_problem flag, suggested_problem_title, member preview.
+export const fetchRcaClusters = (params) => _get(`${SD}/incidents/rca/clusters`, params)
+// Promote a cluster → PROBLEM (investigating) linking the sealed member subset:
+// { ticket_ids: [2..50], title, statement?, root_cause_hint? } → 201 + per-ticket results.
+export const promoteRcaCluster = (payload) => _post(`${SD}/incidents/rca/clusters/promote`, payload)
 export const setMajorIncident = (id, payload) => _post(`${SD}/tickets/${id}/major-incident`, payload || {})
 export const holdTicket = (id, payload) => _post(`${SD}/tickets/${id}/hold`, payload || {})
 // Resume accepts an optional { reason } — lands on the timeline as the transition note.
@@ -646,6 +681,7 @@ export const CAL_KINDS = [
   { value: 'hold_resume',    label: 'Hold resumes',    short: 'Resume',   token: 'resume' },
   { value: 'vendor_due',     label: 'Vendor reply',    short: 'Vendor',   token: 'stone' },
   { value: 'auto_close',     label: 'Auto-close',      short: 'Auto',     token: 'moon' },
+  { value: 'pir_review',     label: 'PIR review',      short: 'PIR',      token: 'gold' },
   { value: 'reminder',       label: 'My reminders',    short: 'Pin',      token: 'pin' },
 ]
 export const CAL_HISTORY_KINDS = [
@@ -873,6 +909,22 @@ export const ROOT_CAUSES = [
 ]
 export const resolutionLabel = (v) => RESOLUTION_CODES.find(r => r.value === v)?.label || v
 export const rootCauseLabel = (v) => ROOT_CAUSES.find(r => r.value === v)?.label || v
+
+/* ── RCA v2 review machine (RCA desks) ──
+   rca_status column: filed → validated | returned; reopen flips any live story to
+   stale; NULL = nothing filed. 'owed' is a LENS (required-but-absent), not a status.
+   Legacy rows (rca_summary present, rca_status NULL) READ as 'filed' — mirror of the
+   backend's rca_effective_status; always go through rcaStatusOf, never the raw field. */
+export const RCA_STATUSES = {
+  owed:      { label: 'OWED',      tone: 'owed' },
+  filed:     { label: 'FILED',     tone: 'filed' },
+  returned:  { label: 'RETURNED',  tone: 'returned' },
+  validated: { label: 'VALIDATED', tone: 'validated' },
+  stale:     { label: 'STALE',     tone: 'stale' },
+}
+export const rcaStatusOf = (r) =>
+  r?.rca_status || (((r?.rca_summary || '').trim()) ? 'filed' : 'owed')
+export const rcaStatusMeta = (r) => RCA_STATUSES[rcaStatusOf(r)] || RCA_STATUSES.owed
 
 /* ── Impact × Urgency → Priority matrix (mirrors backend IMPACT_URGENCY_MATRIX) ──
    Both axes use low|medium|high|critical; the derived priority is one of our
@@ -1122,3 +1174,277 @@ export const BUSINESS_IMPACTS = [
 ]
 // A critical with no timeline movement for this long reads as "stale" on the board.
 export const STALE_CRITICAL_HOURS = 4
+
+/* ─────────────────────────── Incident Management ───────────────────────────
+   The Fault Grid (agent) / Command Funnel (admin) module. Incidents ARE tickets —
+   these endpoints are sealed lenses + the incident-command verbs + the PIR
+   lifecycle over /support-desk/incidents/* and /support-desk/tickets/{id}/*. */
+
+// SEV1–SEV4 is DERIVED, never stored (backend twin: utils/support_desk/incidents.ticket_sev):
+// SEV1 = major incident · SEV2 = priority critical · SEV3 = urgent/high · SEV4 = medium/low.
+export const SEV_LEVELS = [
+  { sev: 1, key: 'sev1', label: 'SEV1', title: 'Major incident', color: 'var(--sd-pri-critical)' },
+  { sev: 2, key: 'sev2', label: 'SEV2', title: 'Critical', color: 'var(--sd-pri-urgent)' },
+  { sev: 3, key: 'sev3', label: 'SEV3', title: 'High', color: 'var(--sd-amber)' },
+  { sev: 4, key: 'sev4', label: 'SEV4', title: 'Standard', color: 'var(--sd-steel)' },
+]
+export const sevOf = (t) => (t?.is_major_incident ? 1
+  : (t?.priority === 'critical' ? 2
+    : (t?.priority === 'urgent' || t?.priority === 'high') ? 3 : 4))
+export const sevMeta = (sev) => SEV_LEVELS.find(s => s.sev === sev) || SEV_LEVELS[3]
+
+// "At risk" = live resolution deadline inside the warning window (backend twin:
+// utils/support_desk/incidents._AT_RISK_HOURS). Breached and paused rows are excluded.
+export const AT_RISK_HOURS = 4
+export const isAtRisk = (row, nowMs, hours = AT_RISK_HOURS) => {
+  if (!row?.resolution_due_at || row.sla_resolution_breached || row.sla_response_breached) return false
+  if (row.sla_paused_since) return false
+  const due = new Date(row.resolution_due_at).getTime()
+  return due > nowMs && due - nowMs <= hours * 3600 * 1000
+}
+// Defensive normalizer: rows must always carry a derived sev even if the API omits it.
+export const normalizeIncidentRow = (r) => ({ ...r, sev: r?.sev ?? sevOf(r) })
+
+/* True when the signed-in user may run OWNER-TIER incident verbs on this row
+   (ack / update / roster / impact / decision / link / pin-curate). Mirrors the
+   backend `_ticket_actor_error` bar as closely as the client data allows:
+     superuser · assignee · incident commander · named collaborator · lead of the
+     owning team (collaborators only when the row carries them — timeline events
+     don't, PIR rows/dossier do). Known false-negative: live-swarm participants,
+     not carried on any sealed row; fail-CLOSED is the safe default. `me` =
+     fetchMe() result, `caps` = useCapabilities() state. */
+export const canActOnIncident = (row, me, caps) => {
+  if (!row) return false
+  if (caps?.isAdmin) return true
+  const uid = me?.id != null ? String(me.id) : null
+  if (!uid) return false
+  if (row.assigned_agent_id && String(row.assigned_agent_id) === uid) return true
+  if (row.incident_commander_id && String(row.incident_commander_id) === uid) return true
+  if (Array.isArray(row.collaborators) && row.collaborators.map(String).includes(uid)) return true
+  if (row.team_id && (caps?.leadTeamIds || []).includes(String(row.team_id))) return true
+  return false
+}
+
+// Sealed dashboard rollup (keys are a frozen contract with the backend schema).
+export const fetchIncidentStats = () => _get(`${SD}/incidents/stats`)
+// Composed command-dashboard rollup — ONE sealed request (StaticPool-friendly) returning
+// { generated_at, is_superuser, agent: <IncidentStatsResponse>, extras: { next_breach,
+// aging_ladder[], escalation{l1,l2,l3,escalated_total,auto_escalated_30d}, war_rooms,
+// quality{csat_avg,csat_responses,reopen_rate_pct,fcr_pct}, tasks_live{tickets_with_tasks,
+// open,done,progress_pct} }, admin: null | { leaderboard[], per_team[], rca, pir,
+// recurring[], escalation_heatmap[], busy_hours[] } }. admin block is superuser-only;
+// agent+extras are team-sealed (leads get their slice). Powers A1 Situation Deck + C1 Concourse.
+export const fetchIncidentCommandDashboard = () => _get(`${SD}/incidents/command-dashboard`)
+// Server-paged board: { lens: active|major|critical|all, page?, limit(≤100)?, sev?,
+// flag: unacked|at_risk|breached|unowned|cmdr_unstaffed|update_overdue?, status?,
+// category_id?, service?, owner_id?, q?, from?, to?, sort_by: created_at|ticket_number?,
+// sort_dir: asc|desc? } → { total, page, limit, items }. Omitting page keeps the
+// legacy single-window behavior for older callers.
+export const listIncidents = (params) => _get(`${SD}/incidents/`, params)
+// Cross-incident chronology, day-bucketed in the caller's local time.
+export const fetchIncidentTimeline = (params) =>
+  _get(`${SD}/incidents/timeline`, { tz_offset: -new Date().getTimezoneOffset(), ...params })
+// CSV export — auth-aware Blob; caller triggers the download (never a token in a URL).
+export const exportIncidentTimelineCsv = async (params) => {
+  const res = await axios.get(`${API}${SD}/incidents/timeline/export.csv`,
+    { headers: authHeader(), params, responseType: 'blob' })
+  return res.data
+}
+// ── Timeline rebuild surfaces (all additive) ──
+// Hero-instrument aggregates: density buckets (hour ≤48h window, else day), by_category/
+// by_sev mix, milestones, human/system split, top actors, raised-vs-restored flow, window
+// MTTA/MTTR, busiest incident, per-team split. Same seal + filters as the feed.
+export const fetchIncidentTimelinePulse = (params) =>
+  _get(`${SD}/incidents/timeline/pulse`, { tz_offset: -new Date().getTimezoneOffset(), ...params })
+// The event-type registry (labels/categories/tones/milestone-eligibility + cap) — the
+// server truth behind the kind chips; merge over the client EVENT_META fallback.
+export const fetchIncidentEventCatalog = () => _get(`${SD}/incidents/timeline/catalog`)
+// Merged per-incident dossier: activities + comments + worklogs + tasks in one stream,
+// plus a row-shaped `ticket` header block the verb rail can gate on. { types?: csv,
+// from?, to?, page?, limit(≤100)? } → { ticket, total, counts, items }.
+export const fetchIncidentStream = (id, params) => _get(`${SD}/incidents/${id}/stream`, params)
+// Milestone pins — owner-tier curation of an incident's key beats (422 on non-eligible
+// kinds, 409 re-pin/cap; catalog carries `milestone_eligible`). DELETE unpins.
+export const pinTimelineMilestone = (activityId) =>
+  _post(`${SD}/incidents/activities/${activityId}/pin`)
+export const unpinTimelineMilestone = (activityId) =>
+  _del(`${SD}/incidents/activities/${activityId}/pin`)
+// JSON export — same sealed query + 2000 cap as the CSV, machine-readable envelope.
+export const exportIncidentTimelineJson = async (params) => {
+  const res = await axios.get(`${API}${SD}/incidents/timeline/export.json`,
+    { headers: authHeader(), params, responseType: 'blob' })
+  return res.data
+}
+// PDF "shift chronicle" — the filtered window as a printable dossier (newest 400 events).
+export const exportIncidentTimelinePdf = async (params) => {
+  const res = await axios.get(`${API}${SD}/incidents/timeline/export.pdf`,
+    { headers: authHeader(), params, responseType: 'blob' })
+  return res.data
+}
+// "AI insights" — terminal precedents sharing a category / service / keywords, with their fix.
+export const similarIncidents = (id) => _get(`${SD}/incidents/${id}/similar`)
+
+// MI command roster: { incident_commander_id?, comms_lead_id?, ops_lead_id?, clear?: [field],
+// note? } — note is REQUIRED (422) whenever a change replaces/stands down a seated holder.
+export const setIncidentRoles = (id, payload) => _patch(`${SD}/tickets/${id}/incident-roles`, payload)
+// The roster console's sealed read: team staffing pool w/ directory info + live command
+// load, current holders (+ held-since), and the chain-of-command log. `q` (2+ chars)
+// typeahead-searches the whole directory, capped at 25.
+export const fetchRosterCandidates = (id, params) => _get(`${SD}/tickets/${id}/roster-candidates`, params)
+// Impact detail: affected_services[], incident_started_at/detected_at, compliance/
+// security/public_impact flags, business_impact, affected_users, revenue_impact, note?.
+// Send ONLY changed fields — no-op stamps 422, and REVISING an already-stamped value
+// without `note` 422s (revision drop-gate). Diffs land on the activity timeline.
+export const setIncidentImpact = (id, payload) => _patch(`${SD}/tickets/${id}/incident-impact`, payload)
+// Decision log — immutable typed activity row: { kind: DECISION_KINDS, decision, note? }.
+export const logIncidentDecision = (id, payload) => _post(`${SD}/tickets/${id}/decision`, payload)
+// Parent/child incident linking (one level deep): { parent_id } to link, { clear: true } to
+// unlink. Optional { note } (≤300) is the structured rationale recorded on the link/unlink
+// activity rows (both timelines on link).
+export const setIncidentParent = (id, payload) => _patch(`${SD}/tickets/${id}/incident-parent`, payload)
+// Children rolled under a master incident — team-sealed like every incident lens.
+export const listIncidentChildren = (id) => _get(`${SD}/incidents/${id}/children`)
+
+// PIR lifecycle: one report per incident (create 409s on duplicate — idempotent).
+export const createPir = (ticketId, payload) => _post(`${SD}/tickets/${ticketId}/pir`, payload || {})
+export const listPirs = (params) => _get(`${SD}/incidents/pirs`, params)
+// THE sealed PIR desk board — ONE response = rows + lockstep chip stats + generated_at.
+// { lens: owed|drafting|in_review|approved|published|actions_due|all, q?, sev?, page?,
+//   limit?, sort: updated|submitted|created|sev|age, sort_dir? }. The `owed` lens rows
+// are TICKETS still owing a review (kind='owed'); every other lens is PIR documents
+// (kind='pir'). Server-side single truth — never fold owed client-side again.
+export const fetchPirBoard = (params) => _get(`${SD}/incidents/pirs/board`, params)
+export const getPir = (id) => _get(`${SD}/incidents/pirs/${id}`)
+export const updatePir = (id, payload) => _patch(`${SD}/incidents/pirs/${id}`, payload)
+export const submitPir = (id) => _post(`${SD}/incidents/pirs/${id}/submit`, {})
+export const approvePir = (id, payload) => _post(`${SD}/incidents/pirs/${id}/approve`, payload || {})
+export const rejectPir = (id, payload) => _post(`${SD}/incidents/pirs/${id}/reject`, payload)
+export const publishPir = (id) => _post(`${SD}/incidents/pirs/${id}/publish`, {})
+// PDF dossier — auth-aware Blob (WeasyPrint server-side; 503 = GTK runtime missing).
+export const exportPirPdf = async (id) => {
+  const res = await axios.get(`${API}${SD}/incidents/pirs/${id}/export.pdf`,
+    { headers: authHeader(), responseType: 'blob' })
+  return res.data
+}
+
+// Command-decision taxonomy (backend DecisionKind twin) — DR/failover/BCP are RECORDED
+// decisions, not automated actions.
+export const DECISION_KINDS = [
+  { value: 'mitigation', label: 'Mitigation step' },
+  { value: 'escalate_executive', label: 'Escalate to executive' },
+  { value: 'failover', label: 'Failover invoked' },
+  { value: 'activate_dr', label: 'DR activated' },
+  { value: 'invoke_bcp', label: 'BCP invoked' },
+  { value: 'rollback', label: 'Rollback ordered' },
+  { value: 'vendor_engaged', label: 'Vendor engaged' },
+  { value: 'comms', label: 'Comms decision' },
+  { value: 'stand_down', label: 'Stand-down' },
+  { value: 'other', label: 'Other' },
+]
+// PIR statuses (backend PirStatus twin).
+export const PIR_STATUSES = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'in_review', label: 'In Review' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'published', label: 'Published' },
+]
+
+/* ── Major-incident command upgrade (Countdown Wall / War Table desks) ──
+   phase clocks, executive sitrep, MI-candidate proposal workflow, stakeholder
+   comms hub and the PIR action-item tracker. All additive over the same seals. */
+
+// Derived 7-phase track (started→detected→declared→acked→mitigating→resolved→closed)
+// + inter-phase durations + MTTD/MTTA/MTTR minutes for one incident.
+export const fetchIncidentPhases = (id) => _get(`${SD}/incidents/${id}/phases`)
+// Executive situation snapshot — phases, roster, impact, cadence, latest decisions,
+// SLA posture, children, watchers, PIR state — one sealed read.
+export const fetchIncidentSitrep = (id) => _get(`${SD}/incidents/${id}/sitrep`)
+// Sitrep one-pager PDF — auth-aware Blob (WeasyPrint; 503 = GTK runtime missing).
+export const exportSitrepPdf = async (id) => {
+  const res = await axios.get(`${API}${SD}/incidents/${id}/sitrep.pdf`,
+    { headers: authHeader(), responseType: 'blob' })
+  return res.data
+}
+
+// MI-candidate proposal workflow (ServiceNow "MI candidate" parity). Direct declare is
+// LEAD/ADMIN-only — regular agents propose; the lead confirms (arming cadence/war room)
+// or declines with a mandatory note; the proposer may withdraw their own candidate.
+export const proposeMi = (id, payload) => _post(`${SD}/tickets/${id}/mi-proposal`, payload)
+export const confirmMiProposal = (id, payload) => _post(`${SD}/tickets/${id}/mi-proposal/confirm`, payload || {})
+export const declineMiProposal = (id, payload) => _post(`${SD}/tickets/${id}/mi-proposal/decline`, payload)
+export const withdrawMiProposal = (id) => _post(`${SD}/tickets/${id}/mi-proposal/withdraw`, {})
+
+// Stakeholder comms hub: subscribe/unsubscribe OTHER users as watchers (owner-tier;
+// self-service watch/unwatch stays on /watch). listTicketWatchers is the shared read.
+export const listTicketWatchers = (id) => _get(`${SD}/tickets/${id}/watchers`)
+export const addTicketWatcher = (id, userId) => _post(`${SD}/tickets/${id}/watchers`, { user_id: userId })
+export const removeTicketWatcher = (id, userId) => _del(`${SD}/tickets/${id}/watchers/${userId}`)
+
+// Cross-incident PIR action-item board: { status: open|in_progress|done?, overdue?, kind?,
+// owner_id?, pir_status?, q?, page?, limit? } → { total, page, limit,
+// counts:{open,in_progress,done,overdue}, items }. status=open returns the WORKING SET
+// (open ∪ in_progress); in_progress/done are exact.
+export const listIncidentActions = (params) => _get(`${SD}/incidents/actions`, params)
+// Status-only carve-out — the ONE mutation allowed on approved/published PIRs.
+// ALWAYS pass the row's `aid` in the payload: the stable address survives draft-era
+// reorders and overrides a stale positional index server-side.
+export const patchPirAction = (pirId, kind, index, payload) =>
+  _patch(`${SD}/incidents/pirs/${pirId}/actions/${kind}/${index}`, payload)
+// Owed-review nudge — works on TERMINAL incidents (the generic /nudge-owner 409s those).
+// Pings commander∪owner∪team-leads to file the PIR; 24h-throttled server-side. Resolves
+// to { status: 'sent'|'throttled', recipients } — a throttle is a benign 200, not an error.
+export const nudgePirReview = (ticketId, payload) => _post(`${SD}/incidents/${ticketId}/pir-nudge`, payload || {})
+// Action-item reminder — pings the action OWNER (else commander/assignee). Pass the row's
+// `aid` (stable address). Resolves to { status: 'sent'|'throttled' }.
+export const remindPirAction = (pirId, kind, index, payload) =>
+  _post(`${SD}/incidents/pirs/${pirId}/actions/${kind}/${index}/remind`, payload || {})
+// Follow-through action statuses (backend PIR_ACTION_STATUSES twin).
+export const PIR_ACTION_STATUSES = [
+  { value: 'open', label: 'Open' },
+  { value: 'in_progress', label: 'In progress' },
+  { value: 'done', label: 'Done' },
+]
+
+/* ── Critical-desk upgrade (Fault Grid / Command Funnel) — response playbooks,
+   incident tasks and severity reclassification. All sealed like every incident
+   read/verb. Flag-name translation twin (list `flag` ⇔ /incidents/stats keys):
+   cmdr_unstaffed⇔stats.roles_unassigned · mi_proposed⇔stats.mi_proposals_pending ·
+   at_risk/breached⇔stats.sla.* — the CRIT_LENSES map in
+   views/support-desk/composables/useCriticalDesk.js is the ONE place that
+   translation lives on the UI side. ── */
+
+// Curated response-playbook library — static [{ key, label, task_count, tasks }].
+export const listIncidentPlaybooks = () => _get(`${SD}/incidents/playbooks`)
+// One incident's task board → { total, open, done, skipped, progress_pct, items }.
+// Progress counts done/(open+done) — skipped rows are excluded from the denominator.
+export const listIncidentTasks = (id) => _get(`${SD}/tickets/${id}/tasks`)
+// Add a single response task: { title, note?, owner_id? }. 422 on non-incidents;
+// 409 on terminal/merged records. Assigning someone else notifies them.
+export const addIncidentTask = (id, payload) => _post(`${SD}/tickets/${id}/tasks`, payload)
+// Stamp a whole playbook onto the incident: { template_key }. Tasks are SNAPSHOT on
+// apply (later template edits never rewrite history); idempotent per key — a second
+// apply 409s while any non-skipped row from the same template survives.
+export const applyIncidentTaskTemplate = (id, payload) =>
+  _post(`${SD}/tickets/${id}/tasks/apply-template`, payload)
+// Task transitions: open→done free · open→skipped (status_note REQUIRED — skipped is
+// the tombstone, there is no DELETE) · done→open (status_note REQUIRED — a correction)
+// · skipped→open free. done→skipped and same-status 422. Status moves stay allowed
+// post-resolution (follow-through, like PIR actions); owner changes on terminal 409.
+export const patchIncidentTask = (id, taskId, payload) =>
+  _patch(`${SD}/tickets/${id}/tasks/${taskId}`, payload)
+// Severity reclassification: { target_sev: 2|3, note (min 10 — REQUIRED) }.
+// Promote → SEV2 is owner-tier (raising the alarm is safe to over-do); de-escalate
+// → SEV3 is lead/superuser (removing the desk's eyes carries the decline-an-MI bar).
+// 409 on major incidents (SEV1 = the MI flag — use the major-incident verb), merged
+// and terminal rows; 422 when already at the target severity.
+export const changeSev = (id, payload) => _post(`${SD}/tickets/${id}/sev`, payload)
+// Render-time war-room link fix for the admin panel: stored URLs stay untouched
+// (zero-migration) — only a LEADING '/user/support/' is re-homed to
+// '/admin/support-desk/' so an admin's click lands inside their own panel
+// (the queues/l2 route exists there: agentOnly gates employees, not admins).
+// External bridge/meet links pass through unchanged.
+export const warRoomHref = (url, panel) => {
+  if (!url || panel !== 'admin') return url
+  const s = String(url)
+  return s.startsWith('/user/support/') ? `/admin/support-desk/${s.slice('/user/support/'.length)}` : url
+}

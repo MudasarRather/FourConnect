@@ -68,12 +68,15 @@ import {
   LayoutDashboard, UserCheck, Layers, Inbox, Activity, Hourglass, Truck, AlertTriangle, Flame, Timer,
   CircleCheck, CircleSlash, Plus, Users, UserPlus, Pause, RotateCcw, AlarmClock, Archive,
   CalendarDays, ClipboardList, TowerControl, Headset, Wrench, Cpu, SlidersHorizontal,
+  Siren, Zap, History, SearchCheck, FileCheck2, Gauge,
 } from 'lucide-vue-next'
 import '../../styles/support-desk-theme.css'
 import SdModuleHeader from './components/SdModuleHeader.vue'
 import SdWorkspaceTabBar from './components/SdWorkspaceTabBar.vue'
 import SdWorkspaceRail from './components/SdWorkspaceRail.vue'
 import SdSwitchyardRail from './components/SdSwitchyardRail.vue'
+import SdIncGridRail from './components/SdIncGridRail.vue'
+import SdIncFunnelRail from './components/SdIncFunnelRail.vue'
 import SdSectionPlaceholder from './sections/SdSectionPlaceholder.vue'
 import SdTicketDrawer from './drawers/SdTicketDrawer.vue'
 import SdTicketCreateModal from './modals/SdTicketCreateModal.vue'
@@ -93,7 +96,12 @@ const TICKET_ICONS = {
 const QUEUE_ICONS = {
   overview: TowerControl, l1: Headset, l2: Wrench, l3: Cpu, config: SlidersHorizontal,
 }
-const RAIL_ICONS = { tickets: TICKET_ICONS, queues: QUEUE_ICONS }
+// Per-tab icons for BOTH incident rails (Fault Grid + Command Funnel share tab keys).
+const INCIDENT_ICONS = {
+  dashboard: Gauge, active: Zap, major: Siren, critical: AlertTriangle,
+  timeline: History, rca: SearchCheck, 'post-incident': FileCheck2,
+}
+const RAIL_ICONS = { tickets: TICKET_ICONS, queues: QUEUE_ICONS, incidents: INCIDENT_ICONS }
 
 const route = useRoute()
 const router = useRouter()
@@ -103,7 +111,11 @@ const base = computed(() => (panel.value === 'employee' ? '/user/support' : '/ad
 
 const activeModule = computed(() => getSupportModule(panel.value, route.params.module))
 const vertical = computed(() => !!activeModule.value.verticalRail)
-const railComp = computed(() => (activeModule.value.verticalRail === 'switchyard' ? SdSwitchyardRail : SdWorkspaceRail))
+// Each vertical module owns its OWN rail instrument: Tickets → console rail, Queues →
+// Switchyard lever frame, Incidents (agent) → Fault Grid bus-bar, Incidents (admin) →
+// Command Funnel manifold.
+const RAIL_COMPS = { switchyard: SdSwitchyardRail, faultgrid: SdIncGridRail, funnel: SdIncFunnelRail }
+const railComp = computed(() => RAIL_COMPS[activeModule.value.verticalRail] || SdWorkspaceRail)
 const railIcons = computed(() => RAIL_ICONS[activeModule.value.key] || {})
 
 // Support-agent reveal (Hybrid): admin always; employee only after a successful ops probe.

@@ -455,6 +455,16 @@
                   <button v-if="!isTerminal && canCommand" class="tk-more-item" @click="openAction('remind')"><BellRing :size="14" /> Send reminder</button>
                   <button v-if="canFlagIncident" class="tk-more-item" @click="openAction('incident')"><Siren :size="14" /> {{ t.is_major_incident ? 'Update incident' : 'Flag major incident' }}</button>
                   <button v-if="canPostUpdate" class="tk-more-item" @click="openForm('update')"><MessageSquare :size="14" /> Post stakeholder update</button>
+                  <!-- Incident-command verbs (Fault Grid parity — the drawer is a full command surface) -->
+                  <template v-if="canIncidentCommand">
+                    <span class="tk-more-sep" />
+                    <button v-if="!isTerminal" class="tk-more-item" @click="openRoles"><Crown :size="14" /> Staff response roster</button>
+                    <button v-if="!isTerminal" class="tk-more-item" @click="openIncModal('decision')"><Gavel :size="14" /> Log command decision</button>
+                    <button class="tk-more-item" @click="openIncModal('impact')"><Gauge :size="14" /> Impact detail / blast radius</button>
+                    <button v-if="!isTerminal || t.parent_incident_id" class="tk-more-item" @click="openIncModal('link')">
+                      <Link2 :size="14" /> {{ t.parent_incident_id ? 'Master incident link' : 'Roll under master incident' }}</button>
+                    <button class="tk-more-item" :disabled="busy" @click="draftPir"><FileCheck2 :size="14" /> Open post-incident review</button>
+                  </template>
                   <button v-if="canCommand" class="tk-more-item" @click="openRca"><FileSearch :size="14" /> Record RCA</button>
                   <span v-if="canCommand && !isArchived" class="tk-more-sep" />
                   <button v-if="canCommand && !isArchived" class="tk-more-item" @click="openForm('time')"><Timer :size="14" /> Log time worked</button>
@@ -625,6 +635,16 @@
     <!-- RCA routes through the Breached desk's full console (SLA-anatomy evidence + coded
          breach-reason taxonomy) — ONE root-cause surface everywhere, like the escalate console. -->
     <SdRcaConsole :open="rcaOpen" :ticket="t" :now="now" @close="rcaOpen = false" @saved="onRcaSaved" />
+    <!-- Incident-command modals — the SAME consoles the Fault Grid sections use, so the
+         drawer never forces an agent back to a section to command an incident. -->
+    <SdIncRolesModal :open="incModal === 'roles'" :ticket="t"
+      @close="incModal = null" @done="onIncDone" />
+    <SdIncDecisionModal :open="incModal === 'decision'" :ticket="t"
+      @close="incModal = null" @done="onIncDone" />
+    <SdIncImpactModal :open="incModal === 'impact'" :ticket="t"
+      @close="incModal = null" @done="onIncDone" />
+    <SdIncLinkModal :open="incModal === 'link'" :ticket="t"
+      @close="incModal = null" @done="onIncDone" />
     <!-- Ultra-modern work-state move (process · people · reason · workflow) — reused from the
          Live Ops board so "Move to In Progress / Pending Customer" carry full context. -->
     <SdFlowMoveModal :open="!!moveTo" :ticket="t" :from="t?.status" :to="moveTo" :agent="isAgent"
@@ -650,6 +670,7 @@ import {
   Shield, UserRound, Inbox, Activity, Check, CornerDownLeft, Loader, Eye,
   Flag, Zap, AlarmClock, Globe, Building2, Contact, BadgeCheck, Banknote, Video,
   Maximize2, Minimize2, PlayCircle, Hourglass, CalendarClock, ArchiveRestore, Scale, EyeOff,
+  Crown, Gavel, Link2, FileCheck2,
 } from 'lucide-vue-next'
 import SdPill from '../components/SdPill.vue'
 import SdSelect from '../components/SdSelect.vue'
@@ -663,6 +684,10 @@ import SdCloseModal from '../modals/SdCloseModal.vue'
 import SdWithdrawModal from '../modals/SdWithdrawModal.vue'
 import SdAgentActionModal from '../modals/SdAgentActionModal.vue'
 import SdRcaConsole from '../modals/SdRcaConsole.vue'
+import SdIncRolesModal from '../modals/SdIncRolesModal.vue'
+import SdIncDecisionModal from '../modals/SdIncDecisionModal.vue'
+import SdIncImpactModal from '../modals/SdIncImpactModal.vue'
+import SdIncLinkModal from '../modals/SdIncLinkModal.vue'
 import { API_BASE } from '@/utils/api'
 import {
   // assign / de-escalate / resume / hold / reopen run through SdAgentActionModal;
@@ -690,6 +715,8 @@ import {
   reopenSourceLabel, reopenReasonLabel,
   // Superuser governance — comment redaction + change requester
   redactTicketComment, changeTicketRequester, listTeamPeople,
+  // Incident command (Fault Grid verbs — roster/decision/impact modals + PIR + rollup)
+  createPir,
 } from '@/composables/useSupportDesk'
 
 const props = defineProps({
@@ -1361,7 +1388,9 @@ const doNudgeOwner = () => run(async () => {
 })
 const doPostUpdate = () => run(async () => {
   const p = { body: updBody.value.trim(), is_internal: updInternal.value }
-  if (updCadence.value === 'stop') p.stop_cadence = true
+  // Standing down an armed cadence needs a reason (backend 422) — the update text
+  // accompanying the stand-down IS its stated reason.
+  if (updCadence.value === 'stop') { p.stop_cadence = true; p.note = updBody.value.trim().slice(0, 500) }
   else if (updCadence.value) p.interval_minutes = Number(updCadence.value)
   await postStatusUpdate(t.value.id, p)
   toast.success('Stakeholder update posted')
@@ -1382,6 +1411,32 @@ const othersHere = computed(() => (viewers.value || []).filter(v => String(v.use
 const rcaOpen = ref(false)
 const openRca = () => { form.value = null; rcaOpen.value = true }
 const onRcaSaved = () => { rcaOpen.value = false; if (props.ticketId) load(props.ticketId); emit('changed') }
+
+/* ── Incident-command verbs (Fault Grid parity inside the drawer) ──
+   roster / decision / impact / master-link reuse the SAME incident modals the sections
+   mount; PIR drafting is idempotent server-side (409 = one already exists). Gated like
+   the backend: incident-type ∪ MI, actor tier, live (not merged/archived). */
+const isIncident = computed(() => !!t.value && (t.value.ticket_type === 'incident' || t.value.is_major_incident))
+const canIncidentCommand = computed(() => isAgent.value && canCommand.value && !isArchived.value
+  && isIncident.value && !t.value?.merged_into_id)
+const incModal = ref(null)                 // 'roles' | 'decision' | 'impact' | 'link'
+const openIncModal = (m) => { form.value = null; incModal.value = m }
+// The roles modal self-hydrates from the sealed /roster-candidates read — the old
+// listMyTeam() pool here was DIRECT REPORTS, empty for most agents.
+const openRoles = () => { form.value = null; incModal.value = 'roles' }
+const onIncDone = async () => { incModal.value = null; if (props.ticketId) await load(props.ticketId); emit('changed') }
+const draftPir = async () => {
+  form.value = null
+  busy.value = true
+  try {
+    const p = await createPir(t.value.id)
+    toast.success(`${p.report_number} drafted — build it on the Post-Incident desk`)
+  } catch (e) {
+    const detail = e?.response?.data?.detail || 'Could not open the post-incident review'
+    if (e?.response?.status === 409) toast.info(detail)
+    else toast.error(detail)
+  } finally { busy.value = false }
+}
 // Pass identity (not just id) so the Assign modal can show who'll own it.
 const meForModal = computed(() => ({ id: myId.value, name: props.me?.name || '', email: props.me?.email || '' }))
 

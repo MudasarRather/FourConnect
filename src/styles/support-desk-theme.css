@@ -403,6 +403,119 @@
   --sd-utpl-grad:      linear-gradient(122deg, #ffd9a0 0%, #f0a83c 48%, #a86a14 100%);
   --sd-utpl-glow:      0 0 30px rgba(240, 168, 60, 0.26);
 
+  /* ── Incident Management, AGENT desk — "THE FAULT GRID" (night-city power grid).
+     Services are substations, incidents are ARC-FAULTS, an MI is a BLACKOUT, resolving
+     RE-ENERGIZES the line. CURRENT is live amber, ARC is fault red, LIVE is energized
+     emerald, DIM is de-energized steel. The grid-map SCREEN stays night-dark in BOTH
+     themes (phosphor display panel); the stage around it is THEME-NATIVE. ── */
+  --sd-inc-core:       #f5a623;   --sd-inc-soft: rgba(245, 166, 35, 0.13);
+  --sd-inc-hi:         #ffd166;   --sd-inc-hi-soft: rgba(255, 209, 102, 0.15);
+  --sd-inc-deep:       #92601a;   --sd-inc-deep-soft: rgba(146, 96, 26, 0.18);
+  --sd-inc-arc:        #f0564a;   --sd-inc-arc-soft: rgba(240, 86, 74, 0.14);
+  --sd-inc-live:       #34d399;   --sd-inc-live-soft: rgba(52, 211, 153, 0.14);
+  --sd-inc-warn:       #fbbf24;   --sd-inc-warn-soft: rgba(251, 191, 36, 0.15);
+  --sd-inc-dim:        #8f8a80;   --sd-inc-dim-soft: rgba(143, 138, 128, 0.13);
+  --sd-inc-brd:        rgba(245, 166, 35, 0.30);
+  --sd-inc-screen:     #04070b;   /* grid-map night glass (dark in BOTH themes) */
+  --sd-inc-screen-ink: #ffe9c4;   /* phosphor labels on the screen (both themes) */
+  --sd-inc-screen-dim: #9c8a68;
+  --sd-inc-grid-line:  rgba(245, 166, 35, 0.10);  /* blueprint graticule on the screen */
+  --sd-inc-stage:      #0a0806;   /* hero air — THEME-NATIVE (control-room vellum on light) */
+  --sd-inc-bus:        #14100a;   /* breaker-rail bus-bar body */
+  --sd-inc-grad:       linear-gradient(122deg, #ffd166 0%, #f5a623 46%, #92601a 100%);
+  --sd-inc-glow:       0 0 30px rgba(245, 166, 35, 0.26);
+
+  /* ── Incident Management, ADMIN desk — "THE COMMAND FUNNEL" (braided-stream wall).
+     Every service feeds a filament into the CORE ring; outfalls diverge RESOLVED
+     (emerald), ESCALATED (fault red), AUTO (steel). The funnel WALL stays obsidian
+     in BOTH themes (display panel); the stage is THEME-NATIVE. ── */
+  --sd-fun-core:       #fb923c;   --sd-fun-soft: rgba(251, 146, 60, 0.13);
+  --sd-fun-hi:         #ffc46b;   --sd-fun-hi-soft: rgba(255, 196, 107, 0.15);
+  --sd-fun-deep:       #8a4f16;   --sd-fun-deep-soft: rgba(138, 79, 22, 0.18);
+  --sd-fun-stream:     rgba(251, 146, 60, 0.55);   /* inflow filament stroke */
+  --sd-fun-stream-dim: rgba(251, 146, 60, 0.18);
+  --sd-fun-resolved:   #34d399;   --sd-fun-resolved-soft: rgba(52, 211, 153, 0.14);
+  --sd-fun-esc:        #f0564a;   --sd-fun-esc-soft: rgba(240, 86, 74, 0.14);
+  --sd-fun-auto:       #a8a29e;   --sd-fun-auto-soft: rgba(168, 162, 158, 0.13);
+  --sd-fun-brd:        rgba(251, 146, 60, 0.30);
+  --sd-fun-wall:       #070609;   /* funnel wall glass (dark in BOTH themes) */
+  --sd-fun-wall-ink:   #f4e3cb;
+  --sd-fun-wall-dim:   #97846a;
+  --sd-fun-wall-line:  rgba(251, 146, 60, 0.09);
+  --sd-fun-stage:      #0b0907;   /* hero air — THEME-NATIVE (boardroom vellum on light) */
+  --sd-fun-grad:       linear-gradient(122deg, #ffc46b 0%, #fb923c 48%, #8a4f16 100%);
+  --sd-fun-glow:       0 0 30px rgba(251, 146, 60, 0.26);
+
+  /* ── RCA desk, AGENT — "THE TEARDOWN × THE STACK DESCENT" (machined gold +
+     graphite workshop). The exploded-view STAGE and the debugger BENCH stay night
+     panels in BOTH themes (display-panel rule); the program around them is
+     THEME-NATIVE. defect = failing-part red, live = validated emerald. ── */
+  --sd-rca-core:       #eab948;   --sd-rca-soft: rgba(234, 185, 72, 0.13);
+  --sd-rca-hi:         #ffdf8e;   --sd-rca-hi-soft: rgba(255, 223, 142, 0.15);
+  --sd-rca-deep:       #8a6a1c;   --sd-rca-deep-soft: rgba(138, 106, 28, 0.18);
+  --sd-rca-defect:     #ee5a4e;   --sd-rca-defect-soft: rgba(238, 90, 78, 0.14);
+  --sd-rca-live:       #34d399;   --sd-rca-live-soft: rgba(52, 211, 153, 0.14);
+  --sd-rca-warn:       #fbbf24;   --sd-rca-warn-soft: rgba(251, 191, 36, 0.15);
+  --sd-rca-dim:        #8f8a80;   --sd-rca-dim-soft: rgba(143, 138, 128, 0.13);
+  --sd-rca-brd:        rgba(234, 185, 72, 0.30);
+  --sd-rca-stage:      #070708;   /* exploded-view void (dark in BOTH themes) */
+  --sd-rca-stage-ink:  #f2e7d0;   /* leader-line labels on the stage (both themes) */
+  --sd-rca-stage-dim:  #9a8f7a;
+  --sd-rca-stage-line: rgba(234, 185, 72, 0.12);  /* leader-line hairlines */
+  --sd-rca-bench:      #100e0b;   /* debugger bench / gutter panel (both themes) */
+  --sd-rca-grad:       linear-gradient(122deg, #ffdf8e 0%, #eab948 46%, #8a6a1c 100%);
+  --sd-rca-glow:       0 0 30px rgba(234, 185, 72, 0.26);
+
+  /* ── RCA desk, ADMIN — "THE CLEARINGHOUSE" (bronze settlement terminal). The
+     TAPE and the clearing BOARD stay terminal-dark in BOTH themes (display panel);
+     the desks around them are THEME-NATIVE. settle = emerald, bounce = red. ── */
+  --sd-rcg-core:       #d98a2b;   --sd-rcg-soft: rgba(217, 138, 43, 0.13);
+  --sd-rcg-hi:         #ffbe63;   --sd-rcg-hi-soft: rgba(255, 190, 99, 0.15);
+  --sd-rcg-deep:       #7c4f12;   --sd-rcg-deep-soft: rgba(124, 79, 18, 0.18);
+  --sd-rcg-settle:     #34d399;   --sd-rcg-settle-soft: rgba(52, 211, 153, 0.14);
+  --sd-rcg-bounce:     #e14b4b;   --sd-rcg-bounce-soft: rgba(225, 75, 75, 0.14);
+  --sd-rcg-warn:       #fbbf24;   --sd-rcg-warn-soft: rgba(251, 191, 36, 0.15);
+  --sd-rcg-dim:        #8d8579;   --sd-rcg-dim-soft: rgba(141, 133, 121, 0.13);
+  --sd-rcg-brd:        rgba(217, 138, 43, 0.30);
+  --sd-rcg-board:      #060708;   /* clearing-board terminal glass (both themes) */
+  --sd-rcg-board-ink:  #f0e5cd;
+  --sd-rcg-board-dim:  #9b8c72;
+  --sd-rcg-board-line: rgba(217, 138, 43, 0.10);
+  --sd-rcg-stage:      #0a0907;   /* hero air — THEME-NATIVE (bourse vellum on light) */
+  --sd-rcg-grad:       linear-gradient(122deg, #ffbe63 0%, #d98a2b 48%, #7c4f12 100%);
+  --sd-rcg-glow:       0 0 30px rgba(217, 138, 43, 0.26);
+
+  /* ── RCA review-status language (consumed ONLY by SdRcaStatusStamp so the
+     owed/filed/validated/returned/stale color story is identical on both desks,
+     the drawer and the console) ── */
+  --sd-rcas-owed:      #ee5a4e;   --sd-rcas-owed-soft: rgba(238, 90, 78, 0.14);
+  --sd-rcas-filed:     #eab948;   --sd-rcas-filed-soft: rgba(234, 185, 72, 0.15);
+  --sd-rcas-validated: #34d399;   --sd-rcas-validated-soft: rgba(52, 211, 153, 0.14);
+  --sd-rcas-returned:  #fb923c;   --sd-rcas-returned-soft: rgba(251, 146, 60, 0.15);
+  --sd-rcas-stale:     #a49a8a;   --sd-rcas-stale-soft: rgba(164, 154, 138, 0.14);
+
+  /* ── Post-Incident desks — "THE GLASS DOSSIER" (agent) liquid-glass language.
+     Every pane/chip/tile on the PIR desks is built from these glass primitives;
+     both themes are DESIGNED (cream glass in light — no night re-pin needed). ── */
+  --sd-pir-core:         #e8b04b;   --sd-pir-core-soft: rgba(232, 176, 75, 0.12);
+  --sd-pir-hot:          #f59e0b;   --sd-pir-hot-soft: rgba(245, 158, 11, 0.14);
+  --sd-pir-deep:         #b45309;
+  --sd-pir-em:           #34d399;   --sd-pir-em-deep: #0a7a58;
+  --sd-pir-red:          #ef4444;   --sd-pir-red-deep: #b91c1c;
+  --sd-pir-ink:          #f2ead9;   /* glass-etched text */
+  --sd-pir-ink2:         #c8b997;
+  --sd-pir-ink3:         #8e7f63;
+  --sd-pir-glass:        linear-gradient(160deg, rgba(255, 251, 240, 0.075), rgba(255, 251, 240, 0.025));
+  --sd-pir-glass-strong: linear-gradient(160deg, rgba(255, 251, 240, 0.11), rgba(255, 251, 240, 0.04));
+  --sd-pir-brd:          rgba(255, 248, 232, 0.12);
+  --sd-pir-brd2:         rgba(232, 176, 75, 0.4);
+  --sd-pir-spec:         rgba(255, 252, 244, 0.16);
+  --sd-pir-shadow:       0 30px 80px rgba(0, 0, 0, 0.55);
+  --sd-pir-stage:        #131009;   /* pane-stack scene stage */
+  --sd-pir-stage2:       #191309;
+  --sd-pir-field:        rgba(255, 251, 240, 0.03);   /* input wells on glass */
+  --sd-pir-btn-ink:      #1d1206;   /* text on the amber primary */
+
   /* Basin fluid (canvas-driven; literal hex for shader uniforms lives in JS) */
   --sd-fluid-core: #fb923c;
   --sd-fluid-glow: rgba(251, 146, 60, 0.5);
@@ -717,6 +830,89 @@
   --sd-utpl-grad:      linear-gradient(122deg, #a86711 0%, #7f4d0c 52%, #5f3a08 100%);
   --sd-utpl-glow:      0 0 24px rgba(168, 103, 17, 0.22);
 
+  /* Fault Grid — daylight control room: deepened ambers for AA on cream; the
+     grid-map screen deliberately STAYS night glass (phosphor panel, both themes). */
+  --sd-inc-core:       #b07417;   --sd-inc-soft: rgba(176, 116, 23, 0.11);
+  --sd-inc-hi:         #8a5a10;   --sd-inc-hi-soft: rgba(138, 90, 16, 0.12);
+  --sd-inc-deep:       #6f4a10;   --sd-inc-deep-soft: rgba(111, 74, 16, 0.15);
+  --sd-inc-arc:        #c2352b;   --sd-inc-arc-soft: rgba(194, 53, 43, 0.12);
+  --sd-inc-live:       #047857;   --sd-inc-live-soft: rgba(4, 120, 87, 0.13);
+  --sd-inc-warn:       #b45309;   --sd-inc-warn-soft: rgba(180, 83, 9, 0.13);
+  --sd-inc-dim:        #7a746a;   --sd-inc-dim-soft: rgba(122, 116, 106, 0.13);
+  --sd-inc-brd:        rgba(176, 116, 23, 0.32);
+  --sd-inc-stage:      #f5eedf;   /* control-room vellum */
+  --sd-inc-bus:        #ece2cd;
+  --sd-inc-grad:       linear-gradient(122deg, #b07417 0%, #92601a 52%, #6f4a10 100%);
+  --sd-inc-glow:       0 0 22px rgba(176, 116, 23, 0.2);
+
+  /* Command Funnel — boardroom daylight; the funnel wall stays obsidian (both themes). */
+  --sd-fun-core:       #b05f14;   --sd-fun-soft: rgba(176, 95, 20, 0.11);
+  --sd-fun-hi:         #8a4a10;   --sd-fun-hi-soft: rgba(138, 74, 16, 0.12);
+  --sd-fun-deep:       #6e3d10;   --sd-fun-deep-soft: rgba(110, 61, 16, 0.15);
+  --sd-fun-stream:     rgba(176, 95, 20, 0.55);
+  --sd-fun-stream-dim: rgba(176, 95, 20, 0.20);
+  --sd-fun-resolved:   #047857;   --sd-fun-resolved-soft: rgba(4, 120, 87, 0.13);
+  --sd-fun-esc:        #be123c;   --sd-fun-esc-soft: rgba(190, 18, 60, 0.12);
+  --sd-fun-auto:       #78716c;   --sd-fun-auto-soft: rgba(120, 113, 108, 0.13);
+  --sd-fun-brd:        rgba(176, 95, 20, 0.32);
+  --sd-fun-stage:      #f5eedf;
+  --sd-fun-grad:       linear-gradient(122deg, #b05f14 0%, #8a4a10 52%, #6e3d10 100%);
+  --sd-fun-glow:       0 0 22px rgba(176, 95, 20, 0.2);
+
+  /* RCA agent desk — daylight workshop: deepened machined golds for AA on cream;
+     the exploded-view stage + debugger bench deliberately STAY night panels. */
+  --sd-rca-core:       #a1770f;   --sd-rca-soft: rgba(161, 119, 15, 0.11);
+  --sd-rca-hi:         #7d5c0c;   --sd-rca-hi-soft: rgba(125, 92, 12, 0.12);
+  --sd-rca-deep:       #6a4e10;   --sd-rca-deep-soft: rgba(106, 78, 16, 0.15);
+  --sd-rca-defect:     #c2352b;   --sd-rca-defect-soft: rgba(194, 53, 43, 0.12);
+  --sd-rca-live:       #047857;   --sd-rca-live-soft: rgba(4, 120, 87, 0.13);
+  --sd-rca-warn:       #b45309;   --sd-rca-warn-soft: rgba(180, 83, 9, 0.13);
+  --sd-rca-dim:        #7a746a;   --sd-rca-dim-soft: rgba(122, 116, 106, 0.13);
+  --sd-rca-brd:        rgba(161, 119, 15, 0.32);
+  --sd-rca-grad:       linear-gradient(122deg, #a1770f 0%, #8a6a1c 52%, #6a4e10 100%);
+  --sd-rca-glow:       0 0 22px rgba(161, 119, 15, 0.2);
+
+  /* RCA admin desk — bourse daylight; tape + clearing board stay terminal glass. */
+  --sd-rcg-core:       #a5620f;   --sd-rcg-soft: rgba(165, 98, 15, 0.11);
+  --sd-rcg-hi:         #824d0e;   --sd-rcg-hi-soft: rgba(130, 77, 14, 0.12);
+  --sd-rcg-deep:       #6a3f10;   --sd-rcg-deep-soft: rgba(106, 63, 16, 0.15);
+  --sd-rcg-settle:     #047857;   --sd-rcg-settle-soft: rgba(4, 120, 87, 0.13);
+  --sd-rcg-bounce:     #b91c1c;   --sd-rcg-bounce-soft: rgba(185, 28, 28, 0.12);
+  --sd-rcg-warn:       #b45309;   --sd-rcg-warn-soft: rgba(180, 83, 9, 0.13);
+  --sd-rcg-dim:        #78716c;   --sd-rcg-dim-soft: rgba(120, 113, 108, 0.13);
+  --sd-rcg-brd:        rgba(165, 98, 15, 0.32);
+  --sd-rcg-stage:      #f5eedf;
+  --sd-rcg-grad:       linear-gradient(122deg, #a5620f 0%, #8a4a10 52%, #6a3f10 100%);
+  --sd-rcg-glow:       0 0 22px rgba(165, 98, 15, 0.2);
+
+  /* Post-Incident glass on cream — the panes read as frosted white glass; ink deepens
+     for AA; amber accents deepen one step so the etch stays legible on cream. */
+  --sd-pir-core:         #b07514;   --sd-pir-core-soft: rgba(176, 117, 20, 0.12);
+  --sd-pir-hot:          #c2410c;   --sd-pir-hot-soft: rgba(194, 65, 12, 0.13);
+  --sd-pir-deep:         #8a5a14;
+  --sd-pir-em:           #047857;   --sd-pir-em-deep: #065f46;
+  --sd-pir-red:          #c2352b;   --sd-pir-red-deep: #991b1b;
+  --sd-pir-ink:          #2b2115;
+  --sd-pir-ink2:         #5c4d38;
+  --sd-pir-ink3:         #8a7a60;
+  --sd-pir-glass:        linear-gradient(160deg, rgba(255, 255, 255, 0.6), rgba(255, 253, 246, 0.35));
+  --sd-pir-glass-strong: linear-gradient(160deg, rgba(255, 255, 255, 0.78), rgba(255, 253, 246, 0.5));
+  --sd-pir-brd:          rgba(180, 120, 40, 0.18);
+  --sd-pir-brd2:         rgba(180, 83, 9, 0.45);
+  --sd-pir-spec:         rgba(255, 255, 255, 0.85);
+  --sd-pir-shadow:       0 24px 60px rgba(140, 100, 40, 0.18);
+  --sd-pir-stage:        #faf7f0;
+  --sd-pir-stage2:       #f2ecdd;
+  --sd-pir-field:        rgba(255, 255, 255, 0.5);
+  --sd-pir-btn-ink:      #1d1206;
+
+  /* RCA status stamps on cream — deepened for AA. */
+  --sd-rcas-owed:      #c2352b;   --sd-rcas-owed-soft: rgba(194, 53, 43, 0.12);
+  --sd-rcas-filed:     #9a6d14;   --sd-rcas-filed-soft: rgba(154, 109, 20, 0.13);
+  --sd-rcas-validated: #047857;   --sd-rcas-validated-soft: rgba(4, 120, 87, 0.13);
+  --sd-rcas-returned:  #b05f14;   --sd-rcas-returned-soft: rgba(176, 95, 20, 0.13);
+  --sd-rcas-stale:     #7a746a;   --sd-rcas-stale-soft: rgba(122, 116, 106, 0.13);
+
   --sd-fluid-core: #ea580c;
   --sd-fluid-glow: rgba(234, 88, 12, 0.45);
   --sd-fluid-deep: #c2410c;
@@ -795,6 +991,34 @@
 @keyframes sd-cal-now { 0%, 100% { box-shadow: 0 0 10px var(--sd-cal-core); } 50% { box-shadow: 0 0 26px var(--sd-cal-core); } }
 @keyframes sd-cal-flow { to { stroke-dashoffset: -240; } }
 @keyframes sd-cal-storm-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(240, 86, 74, 0.45); } 50% { box-shadow: 0 0 0 7px rgba(240, 86, 74, 0); } }
+
+/* Incident Management — Fault Grid (agent) + Command Funnel (admin). GLOBAL so the
+   SVG instruments' inline animation strings resolve (scoped names would be renamed). */
+@keyframes sd-inc-current-flow { to { stroke-dashoffset: -240; } }
+@keyframes sd-inc-arc-flicker {
+  0%, 100% { opacity: 1; } 8% { opacity: 0.35; } 16% { opacity: 0.95; }
+  34% { opacity: 0.5; } 41% { opacity: 1; } 67% { opacity: 0.62; } 74% { opacity: 1; }
+}
+@keyframes sd-inc-blackout-ripple {
+  0% { transform: scale(0.4); opacity: 0.85; }
+  80% { transform: scale(2.1); opacity: 0; } 100% { opacity: 0; }
+}
+@keyframes sd-inc-reenergize {
+  0% { opacity: 0; transform: scale(0.6); } 40% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+@keyframes sd-inc-led { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@keyframes sd-inc-freq-wobble { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg); } }
+@keyframes sd-fun-stream-drift { to { stroke-dashoffset: -900; } }
+@keyframes sd-fun-core-pulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(251, 146, 60, 0.4)); }
+  50% { transform: scale(1.045); filter: drop-shadow(0 0 18px rgba(251, 146, 60, 0.75)); }
+}
+@keyframes sd-fun-junction-tick { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 100% { transform: scale(1); } }
+@keyframes sd-fun-flare {
+  0% { opacity: 0; transform: scale(0.5); } 30% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.9); }
+}
 
 @property --sd-p { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 
@@ -1106,4 +1330,27 @@
   --sd-l3-paper:     rgba(233, 221, 192, 0.05);
   --sd-l3-grad:      linear-gradient(122deg, #ffe3a8 0%, #d9a441 48%, #7a5410 100%);
   --sd-l3-glow:      0 0 30px rgba(217, 164, 65, 0.28);
+}
+
+/* ═════ RCA DESK dark-decree surfaces — NIGHT STAGE RE-PIN (light theme) ═════
+   The Teardown stage (.rah), trace buffer (.rqb), frame-inspector bench (.rwb),
+   coverage/aging readout cards (.ro-card) and the precedent strip (.rcap.strip)
+   stay dark in BOTH themes by token decree. The light-theme --sd-rca-* values
+   (bronze #a1770f family, tuned for cream chrome) are illegible ON those dark
+   panels — re-pin the machined-gold night values inside them only. */
+[data-theme="light"] .rah,
+[data-theme="light"] .rqb,
+[data-theme="light"] .rwb,
+[data-theme="light"] .ro-card,
+[data-theme="light"] .rcap.strip {
+  --sd-rca-core:       #eab948;   --sd-rca-soft: rgba(234, 185, 72, 0.13);
+  --sd-rca-hi:         #ffdf8e;   --sd-rca-hi-soft: rgba(255, 223, 142, 0.15);
+  --sd-rca-deep:       #8a6a1c;   --sd-rca-deep-soft: rgba(138, 106, 28, 0.18);
+  --sd-rca-defect:     #ee5a4e;   --sd-rca-defect-soft: rgba(238, 90, 78, 0.14);
+  --sd-rca-live:       #34d399;   --sd-rca-live-soft: rgba(52, 211, 153, 0.14);
+  --sd-rca-warn:       #fbbf24;   --sd-rca-warn-soft: rgba(251, 191, 36, 0.15);
+  --sd-rca-dim:        #8f8a80;   --sd-rca-dim-soft: rgba(143, 138, 128, 0.13);
+  --sd-rca-brd:        rgba(234, 185, 72, 0.30);
+  --sd-rca-grad:       linear-gradient(122deg, #ffdf8e 0%, #eab948 46%, #8a6a1c 100%);
+  --sd-rca-glow:       0 0 30px rgba(234, 185, 72, 0.26);
 }

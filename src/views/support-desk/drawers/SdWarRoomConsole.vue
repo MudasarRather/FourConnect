@@ -148,26 +148,21 @@
               </div>
             </Motion>
 
-            <!-- ══ post-incident review (terminal) ══ -->
+            <!-- ══ post-incident review (terminal) — RCA v2: capture routes through the
+                 unified structured console (category + five-whys + factors + review
+                 machine); the old inline triple could save EMPTY summaries and never
+                 carried the structured fields. This panel is the read-only recap. ══ -->
             <Motion v-if="isTerminal" as="section" class="wrc-panel pir" v-bind="pT(4)">
               <h4 class="wrc-p-title"><FileWarning :size="13" /> Post-incident review
                 <span v-if="!hasRca" class="wrc-rca-gap sd-mono">RCA MISSING</span>
               </h4>
-              <template v-if="canAct">
-                <div class="wrc-field"><label>What happened (root cause)</label>
-                  <textarea v-model="rca.rca_summary" class="wrc-composer" rows="2" placeholder="Root cause of the incident…" /></div>
-                <div class="wrc-field"><label>Corrective action</label>
-                  <textarea v-model="rca.rca_corrective" class="wrc-composer" rows="2" placeholder="What fixed it…" /></div>
-                <div class="wrc-field"><label>Preventive action</label>
-                  <textarea v-model="rca.rca_preventive" class="wrc-composer" rows="2" placeholder="What stops it recurring…" /></div>
-                <div class="wrc-save-row">
-                  <button class="wrc-btn primary sm" :disabled="busy.rca || !rcaDirty" @click="saveRca">
-                    <Loader v-if="busy.rca" :size="12" class="wrc-spin" /><Check v-else :size="12" /> Save review
-                  </button>
-                </div>
-              </template>
-              <p v-else-if="hasRca" class="wrc-quiet">{{ t.rca_summary }}</p>
+              <p v-if="hasRca" class="wrc-quiet">{{ t.rca_summary }}</p>
               <p v-else class="wrc-quiet">No root-cause record yet.</p>
+              <div v-if="canAct" class="wrc-save-row">
+                <button class="wrc-btn primary sm" @click="rcaConsoleOpen = true">
+                  <FileWarning :size="12" /> {{ hasRca ? 'Open root-cause console' : 'File the root cause' }}
+                </button>
+              </div>
             </Motion>
 
             <!-- ══ command actions ── -->
@@ -181,6 +176,9 @@
         </Motion>
       </div>
     </Presence>
+    <!-- RCA v2 capture — self-teleports; z 5300 clears this drawer's 5200 overlay -->
+    <SdRcaConsole :open="rcaConsoleOpen" :ticket="t" :now="now" :z="5300"
+      @close="rcaConsoleOpen = false" @saved="onRcaSaved" />
   </Teleport>
 </template>
 
@@ -198,8 +196,9 @@ import {
 } from 'lucide-vue-next'
 import SdPill from '../components/SdPill.vue'
 import SdSelect from '../components/SdSelect.vue'
+import SdRcaConsole from '../modals/SdRcaConsole.vue'
 import {
-  updateTicket, ackTicket, postStatusUpdate, setTicketRca,
+  updateTicket, ackTicket, postStatusUpdate,
   useCapabilities, fetchCapabilities,
   BUSINESS_IMPACTS, CRITICAL_UPDATE_TEMPLATES, UPDATE_CADENCE_OPTIONS,
 } from '@/composables/useSupportDesk'
@@ -234,7 +233,7 @@ const canAct = computed(() => {
 })
 const others = computed(() => (props.viewers || []).filter(v => !v.is_me))
 const initials = (n) => (n ? n.trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('').toUpperCase() : '—')
-const busy = reactive({ ack: false, impact: false, update: false, rca: false })
+const busy = reactive({ ack: false, impact: false, update: false })
 
 /* impact draft */
 const draft = reactive({ business_impact: '', affected_users: null, revenue_impact: '', war_room_url: '' })
@@ -244,7 +243,7 @@ const syncDraft = () => {
   draft.revenue_impact = t.value?.revenue_impact || ''
   draft.war_room_url = t.value?.war_room_url || ''
 }
-watch(() => [props.open, t.value?.id], () => { if (props.open) { syncDraft(); syncRca() } }, { immediate: true })
+watch(() => [props.open, t.value?.id], () => { if (props.open) { syncDraft() } }, { immediate: true })
 const impactDirty = computed(() => t.value && (
   draft.business_impact !== (t.value.business_impact || '') ||
   (draft.affected_users ?? null) !== (t.value.affected_users ?? null) ||
@@ -305,10 +304,20 @@ const postUpdate = async () => {
 }
 const stopCadence = async () => {
   if (busy.update || !t.value) return
+  // Standing down an armed cadence needs a reason (backend 422) — the typed update
+  // line doubles as the stated reason so the stand-down never lands silent.
+  const why = updateBody.value.trim()
+  if (why.length < 3) {
+    toast.info('Type one line in the update box explaining the stand-down, then press Stop again.')
+    return
+  }
   busy.update = true
   try {
-    const u = await postStatusUpdate(t.value.id, { body: 'Update cadence stood down.', is_internal: true, stop_cadence: true })
-    toast.info('Cadence stopped')
+    const u = await postStatusUpdate(t.value.id, {
+      body: why, is_internal: true, stop_cadence: true, note: why.slice(0, 500),
+    })
+    toast.info('Cadence stopped — reason logged')
+    updateBody.value = ''; pickedTpl.value = ''; cadencePick.value = 'keep'
     emit('changed', u)
   } catch (e) { toast.error(e?.response?.data?.detail || 'Could not stop the cadence') } finally { busy.update = false }
 }
@@ -344,26 +353,14 @@ const slaTone = computed(() => {
   return rem < 0 ? 'over' : rem < 7200000 ? 'warn' : ''
 })
 
-/* RCA */
-const rca = reactive({ rca_summary: '', rca_corrective: '', rca_preventive: '' })
-const syncRca = () => {
-  rca.rca_summary = t.value?.rca_summary || ''
-  rca.rca_corrective = t.value?.rca_corrective || ''
-  rca.rca_preventive = t.value?.rca_preventive || ''
-}
+/* RCA — v2: capture routes through the unified SdRcaConsole (structured category /
+   five-whys / factors + server validation); the drawer keeps only the recap + launch.
+   The console self-teleports; :z=5300 clears this drawer's 5200 overlay. */
+const rcaConsoleOpen = ref(false)
 const hasRca = computed(() => !!(t.value?.rca_summary || '').trim())
-const rcaDirty = computed(() => t.value && (
-  rca.rca_summary !== (t.value.rca_summary || '') ||
-  rca.rca_corrective !== (t.value.rca_corrective || '') ||
-  rca.rca_preventive !== (t.value.rca_preventive || '')))
-const saveRca = async () => {
-  if (busy.rca || !t.value) return
-  busy.rca = true
-  try {
-    const u = await setTicketRca(t.value.id, { ...rca })
-    toast.success('Post-incident review saved')
-    emit('changed', u)
-  } catch (e) { toast.error(e?.response?.data?.detail || 'Could not save the review') } finally { busy.rca = false }
+const onRcaSaved = () => {
+  rcaConsoleOpen.value = false
+  emit('changed', t.value)
 }
 
 const pT = (i) => ({

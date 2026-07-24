@@ -53,11 +53,24 @@
             <i class="rp-tag">{{ r.breached ? 'Under strain' : r.critical ? 'Critical load' : r.open ? 'On the desk' : 'Clear' }}</i>
           </span>
           <span class="rp-load sd-mono" :title="`${r.open} open`"><SdCountUp :value="r.open" /></span>
+          <!-- reporting-line chronology: lands on the Incident Timeline filtered to this
+               report's moves (?actor_id) — the seal shows the manager only what it allows -->
+          <span class="rp-chron" role="button" tabindex="0"
+                :title="`Incident chronology — ${r.name}'s moves on the timeline`"
+                @click.stop="$emit('chronicle', r.user_id)"
+                @keydown.enter.stop.prevent="$emit('chronicle', r.user_id)">
+            <History :size="11" />
+          </span>
         </div>
 
-        <!-- stat cells -->
+        <!-- stat cells (rca + pir are deep links into their review desks) -->
         <div class="rp-cells">
-          <span v-for="c in cellsOf(r)" :key="c.key" class="rp-cell" :class="[c.key, { z: !c.v }]">
+          <span v-for="c in cellsOf(r)" :key="c.key" class="rp-cell" :class="[c.key, { z: !c.v, link: isLinkCell(c) }]"
+                :role="isLinkCell(c) ? 'button' : undefined"
+                :tabindex="isLinkCell(c) ? 0 : undefined"
+                :title="linkTitle(c, r)"
+                @click.stop="isLinkCell(c) && $emit(c.key, r.user_id)"
+                @keydown.enter.stop.prevent="isLinkCell(c) && $emit(c.key, r.user_id)">
             <component :is="c.icon" :size="11" />
             <b><SdCountUp :value="c.v" :duration="800" /></b>
             <i>{{ c.label }}</i>
@@ -97,7 +110,7 @@
    sits on a support team. Parent owns data + drill loading. Accent = --sd-team-*. */
 import { computed } from 'vue'
 import { Motion } from 'motion-v'
-import { UsersRound, RefreshCw, X, Layers, Flame, Siren, Timer, CircleCheck } from 'lucide-vue-next'
+import { UsersRound, RefreshCw, X, Layers, Flame, Siren, Timer, CircleCheck, TriangleAlert, History, FileSearch, FileCheck2 } from 'lucide-vue-next'
 import SdTicketTable from './SdTicketTable.vue'
 import SdCountUp from './SdCountUp.vue'
 
@@ -112,24 +125,37 @@ const props = defineProps({
   alwaysTable: { type: Boolean, default: false },
   compact: { type: Boolean, default: false },   // strip variant under a hero (no title/sub)
 })
-defineEmits(['pick', 'open', 'refresh'])
+defineEmits(['pick', 'open', 'refresh', 'chronicle', 'rca', 'pir'])
 
 const COLS = ['flag', 'number', 'subject', 'priority', 'status', 'sla', 'updated']
 const initials = (n) => (n || '').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 const selectedName = () => (props.reports.find(r => String(r.user_id) === String(props.selectedId))?.name) || 'Report'
 
-const hasStrain = computed(() => (props.reports || []).some(r => r.breached || r.critical))
+const hasStrain = computed(() => (props.reports || []).some(r => r.breached || r.critical || r.major_incidents))
 const maxOpen = computed(() => Math.max(1, ...(props.reports || []).map(r => r.open || 0)))
 const loadPct = (r) => Math.round(100 * Math.min(1, (r.open || 0) / maxOpen.value))
-const toneOf = (r) => (r.critical ? 'crit' : r.breached ? 'strain' : (r.open >= Math.max(3, maxOpen.value * 0.7)) ? 'busy' : 'sync')
+const toneOf = (r) => ((r.major_incidents || r.critical) ? 'crit' : r.breached ? 'strain' : (r.open >= Math.max(3, maxOpen.value * 0.7)) ? 'busy' : 'sync')
 
 const cellsOf = (r) => [
   { key: 'open', label: 'open', v: r.open || 0, icon: Layers },
   { key: 'hot', label: 'breached', v: r.breached || 0, icon: Flame },
   { key: 'crit', label: 'critical', v: r.critical || 0, icon: Siren },
+  { key: 'mi', label: 'major', v: r.major_incidents || 0, icon: TriangleAlert },
   { key: 'due', label: 'due soon', v: r.due_soon || 0, icon: Timer },
+  // RCA v2: terminal breached/SEV1-2 records still owing a root-cause analysis —
+  // the cell is a deep link into the RCA desk filtered to this report's debt.
+  { key: 'rca', label: 'rca owed', v: r.rca_owed || 0, icon: FileSearch },
+  // PIR v2: terminal SEV1/2 incidents (90d) still owing a post-incident review —
+  // deep link into the Post-Incident desk's owed lens for this report.
+  { key: 'pir', label: 'pir owed', v: r.pir_owed || 0, icon: FileCheck2 },
   { key: 'ok', label: 'solved', v: r.resolved_today || 0, icon: CircleCheck },
 ]
+const LINK_TITLES = {
+  rca: (r) => `Open the RCA desk — ${r.name}'s owed root causes`,
+  pir: (r) => `Open the Post-Incident desk — ${r.name}'s owed reviews`,
+}
+const isLinkCell = (c) => Boolean(LINK_TITLES[c.key] && c.v)
+const linkTitle = (c, r) => (isLinkCell(c) ? LINK_TITLES[c.key](r) : undefined)
 
 const headGauges = computed(() => {
   const t = props.totals || {}
@@ -249,9 +275,20 @@ const spot = (e) => {
 .rp-tag { font-style: normal; font-size: 10px; color: var(--sd-text-muted); }
 .rp-card.strain .rp-tag, .rp-card.crit .rp-tag { color: var(--sd-team-strain); }
 .rp-load { font-size: 22px; font-weight: 800; color: var(--sd-team-core); font-variant-numeric: tabular-nums; }
+.rp-chron {
+  display: inline-flex; align-items: center; justify-content: center; flex: none;
+  width: 24px; height: 24px; border-radius: 50%; margin-left: 6px; cursor: pointer;
+  color: var(--sd-text-dim); border: 1px solid transparent;
+  transition: color .18s, border-color .18s, transform .18s var(--sd-spring);
+}
+.rp-chron:hover, .rp-chron:focus-visible {
+  color: var(--sd-team-core); transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--sd-team-core) 45%, transparent);
+  outline: none;
+}
 .rp-card.strain .rp-load, .rp-card.crit .rp-load { color: var(--sd-team-strain); }
 
-.rp-cells { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+.rp-cells { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
 .rp-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px; border-radius: 9px;
   background: var(--sd-team-deep-soft); border: 1px solid transparent; }
 .rp-cell :deep(svg) { color: var(--sd-text-dim); }
@@ -262,6 +299,18 @@ const spot = (e) => {
 .rp-cell.hot:not(.z) b, .rp-cell.hot:not(.z) :deep(svg) { color: var(--sd-team-strain); }
 .rp-cell.crit:not(.z) { background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.3); }
 .rp-cell.crit:not(.z) b, .rp-cell.crit:not(.z) :deep(svg) { color: var(--sd-pri-critical, #ef4444); }
+.rp-cell.rca:not(.z) { background: var(--sd-rcas-owed-soft); border-color: color-mix(in srgb, var(--sd-rcas-owed) 30%, transparent); }
+.rp-cell.rca:not(.z) b, .rp-cell.rca:not(.z) :deep(svg) { color: var(--sd-rcas-owed); }
+.rp-cell.pir:not(.z) { background: color-mix(in srgb, var(--sd-team-core) 12%, transparent);
+  border-color: color-mix(in srgb, var(--sd-team-core) 32%, transparent); }
+.rp-cell.pir:not(.z) b, .rp-cell.pir:not(.z) :deep(svg) { color: var(--sd-team-core); }
+.rp-cell.link { cursor: pointer; transition: transform .18s var(--sd-spring), box-shadow .18s; }
+.rp-cell.link:hover, .rp-cell.link:focus-visible { transform: translateY(-1px); outline: none;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--sd-rcas-owed) 22%, transparent); }
+.rp-cell.pir.link:hover, .rp-cell.pir.link:focus-visible {
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--sd-team-core) 22%, transparent); }
+.rp-cell.mi:not(.z) { background: rgba(239, 68, 68, 0.16); border-color: var(--sd-pri-critical, #ef4444); }
+.rp-cell.mi:not(.z) b, .rp-cell.mi:not(.z) :deep(svg) { color: var(--sd-pri-critical, #ef4444); }
 .rp-cell.due:not(.z) b, .rp-cell.due:not(.z) :deep(svg) { color: var(--sd-team-core); }
 .rp-cell.ok:not(.z) b, .rp-cell.ok:not(.z) :deep(svg) { color: var(--sd-team-sync); }
 

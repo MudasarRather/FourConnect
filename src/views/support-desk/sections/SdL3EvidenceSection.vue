@@ -155,7 +155,11 @@
       @close="bulkOpen = false" @done="onBulkDone" />
     <SdProblemLinkModal :ticket="problemTarget" :problem="problemEdit" :me="me"
       @close="problemTarget = null; problemEdit = null" @done="onProblemLinked" />
-    <SdRcaModal :ticket="rcaTarget" @close="rcaTarget = null" @done="onRcaDone" />
+    <!-- RCA v2: the unified console replaced the L3-only SdRcaModal — same structured
+         capture (category, five-whys, factors) + the promote-to-problem/KEDB block
+         everywhere. Contract: :open :ticket :now @close @saved. -->
+    <SdRcaConsole :open="!!rcaTarget" :ticket="rcaTarget" :now="now"
+      @close="rcaTarget = null" @saved="onRcaDone" />
     <SdCascadeModal :problem="cascadeTarget" @close="cascadeTarget = null" @done="onCascadeDone" />
     <SdChangeLinkModal :ticket="changeTarget" @close="changeTarget = null" @done="onChangeLinked" />
   </div>
@@ -192,7 +196,7 @@ import SdTierMoveModal from '../modals/SdTierMoveModal.vue'
 import SdWorklogModal from '../modals/SdWorklogModal.vue'
 import SdBulkActionModal from '../modals/SdBulkActionModal.vue'
 import SdProblemLinkModal from '../modals/SdProblemLinkModal.vue'
-import SdRcaModal from '../modals/SdRcaModal.vue'
+import SdRcaConsole from '../modals/SdRcaConsole.vue'
 import SdCascadeModal from '../modals/SdCascadeModal.vue'
 import SdChangeLinkModal from '../modals/SdChangeLinkModal.vue'
 import {

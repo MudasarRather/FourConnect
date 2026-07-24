@@ -14,7 +14,7 @@
       <SdReportsPanel :reports="reportsOverview.reports || []" :totals="reportsOverview.totals"
         :loading="reportsLoading" :now="now" :selected-id="reportFocus"
         :drill-rows="drillRows" :drill-loading="drillLoading" :always-table="true"
-        @pick="pickReport" @open="openDrawer" @refresh="refreshReports" />
+        @pick="pickReport" @open="openDrawer" @refresh="refreshReports" @chronicle="goChronicle" @rca="goRcaDesk" @pir="goPirDesk" />
     </template>
 
     <!-- ═══════════════ THE SQUAD COMMAND DESK ═══════════════ -->
@@ -49,7 +49,7 @@
         :reports="reportsOverview.reports" :totals="reportsOverview.totals"
         :loading="reportsLoading" :now="now" :selected-id="reportFocus"
         :drill-rows="drillRows" :drill-loading="drillLoading"
-        @pick="pickReport" @open="openDrawer" @refresh="refreshReports" />
+        @pick="pickReport" @open="openDrawer" @refresh="refreshReports" @chronicle="goChronicle" @rca="goRcaDesk" @pir="goPirDesk" />
 
       <!-- smart insights -->
       <SdInsightTicker v-if="insights.length" :insights="insights" @act="onInsight" />
@@ -467,6 +467,13 @@ const doDistribute = async () => {
 /* ── drawer + cross-desk ── */
 const openDrawer = (id) => { drawerId.value = String(id) }
 const goMyTickets = () => router.push('/user/support/tickets/my')
+// Reporting-line chronology: the Incident Timeline filtered to one report's moves.
+// The timeline is agent-gated + team-sealed — the manager sees only what the seal allows.
+const goChronicle = (uid) => router.push(`/user/support/incidents/timeline?actor_id=${uid}`)
+// Reporting-line RCA debt: the RCA desk's owed lens filtered to one report's tickets.
+const goRcaDesk = (uid) => router.push(`/user/support/incidents/rca?lens=owed&actor=${uid}`)
+// Reporting-line PIR debt: the Post-Incident desk's owed lens filtered to one report.
+const goPirDesk = (uid) => router.push(`/user/support/incidents/post-incident?lens=owed&actor=${uid}`)
 
 /* ── command palette ── */
 const paletteOpen = ref(false)

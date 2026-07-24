@@ -4,6 +4,7 @@
       <Motion
         v-if="open"
         class="sd-modal-overlay"
+        :style="{ zIndex: z }"
         :initial="{ opacity: 0 }"
         :animate="{ opacity: 1 }"
         :exit="{ opacity: 0 }"
@@ -47,6 +48,9 @@ const props = defineProps({
   title: { type: String, default: '' },
   eyebrow: { type: String, default: '' },
   width: { type: String, default: '560px' },
+  // stack rung — default matches the CSS fallback; callers co-rendered with the
+  // war-room console (z5200) pass 5300, drawer-launched contexts pass 2700
+  z: { type: Number, default: 2000 },
 })
 const emit = defineEmits(['close'])
 

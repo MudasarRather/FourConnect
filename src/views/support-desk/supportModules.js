@@ -60,6 +60,24 @@ const SdTemplatesSection = A(() => import('./sections/SdTemplatesSection.vue'))
 const SdMyTicketsSection = A(() => import('./sections/SdMyTicketsSection.vue'))
 const SdNewTicketSection = A(() => import('./sections/SdNewTicketSection.vue'))
 const SdProblemsSection = A(() => import('./sections/SdProblemsSection.vue'))
+// Incident Management — AGENT "Fault Grid" bodies vs ADMIN "Command Funnel" bodies
+// (two registry entries share key 'incidents'; see the module comments below).
+const SdIncGridDashboard = A(() => import('./sections/SdIncGridDashboard.vue'))
+const SdIncActiveSection = A(() => import('./sections/SdIncActiveSection.vue'))
+const SdIncMajorSection = A(() => import('./sections/SdIncMajorSection.vue'))
+const SdIncCriticalSection = A(() => import('./sections/SdIncCriticalSection.vue'))
+const SdIncTimelineSection = A(() => import('./sections/SdIncTimelineSection.vue'))
+// RCA desk — agent "THE TEARDOWN × THE STACK DESCENT" working desk (RCA v2)
+const SdIncRcaDeskSection = A(() => import('./sections/SdIncRcaDeskSection.vue'))
+const SdIncPirSection = A(() => import('./sections/SdIncPirSection.vue'))
+const SdIncFunnelDashboard = A(() => import('./sections/SdIncFunnelDashboard.vue'))
+const SdIncFleetSection = A(() => import('./sections/SdIncFleetSection.vue'))
+const SdIncMajorCommandSection = A(() => import('./sections/SdIncMajorCommandSection.vue'))
+const SdIncCriticalOversightSection = A(() => import('./sections/SdIncCriticalOversightSection.vue'))
+const SdIncChronicleSection = A(() => import('./sections/SdIncChronicleSection.vue'))
+// RCA governance — admin "THE CLEARINGHOUSE" review/settlement desk (RCA v2)
+const SdIncRcaGovernanceSection = A(() => import('./sections/SdIncRcaGovernanceSection.vue'))
+const SdIncPirApprovalsSection = A(() => import('./sections/SdIncPirApprovalsSection.vue'))
 const SdServiceCatalogSection = A(() => import('./sections/SdServiceCatalogSection.vue'))
 const SdChangeRequestsSection = A(() => import('./sections/SdChangeRequestsSection.vue'))
 const SdKnowledgeBaseSection = A(() => import('./sections/SdKnowledgeBaseSection.vue'))
@@ -238,16 +256,39 @@ export const SUPPORT_MODULES = [
       { ...tool('config', 'Queue Config', SdQueueConfigSection), adminOnly: true },
     ],
   },
+  // ── Incident Management: TWO entries share key 'incidents' (getSupportModule looks
+  // up inside the panel-filtered list, so each panel resolves its own entry) — the
+  // AGENT desk is "THE FAULT GRID" (power-grid response floor), the ADMIN desk is
+  // "THE COMMAND FUNNEL" (braided-stream oversight wall). Completely different rails,
+  // heroes and section bodies; the backend seal does the scoping.
   {
-    key: 'incidents', label: 'Incidents', icon: AlertTriangle, accent: 'var(--sd-pri-critical)', group: 'ITIL', panels: ['employee', 'admin'],
-    sub: 'Major-incident command — active incidents, timelines and post-incident reviews.',
+    key: 'incidents', label: 'Incidents', icon: AlertTriangle, accent: 'var(--sd-pri-critical)', group: 'ITIL', panels: ['employee'],
+    verticalRail: 'faultgrid',   // → SdIncGridRail (substation bus-bar breakers)
+    sub: 'The Fault Grid — live incident command: faults, war rooms and the road back to green.',
     tabs: [
-      ph('active', 'Active Incidents', 'PHASE 3 · ITIL'),
-      ph('major', 'Major Incidents', 'PHASE 3 · ITIL'),
-      ph('critical', 'Critical Incidents', 'PHASE 3 · ITIL'),
-      ph('timeline', 'Incident Timeline', 'PHASE 3 · ITIL'),
-      ph('rca', 'Root Cause Analysis', 'PHASE 3 · ITIL'),
-      ph('post-incident', 'Post-Incident Reports', 'PHASE 3 · ITIL'),
+      // Dashboard stays visible to every employee — the section itself shows an
+      // agents-only gate state for self-service users (agentReveal prop).
+      tool('dashboard', 'Dashboard', SdIncGridDashboard),
+      { ...tool('active', 'Active Incidents', SdIncActiveSection), agentOnly: true },
+      { ...tool('major', 'Major Incidents', SdIncMajorSection), agentOnly: true },
+      { ...tool('critical', 'Critical Incidents', SdIncCriticalSection), agentOnly: true },
+      { ...tool('timeline', 'Incident Timeline', SdIncTimelineSection), agentOnly: true },
+      { ...tool('rca', 'Root Cause Analysis', SdIncRcaDeskSection), agentOnly: true },
+      { ...tool('post-incident', 'Post-Incident Reports', SdIncPirSection), agentOnly: true },
+    ],
+  },
+  {
+    key: 'incidents', label: 'Incidents', icon: AlertTriangle, accent: 'var(--sd-pri-critical)', group: 'ITIL', panels: ['admin'],
+    verticalRail: 'funnel',      // → SdIncFunnelRail (braided-stream flow gates)
+    sub: 'The Command Funnel — every signal, one stream: fleet posture, MI command and the record of review.',
+    tabs: [
+      tool('dashboard', 'Dashboard', SdIncFunnelDashboard),
+      tool('active', 'Active Incidents', SdIncFleetSection),
+      tool('major', 'Major Incidents', SdIncMajorCommandSection),
+      tool('critical', 'Critical Incidents', SdIncCriticalOversightSection),
+      tool('timeline', 'Incident Timeline', SdIncChronicleSection),
+      tool('rca', 'Root Cause Analysis', SdIncRcaGovernanceSection),
+      tool('post-incident', 'Post-Incident Reports', SdIncPirApprovalsSection),
     ],
   },
   {
@@ -256,7 +297,8 @@ export const SUPPORT_MODULES = [
     tabs: [
       self('problems', 'Problems', SdProblemsSection),
       ph('known-errors', 'Known Errors', 'PHASE 3 · ITIL'),
-      ph('rca', 'RCA Records', 'PHASE 3 · ITIL'),
+      // (the old 'rca' placeholder is GONE — the canonical RCA record surfaces are
+      // the Incidents module's rca tab on both panels; a third stub was IA debt)
       ph('corrective', 'Corrective Actions', 'PHASE 3 · ITIL'),
       ph('preventive', 'Preventive Actions', 'PHASE 3 · ITIL'),
     ],

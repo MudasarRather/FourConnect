@@ -123,8 +123,9 @@
     <SdTicketDrawer :ticket-id="drawerId" :caps="{ agent }" @close="onDrawerClose" @changed="refreshAll" />
     <SdWarRoomConsole :open="!!warTarget" :ticket="warTarget" :agent="agent" :me="me" :now="now" :viewers="viewers"
       @close="warTarget = null" @changed="onWarChanged" @open-ticket="openTicket" @declare="(t) => openDeclare(t)" />
+    <!-- :z=5300 — co-rendered with SdWarRoomConsole (z5200): the declare ceremony must clear it -->
     <SdMajorIncidentModal :open="declareOpen" :ticket="declareTarget" :tickets="declareOptions" :agent="agent"
-      @close="declareOpen = false" @done="onDeclared" />
+      :z="5300" @close="declareOpen = false" @done="onDeclared" />
     <SdResolveModal :open="!!resolveTarget" :ticket="resolveTarget" :agent="agent" @close="resolveTarget = null" @done="onResolved" />
     <SdFlowMoveModal :open="!!moveTarget" :ticket="moveTarget?.ticket" :from="moveTarget?.from" :to="moveTarget?.to"
       :agent="agent" :me="me" :assignees="assignees" :now="now" @close="moveTarget = null" @done="onMoved" />
@@ -180,7 +181,7 @@ import SdFlowMoveModal from '../modals/SdFlowMoveModal.vue'
 import { getTicketScope } from '../tickets/ticketScopes'
 import {
   listScoped, fetchCriticalStats, fetchCommandCenterStats, fetchMyWorkbench,
-  managerAssignTicket, ackTicket, bulkAck, ticketPresence,
+  managerAssignTicket, ackTicket, bulkAck, ticketPresence, getMyTicket,
   getMe, listMyTeam, loadPickers, usePickers, listSavedViews, createSavedView, deleteSavedView,
   TICKET_TYPES, BUSINESS_IMPACTS, STALE_CRITICAL_HOURS, priorityLabel, statusLabel,
 } from '@/composables/useSupportDesk'
